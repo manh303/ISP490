@@ -1,0 +1,2 @@
+data/raw/kaggle_datasets/**/*.csv !text !filter !merge !diff
+models/** !text !filter !merge !diff
