@@ -1,0 +1,1 @@
+export default function MetricCard({label,value}){return <div>{label}: {value}</div>;}

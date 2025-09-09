@@ -1,0 +1,1 @@
+import {API_BASE} from './api';export async function getKPI(){const r=await fetch(`${API_BASE}/v1/analytics/kpi`);return r.json();}
