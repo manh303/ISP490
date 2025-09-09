@@ -5,7 +5,7 @@ import time
 import random
 from pathlib import Path
 from loguru import logger
-from src.utils.config import Config
+from utils.config import Config
 
 class WebScraper:
     def __init__(self):

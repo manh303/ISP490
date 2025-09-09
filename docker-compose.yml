@@ -47,6 +47,133 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - dss_network
+
+  # Airflow Database
+  airflow-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - dss_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Airflow Init (run once to setup DB)
+  airflow-init:
+    build: ./airflow
+    environment: &airflow-common-env
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-db/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW_CONN_POSTGRES_DEFAULT: postgres://dss_user:dss_password_123@postgres:5432/ecommerce_dss
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/config:/opt/airflow/config
+      - ./data:/app/data
+      - ./data-pipeline/src:/app/src
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db init &&
+        airflow users create \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com \
+          --password admin123
+    depends_on:
+      airflow-db:
+        condition: service_healthy
+    networks:
+      - dss_network
+
+  # Airflow Webserver
+  airflow-webserver:
+    build: ./airflow
+    command: webserver
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *airflow-common-env
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/config:/opt/airflow/config
+      - ./data:/app/data
+      - ./data-pipeline/src:/app/src
+    depends_on:
+      - airflow-init
+    restart: unless-stopped
+    networks:
+      - dss_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Airflow Scheduler
+  airflow-scheduler:
+    build: ./airflow
+    command: scheduler
+    environment:
+      <<: *airflow-common-env
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/config:/opt/airflow/config
+      - ./data:/app/data
+      - ./data-pipeline/src:/app/src
+    depends_on:
+      - airflow-init
+    restart: unless-stopped
+    networks:
+      - dss_network
+
+  # Airflow Worker
+  airflow-worker:
+    build: ./airflow
+    command: celery worker
+    environment:
+      <<: *airflow-common-env
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/config:/opt/airflow/config
+      - ./data:/app/data
+      - ./data-pipeline/src:/app/src
+    depends_on:
+      - airflow-init
+    restart: unless-stopped
+    networks:
+      - dss_network
+
   # Data Pipeline Service
   data-pipeline:
     build:
@@ -66,6 +193,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./data-pipeline/logs:/app/logs
+      - ./data-pipeline:/app  # Mount source code for development
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,8 +202,8 @@ services:
     networks:
       - dss_network
     restart: unless-stopped
-    command: ["python", "scripts/continuous_pipeline.py"]
-
+    # Change this command to keep container running
+    command: ["tail", "-f", "/dev/null"]  # Keep container alive
   # Backend API Service
   backend:
     build:
@@ -132,7 +260,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     build:
-      context: ./nginx
+      context: ./deployment/nginx
       dockerfile: Dockerfile
     ports:
       - "80:80"
@@ -154,6 +282,8 @@ volumes:
   postgres_data:
     driver: local
   mongo_data:
+    driver: local
+  airflow_db_data:
     driver: local
 
 networks:

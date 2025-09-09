@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from pymongo import MongoClient
 from loguru import logger
-from src.utils.config import Config
+from utils.config import Config
 
 class DatabaseManager:
     def __init__(self):

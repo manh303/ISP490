@@ -1,5 +1,5 @@
 # Data Pipeline Container
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -20,11 +20,11 @@ RUN apt-get update && apt-get install -y \
 
 # Install Java (required for Spark)
 RUN apt-get update && apt-get install -y \
-    openjdk-11-jdk-headless \
+    default-jdk \
     && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
 # Copy requirements first for better caching
 COPY requirements.txt .
@@ -43,7 +43,11 @@ RUN mkdir -p /app/data/{raw,processed,models,exports} && \
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash dss_user && \
-    chown -R dss_user:dss_user /app
+    mkdir -p /home/dss_user/kaggle_datasets && \
+    chown -R dss_user:dss_user /home/dss_user
+# Set working directory and permissions
+WORKDIR /app
+RUN chown -R dss_user:dss_user /app
 USER dss_user
 
 # Health check
