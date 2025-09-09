@@ -1,9 +1,43 @@
-__pycache__/
-*.pyc
+# Temporary data files
+data/raw/kaggle_datasets/**/*.csv
+data/processed/**/*.csv
+data/exports/**/*.csv
+
+# Temporary data files
+data/raw/temp/
+data/processed/temp/
+data/exports/temp/
+
+# Credentials
+kaggle.json
 .env
-node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
 dist/
-.build/
-.airflow/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
 *.log
-.ipynb_checkpoints/
+
+# Node modules
+node_modules/
