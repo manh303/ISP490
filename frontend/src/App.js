@@ -1,0 +1,1 @@
+export default function App(){return (<div style={{padding:16}}><h1>Ecommerce DSS Dashboard</h1><p>Starter UI</p></div>);}

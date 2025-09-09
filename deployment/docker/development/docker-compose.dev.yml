@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # Development databases - lighter configuration
+  postgres-dev:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - dss_dev_network
+
+  mongodb-dev:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      - mongo_dev_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - dss_dev_network
+
+  # Development data pipeline with hot reload
+  data-pipeline-dev:
+    build:
+      context: ./data-pipeline
+      dockerfile: Dockerfile
+      target: development  # Multi-stage build target
+    environment:
+      - DB_HOST=postgres-dev
+      - MONGO_HOST=mongodb-dev
+      - KAGGLE_USERNAME=${KAGGLE_USERNAME}
+      - KAGGLE_KEY=${KAGGLE_KEY}
+      - DEVELOPMENT=true
+    volumes:
+      - ./data-pipeline:/app
+      - ./data:/app/data
+    depends_on:
+      - postgres-dev
+      - mongodb-dev
+    networks:
+      - dss_dev_network
+    command: ["python", "-m", "pytest", "--watch"]
+
+  # Development backend with hot reload
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=postgres-dev
+      - MONGO_HOST=mongodb-dev
+      - DEVELOPMENT=true
+      - RELOAD=true
+    volumes:
+      - ./backend:/app
+      - ./data/models:/app/models
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres-dev
+    networks:
+      - dss_dev_network
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Development frontend with hot reload
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    networks:
+      - dss_dev_network
+    command: ["npm", "start"]
+
+  # Development tools
+  jupyter:
+    build:
+      context: ./data-pipeline
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=postgres-dev
+      - MONGO_HOST=mongodb-dev
+    volumes:
+      - ./data-pipeline:/app
+      - ./data:/app/data
+    ports:
+      - "8888:8888"
+    networks:
+      - dss_dev_network
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]
+
+volumes:
+  postgres_dev_data:
+  mongo_dev_data:
+
+networks:
+  dss_dev_network:
+    driver: bridge

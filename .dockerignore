@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+README.md
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Dependencies
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env.local
+.env.development
+.env.production
+
+# Data (only copy what's needed)
+data/raw/*
+data/processed/*
+!data/sample/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

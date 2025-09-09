@@ -1,0 +1,1 @@
+export const fmt=(n)=>new Intl.NumberFormat().format(n);
