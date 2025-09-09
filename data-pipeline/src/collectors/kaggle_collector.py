@@ -2,15 +2,38 @@ import os
 import pandas as pd
 import kaggle
 from pathlib import Path
-from src.utils.config import Config
+from utils.config import Config
 from loguru import logger
 
 class KaggleCollector:
     def __init__(self):
         self.config = Config()
-        # Authenticate with Kaggle
-        os.environ['KAGGLE_USERNAME'] = self.config.KAGGLE_USERNAME
-        os.environ['KAGGLE_KEY'] = self.config.KAGGLE_KEY
+        
+        # Check if credentials exist in app directory (Docker container root)
+        kaggle_json_path = Path("/app/kaggle.json")
+        
+        try:
+            # Create .kaggle directory in user home if it doesn't exist
+            kaggle_dir = Path.home() / '.kaggle'
+            kaggle_dir.mkdir(exist_ok=True)
+            
+            # Copy kaggle.json to user home .kaggle directory
+            target_path = kaggle_dir / 'kaggle.json'
+            if kaggle_json_path.exists():
+                import shutil
+                shutil.copy2(kaggle_json_path, target_path)
+                # Set file permissions
+                target_path.chmod(0o600)
+                logger.info(f"Copied kaggle.json to {target_path}")
+            else:
+                raise FileNotFoundError(f"Kaggle credentials not found at {kaggle_json_path}")
+            
+            # Verify Kaggle authentication
+            kaggle.api.authenticate()
+            logger.info("✅ Successfully authenticated with Kaggle API")
+        except Exception as e:
+            logger.error(f"❌ Failed to authenticate with Kaggle API: {e}")
+            raise
         
     def download_dataset(self, dataset_name: str, download_path: str = None):
         """
@@ -20,20 +43,29 @@ class KaggleCollector:
             download_path: Path để save data
         """
         if not download_path:
-            download_path = Path(self.config.RAW_DATA_PATH) / "kaggle_datasets"
+            # Save to mounted volume directory that maps to local system
+            download_path = Path("C:/DoAn_FPT_FALL2025/ecommerce-dss-project/data/raw/kaggle_datasets")
         
         download_path = Path(download_path)
-        download_path.mkdir(parents=True, exist_ok=True)
         
         try:
+            # Create directory without changing permissions
+            download_path.mkdir(parents=True, exist_ok=True)
+            
+            # Create dataset-specific subdirectory
+            dataset_dir = download_path / dataset_name.split('/')[-1]
+            dataset_dir.mkdir(exist_ok=True)
+            
             logger.info(f"Downloading dataset: {dataset_name}")
+            logger.info(f"Saving to: {dataset_dir}")
+            
             kaggle.api.dataset_download_files(
                 dataset_name, 
-                path=download_path, 
+                path=str(dataset_dir),  # Save to dataset-specific subdirectory
                 unzip=True
             )
-            logger.success(f"Dataset downloaded to: {download_path}")
-            return download_path
+            logger.success(f"Dataset downloaded to: {dataset_dir}")
+            return dataset_dir
         except Exception as e:
             logger.error(f"Error downloading dataset: {e}")
             return None
