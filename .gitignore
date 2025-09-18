@@ -3,8 +3,8 @@ data/raw/kaggle_datasets/**/*.csv
 data/processed/**/*.csv
 data/exports/**/*.csv
 # Ignore large data files
-data/raw/kaggle_datasets/ecommerce-behavior-data-from-multi-category-store/*.csv
-*.csv  # Hoặc cụ thể hơn nếu cần
+data/transactions.csv
+data/raw/kaggle_datasets/brazilian-ecommerce/olist_geolocation_dataset.csv
 # Temporary data files
 data/raw/temp/
 data/processed/temp/
