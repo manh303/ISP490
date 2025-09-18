@@ -194,6 +194,8 @@ services:
       - ./data:/app/data
       - ./data-pipeline/logs:/app/logs
       - ./data-pipeline:/app  # Mount source code for development
+    ports:
+    - "8888:8888"  # Add this line
     depends_on:
       postgres:
         condition: service_healthy
