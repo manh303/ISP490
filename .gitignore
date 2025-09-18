@@ -10,7 +10,11 @@ data/raw/temp/
 data/processed/temp/
 data/exports/temp/
 
+# Ignore pickle files
+*.pkl
+# Or specific: clv_model.pkl, data/clv_model.pkl
 # Credentials
+
 kaggle.json
 .env
 
