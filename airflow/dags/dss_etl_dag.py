@@ -11,6 +11,7 @@ import os
 # Add project path
 sys.path.append('/opt/airflow/dags')
 sys.path.append('/app/src')
+sys.path.append('/app/src/utils')
 
 # Default arguments
 default_args = {
@@ -37,8 +38,31 @@ dag = DAG(
 def check_data_sources(**context):
     """Check if data sources are available"""
     from utils.database import DatabaseManager
+    import os
+    from pathlib import Path
+    import shutil
     
     db_manager = DatabaseManager()
+    
+    # Define paths
+    config_dir = Path('/opt/airflow/config')
+    kaggle_path = config_dir / 'kaggle.json'
+    
+    # Create config directory if it doesn't exist
+    config_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Copy kaggle.json to airflow user's home directory
+    home_kaggle_dir = Path.home() / '.kaggle'
+    home_kaggle_dir.mkdir(parents=True, exist_ok=True)
+    
+    if kaggle_path.exists():
+        # Copy to user's .kaggle directory
+        shutil.copy2(kaggle_path, home_kaggle_dir / 'kaggle.json')
+        # Set proper permissions
+        os.chmod(home_kaggle_dir / 'kaggle.json', 0o600)
+        os.environ['KAGGLE_CONFIG_DIR'] = str(home_kaggle_dir)
+    else:
+        raise Exception(f"Kaggle credentials not found at {kaggle_path}")
     
     # Check PostgreSQL connection
     try:
@@ -48,11 +72,15 @@ def check_data_sources(**context):
     except Exception as e:
         raise Exception(f"PostgreSQL connection failed: {e}")
     
-    # Check Kaggle API
+    # Check Kaggle API with specific credentials
     try:
         import kaggle
-        datasets = kaggle.api.dataset_list(page=1, size=1)
-        print("✅ Kaggle API connection successful")
+        # Use max-size instead of deprecated size parameter
+        datasets = kaggle.api.dataset_list(max_size=1000)
+        if len(datasets) > 0:
+            print("✅ Kaggle API connection successful")
+        else:
+            raise Exception("No datasets returned from Kaggle API")
     except Exception as e:
         raise Exception(f"Kaggle API failed: {e}")
     
@@ -177,6 +205,7 @@ def transform_clean_data(**context):
 def load_to_warehouse(**context):
     """Load cleaned data to data warehouse tables"""
     from utils.database import DatabaseManager
+    import gc  # For garbage collection
     
     db_manager = DatabaseManager()
     
@@ -185,36 +214,57 @@ def load_to_warehouse(**context):
         "SELECT * FROM airflow_cleaning_summary WHERE processing_date::date = CURRENT_DATE"
     )
     
-    consolidated_data = []
+    processed_count = 0
+    batch_size = 100000  # Process 100k rows at a time
     
     for _, row in cleaning_summary.iterrows():
         table_name = row['table_name']
         
-        # Load cleaned data
-        df = db_manager.load_from_postgres(f"SELECT * FROM {table_name}")
-        
-        if not df.empty:
-            # Standardize columns based on data type
-            if 'customer' in table_name:
-                df['data_type'] = 'customer'
-            elif 'product' in table_name:
-                df['data_type'] = 'product'
-            elif 'order' in table_name:
-                df['data_type'] = 'transaction'
-            else:
-                df['data_type'] = 'general'
+        try:
+            # Get total count first
+            count_query = f"SELECT COUNT(*) as count FROM {table_name}"
+            total_rows = db_manager.load_from_postgres(count_query)['count'].iloc[0]
             
-            consolidated_data.append(df)
+            # Process in batches
+            for offset in range(0, total_rows, batch_size):
+                # Load data in chunks
+                query = f"""
+                    SELECT * FROM {table_name} 
+                    LIMIT {batch_size} OFFSET {offset}
+                """
+                df_chunk = db_manager.load_from_postgres(query)
+                
+                if not df_chunk.empty:
+                    # Add standardization columns
+                    df_chunk['data_type'] = 'general'
+                    if 'customer' in table_name:
+                        df_chunk['data_type'] = 'customer'
+                    elif 'product' in table_name:
+                        df_chunk['data_type'] = 'product'
+                    elif 'order' in table_name:
+                        df_chunk['data_type'] = 'transaction'
+                    
+                    # Insert directly to warehouse
+                    db_manager.save_to_postgres(
+                        df_chunk, 
+                        'dw_ecommerce_data',
+                        if_exists='append'
+                    )
+                    
+                    processed_count += len(df_chunk)
+                    print(f"Processed {processed_count}/{total_rows} rows from {table_name}")
+                    
+                    # Clear memory
+                    del df_chunk
+                    gc.collect()
+                
+        except Exception as e:
+            print(f"Error processing {table_name}: {e}")
+            continue
     
-    if consolidated_data:
-        # Combine all data
-        final_df = pd.concat(consolidated_data, ignore_index=True, sort=False)
-        
-        # Load to final warehouse table
-        db_manager.save_to_postgres(final_df, 'dw_ecommerce_data')
-        
-        print(f"Loaded {len(final_df)} records to data warehouse")
-        return f"Successfully loaded {len(final_df)} records"
+    if processed_count > 0:
+        print(f"Loaded {processed_count} records to data warehouse")
+        return f"Successfully loaded {processed_count} records"
     
     raise Exception("No data to load to warehouse")
 

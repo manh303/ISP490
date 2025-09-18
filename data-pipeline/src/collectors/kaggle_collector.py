@@ -9,24 +9,33 @@ class KaggleCollector:
     def __init__(self):
         self.config = Config()
         
-        # Check if credentials exist in app directory (Docker container root)
-        kaggle_json_path = Path("/app/kaggle.json")
+        # Check multiple locations for kaggle.json
+        possible_paths = [
+            Path("/opt/airflow/config/kaggle.json"),  # Airflow config directory
+            Path("/app/kaggle.json"),                 # Docker root
+            Path.home() / '.kaggle/kaggle.json'       # User home
+        ]
+        
+        kaggle_json_path = None
+        for path in possible_paths:
+            if path.exists():
+                kaggle_json_path = path
+                break
+                
+        if not kaggle_json_path:
+            raise FileNotFoundError(f"Kaggle credentials not found in any location: {possible_paths}")
         
         try:
-            # Create .kaggle directory in user home if it doesn't exist
+            # Create .kaggle directory in user home
             kaggle_dir = Path.home() / '.kaggle'
             kaggle_dir.mkdir(exist_ok=True)
             
             # Copy kaggle.json to user home .kaggle directory
             target_path = kaggle_dir / 'kaggle.json'
-            if kaggle_json_path.exists():
-                import shutil
-                shutil.copy2(kaggle_json_path, target_path)
-                # Set file permissions
-                target_path.chmod(0o600)
-                logger.info(f"Copied kaggle.json to {target_path}")
-            else:
-                raise FileNotFoundError(f"Kaggle credentials not found at {kaggle_json_path}")
+            import shutil
+            shutil.copy2(kaggle_json_path, target_path)
+            target_path.chmod(0o600)
+            logger.info(f"Copied kaggle.json to {target_path}")
             
             # Verify Kaggle authentication
             kaggle.api.authenticate()

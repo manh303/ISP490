@@ -25,11 +25,37 @@ class DatabaseManager:
         return self.postgres_engine
     
     def get_mongo_connection(self):
-        """Get MongoDB connection"""
+        """Get MongoDB connection with authentication"""
         if not self.mongo_client:
-            connection_string = f"mongodb://{self.config.MONGO_HOST}:{self.config.MONGO_PORT}"
-            self.mongo_client = MongoClient(connection_string)
-            logger.info("Connected to MongoDB")
+            try:
+                # Check if MongoDB auth is configured
+                if hasattr(self.config, 'MONGO_USER') and hasattr(self.config, 'MONGO_PASSWORD'):
+                    # Use authenticated connection
+                    auth_source = getattr(self.config, 'MONGO_AUTH_SOURCE', 'admin')
+                    self.mongo_client = MongoClient(
+                        host=self.config.MONGO_HOST,
+                        port=self.config.MONGO_PORT,
+                        username=self.config.MONGO_USER,
+                        password=self.config.MONGO_PASSWORD,
+                        authSource=auth_source,
+                        serverSelectionTimeoutMS=5000
+                    )
+                    # Test the connection
+                    self.mongo_client.admin.command('ping')
+                    logger.info("Connected to MongoDB with authentication")
+                else:
+                    # Fallback to connection without auth (for local development)
+                    connection_string = f"mongodb://{self.config.MONGO_HOST}:{self.config.MONGO_PORT}"
+                    self.mongo_client = MongoClient(connection_string, serverSelectionTimeoutMS=5000)
+                    # Test the connection
+                    self.mongo_client.admin.command('ping')
+                    logger.info("Connected to MongoDB without authentication")
+                    
+            except Exception as e:
+                logger.error(f"MongoDB connection failed: {e}")
+                # If MongoDB is optional, you can set it to None
+                self.mongo_client = None
+                
         return self.mongo_client
     
     def save_to_postgres(self, df: pd.DataFrame, table_name: str, if_exists='replace'):
@@ -40,11 +66,18 @@ class DatabaseManager:
             logger.info(f"Saved {len(df)} records to PostgreSQL table: {table_name}")
         except Exception as e:
             logger.error(f"Error saving to PostgreSQL: {e}")
+            raise  # Re-raise since PostgreSQL is critical
     
     def save_to_mongo(self, data, collection_name: str, database_name=None):
         """Save data to MongoDB"""
         try:
             client = self.get_mongo_connection()
+            
+            # Skip if MongoDB connection failed
+            if client is None:
+                logger.warning("MongoDB connection not available, skipping backup")
+                return
+            
             db_name = database_name or self.config.MONGO_DB
             db = client[db_name]
             collection = db[collection_name]
@@ -54,10 +87,18 @@ class DatabaseManager:
             else:
                 records = data
             
-            result = collection.insert_many(records)
-            logger.info(f"Saved {len(result.inserted_ids)} records to MongoDB: {collection_name}")
+            # Clear existing data and insert new (optional - you can modify this)
+            collection.delete_many({})
+            
+            if records:  # Only insert if there are records
+                result = collection.insert_many(records)
+                logger.info(f"Saved {len(result.inserted_ids)} records to MongoDB: {collection_name}")
+            else:
+                logger.info(f"No records to save to MongoDB collection: {collection_name}")
+                
         except Exception as e:
             logger.error(f"Error saving to MongoDB: {e}")
+            # Don't raise - MongoDB is backup, not critical
     
     def load_from_postgres(self, query: str) -> pd.DataFrame:
         """Load data from PostgreSQL"""
@@ -69,3 +110,45 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error loading from PostgreSQL: {e}")
             return pd.DataFrame()
+    
+    def load_from_mongo(self, collection_name: str, database_name=None, query=None) -> pd.DataFrame:
+        """Load data from MongoDB"""
+        try:
+            client = self.get_mongo_connection()
+            
+            if client is None:
+                logger.warning("MongoDB connection not available")
+                return pd.DataFrame()
+            
+            db_name = database_name or self.config.MONGO_DB
+            db = client[db_name]
+            collection = db[collection_name]
+            
+            # Use query filter if provided, otherwise get all documents
+            cursor = collection.find(query or {})
+            data = list(cursor)
+            
+            if data:
+                df = pd.DataFrame(data)
+                # Remove MongoDB's _id column if present
+                if '_id' in df.columns:
+                    df = df.drop('_id', axis=1)
+                logger.info(f"Loaded {len(df)} records from MongoDB collection: {collection_name}")
+                return df
+            else:
+                logger.info(f"No records found in MongoDB collection: {collection_name}")
+                return pd.DataFrame()
+                
+        except Exception as e:
+            logger.error(f"Error loading from MongoDB: {e}")
+            return pd.DataFrame()
+    
+    def close_connections(self):
+        """Close database connections"""
+        if self.postgres_engine:
+            self.postgres_engine.dispose()
+            logger.info("PostgreSQL connection closed")
+        
+        if self.mongo_client:
+            self.mongo_client.close()
+            logger.info("MongoDB connection closed")
