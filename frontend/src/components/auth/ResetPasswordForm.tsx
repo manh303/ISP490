@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
@@ -12,6 +12,7 @@ export default function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [passwordStrength, setPasswordStrength] = useState<{strength: number; label: string}>({ strength: 0, label: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [tokenError, setTokenError] = useState("");
@@ -78,6 +79,27 @@ export default function ResetPasswordForm() {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
+
+  // Assess password strength based on length, uppercase, numbers and symbols
+  const assessPasswordStrength = (password: string) => {
+    if (!password) return { strength: 0, label: '' };
+    let score = 0;
+    if (password.length >= 8) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+    // Map score 0-4 to strength 1-4 (1=weak,4=strong)
+    const strength = Math.max(1, score);
+    const label =
+      score <= 1 ? 'Weak' : score === 2 ? 'Fair' : score === 3 ? 'Good' : 'Strong';
+
+    return { strength, label };
+  };
+
+  useEffect(() => {
+    setPasswordStrength(assessPasswordStrength(formData.password));
+  }, [formData.password]);
 
   // Show error if token is missing
   if (!token) {
@@ -156,7 +178,7 @@ export default function ResetPasswordForm() {
                 Create New Password
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Your new password must be different from previously used passwords.
+                 Please enter a new password below.
               </p>
             </div>
 
@@ -169,19 +191,15 @@ export default function ResetPasswordForm() {
             <div>
               <form onSubmit={handleSubmit}>
                 <div className="space-y-5">
-                  {/* New Password */}
+                  {/* New Password with strength meter */}
                   <div>
-                    <Label>
-                      New Password<span className="text-error-500">*</span>
-                    </Label>
                     <div className="relative">
                       <Input
+                        placeholder="Password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter your new password"
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
-                        error={!!errors.password}
-                        hint={errors.password}
+                        className={errors.password ? "border-red-500" : ""}
                       />
                       <span
                         onClick={() => setShowPassword(!showPassword)}
@@ -194,13 +212,42 @@ export default function ResetPasswordForm() {
                         )}
                       </span>
                     </div>
+                    {formData.password && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mb-2">
+                          <div 
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                              passwordStrength.strength === 1 ? 'bg-orange-500 w-1/4' :
+                              passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
+                              passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
+                              'bg-green-500 w-full'
+                            }`} 
+                          />
+                        </div>
+                        <div className="text-left">
+                          <span className={`text-sm font-medium ${
+                            passwordStrength.strength === 1 ? 'text-orange-500' :
+                            passwordStrength.strength === 2 ? 'text-yellow-500' :
+                            passwordStrength.strength === 3 ? 'text-blue-500' :
+                            'text-green-500'
+                          }`}>
+                            Password strength: {passwordStrength.label}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {errors.password && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.password}
+                      </p>
+                    )}
                   </div>
 
                   {/* Confirm Password */}
                   <div>
-                    <Label>
+                    {/* <Label>
                       Confirm Password<span className="text-error-500">*</span>
-                    </Label>
+                    </Label> */}
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
@@ -257,7 +304,7 @@ export default function ResetPasswordForm() {
                 </div>
               </form>
 
-              <div className="mt-5">
+              {/* <div className="mt-5">
                 <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                   Remember your password? {""}
                   <Link
@@ -267,7 +314,7 @@ export default function ResetPasswordForm() {
                     Sign In
                   </Link>
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         ) : (
