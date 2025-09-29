@@ -21,6 +21,7 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
 
 export default function App() {
   return (
@@ -30,7 +31,7 @@ export default function App() {
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            {/* <Route index path="/" element={<Home />} /> */}
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
@@ -57,12 +58,13 @@ export default function App() {
           </Route>
 
           {/* Auth Layout */}
+          <Route index path="/" element={<SignIn />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-code" element={<VerifyCode />} />
-
+          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>

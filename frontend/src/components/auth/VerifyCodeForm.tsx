@@ -82,7 +82,7 @@ export default function VerifyCodeForm() {
 
   const handleVerify = async (codeToVerify?: string) => {
     const verificationCode = codeToVerify || code.join("");
-    
+
     if (verificationCode.length !== 6) {
       setError("Please enter all 6 digits");
       return;
@@ -94,7 +94,7 @@ export default function VerifyCodeForm() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Simulate verification
       if (verificationCode === "123456") {
         // Success - redirect to dashboard or next step
@@ -120,14 +120,14 @@ export default function VerifyCodeForm() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Start countdown (60 seconds)
       setCountdown(60);
-      
+
       // Clear existing code
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
-      
+
     } catch (error) {
       setError("Failed to resend code. Please try again.");
     } finally {
@@ -137,15 +137,7 @@ export default function VerifyCodeForm() {
 
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
-      <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
-        <Link
-          to="/signin"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon className="size-5" />
-          Back to Login
-        </Link>
-      </div>
+
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="text-center">
           <div className="mb-5 sm:mb-8">
@@ -155,9 +147,9 @@ export default function VerifyCodeForm() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Enter the 6-digit code sent to your email
             </p>
-            <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+            {/* <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               {email}
-            </p>
+            </p> */}
           </div>
 
           {error && (
@@ -180,11 +172,10 @@ export default function VerifyCodeForm() {
                     value={digit}
                     onChange={(e) => handleInputChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`w-12 h-12 text-center text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                      error
+                    className={`w-12 h-12 text-center text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-colors ${error
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500"
                         : "border-gray-300 focus:border-brand-500 focus:ring-brand-500/20 dark:border-gray-600 dark:focus:border-brand-400"
-                    } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
+                      } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
                     disabled={isLoading}
                   />
                 ))}
@@ -230,11 +221,10 @@ export default function VerifyCodeForm() {
                     type="button"
                     onClick={handleResendCode}
                     disabled={countdown > 0 || isResending}
-                    className={`${
-                      countdown > 0 || isResending
+                    className={`${countdown > 0 || isResending
                         ? "text-gray-400 cursor-not-allowed"
                         : "text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                    } transition-colors`}
+                      } transition-colors`}
                   >
                     {isResending ? (
                       "Sending..."
@@ -248,13 +238,21 @@ export default function VerifyCodeForm() {
               </div>
             </div>
           </form>
-
+          <div className="mt-6 text-center">
+            <Link
+              to="/signin"
+              className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            >
+              <ChevronLeftIcon className="size-5" />
+              Back to Login
+            </Link>
+          </div>
           {/* Demo hint */}
-          <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          {/* <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-xs text-blue-600 dark:text-blue-400">
               💡 <strong>Demo:</strong> Use code <code className="px-1 bg-blue-100 dark:bg-blue-800 rounded">123456</code> to test verification
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
