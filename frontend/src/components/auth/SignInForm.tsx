@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
-import Label from "../form/Label";
+// import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
@@ -87,9 +87,9 @@ export default function SignInForm() {
                   )}
                 </div>
                 <div>
-                  <Label>
+                  {/* <Label>
                     Password <span className="text-error-500">*</span>{" "}
-                  </Label>
+                  </Label> */}
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
