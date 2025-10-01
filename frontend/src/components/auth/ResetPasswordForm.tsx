@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
-import Label from "../form/Label";
+// import Label from "../form/Label";
 import Input from "../form/input/InputField";
 
 export default function ResetPasswordForm() {
