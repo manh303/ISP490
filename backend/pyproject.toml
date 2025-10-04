@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "dss-backend"
+version = "0.1.0"
+description = "DSS Backend API"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.103.0"
+uvicorn = {extras = ["standard"], version = "^0.23.0"}
+sqlalchemy = "^2.0.0"
+psycopg2-binary = "^2.9.7"
+pymongo = "^4.5.0"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.0"}
+python-multipart = "^0.0.6"
+redis = "^4.6.0"
+pandas = "^2.1.0"
+numpy = "^1.25.0"
+pydantic = "^2.3.0"
+python-dotenv = "^1.0.0"
+requests = "^2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.7.0"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

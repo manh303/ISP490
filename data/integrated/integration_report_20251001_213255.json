@@ -1,0 +1,63 @@
+{
+  "integration_summary": {
+    "timestamp": "2025-10-01T21:32:55.595858",
+    "total_products": 738,
+    "total_customers": 5000,
+    "total_orders": 10000,
+    "duplicates_removed": 99,
+    "errors_encountered": 0,
+    "integration_success": true
+  },
+  "data_sources": {
+    "consolidated_data": {
+      "products": 120,
+      "customers": 5000,
+      "orders": 10000,
+      "quality": "premium",
+      "market_focus": "vietnam"
+    },
+    "crawled_data": {
+      "products": 717,
+      "platforms": 6,
+      "real_time": true,
+      "market_focus": "vietnam"
+    }
+  },
+  "output_files": {
+    "products_file": "..\\data\\integrated\\vietnamese_products_integrated_20251001_213255.csv",
+    "customers_file": "..\\data\\integrated\\vietnamese_customers_integrated_20251001_213255.csv",
+    "orders_file": "..\\data\\integrated\\vietnamese_orders_integrated_20251001_213255.csv",
+    "transactions_file": "..\\data\\integrated\\vietnamese_transactions_integrated_20251001_213255.csv"
+  },
+  "data_quality": {
+    "schema_standardization": "complete",
+    "vietnamese_market_focus": true,
+    "currency_support": "VND + USD",
+    "platform_coverage": [
+      "Shopee",
+      "Tiki",
+      "Lazada",
+      "Sendo",
+      "FPTShop",
+      "CellphoneS"
+    ],
+    "payment_methods": [
+      "COD",
+      "MoMo",
+      "ZaloPay",
+      "Bank_Transfer",
+      "Credit_Card"
+    ]
+  },
+  "recommendations": {
+    "primary_use": "Vietnamese e-commerce DSS analytics",
+    "suitable_for": [
+      "Business intelligence",
+      "Sales analysis",
+      "Customer segmentation",
+      "Market research"
+    ],
+    "data_freshness": "Real-time crawled + Consolidated base",
+    "scalability": "Ready for production"
+  }
+}
