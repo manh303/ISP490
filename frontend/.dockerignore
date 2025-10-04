@@ -1,0 +1,14 @@
+# Docker ignore file để tối ưu build context
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.nyc
+*.log
+.DS_Store
+Thumbs.db
