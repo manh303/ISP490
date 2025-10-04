@@ -1,0 +1,202 @@
+{
+  "data_flow_model": {
+    "input_sources": {
+      "api_sources": {
+        "fakestore_api": {
+          "url": "https://fakestoreapi.com",
+          "daily_volume": "~200 products",
+          "data_types": [
+            "products",
+            "categories",
+            "users",
+            "carts"
+          ],
+          "status": "active"
+        },
+        "dummyjson_store": {
+          "url": "https://dummyjson.com",
+          "daily_volume": "~300 products",
+          "data_types": [
+            "products",
+            "reviews",
+            "users"
+          ],
+          "status": "active"
+        },
+        "platzi_api": {
+          "url": "https://api.escuelajs.co/api/v1",
+          "daily_volume": "~100 products",
+          "data_types": [
+            "products",
+            "categories"
+          ],
+          "status": "active"
+        }
+      },
+      "web_scraping": {
+        "sendo_vn": {
+          "url": "https://www.sendo.vn",
+          "daily_volume": "~150 products",
+          "target_pages": [
+            "/danh-muc",
+            "/tim-kiem",
+            "/san-pham"
+          ],
+          "status": "active"
+        },
+        "fptshop_vn": {
+          "url": "https://fptshop.com.vn",
+          "daily_volume": "~150 products",
+          "target_pages": [
+            "/may-tinh",
+            "/dien-thoai",
+            "/may-anh"
+          ],
+          "status": "active"
+        },
+        "chotot_com": {
+          "url": "https://www.chotot.com",
+          "daily_volume": "~50 products",
+          "target_pages": [
+            "/mua-ban",
+            "/tim-kiem"
+          ],
+          "status": "active"
+        },
+        "shopee_vn": {
+          "url": "https://shopee.vn",
+          "daily_volume": "~100 synthetic products",
+          "limitations": [
+            "SPA architecture requires JavaScript",
+            "Anti-bot protection active",
+            "Robots.txt blocks product pages",
+            "Dynamic content loading"
+          ],
+          "status": "limited"
+        }
+      },
+      "synthetic_data": {
+        "user_behavior": {
+          "volume": "1000 events/minute",
+          "types": [
+            "page_views",
+            "clicks",
+            "searches",
+            "purchases"
+          ]
+        },
+        "transactions": {
+          "volume": "500 transactions/hour",
+          "types": [
+            "orders",
+            "payments",
+            "shipments",
+            "returns"
+          ]
+        },
+        "market_changes": {
+          "volume": "200 updates/minute",
+          "types": [
+            "price_updates",
+            "inventory_changes",
+            "promotions"
+          ]
+        }
+      }
+    },
+    "processing_pipeline": {
+      "real_time": {
+        "kafka_topics": [
+          "user_events",
+          "transaction_stream",
+          "price_changes"
+        ],
+        "spark_streaming": "Apache Spark 3.x",
+        "latency": "<5 minutes",
+        "throughput": "1000+ events/minute"
+      },
+      "batch_processing": {
+        "airflow_dags": [
+          "dss_etl_dag",
+          "comprehensive_ecommerce_dss_dag"
+        ],
+        "schedule": "Daily/Hourly",
+        "etl_jobs": [
+          "data_validation",
+          "transformation",
+          "aggregation"
+        ]
+      },
+      "ml_pipeline": {
+        "feature_engineering": "Automated",
+        "model_training": "Weekly retraining",
+        "inference": "Real-time predictions",
+        "validation": "Cross-validation + holdout"
+      }
+    },
+    "storage_systems": {
+      "raw_data": {
+        "mongodb": {
+          "collections": [
+            "data_lake",
+            "product_catalog",
+            "customer_profiles"
+          ],
+          "volume": "2.76M+ records"
+        },
+        "file_storage": {
+          "formats": [
+            "CSV",
+            "JSON",
+            "Parquet"
+          ],
+          "location": "/data/raw/"
+        }
+      },
+      "processed_data": {
+        "postgresql": {
+          "tables": [
+            "analytics_warehouse",
+            "metrics_summary",
+            "feature_store"
+          ],
+          "optimization": "Indexed for analytics queries"
+        }
+      }
+    },
+    "output_systems": {
+      "dashboards": {
+        "grafana": {
+          "update_frequency": "Real-time",
+          "dashboard_types": [
+            "Sales Analytics",
+            "Market Insights",
+            "System Monitoring"
+          ]
+        }
+      },
+      "reports": {
+        "business_reports": "Daily/Weekly/Monthly",
+        "performance_kpis": "Real-time metrics",
+        "trend_analysis": "Historical patterns"
+      },
+      "ml_outputs": {
+        "price_predictions": "Hourly updates",
+        "demand_forecasting": "Daily forecasts",
+        "customer_insights": "Real-time scoring"
+      },
+      "apis": {
+        "rest_endpoints": "FastAPI backend",
+        "websocket_streams": "Real-time data feeds",
+        "alerts": "24/7 system monitoring"
+      }
+    }
+  },
+  "quality_metrics": {
+    "data_completeness": "95%",
+    "data_accuracy": "98%",
+    "data_consistency": "97%",
+    "processing_success_rate": "87.5%",
+    "system_uptime": "99.5%"
+  }
+}
