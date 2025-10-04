@@ -216,7 +216,7 @@ export default function VerifyCodeForm() {
               {/* Resend Code */}
               <div className="text-center">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Didn't receive the code?{" "}
+                  {/* Didn't receive the code?{" "} */}
                   <button
                     type="button"
                     onClick={handleResendCode}
