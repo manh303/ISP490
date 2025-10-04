@@ -1,0 +1,83 @@
+{
+  "market_overview": {
+    "country": "Vietnam",
+    "market_size_usd_billion": 16.4,
+    "growth_rate_percent": 25.2,
+    "total_online_shoppers_million": 57.5,
+    "mobile_commerce_share_percent": 65.3,
+    "average_order_value_usd": 28.5,
+    "market_maturity": "Growing",
+    "key_trends": [
+      "Mobile-first shopping behavior",
+      "Social commerce integration",
+      "Local payment method preference",
+      "Regional platform dominance"
+    ]
+  },
+  "platform_landscape": {
+    "Shopee": 34.2,
+    "Tiki": 16.8,
+    "Lazada": 15.3,
+    "Sendo": 8.9,
+    "Others": 22.8
+  },
+  "payment_ecosystem": {
+    "Bank_Transfer": 35.2,
+    "E_Wallet_MoMo": 18.4,
+    "E_Wallet_ZaloPay": 12.3,
+    "Cash_on_Delivery": 24.1,
+    "Credit_Card": 8.7,
+    "Others": 1.3
+  },
+  "regional_distribution": {
+    "Ho_Chi_Minh_City": 28.5,
+    "Hanoi": 22.3,
+    "Da_Nang": 8.7,
+    "Can_Tho": 6.2,
+    "Others": 34.3
+  },
+  "electronics_segment": {
+    "market_share_percent": 28.5,
+    "growth_rate_percent": 31.2,
+    "key_categories": {
+      "Smartphones": 42.3,
+      "Laptops": 18.7,
+      "Audio_Devices": 12.4,
+      "Gaming": 9.8,
+      "Wearables": 8.5,
+      "Others": 8.3
+    },
+    "consumer_preferences": {
+      "brand_loyalty": "Medium",
+      "price_sensitivity": "High",
+      "quality_focus": "High",
+      "warranty_importance": "Very High"
+    }
+  },
+  "business_opportunities": {
+    "high_growth_segments": [
+      "Mobile Gaming",
+      "Wearables",
+      "Smart Home"
+    ],
+    "underserved_regions": [
+      "Central Highlands",
+      "Mekong Delta"
+    ],
+    "payment_innovation": [
+      "Buy Now Pay Later",
+      "Crypto Payments"
+    ],
+    "logistics_opportunities": [
+      "Same-day delivery",
+      "Rural expansion"
+    ]
+  },
+  "data_quality": {
+    "source": "Vietnam E-commerce Report 2023-2024",
+    "reliability": "High",
+    "last_updated": "2025-10-01T19:06:32.010013",
+    "coverage": "Comprehensive",
+    "market_validation": "Government and Industry Sources"
+  }
+}
