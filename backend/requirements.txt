@@ -1,34 +1,125 @@
-# FastAPI Framework
-fastapi==0.103.0
-uvicorn[standard]==0.23.2
-pydantic==2.3.0
+# FastAPI & Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+gunicorn==21.2.0
+python-multipart==0.0.6
 
-# Database
-sqlalchemy==2.0.19
-psycopg2-binary==2.9.7
-alembic==1.11.2
+# Async Database Support
+asyncpg==0.29.0
+databases[postgresql]==0.7.0
+motor==3.3.2
+redis==5.0.1
+aiofiles==23.2.1
 
-# Authentication & Security
+# SQLAlchemy & ORM
+sqlalchemy[asyncio]==1.4.53
+alembic==1.12.1
+
+# Data Processing & Analytics
+pandas==2.1.3
+numpy==1.25.2
+pyarrow==14.0.1
+scipy==1.11.4
+
+# Machine Learning
+scikit-learn==1.3.2
+joblib==1.3.2
+xgboost==2.0.1
+lightgbm==4.1.0
+
+# Kafka & Streaming
+kafka-python==2.0.2
+confluent-kafka==2.3.0
+aiokafka==0.9.0
+
+# Security & Authentication
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
+cryptography==41.0.7
+pyjwt==2.8.0
 
-# HTTP Client
-httpx==0.24.1
-requests==2.31.0
+# Validation & Serialization
+pydantic[email]>=1.10.0,<2.0.0
+orjson==3.9.10
+msgpack==1.0.7
 
-# Data Processing
-pandas==2.0.3
-numpy==1.24.3
+# Monitoring & Logging
+prometheus-client==0.19.0
+structlog==23.2.0
+loguru==0.7.2
+sentry-sdk[fastapi]==1.38.0
 
-# ML Integration
-scikit-learn==1.3.0
-joblib==1.3.1
+# HTTP & Networking
+httpx[http2]==0.25.2
+aiohttp==3.9.1
+websockets==12.0
+
+# Configuration & Environment
+python-dotenv==1.0.0
+pyyaml==6.0.1
+click==8.1.7
+
+# Development & Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+httpx==0.25.2
+factory-boy==3.3.0
+
+# System Monitoring
+psutil==5.9.6
+
+# Data Validation & Schemas
+marshmallow==3.20.1
+cerberus==1.3.5
+
+# Caching & Performance
+cachetools==5.3.2
+python-memcached==1.61
+
+# Time & Date
+python-dateutil==2.8.2
+pytz==2023.3
+
+# File Processing
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# API Documentation
+# pydantic-openapi-helper removed due to version conflicts
+
+# Background Tasks
+celery[redis]==5.3.4
+arq==0.25.0
 
 # Utilities
-python-dotenv==1.0.0
-loguru==0.7.0
+click==8.1.7
+rich==13.7.0
+typer==0.9.0
 
-# Development
-pytest==7.4.0
-pytest-asyncio==0.21.1
+# Production WSGI/ASGI
+uvloop==0.19.0
+httptools==0.6.1
+
+# Health Checks
+# health-check package removed due to compatibility issues
+
+# Serialization Performance
+ujson==5.8.0
+
+# Memory Profiling (Development)
+memory-profiler==0.61.0
+line-profiler==4.1.1
+
+# Database Migrations
+yoyo-migrations==8.2.0
+
+# API Rate Limiting
+slowapi==0.1.9
+
+# WebSocket Support
+python-socketio==5.11.0
+
+# Async Task Queue
+dramatiq[redis]==1.15.0
