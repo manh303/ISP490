@@ -1,9 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
-<<<<<<< Updated upstream
-=======
 import Home from "./pages/Home";
 import PublicLayout  from "./layout/PublicLayout";
->>>>>>> Stashed changes
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
@@ -35,13 +32,8 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-<<<<<<< Updated upstream
-          <Route element={<AppLayout />}>
-            {/* <Route index path="/" element={<Home />} /> */}
-=======
           <Route element={<DashboardLayout />}>
            
->>>>>>> Stashed changes
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
