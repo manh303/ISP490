@@ -64,7 +64,6 @@ export default function App() {
           </Route>
 
           {/* Auth Layout */}
-          <Route index path="/" element={<SignIn />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
