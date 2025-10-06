@@ -1,0 +1,321 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "🏪 E-commerce DSS - Complete Monitoring Dashboard",
+    "tags": ["ecommerce", "dss", "monitoring", "production"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "📊 System Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up",
+            "legendFormat": "{{job}} - {{instance}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "DOWN"}}, "type": "value"},
+              {"options": {"1": {"text": "UP"}}, "type": "value"}
+            ],
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "💻 System Resources - CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "CPU Usage %",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {"label": "Percentage", "max": 100, "min": 0}
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 6}
+      },
+      {
+        "id": 3,
+        "title": "💾 Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "Memory Usage %",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {"label": "Percentage", "max": 100, "min": 0}
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 6}
+      },
+      {
+        "id": 4,
+        "title": "💽 Disk Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(1 - (node_filesystem_avail_bytes{fstype!=\"tmpfs\"} / node_filesystem_size_bytes{fstype!=\"tmpfs\"})) * 100",
+            "legendFormat": "Disk Usage % - {{mountpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {"label": "Percentage", "max": 100, "min": 0}
+        ],
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 6}
+      },
+      {
+        "id": 5,
+        "title": "🗄️ PostgreSQL Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "legendFormat": "Active Connections - {{datname}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14}
+      },
+      {
+        "id": 6,
+        "title": "🔄 PostgreSQL Transactions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_xact_commit[5m])",
+            "legendFormat": "Commits/sec - {{datname}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(pg_stat_database_xact_rollback[5m])",
+            "legendFormat": "Rollbacks/sec - {{datname}}",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14}
+      },
+      {
+        "id": 7,
+        "title": "📮 Redis Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_connected_clients",
+            "legendFormat": "Connected Clients",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_memory_used_bytes / 1024 / 1024",
+            "legendFormat": "Memory Used (MB)",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22}
+      },
+      {
+        "id": 8,
+        "title": "📊 Redis Commands",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_commands_processed_total[5m])",
+            "legendFormat": "Commands/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) * 100",
+            "legendFormat": "Hit Rate %",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22}
+      },
+      {
+        "id": 9,
+        "title": "🌐 Network Traffic",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m]) / 1024 / 1024",
+            "legendFormat": "RX {{device}} (MB/s)",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m]) / 1024 / 1024",
+            "legendFormat": "TX {{device}} (MB/s)",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30}
+      },
+      {
+        "id": 10,
+        "title": "🏥 Service Health Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "up",
+            "legendFormat": "{{job}} @ {{instance}}",
+            "refId": "A",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "job": "Service",
+                "instance": "Instance",
+                "Value": "Status"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "color-background"
+            },
+            "mappings": [
+              {"options": {"0": {"text": "DOWN", "color": "red"}}, "type": "value"},
+              {"options": {"1": {"text": "UP", "color": "green"}}, "type": "value"}
+            ]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30}
+      },
+      {
+        "id": 11,
+        "title": "🔥 Backend Metrics (When Available)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "backend_requests_total",
+            "legendFormat": "Total Requests - {{method}} {{endpoint}}",
+            "refId": "A"
+          },
+          {
+            "expr": "backend_active_connections",
+            "legendFormat": "Active Connections",
+            "refId": "B"
+          },
+          {
+            "expr": "backend_uptime_seconds / 3600",
+            "legendFormat": "Uptime (hours)",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 38}
+      },
+      {
+        "id": 12,
+        "title": "📈 Grafana Internal Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "grafana_api_response_status_total",
+            "legendFormat": "API Responses - {{code}}",
+            "refId": "A"
+          },
+          {
+            "expr": "grafana_stat_total_users",
+            "legendFormat": "Total Users",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 38}
+      },
+      {
+        "id": 13,
+        "title": "💾 Database Sizes",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "pg_database_size_bytes / 1024 / 1024",
+            "legendFormat": "PostgreSQL Size (MB) - {{datname}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "MB"
+          }
+        },
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 46}
+      },
+      {
+        "id": 14,
+        "title": "⚡ Performance Alerts",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "ALERTS{alertstate=\"firing\"}",
+            "legendFormat": "Active Alerts",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 16, "x": 8, "y": 46}
+      },
+      {
+        "id": 15,
+        "title": "🎯 Monitoring Coverage Summary",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(up == 1)",
+            "legendFormat": "Services UP",
+            "refId": "A"
+          },
+          {
+            "expr": "count(up == 0)",
+            "legendFormat": "Services DOWN",
+            "refId": "B"
+          },
+          {
+            "expr": "count(count by (__name__)({__name__=~\".+\"}))",
+            "legendFormat": "Total Metrics",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 52}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "data_collection_strategy": {
+    "description": "Multi-source data collection for Big Data DSS E-commerce",
+    "target_4v": {
+      "volume": "1M+ records/day",
+      "variety": "Structured, Semi-structured, Unstructured",
+      "velocity": "Real-time + Batch",
+      "veracity": "Data quality validation & cleansing"
+    }
+  },
+
+  "data_sources": {
+    "apis": {
+      "ecommerce_focus": {
+        "fakestore_api": {
+          "base_url": "https://fakestoreapi.com",
+          "endpoints": {
+            "products": "/products",
+            "categories": "/products/categories",
+            "single_product": "/products/{id}",
+            "category_products": "/products/category/{category}",
+            "users": "/users",
+            "carts": "/carts"
+          },
+          "rate_limit": "unlimited",
+          "auth_required": false,
+          "data_types": ["products", "categories", "users", "shopping_carts"],
+          "description": "Complete e-commerce store simulation with products, users, carts",
+          "priority": 1
+        },
+        "dummyjson_store": {
+          "base_url": "https://dummyjson.com",
+          "endpoints": {
+            "products": "/products",
+            "search": "/products/search",
+            "categories": "/products/categories",
+            "users": "/users",
+            "carts": "/carts"
+          },
+          "rate_limit": "unlimited",
+          "auth_required": false,
+          "data_types": ["products", "categories", "users", "shopping_carts", "reviews"],
+          "description": "Rich e-commerce data with search, reviews, detailed product info",
+          "priority": 2
+        },
+        "platzi_fake_api": {
+          "base_url": "https://api.escuelajs.co/api/v1",
+          "endpoints": {
+            "products": "/products",
+            "categories": "/categories",
+            "users": "/users"
+          },
+          "rate_limit": "unlimited",
+          "auth_required": false,
+          "data_types": ["products", "categories", "users"],
+          "description": "E-commerce API with product images and category management",
+          "priority": 3
+        }
+      }
+    },
+
+    "web_scraping": {
+      "vietnamese_sites": {
+        "sendo": {
+          "base_url": "https://www.sendo.vn",
+          "target_pages": ["/danh-muc", "/tim-kiem", "/san-pham"],
+          "data_types": ["products", "prices", "promotions"],
+          "scraping_frequency": "daily"
+        },
+        "fptshop": {
+          "base_url": "https://fptshop.com.vn",
+          "target_pages": ["/may-tinh", "/dien-thoai", "/may-anh"],
+          "data_types": ["electronics", "specifications", "reviews"],
+          "scraping_frequency": "weekly"
+        },
+        "chotot": {
+          "base_url": "https://www.chotot.com",
+          "target_pages": ["/mua-ban", "/tim-kiem"],
+          "data_types": ["second_hand", "local_market"],
+          "scraping_frequency": "daily"
+        }
+      },
+
+      "international_sites": {
+        "aliexpress": {
+          "base_url": "https://www.aliexpress.com",
+          "target_pages": ["/category", "/wholesale"],
+          "data_types": ["wholesale_prices", "suppliers"],
+          "scraping_frequency": "weekly"
+        }
+      }
+    },
+
+    "generated_data": {
+      "real_time_simulation": {
+        "user_behavior": {
+          "types": ["page_views", "clicks", "searches", "purchases"],
+          "frequency": "continuous",
+          "volume": "1000 events/minute"
+        },
+        "transactions": {
+          "types": ["orders", "payments", "shipments", "returns"],
+          "frequency": "continuous",
+          "volume": "500 transactions/hour"
+        },
+        "market_changes": {
+          "types": ["price_updates", "inventory_changes", "promotions"],
+          "frequency": "every 5 minutes",
+          "volume": "200 updates/minute"
+        }
+      },
+
+      "synthetic_datasets": {
+        "customer_profiles": {
+          "size": "100K customers",
+          "attributes": ["demographics", "preferences", "history"],
+          "generation_method": "faker + business_logic"
+        },
+        "product_catalog": {
+          "size": "50K products",
+          "categories": ["electronics", "fashion", "home", "books"],
+          "generation_method": "templates + variations"
+        }
+      }
+    },
+
+    "external_datasets": {
+      "public_datasets": {
+        "kaggle": {
+          "ecommerce_datasets": [
+            "Brazilian E-Commerce Public Dataset",
+            "Online Retail Dataset",
+            "Amazon Product Data",
+            "Instacart Market Basket Analysis"
+          ]
+        },
+        "government_data": {
+          "vietnam_statistics": "https://www.gso.gov.vn",
+          "trade_data": "https://www.customs.gov.vn"
+        }
+      }
+    }
+  },
+
+  "data_quality_requirements": {
+    "completeness": 0.95,
+    "accuracy": 0.98,
+    "consistency": 0.97,
+    "timeliness": "< 5 minutes for real-time",
+    "validity": 0.99
+  },
+
+  "collection_schedule": {
+    "real_time": ["user_behavior", "transactions", "social_mentions"],
+    "hourly": ["price_updates", "inventory_changes"],
+    "daily": ["product_catalogs", "reviews", "market_data"],
+    "weekly": ["competitor_analysis", "trend_analysis"],
+    "monthly": ["historical_analysis", "model_training_data"]
+  },
+
+  "storage_mapping": {
+    "kafka_topics": {
+      "real_time_events": "user_events",
+      "transactions": "transaction_stream",
+      "social_data": "social_mentions",
+      "price_updates": "price_changes"
+    },
+    "mongodb_collections": {
+      "raw_data": "data_lake",
+      "products": "product_catalog",
+      "customers": "customer_profiles",
+      "reviews": "review_data"
+    },
+    "postgresql_tables": {
+      "processed_data": "analytics_warehouse",
+      "aggregations": "metrics_summary",
+      "ml_features": "feature_store"
+    }
+  }
+}

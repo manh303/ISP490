@@ -1,0 +1,4528 @@
+[
+  {
+    "product_id": "CELLPHONES_be6c466b",
+    "name": "Xiaomi Product 9390",
+    "price": 19724000.0,
+    "original_price": 27843000.0,
+    "discount_percent": 29.2,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.3,
+    "review_count": 185,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9390 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_47a65d3c.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:22.730859",
+    "url": "https://cellphones.com/product/cf742352"
+  },
+  {
+    "product_id": "CELLPHONES_e6bde0a7",
+    "name": "Asanzo Product 5013",
+    "price": 33388000.0,
+    "original_price": 39106000.0,
+    "discount_percent": 14.6,
+    "category": "dien-thoai",
+    "brand": "Asanzo",
+    "rating": 4.3,
+    "review_count": 38,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5013 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c9100a5b.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:22.842244",
+    "url": "https://cellphones.com/product/64e8fd07"
+  },
+  {
+    "product_id": "CELLPHONES_77fd155b",
+    "name": "Samsung Product 9390",
+    "price": 2863000.0,
+    "original_price": 3430000.0,
+    "discount_percent": 16.5,
+    "category": "dien-thoai",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 562,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9390 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_8a7a9158.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:22.943661",
+    "url": "https://cellphones.com/product/f59cedfa"
+  },
+  {
+    "product_id": "CELLPHONES_bd29b99e",
+    "name": "OPPO Product 8799",
+    "price": 38669000.0,
+    "original_price": 56487000.0,
+    "discount_percent": 31.5,
+    "category": "dien-thoai",
+    "brand": "OPPO",
+    "rating": 3.6,
+    "review_count": 1631,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8799 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b1c98727.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.044163",
+    "url": "https://cellphones.com/product/568e252a"
+  },
+  {
+    "product_id": "CELLPHONES_cb7eb102",
+    "name": "FPT Product 8827",
+    "price": 39892000.0,
+    "original_price": 55315000.0,
+    "discount_percent": 27.9,
+    "category": "dien-thoai",
+    "brand": "FPT",
+    "rating": 4.9,
+    "review_count": 314,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8827 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_e8c33177.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.149865",
+    "url": "https://cellphones.com/product/9b81f181"
+  },
+  {
+    "product_id": "CELLPHONES_4aa1f796",
+    "name": "VinSmart Product 3286",
+    "price": 23124000.0,
+    "original_price": 34200000.0,
+    "discount_percent": 32.4,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 4.1,
+    "review_count": 352,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3286 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b08e2cb4.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.251895",
+    "url": "https://cellphones.com/product/1b24a23d"
+  },
+  {
+    "product_id": "CELLPHONES_4b0c8fe9",
+    "name": "VinSmart Product 6659",
+    "price": 16097000.0,
+    "original_price": 22664000.0,
+    "discount_percent": 29.0,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 3.8,
+    "review_count": 1857,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6659 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_2c99c893.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.358844",
+    "url": "https://cellphones.com/product/badc2ffc"
+  },
+  {
+    "product_id": "CELLPHONES_078382cb",
+    "name": "OPPO Product 3147",
+    "price": 3089000.0,
+    "original_price": 4568000.0,
+    "discount_percent": 32.4,
+    "category": "dien-thoai",
+    "brand": "OPPO",
+    "rating": 3.8,
+    "review_count": 517,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3147 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_4cd25121.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.460226",
+    "url": "https://cellphones.com/product/21e99f02"
+  },
+  {
+    "product_id": "CELLPHONES_4004279e",
+    "name": "FPT Product 9036",
+    "price": 41632000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "FPT",
+    "rating": 3.8,
+    "review_count": 788,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9036 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_d0aba5bc.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.571812",
+    "url": "https://cellphones.com/product/6fac5806"
+  },
+  {
+    "product_id": "CELLPHONES_a37e25d7",
+    "name": "OPPO Product 2127",
+    "price": 35198000.0,
+    "original_price": 45705000.0,
+    "discount_percent": 23.0,
+    "category": "dien-thoai",
+    "brand": "OPPO",
+    "rating": 4.8,
+    "review_count": 62,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2127 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_9277d539.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.681067",
+    "url": "https://cellphones.com/product/d37559eb"
+  },
+  {
+    "product_id": "CELLPHONES_3901d565",
+    "name": "Realme Product 8705",
+    "price": 34965000.0,
+    "original_price": 38857000.0,
+    "discount_percent": 10.0,
+    "category": "dien-thoai",
+    "brand": "Realme",
+    "rating": 4.1,
+    "review_count": 1719,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8705 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_51bde2ad.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.788130",
+    "url": "https://cellphones.com/product/cf7e578f"
+  },
+  {
+    "product_id": "CELLPHONES_6d88c2ee",
+    "name": "FPT Product 2166",
+    "price": 10950000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "FPT",
+    "rating": 4.8,
+    "review_count": 805,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2166 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_6610337c.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:23.899800",
+    "url": "https://cellphones.com/product/0287cb82"
+  },
+  {
+    "product_id": "CELLPHONES_f977925e",
+    "name": "Asanzo Product 4553",
+    "price": 43647000.0,
+    "original_price": 49016000.0,
+    "discount_percent": 11.0,
+    "category": "dien-thoai",
+    "brand": "Asanzo",
+    "rating": 3.6,
+    "review_count": 1720,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4553 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_57134d2e.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.009749",
+    "url": "https://cellphones.com/product/51cf0541"
+  },
+  {
+    "product_id": "CELLPHONES_3cb06fbe",
+    "name": "VinSmart Product 3787",
+    "price": 14659000.0,
+    "original_price": 21116000.0,
+    "discount_percent": 30.6,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 4.9,
+    "review_count": 1161,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3787 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f20aaffb.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.110189",
+    "url": "https://cellphones.com/product/ffa19ff0"
+  },
+  {
+    "product_id": "CELLPHONES_38408576",
+    "name": "Asanzo Product 2937",
+    "price": 42257000.0,
+    "original_price": 61882000.0,
+    "discount_percent": 31.7,
+    "category": "dien-thoai",
+    "brand": "Asanzo",
+    "rating": 4.2,
+    "review_count": 1945,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2937 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_64427650.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.214338",
+    "url": "https://cellphones.com/product/e5c4297f"
+  },
+  {
+    "product_id": "CELLPHONES_52183ac5",
+    "name": "Realme Product 1611",
+    "price": 23596000.0,
+    "original_price": 26399000.0,
+    "discount_percent": 10.6,
+    "category": "dien-thoai",
+    "brand": "Realme",
+    "rating": 4.5,
+    "review_count": 1085,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1611 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_41b678a5.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.331019",
+    "url": "https://cellphones.com/product/cd2a8fc5"
+  },
+  {
+    "product_id": "CELLPHONES_86442441",
+    "name": "FPT Product 7173",
+    "price": 30500000.0,
+    "original_price": 36730000.0,
+    "discount_percent": 17.0,
+    "category": "dien-thoai",
+    "brand": "FPT",
+    "rating": 3.8,
+    "review_count": 31,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7173 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_e366f0a3.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.432612",
+    "url": "https://cellphones.com/product/ca624e9b"
+  },
+  {
+    "product_id": "CELLPHONES_947927de",
+    "name": "Xiaomi Product 1452",
+    "price": 19672000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.7,
+    "review_count": 1479,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1452 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_457929b7.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.538454",
+    "url": "https://cellphones.com/product/669377ac"
+  },
+  {
+    "product_id": "CELLPHONES_d1e83043",
+    "name": "Vivo Product 3152",
+    "price": 40158000.0,
+    "original_price": 51509000.0,
+    "discount_percent": 22.0,
+    "category": "dien-thoai",
+    "brand": "Vivo",
+    "rating": 3.9,
+    "review_count": 429,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3152 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_5f8ed2b1.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.641749",
+    "url": "https://cellphones.com/product/8cf8da9e"
+  },
+  {
+    "product_id": "CELLPHONES_37b67deb",
+    "name": "Samsung Product 1816",
+    "price": 25612000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 412,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1816 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_15062fcb.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.754509",
+    "url": "https://cellphones.com/product/6110496c"
+  },
+  {
+    "product_id": "CELLPHONES_7371ddf2",
+    "name": "Xiaomi Product 6724",
+    "price": 31790000.0,
+    "original_price": 45855000.0,
+    "discount_percent": 30.7,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.9,
+    "review_count": 1840,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 6724 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f11e882a.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.854659",
+    "url": "https://cellphones.com/product/83935199"
+  },
+  {
+    "product_id": "CELLPHONES_537d5507",
+    "name": "VinSmart Product 2101",
+    "price": 14490000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 4.9,
+    "review_count": 464,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2101 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_18b83a92.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:24.960943",
+    "url": "https://cellphones.com/product/a96f0b6d"
+  },
+  {
+    "product_id": "CELLPHONES_458c99a8",
+    "name": "FPT Product 6869",
+    "price": 8857000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "FPT",
+    "rating": 3.5,
+    "review_count": 1627,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6869 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_70a0af36.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:25.062315",
+    "url": "https://cellphones.com/product/dc7085ed"
+  },
+  {
+    "product_id": "CELLPHONES_33a1fde7",
+    "name": "Vivo Product 5690",
+    "price": 43843000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Vivo",
+    "rating": 4.2,
+    "review_count": 110,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5690 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_3fae7692.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:25.167946",
+    "url": "https://cellphones.com/product/daf26905"
+  },
+  {
+    "product_id": "CELLPHONES_9bb61261",
+    "name": "VinSmart Product 3139",
+    "price": 42994000.0,
+    "original_price": 56509000.0,
+    "discount_percent": 23.9,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 3.5,
+    "review_count": 1131,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3139 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a5b953bb.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:25.277003",
+    "url": "https://cellphones.com/product/ea47d0a3"
+  },
+  {
+    "product_id": "CELLPHONES_02fe8459",
+    "name": "Samsung Product 8265",
+    "price": 22359000.0,
+    "original_price": 26979000.0,
+    "discount_percent": 17.1,
+    "category": "dien-thoai",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 797,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8265 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_edd46574.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:25.391090",
+    "url": "https://cellphones.com/product/ee4b18f5"
+  },
+  {
+    "product_id": "CELLPHONES_4c766f32",
+    "name": "FPT Product 9094",
+    "price": 41208000.0,
+    "original_price": 47985000.0,
+    "discount_percent": 14.1,
+    "category": "dien-thoai",
+    "brand": "FPT",
+    "rating": 3.7,
+    "review_count": 638,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9094 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_cd4ac4e2.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:25.494425",
+    "url": "https://cellphones.com/product/4997eb90"
+  },
+  {
+    "product_id": "CELLPHONES_daff8472",
+    "name": "Vivo Product 8708",
+    "price": 20757000.0,
+    "original_price": 29249000.0,
+    "discount_percent": 29.0,
+    "category": "dien-thoai",
+    "brand": "Vivo",
+    "rating": 4.6,
+    "review_count": 709,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8708 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_54ae2398.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:25.599151",
+    "url": "https://cellphones.com/product/692332d6"
+  },
+  {
+    "product_id": "CELLPHONES_332145fa",
+    "name": "Asanzo Lenovo ThinkPad X1",
+    "price": 30405000.0,
+    "original_price": 43514000.0,
+    "discount_percent": 30.1,
+    "category": "laptop",
+    "brand": "Asanzo",
+    "rating": 4.3,
+    "review_count": 1505,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ac2b8804.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:26.708300",
+    "url": "https://cellphones.com/product/67f256c6"
+  },
+  {
+    "product_id": "CELLPHONES_7f3dba1c",
+    "name": "BKAV MacBook Pro M3",
+    "price": 44017000.0,
+    "original_price": 51562000.0,
+    "discount_percent": 14.6,
+    "category": "laptop",
+    "brand": "BKAV",
+    "rating": 4.0,
+    "review_count": 392,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_36b2bc95.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:26.811638",
+    "url": "https://cellphones.com/product/c5cec521"
+  },
+  {
+    "product_id": "CELLPHONES_9084783e",
+    "name": "Realme HP Spectre x360",
+    "price": 19096000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Realme",
+    "rating": 4.3,
+    "review_count": 294,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_24b53cb0.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:26.926788",
+    "url": "https://cellphones.com/product/a1d988f2"
+  },
+  {
+    "product_id": "CELLPHONES_296cb161",
+    "name": "Asanzo Acer Predator Helios",
+    "price": 42653000.0,
+    "original_price": 53198000.0,
+    "discount_percent": 19.8,
+    "category": "laptop",
+    "brand": "Asanzo",
+    "rating": 4.5,
+    "review_count": 503,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_0e16f66f.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.036310",
+    "url": "https://cellphones.com/product/e108ef3b"
+  },
+  {
+    "product_id": "CELLPHONES_edef1d99",
+    "name": "Viettel MacBook Pro M3",
+    "price": 42307000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Viettel",
+    "rating": 3.9,
+    "review_count": 1543,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_834083a2.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.138164",
+    "url": "https://cellphones.com/product/52e01b97"
+  },
+  {
+    "product_id": "CELLPHONES_f30f843f",
+    "name": "OPPO Acer Predator Helios",
+    "price": 3870000.0,
+    "original_price": 5183000.0,
+    "discount_percent": 25.3,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 4.5,
+    "review_count": 724,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_acf50d3e.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.244001",
+    "url": "https://cellphones.com/product/a1dfd71f"
+  },
+  {
+    "product_id": "CELLPHONES_976b0ef7",
+    "name": "Apple Acer Predator Helios",
+    "price": 5933000.0,
+    "original_price": 7852000.0,
+    "discount_percent": 24.4,
+    "category": "laptop",
+    "brand": "Apple",
+    "rating": 4.7,
+    "review_count": 1012,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_46b53877.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.352661",
+    "url": "https://cellphones.com/product/05053a11"
+  },
+  {
+    "product_id": "CELLPHONES_0b4475b1",
+    "name": "BKAV Dell XPS 13",
+    "price": 27877000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "BKAV",
+    "rating": 4.5,
+    "review_count": 1697,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_efdb1c5a.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.466032",
+    "url": "https://cellphones.com/product/ae6bb682"
+  },
+  {
+    "product_id": "CELLPHONES_ca3fc725",
+    "name": "VinSmart Acer Predator Helios",
+    "price": 14375000.0,
+    "original_price": 18973000.0,
+    "discount_percent": 24.2,
+    "category": "laptop",
+    "brand": "VinSmart",
+    "rating": 4.6,
+    "review_count": 125,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a911e9d4.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.574988",
+    "url": "https://cellphones.com/product/2b95bc93"
+  },
+  {
+    "product_id": "CELLPHONES_d254fb3e",
+    "name": "BKAV Asus ROG Strix",
+    "price": 2094000.0,
+    "original_price": 2997000.0,
+    "discount_percent": 30.1,
+    "category": "laptop",
+    "brand": "BKAV",
+    "rating": 3.7,
+    "review_count": 205,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_5fcd52e8.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.682210",
+    "url": "https://cellphones.com/product/38f5fd84"
+  },
+  {
+    "product_id": "CELLPHONES_0bfe1321",
+    "name": "Vivo Acer Predator Helios",
+    "price": 6998000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Vivo",
+    "rating": 4.2,
+    "review_count": 1675,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_bb350abe.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.786119",
+    "url": "https://cellphones.com/product/4e0f0dc4"
+  },
+  {
+    "product_id": "CELLPHONES_9151b216",
+    "name": "Vivo HP Spectre x360",
+    "price": 9991000.0,
+    "original_price": 12209000.0,
+    "discount_percent": 18.2,
+    "category": "laptop",
+    "brand": "Vivo",
+    "rating": 3.9,
+    "review_count": 1223,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c3bea040.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.892518",
+    "url": "https://cellphones.com/product/9c4f8bfb"
+  },
+  {
+    "product_id": "CELLPHONES_5560c0d4",
+    "name": "FPT Dell XPS 13",
+    "price": 43855000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "FPT",
+    "rating": 3.5,
+    "review_count": 611,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_55efb17b.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:27.995745",
+    "url": "https://cellphones.com/product/79064a2a"
+  },
+  {
+    "product_id": "CELLPHONES_028aee54",
+    "name": "BKAV Lenovo ThinkPad X1",
+    "price": 34588000.0,
+    "original_price": 38329000.0,
+    "discount_percent": 9.8,
+    "category": "laptop",
+    "brand": "BKAV",
+    "rating": 3.6,
+    "review_count": 916,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_e5220c9a.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.098460",
+    "url": "https://cellphones.com/product/103b5ffa"
+  },
+  {
+    "product_id": "CELLPHONES_7c9145be",
+    "name": "Samsung Dell XPS 13",
+    "price": 30677000.0,
+    "original_price": 42670000.0,
+    "discount_percent": 28.1,
+    "category": "laptop",
+    "brand": "Samsung",
+    "rating": 4.9,
+    "review_count": 143,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_04b5576e.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.199598",
+    "url": "https://cellphones.com/product/c30bef23"
+  },
+  {
+    "product_id": "CELLPHONES_5ebabafb",
+    "name": "BKAV Lenovo ThinkPad X1",
+    "price": 20179000.0,
+    "original_price": 25392000.0,
+    "discount_percent": 20.5,
+    "category": "laptop",
+    "brand": "BKAV",
+    "rating": 4.9,
+    "review_count": 530,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_754803db.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.309039",
+    "url": "https://cellphones.com/product/72811058"
+  },
+  {
+    "product_id": "CELLPHONES_92735983",
+    "name": "Apple HP Spectre x360",
+    "price": 21638000.0,
+    "original_price": 29142000.0,
+    "discount_percent": 25.7,
+    "category": "laptop",
+    "brand": "Apple",
+    "rating": 3.8,
+    "review_count": 1823,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_8b26ccb1.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.416380",
+    "url": "https://cellphones.com/product/a38818ee"
+  },
+  {
+    "product_id": "CELLPHONES_6c4cda20",
+    "name": "Xiaomi Lenovo ThinkPad X1",
+    "price": 34582000.0,
+    "original_price": 48779000.0,
+    "discount_percent": 29.1,
+    "category": "laptop",
+    "brand": "Xiaomi",
+    "rating": 4.5,
+    "review_count": 1000,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f1141851.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.527196",
+    "url": "https://cellphones.com/product/a587d8ec"
+  },
+  {
+    "product_id": "CELLPHONES_52d6b9cc",
+    "name": "BKAV HP Spectre x360",
+    "price": 3953000.0,
+    "original_price": 5732000.0,
+    "discount_percent": 31.0,
+    "category": "laptop",
+    "brand": "BKAV",
+    "rating": 3.9,
+    "review_count": 1266,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ee31f8a4.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.633163",
+    "url": "https://cellphones.com/product/c2c5a55d"
+  },
+  {
+    "product_id": "CELLPHONES_451ce2fe",
+    "name": "OPPO Asus ROG Strix",
+    "price": 25270000.0,
+    "original_price": 32728000.0,
+    "discount_percent": 22.8,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 4.4,
+    "review_count": 599,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_7b2900bb.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.734394",
+    "url": "https://cellphones.com/product/d4260a18"
+  },
+  {
+    "product_id": "CELLPHONES_792a93cf",
+    "name": "OPPO Lenovo ThinkPad X1",
+    "price": 39246000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 3.7,
+    "review_count": 1993,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c10d1d11.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.844380",
+    "url": "https://cellphones.com/product/407e211d"
+  },
+  {
+    "product_id": "CELLPHONES_8c5a7578",
+    "name": "Samsung Acer Predator Helios",
+    "price": 21784000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 1658,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a0e0eacd.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:28.950022",
+    "url": "https://cellphones.com/product/f8bc7f49"
+  },
+  {
+    "product_id": "CELLPHONES_0ce4dd04",
+    "name": "OPPO Acer Predator Helios",
+    "price": 19942000.0,
+    "original_price": 23369000.0,
+    "discount_percent": 14.7,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 4.5,
+    "review_count": 927,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c7ca21a7.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:29.052614",
+    "url": "https://cellphones.com/product/91c416d8"
+  },
+  {
+    "product_id": "CELLPHONES_af6ac437",
+    "name": "OPPO Acer Predator Helios",
+    "price": 34548000.0,
+    "original_price": 44353000.0,
+    "discount_percent": 22.1,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 3.6,
+    "review_count": 1512,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ce86e504.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:29.166219",
+    "url": "https://cellphones.com/product/f9472deb"
+  },
+  {
+    "product_id": "CELLPHONES_85648438",
+    "name": "Viettel Acer Predator Helios",
+    "price": 2829000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Viettel",
+    "rating": 4.5,
+    "review_count": 862,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_23930170.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:29.277484",
+    "url": "https://cellphones.com/product/f12436b5"
+  },
+  {
+    "product_id": "CELLPHONES_ca129128",
+    "name": "OPPO Lenovo ThinkPad X1",
+    "price": 28427000.0,
+    "original_price": 37480000.0,
+    "discount_percent": 24.2,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 4.6,
+    "review_count": 1056,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a11e0042.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:29.389417",
+    "url": "https://cellphones.com/product/42cbb47b"
+  },
+  {
+    "product_id": "CELLPHONES_7c49c3d0",
+    "name": "Realme Acer Predator Helios",
+    "price": 21588000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Realme",
+    "rating": 4.0,
+    "review_count": 796,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_61c4eab8.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:29.493919",
+    "url": "https://cellphones.com/product/0b5b7abb"
+  },
+  {
+    "product_id": "CELLPHONES_6353c0a2",
+    "name": "Viettel MacBook Pro M3",
+    "price": 43818000.0,
+    "original_price": 52361000.0,
+    "discount_percent": 16.3,
+    "category": "laptop",
+    "brand": "Viettel",
+    "rating": 4.0,
+    "review_count": 884,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_799720f0.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:29.600801",
+    "url": "https://cellphones.com/product/ff1010cb"
+  },
+  {
+    "product_id": "CELLPHONES_af90cf27",
+    "name": "OPPO Huawei MatePad Pro",
+    "price": 28709000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "OPPO",
+    "rating": 4.8,
+    "review_count": 759,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_9884720a.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:30.726555",
+    "url": "https://cellphones.com/product/c09f4b0d"
+  },
+  {
+    "product_id": "CELLPHONES_b708e6ca",
+    "name": "BKAV Huawei MatePad Pro",
+    "price": 31391000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "BKAV",
+    "rating": 4.6,
+    "review_count": 345,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b9ddc32a.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:30.836925",
+    "url": "https://cellphones.com/product/19781991"
+  },
+  {
+    "product_id": "CELLPHONES_2592dd22",
+    "name": "Samsung Samsung Galaxy Tab S9",
+    "price": 30718000.0,
+    "original_price": 39723000.0,
+    "discount_percent": 22.7,
+    "category": "tablet",
+    "brand": "Samsung",
+    "rating": 3.6,
+    "review_count": 1564,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Samsung Galaxy Tab S9 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a3d4568e.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:30.949480",
+    "url": "https://cellphones.com/product/73b53ec7"
+  },
+  {
+    "product_id": "CELLPHONES_d7ff4373",
+    "name": "Viettel Samsung Galaxy Tab S9",
+    "price": 31202000.0,
+    "original_price": 42267000.0,
+    "discount_percent": 26.2,
+    "category": "tablet",
+    "brand": "Viettel",
+    "rating": 4.6,
+    "review_count": 1778,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Samsung Galaxy Tab S9 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f5cfcba3.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.051042",
+    "url": "https://cellphones.com/product/66ee66a6"
+  },
+  {
+    "product_id": "CELLPHONES_eedc3f26",
+    "name": "Samsung iPad Pro M2",
+    "price": 3405000.0,
+    "original_price": 3906000.0,
+    "discount_percent": 12.8,
+    "category": "tablet",
+    "brand": "Samsung",
+    "rating": 4.7,
+    "review_count": 713,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_77aac3fc.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.154101",
+    "url": "https://cellphones.com/product/a1d1e93b"
+  },
+  {
+    "product_id": "CELLPHONES_d72bb237",
+    "name": "Samsung iPad Pro M2",
+    "price": 42687000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Samsung",
+    "rating": 4.8,
+    "review_count": 1813,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_484c1192.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.266276",
+    "url": "https://cellphones.com/product/f45b0fb9"
+  },
+  {
+    "product_id": "CELLPHONES_2ce76783",
+    "name": "Xiaomi Huawei MatePad Pro",
+    "price": 37863000.0,
+    "original_price": 42919000.0,
+    "discount_percent": 11.8,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 4.3,
+    "review_count": 1721,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_05b6ad9e.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.366744",
+    "url": "https://cellphones.com/product/cd5013dc"
+  },
+  {
+    "product_id": "CELLPHONES_189ea361",
+    "name": "BKAV iPad Pro M2",
+    "price": 33563000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "BKAV",
+    "rating": 4.5,
+    "review_count": 688,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_5d90c2a9.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.475957",
+    "url": "https://cellphones.com/product/8d917ea5"
+  },
+  {
+    "product_id": "CELLPHONES_4b2fcde8",
+    "name": "BKAV Huawei MatePad Pro",
+    "price": 41940000.0,
+    "original_price": 54698000.0,
+    "discount_percent": 23.3,
+    "category": "tablet",
+    "brand": "BKAV",
+    "rating": 3.9,
+    "review_count": 1474,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_701a8016.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.577110",
+    "url": "https://cellphones.com/product/4b3d4d1b"
+  },
+  {
+    "product_id": "CELLPHONES_f07c932c",
+    "name": "Xiaomi Huawei MatePad Pro",
+    "price": 7143000.0,
+    "original_price": 10364000.0,
+    "discount_percent": 31.1,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 4.6,
+    "review_count": 575,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c408f0cf.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.691935",
+    "url": "https://cellphones.com/product/b36280ba"
+  },
+  {
+    "product_id": "CELLPHONES_6376c4e0",
+    "name": "Realme Huawei MatePad Pro",
+    "price": 6398000.0,
+    "original_price": 7469000.0,
+    "discount_percent": 14.3,
+    "category": "tablet",
+    "brand": "Realme",
+    "rating": 4.1,
+    "review_count": 75,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_699ef898.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.800050",
+    "url": "https://cellphones.com/product/1dce9545"
+  },
+  {
+    "product_id": "CELLPHONES_1640f7a0",
+    "name": "FPT Huawei MatePad Pro",
+    "price": 14889000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "FPT",
+    "rating": 4.4,
+    "review_count": 1972,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_2e10011b.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:31.906491",
+    "url": "https://cellphones.com/product/ba9fad63"
+  },
+  {
+    "product_id": "CELLPHONES_8965a890",
+    "name": "Samsung Xiaomi Pad 6 Pro",
+    "price": 7189000.0,
+    "original_price": 9509000.0,
+    "discount_percent": 24.4,
+    "category": "tablet",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 709,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a03de766.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.016540",
+    "url": "https://cellphones.com/product/1d4ce530"
+  },
+  {
+    "product_id": "CELLPHONES_832f3b36",
+    "name": "Realme Xiaomi Pad 6 Pro",
+    "price": 9558000.0,
+    "original_price": 11121000.0,
+    "discount_percent": 14.1,
+    "category": "tablet",
+    "brand": "Realme",
+    "rating": 4.5,
+    "review_count": 163,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_014e1437.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.119470",
+    "url": "https://cellphones.com/product/54581ca1"
+  },
+  {
+    "product_id": "CELLPHONES_f1ae71c2",
+    "name": "Xiaomi Lenovo Tab P12 Pro",
+    "price": 34011000.0,
+    "original_price": 38680000.0,
+    "discount_percent": 12.1,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 4.2,
+    "review_count": 1322,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Lenovo Tab P12 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a7add0af.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.230904",
+    "url": "https://cellphones.com/product/dcbbc1a1"
+  },
+  {
+    "product_id": "CELLPHONES_53b8a141",
+    "name": "Vivo Samsung Galaxy Tab S9",
+    "price": 37831000.0,
+    "original_price": 54395000.0,
+    "discount_percent": 30.5,
+    "category": "tablet",
+    "brand": "Vivo",
+    "rating": 4.7,
+    "review_count": 918,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Samsung Galaxy Tab S9 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_aa2eaeff.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.332993",
+    "url": "https://cellphones.com/product/8f3eaef1"
+  },
+  {
+    "product_id": "CELLPHONES_38fcc335",
+    "name": "Vivo iPad Pro M2",
+    "price": 42076000.0,
+    "original_price": 46943000.0,
+    "discount_percent": 10.4,
+    "category": "tablet",
+    "brand": "Vivo",
+    "rating": 4.9,
+    "review_count": 545,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_072da1a4.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.437767",
+    "url": "https://cellphones.com/product/e3ced807"
+  },
+  {
+    "product_id": "CELLPHONES_18848743",
+    "name": "Asanzo Xiaomi Pad 6 Pro",
+    "price": 4411000.0,
+    "original_price": 5340000.0,
+    "discount_percent": 17.4,
+    "category": "tablet",
+    "brand": "Asanzo",
+    "rating": 4.3,
+    "review_count": 1887,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c8c74443.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.541053",
+    "url": "https://cellphones.com/product/25d2860d"
+  },
+  {
+    "product_id": "CELLPHONES_5c556c5c",
+    "name": "Vivo Samsung Galaxy Tab S9",
+    "price": 3244000.0,
+    "original_price": 3580000.0,
+    "discount_percent": 9.4,
+    "category": "tablet",
+    "brand": "Vivo",
+    "rating": 3.7,
+    "review_count": 1755,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Samsung Galaxy Tab S9 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_5162b4d6.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.644229",
+    "url": "https://cellphones.com/product/9bdcb058"
+  },
+  {
+    "product_id": "CELLPHONES_94a2707c",
+    "name": "Xiaomi iPad Pro M2",
+    "price": 38128000.0,
+    "original_price": 45642000.0,
+    "discount_percent": 16.5,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 3.7,
+    "review_count": 1438,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f16853d7.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.751951",
+    "url": "https://cellphones.com/product/9b0e06ec"
+  },
+  {
+    "product_id": "CELLPHONES_2ce58a74",
+    "name": "Realme iPad Pro M2",
+    "price": 14946000.0,
+    "original_price": 16741000.0,
+    "discount_percent": 10.7,
+    "category": "tablet",
+    "brand": "Realme",
+    "rating": 4.4,
+    "review_count": 1543,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_6bff9321.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.854630",
+    "url": "https://cellphones.com/product/746546cf"
+  },
+  {
+    "product_id": "CELLPHONES_92c6117c",
+    "name": "Xiaomi Xiaomi Pad 6 Pro",
+    "price": 15007000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 4.6,
+    "review_count": 1510,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_efe637f4.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:32.959301",
+    "url": "https://cellphones.com/product/25a27bf0"
+  },
+  {
+    "product_id": "CELLPHONES_a9c2ad6d",
+    "name": "FPT Xiaomi Pad 6 Pro",
+    "price": 21149000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "FPT",
+    "rating": 4.5,
+    "review_count": 1029,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_7f995874.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:33.071799",
+    "url": "https://cellphones.com/product/6196a81a"
+  },
+  {
+    "product_id": "CELLPHONES_e3f11fef",
+    "name": "Viettel iPad Pro M2",
+    "price": 35310000.0,
+    "original_price": 52792000.0,
+    "discount_percent": 33.1,
+    "category": "tablet",
+    "brand": "Viettel",
+    "rating": 5.0,
+    "review_count": 475,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_fc2a0d5c.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:33.187109",
+    "url": "https://cellphones.com/product/26c8eff8"
+  },
+  {
+    "product_id": "CELLPHONES_47121931",
+    "name": "Vivo Samsung Galaxy Tab S9",
+    "price": 1044000.0,
+    "original_price": 1544000.0,
+    "discount_percent": 32.4,
+    "category": "tablet",
+    "brand": "Vivo",
+    "rating": 4.2,
+    "review_count": 720,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Samsung Galaxy Tab S9 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ab56da4d.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:33.294033",
+    "url": "https://cellphones.com/product/10728221"
+  },
+  {
+    "product_id": "CELLPHONES_c2ed94c3",
+    "name": "Realme iPad Pro M2",
+    "price": 3384000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Realme",
+    "rating": 3.8,
+    "review_count": 1337,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b7f05df7.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:33.410965",
+    "url": "https://cellphones.com/product/6b21e5ef"
+  },
+  {
+    "product_id": "CELLPHONES_180d33ad",
+    "name": "Asanzo Lenovo Tab P12 Pro",
+    "price": 8052000.0,
+    "original_price": 11145000.0,
+    "discount_percent": 27.8,
+    "category": "tablet",
+    "brand": "Asanzo",
+    "rating": 4.8,
+    "review_count": 596,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Lenovo Tab P12 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_aa6716aa.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:33.516588",
+    "url": "https://cellphones.com/product/1b53fd03"
+  },
+  {
+    "product_id": "CELLPHONES_09c6bb3b",
+    "name": "OPPO Huawei MatePad Pro",
+    "price": 29490000.0,
+    "original_price": 37346000.0,
+    "discount_percent": 21.0,
+    "category": "tablet",
+    "brand": "OPPO",
+    "rating": 4.5,
+    "review_count": 1603,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c0400597.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:33.630760",
+    "url": "https://cellphones.com/product/dd75d764"
+  },
+  {
+    "product_id": "CELLPHONES_fe44b799",
+    "name": "Vivo Product 2749",
+    "price": 1595000.0,
+    "original_price": 1965000.0,
+    "discount_percent": 18.9,
+    "category": "tai-nghe",
+    "brand": "Vivo",
+    "rating": 4.5,
+    "review_count": 1388,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2749 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_cf109ae3.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:35.750953",
+    "url": "https://cellphones.com/product/835a159d"
+  },
+  {
+    "product_id": "CELLPHONES_b775c27d",
+    "name": "FPT Product 6289",
+    "price": 29537000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "FPT",
+    "rating": 3.8,
+    "review_count": 1627,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6289 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_5e620dd6.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:35.871171",
+    "url": "https://cellphones.com/product/399d38e1"
+  },
+  {
+    "product_id": "CELLPHONES_af169ba0",
+    "name": "Samsung Product 9441",
+    "price": 4473000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "Samsung",
+    "rating": 3.6,
+    "review_count": 187,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9441 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_948d7ff1.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:35.972063",
+    "url": "https://cellphones.com/product/5b6ae607"
+  },
+  {
+    "product_id": "CELLPHONES_d1c020f4",
+    "name": "Asanzo Product 3509",
+    "price": 40745000.0,
+    "original_price": 60272000.0,
+    "discount_percent": 32.4,
+    "category": "tai-nghe",
+    "brand": "Asanzo",
+    "rating": 4.4,
+    "review_count": 1444,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3509 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b66c4fdb.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.087052",
+    "url": "https://cellphones.com/product/a86a0e53"
+  },
+  {
+    "product_id": "CELLPHONES_48378a6d",
+    "name": "Asanzo Product 7705",
+    "price": 5353000.0,
+    "original_price": 6272000.0,
+    "discount_percent": 14.6,
+    "category": "tai-nghe",
+    "brand": "Asanzo",
+    "rating": 4.4,
+    "review_count": 681,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7705 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_08153b09.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.189449",
+    "url": "https://cellphones.com/product/d47d1c70"
+  },
+  {
+    "product_id": "CELLPHONES_1cd44938",
+    "name": "FPT Product 8361",
+    "price": 11641000.0,
+    "original_price": 14504000.0,
+    "discount_percent": 19.7,
+    "category": "tai-nghe",
+    "brand": "FPT",
+    "rating": 4.3,
+    "review_count": 1512,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8361 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_4b281703.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.294273",
+    "url": "https://cellphones.com/product/97433ede"
+  },
+  {
+    "product_id": "CELLPHONES_2686a418",
+    "name": "Viettel Product 4321",
+    "price": 1747000.0,
+    "original_price": 2561000.0,
+    "discount_percent": 31.8,
+    "category": "tai-nghe",
+    "brand": "Viettel",
+    "rating": 4.7,
+    "review_count": 946,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4321 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_de496a35.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.405404",
+    "url": "https://cellphones.com/product/4a7ad520"
+  },
+  {
+    "product_id": "CELLPHONES_e4dfe35e",
+    "name": "Realme Product 2355",
+    "price": 41260000.0,
+    "original_price": 55404000.0,
+    "discount_percent": 25.5,
+    "category": "tai-nghe",
+    "brand": "Realme",
+    "rating": 3.6,
+    "review_count": 694,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2355 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_e65bb31d.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.509859",
+    "url": "https://cellphones.com/product/9639b256"
+  },
+  {
+    "product_id": "CELLPHONES_11e3a60c",
+    "name": "Xiaomi Product 8758",
+    "price": 7437000.0,
+    "original_price": 9254000.0,
+    "discount_percent": 19.6,
+    "category": "tai-nghe",
+    "brand": "Xiaomi",
+    "rating": 4.2,
+    "review_count": 1367,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 8758 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_39be55ef.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.615243",
+    "url": "https://cellphones.com/product/d7b122dd"
+  },
+  {
+    "product_id": "CELLPHONES_b384134e",
+    "name": "Samsung Product 8792",
+    "price": 19894000.0,
+    "original_price": 22481000.0,
+    "discount_percent": 11.5,
+    "category": "tai-nghe",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 807,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8792 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_451d5239.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.717746",
+    "url": "https://cellphones.com/product/be629a85"
+  },
+  {
+    "product_id": "CELLPHONES_4b4cadb6",
+    "name": "FPT Product 2580",
+    "price": 10573000.0,
+    "original_price": 15189000.0,
+    "discount_percent": 30.4,
+    "category": "tai-nghe",
+    "brand": "FPT",
+    "rating": 4.8,
+    "review_count": 1981,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2580 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_0539152c.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.827677",
+    "url": "https://cellphones.com/product/c1437b18"
+  },
+  {
+    "product_id": "CELLPHONES_acae8a74",
+    "name": "BKAV Product 4650",
+    "price": 41701000.0,
+    "original_price": 58921000.0,
+    "discount_percent": 29.2,
+    "category": "tai-nghe",
+    "brand": "BKAV",
+    "rating": 4.0,
+    "review_count": 1906,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4650 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b2f477d8.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:36.935134",
+    "url": "https://cellphones.com/product/fe71b68e"
+  },
+  {
+    "product_id": "CELLPHONES_49366c4e",
+    "name": "OPPO Product 2061",
+    "price": 42614000.0,
+    "original_price": 54991000.0,
+    "discount_percent": 22.5,
+    "category": "tai-nghe",
+    "brand": "OPPO",
+    "rating": 4.2,
+    "review_count": 1175,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2061 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_c417b919.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:37.038083",
+    "url": "https://cellphones.com/product/ce6cc45a"
+  },
+  {
+    "product_id": "CELLPHONES_a8249012",
+    "name": "Viettel Product 4328",
+    "price": 8214000.0,
+    "original_price": 10741000.0,
+    "discount_percent": 23.5,
+    "category": "tai-nghe",
+    "brand": "Viettel",
+    "rating": 3.8,
+    "review_count": 1915,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4328 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ae280b36.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:37.143604",
+    "url": "https://cellphones.com/product/c394ccd0"
+  },
+  {
+    "product_id": "CELLPHONES_f97859da",
+    "name": "VinSmart Product 7651",
+    "price": 6026000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "VinSmart",
+    "rating": 4.0,
+    "review_count": 925,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7651 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_180e6b5e.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:37.244615",
+    "url": "https://cellphones.com/product/e5a0c554"
+  },
+  {
+    "product_id": "CELLPHONES_e4408889",
+    "name": "Samsung Product 4571",
+    "price": 12869000.0,
+    "original_price": 17632000.0,
+    "discount_percent": 27.0,
+    "category": "tai-nghe",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 260,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4571 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_de3817c2.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:37.356017",
+    "url": "https://cellphones.com/product/7cff1ee6"
+  },
+  {
+    "product_id": "CELLPHONES_421b05f5",
+    "name": "Viettel Product 8365",
+    "price": 10101000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Viettel",
+    "rating": 4.4,
+    "review_count": 143,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8365 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_da59269d.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:38.475400",
+    "url": "https://cellphones.com/product/8a385a30"
+  },
+  {
+    "product_id": "CELLPHONES_76bf9f2d",
+    "name": "Samsung Product 3420",
+    "price": 24753000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Samsung",
+    "rating": 3.6,
+    "review_count": 1369,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3420 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f9d514a7.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:38.576231",
+    "url": "https://cellphones.com/product/c7891d0e"
+  },
+  {
+    "product_id": "CELLPHONES_e002465f",
+    "name": "OPPO Product 4655",
+    "price": 8779000.0,
+    "original_price": 10449000.0,
+    "discount_percent": 16.0,
+    "category": "loa-bluetooth",
+    "brand": "OPPO",
+    "rating": 3.6,
+    "review_count": 576,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4655 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_9e06fb12.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:38.678957",
+    "url": "https://cellphones.com/product/8ca45fbe"
+  },
+  {
+    "product_id": "CELLPHONES_bf504dc8",
+    "name": "BKAV Product 9116",
+    "price": 18162000.0,
+    "original_price": 22140000.0,
+    "discount_percent": 18.0,
+    "category": "loa-bluetooth",
+    "brand": "BKAV",
+    "rating": 4.3,
+    "review_count": 449,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9116 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_8baf8b14.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:38.783844",
+    "url": "https://cellphones.com/product/22ff654a"
+  },
+  {
+    "product_id": "CELLPHONES_2d4a4799",
+    "name": "Xiaomi Product 3068",
+    "price": 42400000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Xiaomi",
+    "rating": 4.0,
+    "review_count": 1117,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3068 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_90cb83d0.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:38.890454",
+    "url": "https://cellphones.com/product/8717a39e"
+  },
+  {
+    "product_id": "CELLPHONES_dc7f2d04",
+    "name": "BKAV Product 7653",
+    "price": 14164000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "BKAV",
+    "rating": 4.4,
+    "review_count": 1126,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7653 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f33986df.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.004783",
+    "url": "https://cellphones.com/product/d18d8daf"
+  },
+  {
+    "product_id": "CELLPHONES_b7e9ff6f",
+    "name": "OPPO Product 9532",
+    "price": 21807000.0,
+    "original_price": 29138000.0,
+    "discount_percent": 25.2,
+    "category": "loa-bluetooth",
+    "brand": "OPPO",
+    "rating": 4.1,
+    "review_count": 1070,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9532 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_3aa9bf0c.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.113305",
+    "url": "https://cellphones.com/product/c4327886"
+  },
+  {
+    "product_id": "CELLPHONES_f045c50d",
+    "name": "Xiaomi Product 2077",
+    "price": 43041000.0,
+    "original_price": 53843000.0,
+    "discount_percent": 20.1,
+    "category": "loa-bluetooth",
+    "brand": "Xiaomi",
+    "rating": 3.5,
+    "review_count": 349,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 2077 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_2283425d.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.222468",
+    "url": "https://cellphones.com/product/529415e3"
+  },
+  {
+    "product_id": "CELLPHONES_78217014",
+    "name": "VinSmart Product 2034",
+    "price": 3199000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "VinSmart",
+    "rating": 4.8,
+    "review_count": 520,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2034 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b8a8f28e.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.337628",
+    "url": "https://cellphones.com/product/476faa79"
+  },
+  {
+    "product_id": "CELLPHONES_9457d0e7",
+    "name": "Asanzo Product 8723",
+    "price": 4350000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Asanzo",
+    "rating": 4.8,
+    "review_count": 1278,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8723 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_91219c34.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.448057",
+    "url": "https://cellphones.com/product/17746013"
+  },
+  {
+    "product_id": "CELLPHONES_afd86391",
+    "name": "FPT Product 3303",
+    "price": 4003000.0,
+    "original_price": 5807000.0,
+    "discount_percent": 31.1,
+    "category": "loa-bluetooth",
+    "brand": "FPT",
+    "rating": 4.0,
+    "review_count": 1113,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3303 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_16b46e35.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.549284",
+    "url": "https://cellphones.com/product/75d6382e"
+  },
+  {
+    "product_id": "CELLPHONES_88410679",
+    "name": "Asanzo Product 4054",
+    "price": 10290000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Asanzo",
+    "rating": 4.8,
+    "review_count": 838,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4054 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_08be6a47.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.659228",
+    "url": "https://cellphones.com/product/382d97b0"
+  },
+  {
+    "product_id": "CELLPHONES_67a405ca",
+    "name": "FPT Product 3463",
+    "price": 19796000.0,
+    "original_price": 24417000.0,
+    "discount_percent": 18.9,
+    "category": "loa-bluetooth",
+    "brand": "FPT",
+    "rating": 4.7,
+    "review_count": 229,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3463 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_05baaa11.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.772243",
+    "url": "https://cellphones.com/product/fb0f6b66"
+  },
+  {
+    "product_id": "CELLPHONES_e0d9d1a2",
+    "name": "Realme Product 9993",
+    "price": 17138000.0,
+    "original_price": 22646000.0,
+    "discount_percent": 24.3,
+    "category": "loa-bluetooth",
+    "brand": "Realme",
+    "rating": 4.2,
+    "review_count": 758,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9993 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_968c98b7.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.887381",
+    "url": "https://cellphones.com/product/28344199"
+  },
+  {
+    "product_id": "CELLPHONES_0a388179",
+    "name": "Viettel Product 7929",
+    "price": 17979000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Viettel",
+    "rating": 5.0,
+    "review_count": 285,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7929 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_cb5065ef.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:39.997835",
+    "url": "https://cellphones.com/product/da552a8f"
+  },
+  {
+    "product_id": "CELLPHONES_f15e165a",
+    "name": "Realme Product 1079",
+    "price": 20131000.0,
+    "original_price": 24100000.0,
+    "discount_percent": 16.5,
+    "category": "loa-bluetooth",
+    "brand": "Realme",
+    "rating": 4.1,
+    "review_count": 748,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1079 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ee4b618d.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:40.098080",
+    "url": "https://cellphones.com/product/e39b1124"
+  },
+  {
+    "product_id": "CELLPHONES_353ec034",
+    "name": "OPPO Product 4581",
+    "price": 12388000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "OPPO",
+    "rating": 5.0,
+    "review_count": 1497,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4581 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_fb66305e.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:40.210912",
+    "url": "https://cellphones.com/product/33db8760"
+  },
+  {
+    "product_id": "CELLPHONES_90085281",
+    "name": "Realme Product 5311",
+    "price": 5117000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa-bluetooth",
+    "brand": "Realme",
+    "rating": 3.9,
+    "review_count": 1896,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5311 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_93f4d826.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:40.314388",
+    "url": "https://cellphones.com/product/36aa9c8c"
+  },
+  {
+    "product_id": "CELLPHONES_fa0537e2",
+    "name": "Apple Product 4239",
+    "price": 41485000.0,
+    "original_price": 51081000.0,
+    "discount_percent": 18.8,
+    "category": "sac-du-phong",
+    "brand": "Apple",
+    "rating": 4.5,
+    "review_count": 1757,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4239 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_78b27c28.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:41.433513",
+    "url": "https://cellphones.com/product/e741feef"
+  },
+  {
+    "product_id": "CELLPHONES_a019f46d",
+    "name": "Xiaomi Product 5376",
+    "price": 510000.0,
+    "original_price": 679000.0,
+    "discount_percent": 24.9,
+    "category": "sac-du-phong",
+    "brand": "Xiaomi",
+    "rating": 4.6,
+    "review_count": 1208,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 5376 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_8e34bb69.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:41.543432",
+    "url": "https://cellphones.com/product/114adb6e"
+  },
+  {
+    "product_id": "CELLPHONES_1c56b720",
+    "name": "BKAV Product 5989",
+    "price": 28026000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "BKAV",
+    "rating": 4.4,
+    "review_count": 276,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5989 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_e8c41d19.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:41.647488",
+    "url": "https://cellphones.com/product/8571ee2e"
+  },
+  {
+    "product_id": "CELLPHONES_f451d370",
+    "name": "VinSmart Product 7427",
+    "price": 37198000.0,
+    "original_price": 49643000.0,
+    "discount_percent": 25.1,
+    "category": "sac-du-phong",
+    "brand": "VinSmart",
+    "rating": 3.6,
+    "review_count": 532,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7427 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ba3b156d.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:41.751397",
+    "url": "https://cellphones.com/product/7221a69c"
+  },
+  {
+    "product_id": "CELLPHONES_8da5f9ad",
+    "name": "FPT Product 2365",
+    "price": 30042000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "FPT",
+    "rating": 4.5,
+    "review_count": 480,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 2365 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_6569f750.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:41.852038",
+    "url": "https://cellphones.com/product/d54a878d"
+  },
+  {
+    "product_id": "CELLPHONES_801923ce",
+    "name": "OPPO Product 1010",
+    "price": 4626000.0,
+    "original_price": 6041000.0,
+    "discount_percent": 23.4,
+    "category": "sac-du-phong",
+    "brand": "OPPO",
+    "rating": 4.5,
+    "review_count": 1158,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1010 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ec5cd646.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:41.962989",
+    "url": "https://cellphones.com/product/af1cdb1d"
+  },
+  {
+    "product_id": "CELLPHONES_30710768",
+    "name": "Xiaomi Product 8318",
+    "price": 29551000.0,
+    "original_price": 43859000.0,
+    "discount_percent": 32.6,
+    "category": "sac-du-phong",
+    "brand": "Xiaomi",
+    "rating": 4.4,
+    "review_count": 17,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8318 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_817fe122.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.070910",
+    "url": "https://cellphones.com/product/427a21b3"
+  },
+  {
+    "product_id": "CELLPHONES_d5fd0cb3",
+    "name": "FPT Product 3197",
+    "price": 3963000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "FPT",
+    "rating": 3.7,
+    "review_count": 96,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3197 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_1352a142.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.174561",
+    "url": "https://cellphones.com/product/1b7d7358"
+  },
+  {
+    "product_id": "CELLPHONES_0c905612",
+    "name": "VinSmart Product 7956",
+    "price": 7367000.0,
+    "original_price": 10329000.0,
+    "discount_percent": 28.7,
+    "category": "sac-du-phong",
+    "brand": "VinSmart",
+    "rating": 4.8,
+    "review_count": 1330,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 7956 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f21b88be.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.283002",
+    "url": "https://cellphones.com/product/e43438c0"
+  },
+  {
+    "product_id": "CELLPHONES_4e5a19c5",
+    "name": "FPT Product 5299",
+    "price": 21814000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "FPT",
+    "rating": 3.9,
+    "review_count": 1485,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5299 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_b87670df.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.386377",
+    "url": "https://cellphones.com/product/edb0fcdc"
+  },
+  {
+    "product_id": "CELLPHONES_dafac851",
+    "name": "Xiaomi Product 4242",
+    "price": 31619000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "Xiaomi",
+    "rating": 4.1,
+    "review_count": 886,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4242 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_0ca4091c.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.494620",
+    "url": "https://cellphones.com/product/f8ced4e0"
+  },
+  {
+    "product_id": "CELLPHONES_422aff4f",
+    "name": "Viettel Product 8781",
+    "price": 7744000.0,
+    "original_price": 10979000.0,
+    "discount_percent": 29.5,
+    "category": "sac-du-phong",
+    "brand": "Viettel",
+    "rating": 3.7,
+    "review_count": 715,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8781 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_a45c45b7.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.604514",
+    "url": "https://cellphones.com/product/e1a15466"
+  },
+  {
+    "product_id": "CELLPHONES_3ea1d7cb",
+    "name": "Realme Product 7807",
+    "price": 5678000.0,
+    "original_price": 8217000.0,
+    "discount_percent": 30.9,
+    "category": "sac-du-phong",
+    "brand": "Realme",
+    "rating": 4.7,
+    "review_count": 539,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7807 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_565dfb08.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.715106",
+    "url": "https://cellphones.com/product/adc30261"
+  },
+  {
+    "product_id": "CELLPHONES_79459c95",
+    "name": "BKAV Product 5445",
+    "price": 1439000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "BKAV",
+    "rating": 4.1,
+    "review_count": 595,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5445 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_69861c66.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.822472",
+    "url": "https://cellphones.com/product/a6b142ce"
+  },
+  {
+    "product_id": "CELLPHONES_e5cbde38",
+    "name": "Asanzo Product 1464",
+    "price": 6548000.0,
+    "original_price": 9810000.0,
+    "discount_percent": 33.3,
+    "category": "sac-du-phong",
+    "brand": "Asanzo",
+    "rating": 4.3,
+    "review_count": 1383,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 1464 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_8e06db68.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:42.928562",
+    "url": "https://cellphones.com/product/76ed7e60"
+  },
+  {
+    "product_id": "CELLPHONES_c1309c18",
+    "name": "Realme Product 2930",
+    "price": 5207000.0,
+    "original_price": 6059000.0,
+    "discount_percent": 14.1,
+    "category": "sac-du-phong",
+    "brand": "Realme",
+    "rating": 5.0,
+    "review_count": 472,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2930 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_f7f40523.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.043521",
+    "url": "https://cellphones.com/product/d0762e6b"
+  },
+  {
+    "product_id": "CELLPHONES_c05f32c3",
+    "name": "OPPO Product 4343",
+    "price": 16570000.0,
+    "original_price": 23600000.0,
+    "discount_percent": 29.8,
+    "category": "sac-du-phong",
+    "brand": "OPPO",
+    "rating": 4.6,
+    "review_count": 872,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4343 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_e6a61f23.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.151870",
+    "url": "https://cellphones.com/product/83267fe3"
+  },
+  {
+    "product_id": "CELLPHONES_31182d56",
+    "name": "Xiaomi Product 7339",
+    "price": 16211000.0,
+    "original_price": 22377000.0,
+    "discount_percent": 27.6,
+    "category": "sac-du-phong",
+    "brand": "Xiaomi",
+    "rating": 3.9,
+    "review_count": 466,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7339 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_79a11853.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.267553",
+    "url": "https://cellphones.com/product/fab371ba"
+  },
+  {
+    "product_id": "CELLPHONES_f9712dab",
+    "name": "Asanzo Product 3432",
+    "price": 27084000.0,
+    "original_price": 30001000.0,
+    "discount_percent": 9.7,
+    "category": "sac-du-phong",
+    "brand": "Asanzo",
+    "rating": 3.9,
+    "review_count": 653,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3432 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_585ebea0.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.371134",
+    "url": "https://cellphones.com/product/e95de838"
+  },
+  {
+    "product_id": "CELLPHONES_a8739b67",
+    "name": "Samsung Product 6532",
+    "price": 2313000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "sac-du-phong",
+    "brand": "Samsung",
+    "rating": 4.9,
+    "review_count": 770,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6532 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_ee812c9f.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.472374",
+    "url": "https://cellphones.com/product/ccf12a70"
+  },
+  {
+    "product_id": "CELLPHONES_a11ceaeb",
+    "name": "Asanzo Product 5112",
+    "price": 8573000.0,
+    "original_price": 10105000.0,
+    "discount_percent": 15.2,
+    "category": "sac-du-phong",
+    "brand": "Asanzo",
+    "rating": 3.9,
+    "review_count": 788,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5112 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_1c778a5f.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.582885",
+    "url": "https://cellphones.com/product/28336890"
+  },
+  {
+    "product_id": "CELLPHONES_e763175a",
+    "name": "Xiaomi Product 3858",
+    "price": 11681000.0,
+    "original_price": 16393000.0,
+    "discount_percent": 28.7,
+    "category": "sac-du-phong",
+    "brand": "Xiaomi",
+    "rating": 3.8,
+    "review_count": 1829,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3858 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_3c491685.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.695191",
+    "url": "https://cellphones.com/product/2bb11f5e"
+  },
+  {
+    "product_id": "CELLPHONES_4df5ee13",
+    "name": "Samsung Product 8904",
+    "price": 15517000.0,
+    "original_price": 20996000.0,
+    "discount_percent": 26.1,
+    "category": "sac-du-phong",
+    "brand": "Samsung",
+    "rating": 3.7,
+    "review_count": 137,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8904 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_fc965eb7.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.803346",
+    "url": "https://cellphones.com/product/530c1601"
+  },
+  {
+    "product_id": "CELLPHONES_1dcf2194",
+    "name": "BKAV Product 8510",
+    "price": 27337000.0,
+    "original_price": 37700000.0,
+    "discount_percent": 27.5,
+    "category": "sac-du-phong",
+    "brand": "BKAV",
+    "rating": 5.0,
+    "review_count": 607,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8510 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_732d4eb6.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:43.908569",
+    "url": "https://cellphones.com/product/a1069173"
+  },
+  {
+    "product_id": "CELLPHONES_d3a7e30c",
+    "name": "Asanzo Product 5211",
+    "price": 29318000.0,
+    "original_price": 40635000.0,
+    "discount_percent": 27.9,
+    "category": "sac-du-phong",
+    "brand": "Asanzo",
+    "rating": 4.5,
+    "review_count": 160,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5211 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_89e93710.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:44.021286",
+    "url": "https://cellphones.com/product/3f91bd71"
+  },
+  {
+    "product_id": "CELLPHONES_ead4a450",
+    "name": "VinSmart Product 9787",
+    "price": 5071000.0,
+    "original_price": 6175000.0,
+    "discount_percent": 17.9,
+    "category": "sac-du-phong",
+    "brand": "VinSmart",
+    "rating": 4.3,
+    "review_count": 211,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9787 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_4dd68397.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:44.121866",
+    "url": "https://cellphones.com/product/7f07fefa"
+  },
+  {
+    "product_id": "CELLPHONES_42e8d190",
+    "name": "Viettel Product 6167",
+    "price": 28163000.0,
+    "original_price": 41502000.0,
+    "discount_percent": 32.1,
+    "category": "sac-du-phong",
+    "brand": "Viettel",
+    "rating": 4.1,
+    "review_count": 396,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6167 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_d2fc6f56.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:44.234530",
+    "url": "https://cellphones.com/product/f6ee028d"
+  },
+  {
+    "product_id": "CELLPHONES_ec6d47e7",
+    "name": "Vivo Product 5665",
+    "price": 19160000.0,
+    "original_price": 26933000.0,
+    "discount_percent": 28.9,
+    "category": "sac-du-phong",
+    "brand": "Vivo",
+    "rating": 3.7,
+    "review_count": 779,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5665 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://cellphones.com/images/product_dc033c4e.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "cellphones",
+    "crawl_timestamp": "2025-10-01 21:16:44.344918",
+    "url": "https://cellphones.com/product/be9dd431"
+  }
+]
