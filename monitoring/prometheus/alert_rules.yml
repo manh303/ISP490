@@ -1,0 +1,204 @@
+groups:
+  - name: ecommerce-dss-alerts
+    rules:
+      # Service availability alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Backend API alerts
+      - alert: BackendAPIDown
+        expr: up{job="backend-api"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend API is down"
+          description: "Backend API has been down for more than 30 seconds."
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes."
+
+      - alert: HighErrorRate
+        expr: rate(api_requests_total{status=~"5.."}[5m]) / rate(api_requests_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes."
+
+      # Database alerts
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 1 minute."
+
+      - alert: MongoDBDown
+        expr: up{job="mongodb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB is down"
+          description: "MongoDB database has been down for more than 1 minute."
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 1 minute."
+
+      # Kafka alerts
+      - alert: KafkaDown
+        expr: up{job="kafka-jmx"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka is down"
+          description: "Kafka broker has been down for more than 2 minutes."
+
+      # Spark alerts
+      - alert: SparkMasterDown
+        expr: up{job="spark-master"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Spark Master is down"
+          description: "Spark Master has been down for more than 2 minutes."
+
+      - alert: SparkWorkerDown
+        expr: up{job="spark-workers"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Spark Worker is down"
+          description: "One or more Spark Workers have been down for more than 2 minutes."
+
+      # Airflow alerts
+      - alert: AirflowDown
+        expr: up{job="airflow-webserver"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Airflow webserver is down"
+          description: "Airflow webserver has been down for more than 2 minutes."
+
+      # Performance alerts
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for more than 5 minutes on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% for more than 5 minutes on {{ $labels.instance }}."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10% on {{ $labels.instance }}."
+
+      # Cache performance alerts
+      - alert: LowCacheHitRate
+        expr: cache_hit_rate < 70
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value }}% which is below 70% for more than 5 minutes."
+
+      # Connection pool alerts
+      - alert: HighConnectionPoolUsage
+        expr: (active_connections / max_connections) * 100 > 80
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High connection pool usage"
+          description: "Connection pool usage is {{ $value }}% which is above 80%."
+
+      # ML model alerts
+      - alert: MLModelPredictionErrors
+        expr: rate(ml_prediction_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High ML model prediction errors"
+          description: "ML model prediction error rate is {{ $value }} errors per second."
+
+      # WebSocket alerts
+      - alert: HighWebSocketConnections
+        expr: websocket_connections_active > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of WebSocket connections"
+          description: "Number of active WebSocket connections is {{ $value }}."
+
+      # Streaming alerts
+      - alert: HighStreamingMessageLatency
+        expr: histogram_quantile(0.95, rate(streaming_message_duration_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High streaming message latency"
+          description: "95th percentile streaming message processing latency is {{ $value }}s."
+
+      # Security alerts
+      - alert: HighRateLimitHits
+        expr: rate(rate_limit_hits_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate limit hits"
+          description: "Rate limit hits are {{ $value }} per second, indicating potential abuse."
+
+      - alert: HighFailedAuthentications
+        expr: rate(authentication_failures_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failures"
+          description: "Authentication failures are {{ $value }} per second, indicating potential attack."
