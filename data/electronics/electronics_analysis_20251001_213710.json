@@ -1,0 +1,47 @@
+{
+  "total_products": 545,
+  "categories": {
+    "Mobile Devices": 240,
+    "Computing": 122,
+    "General Electronics": 80,
+    "Audio": 64,
+    "Tablets": 35,
+    "Photography": 4
+  },
+  "brands": {
+    "Samsung": 81,
+    "FPT": 48,
+    "Apple": 46,
+    "Asanzo": 45,
+    "Realme": 43,
+    "Xiaomi": 43,
+    "Vivo": 40,
+    "OPPO": 37,
+    "Viettel": 32,
+    "VinSmart": 31
+  },
+  "price_statistics": {
+    "min_usd": 21.38,
+    "max_usd": 2449.89,
+    "avg_usd": 830.8495412844037,
+    "median_usd": 707.71
+  },
+  "rating_statistics": {
+    "avg_rating": 4.237064220183487,
+    "min_rating": 3.5,
+    "max_rating": 5.0
+  },
+  "platform_distribution": {
+    "fptshop": 171,
+    "Consolidated": 120,
+    "cellphones": 108,
+    "sendo": 50,
+    "tiki": 50,
+    "lazada": 46
+  },
+  "availability_rate": 92.84403669724772,
+  "data_sources": {
+    "Vietnamese_Crawled": 425,
+    "Vietnam_Market_Analysis": 120
+  }
+}
