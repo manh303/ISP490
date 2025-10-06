@@ -1,4 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
+<<<<<<< Updated upstream
+=======
+import Home from "./pages/Home";
+import PublicLayout  from "./layout/PublicLayout";
+>>>>>>> Stashed changes
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
@@ -18,7 +23,7 @@ import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
-import AppLayout from "./layout/AppLayout";
+import DashboardLayout from "./layout/DashboardLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
@@ -30,8 +35,13 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
+<<<<<<< Updated upstream
           <Route element={<AppLayout />}>
             {/* <Route index path="/" element={<Home />} /> */}
+=======
+          <Route element={<DashboardLayout />}>
+           
+>>>>>>> Stashed changes
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
@@ -55,6 +65,10 @@ export default function App() {
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
+          </Route>
+          {/* Public Layout cho Home */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
           </Route>
 
           {/* Auth Layout */}
