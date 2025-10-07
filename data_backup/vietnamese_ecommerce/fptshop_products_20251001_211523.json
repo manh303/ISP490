@@ -1,0 +1,2947 @@
+[
+  {
+    "product_id": "FPTSHOP_9f20bde4",
+    "name": "VinSmart Product 1007",
+    "price": 26012000.0,
+    "original_price": 38849000.0,
+    "discount_percent": 33.0,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 4.9,
+    "review_count": 201,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 1007 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_23489481.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.047881",
+    "url": "https://fptshop.com/product/2ec09496"
+  },
+  {
+    "product_id": "FPTSHOP_5ce32d53",
+    "name": "Asanzo Product 9627",
+    "price": 32436000.0,
+    "original_price": 45521000.0,
+    "discount_percent": 28.7,
+    "category": "dien-thoai",
+    "brand": "Asanzo",
+    "rating": 3.8,
+    "review_count": 1738,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9627 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_bbd131dc.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.154960",
+    "url": "https://fptshop.com/product/c77761e8"
+  },
+  {
+    "product_id": "FPTSHOP_c005d060",
+    "name": "VinSmart Product 7563",
+    "price": 37266000.0,
+    "original_price": 50617000.0,
+    "discount_percent": 26.4,
+    "category": "dien-thoai",
+    "brand": "VinSmart",
+    "rating": 4.2,
+    "review_count": 1461,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7563 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6597e93d.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.256934",
+    "url": "https://fptshop.com/product/c2bcebe7"
+  },
+  {
+    "product_id": "FPTSHOP_7318e56b",
+    "name": "Xiaomi Product 3727",
+    "price": 12981000.0,
+    "original_price": 18024000.0,
+    "discount_percent": 28.0,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.3,
+    "review_count": 1515,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3727 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_f019fde5.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.358057",
+    "url": "https://fptshop.com/product/f5165dad"
+  },
+  {
+    "product_id": "FPTSHOP_0a013df1",
+    "name": "Samsung Product 8796",
+    "price": 35078000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Samsung",
+    "rating": 4.7,
+    "review_count": 299,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8796 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_0140a12f.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.462943",
+    "url": "https://fptshop.com/product/969361eb"
+  },
+  {
+    "product_id": "FPTSHOP_493e65f2",
+    "name": "Xiaomi Product 6819",
+    "price": 1149000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.3,
+    "review_count": 1771,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6819 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_85745b40.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.565020",
+    "url": "https://fptshop.com/product/83cca4a9"
+  },
+  {
+    "product_id": "FPTSHOP_1b2b2dd6",
+    "name": "BKAV Product 9244",
+    "price": 43890000.0,
+    "original_price": 56497000.0,
+    "discount_percent": 22.3,
+    "category": "dien-thoai",
+    "brand": "BKAV",
+    "rating": 3.6,
+    "review_count": 401,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9244 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_832e9aef.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.666954",
+    "url": "https://fptshop.com/product/3827285e"
+  },
+  {
+    "product_id": "FPTSHOP_29a83da6",
+    "name": "Viettel Product 8519",
+    "price": 48595000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Viettel",
+    "rating": 4.7,
+    "review_count": 904,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8519 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_813e509c.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.768149",
+    "url": "https://fptshop.com/product/ac559113"
+  },
+  {
+    "product_id": "FPTSHOP_925e03b2",
+    "name": "BKAV Product 4215",
+    "price": 30547000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "BKAV",
+    "rating": 4.3,
+    "review_count": 1487,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4215 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_bea0a1de.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.876129",
+    "url": "https://fptshop.com/product/ecfc81a6"
+  },
+  {
+    "product_id": "FPTSHOP_1adb1ffa",
+    "name": "Samsung Product 6674",
+    "price": 11109000.0,
+    "original_price": 13184000.0,
+    "discount_percent": 15.7,
+    "category": "dien-thoai",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 532,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6674 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_a5169c64.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:05.982649",
+    "url": "https://fptshop.com/product/7131b72d"
+  },
+  {
+    "product_id": "FPTSHOP_e4f0cb31",
+    "name": "Xiaomi Product 3338",
+    "price": 46030000.0,
+    "original_price": 50719000.0,
+    "discount_percent": 9.2,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.5,
+    "review_count": 835,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3338 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_507b59fa.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:06.090067",
+    "url": "https://fptshop.com/product/fd0f2d5b"
+  },
+  {
+    "product_id": "FPTSHOP_665a329b",
+    "name": "Xiaomi Product 4370",
+    "price": 1957000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai",
+    "brand": "Xiaomi",
+    "rating": 4.7,
+    "review_count": 235,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4370 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_8555a111.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:06.199523",
+    "url": "https://fptshop.com/product/2f5e859d"
+  },
+  {
+    "product_id": "FPTSHOP_02ef3bf0",
+    "name": "Viettel Asus ROG Strix",
+    "price": 24690000.0,
+    "original_price": 30816000.0,
+    "discount_percent": 19.9,
+    "category": "laptop",
+    "brand": "Viettel",
+    "rating": 4.6,
+    "review_count": 341,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_2681ed0f.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:07.513217",
+    "url": "https://fptshop.com/product/eab63917"
+  },
+  {
+    "product_id": "FPTSHOP_ca5e4207",
+    "name": "Realme HP Spectre x360",
+    "price": 527000.0,
+    "original_price": 678000.0,
+    "discount_percent": 22.2,
+    "category": "laptop",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 1391,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_76b2c0fc.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:07.614493",
+    "url": "https://fptshop.com/product/ac77f0ef"
+  },
+  {
+    "product_id": "FPTSHOP_359f3017",
+    "name": "Apple Dell XPS 13",
+    "price": 26660000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Apple",
+    "rating": 4.0,
+    "review_count": 1908,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_a4c40d4c.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:07.717366",
+    "url": "https://fptshop.com/product/550bf3b2"
+  },
+  {
+    "product_id": "FPTSHOP_e3cdea60",
+    "name": "Samsung Acer Predator Helios",
+    "price": 34066000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 997,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_f0d3cbcd.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:07.818016",
+    "url": "https://fptshop.com/product/253265f2"
+  },
+  {
+    "product_id": "FPTSHOP_afc1cf4d",
+    "name": "Samsung MacBook Pro M3",
+    "price": 21139000.0,
+    "original_price": 31511000.0,
+    "discount_percent": 32.9,
+    "category": "laptop",
+    "brand": "Samsung",
+    "rating": 4.6,
+    "review_count": 313,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_3f541f93.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:07.922948",
+    "url": "https://fptshop.com/product/ef792d5e"
+  },
+  {
+    "product_id": "FPTSHOP_d8f6ea87",
+    "name": "Vivo Asus ROG Strix",
+    "price": 7601000.0,
+    "original_price": 10919000.0,
+    "discount_percent": 30.4,
+    "category": "laptop",
+    "brand": "Vivo",
+    "rating": 4.8,
+    "review_count": 1426,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_b3fbae22.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.023311",
+    "url": "https://fptshop.com/product/8adde392"
+  },
+  {
+    "product_id": "FPTSHOP_415218e0",
+    "name": "OPPO Acer Predator Helios",
+    "price": 49047000.0,
+    "original_price": 60090000.0,
+    "discount_percent": 18.4,
+    "category": "laptop",
+    "brand": "OPPO",
+    "rating": 3.9,
+    "review_count": 1439,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6da358e1.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.131279",
+    "url": "https://fptshop.com/product/e7f27d49"
+  },
+  {
+    "product_id": "FPTSHOP_e9bd0c82",
+    "name": "VinSmart Acer Predator Helios",
+    "price": 42725000.0,
+    "original_price": 62522000.0,
+    "discount_percent": 31.7,
+    "category": "laptop",
+    "brand": "VinSmart",
+    "rating": 4.4,
+    "review_count": 1723,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_0d439204.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.234240",
+    "url": "https://fptshop.com/product/a9bd6d67"
+  },
+  {
+    "product_id": "FPTSHOP_7dc59268",
+    "name": "Samsung Asus ROG Strix",
+    "price": 37041000.0,
+    "original_price": 53110000.0,
+    "discount_percent": 30.3,
+    "category": "laptop",
+    "brand": "Samsung",
+    "rating": 4.0,
+    "review_count": 672,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_ef514d54.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.340971",
+    "url": "https://fptshop.com/product/8521241b"
+  },
+  {
+    "product_id": "FPTSHOP_86a02af7",
+    "name": "Samsung Lenovo ThinkPad X1",
+    "price": 24345000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop",
+    "brand": "Samsung",
+    "rating": 3.6,
+    "review_count": 1946,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_dbbcb89d.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.449947",
+    "url": "https://fptshop.com/product/be988997"
+  },
+  {
+    "product_id": "FPTSHOP_c44f39ae",
+    "name": "FPT Dell XPS 13",
+    "price": 5578000.0,
+    "original_price": 6561000.0,
+    "discount_percent": 15.0,
+    "category": "laptop",
+    "brand": "FPT",
+    "rating": 4.1,
+    "review_count": 859,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_0e675f4b.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.550960",
+    "url": "https://fptshop.com/product/dad5dc6c"
+  },
+  {
+    "product_id": "FPTSHOP_74b496ba",
+    "name": "VinSmart Lenovo ThinkPad X1",
+    "price": 9992000.0,
+    "original_price": 14758000.0,
+    "discount_percent": 32.3,
+    "category": "laptop",
+    "brand": "VinSmart",
+    "rating": 4.7,
+    "review_count": 1715,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_b7e89228.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:08.652286",
+    "url": "https://fptshop.com/product/4e355905"
+  },
+  {
+    "product_id": "FPTSHOP_10565115",
+    "name": "Xiaomi iPad Pro M2",
+    "price": 23608000.0,
+    "original_price": 26594000.0,
+    "discount_percent": 11.2,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 3.8,
+    "review_count": 77,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_cf40e832.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:09.954628",
+    "url": "https://fptshop.com/product/28ad3114"
+  },
+  {
+    "product_id": "FPTSHOP_cef70896",
+    "name": "Vivo Huawei MatePad Pro",
+    "price": 39251000.0,
+    "original_price": 53486000.0,
+    "discount_percent": 26.6,
+    "category": "tablet",
+    "brand": "Vivo",
+    "rating": 4.0,
+    "review_count": 428,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_e06b8b5e.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.057021",
+    "url": "https://fptshop.com/product/8b7d6c53"
+  },
+  {
+    "product_id": "FPTSHOP_42023c52",
+    "name": "Apple Xiaomi Pad 6 Pro",
+    "price": 26442000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Apple",
+    "rating": 4.3,
+    "review_count": 524,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6e13fea1.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.158078",
+    "url": "https://fptshop.com/product/bfcdfb01"
+  },
+  {
+    "product_id": "FPTSHOP_b013a34b",
+    "name": "BKAV iPad Pro M2",
+    "price": 15122000.0,
+    "original_price": 17338000.0,
+    "discount_percent": 12.8,
+    "category": "tablet",
+    "brand": "BKAV",
+    "rating": 3.7,
+    "review_count": 987,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6e770ff8.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.269811",
+    "url": "https://fptshop.com/product/d41f9442"
+  },
+  {
+    "product_id": "FPTSHOP_79b966ad",
+    "name": "Samsung Huawei MatePad Pro",
+    "price": 5312000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Samsung",
+    "rating": 4.5,
+    "review_count": 1543,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_d3c65b3b.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.373417",
+    "url": "https://fptshop.com/product/3106ac62"
+  },
+  {
+    "product_id": "FPTSHOP_dde0d21c",
+    "name": "Vivo iPad Pro M2",
+    "price": 49308000.0,
+    "original_price": 64363000.0,
+    "discount_percent": 23.4,
+    "category": "tablet",
+    "brand": "Vivo",
+    "rating": 4.4,
+    "review_count": 1288,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm iPad Pro M2 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_c3eb6ed3.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.484364",
+    "url": "https://fptshop.com/product/a317900b"
+  },
+  {
+    "product_id": "FPTSHOP_984cf677",
+    "name": "Samsung Huawei MatePad Pro",
+    "price": 40186000.0,
+    "original_price": 49670000.0,
+    "discount_percent": 19.1,
+    "category": "tablet",
+    "brand": "Samsung",
+    "rating": 3.9,
+    "review_count": 1412,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_492a2946.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.585836",
+    "url": "https://fptshop.com/product/6669a5b3"
+  },
+  {
+    "product_id": "FPTSHOP_5612a031",
+    "name": "Realme Samsung Galaxy Tab S9",
+    "price": 12089000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 1033,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Samsung Galaxy Tab S9 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_1b5480be.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.690714",
+    "url": "https://fptshop.com/product/13c2383f"
+  },
+  {
+    "product_id": "FPTSHOP_dd40d471",
+    "name": "Xiaomi Huawei MatePad Pro",
+    "price": 44116000.0,
+    "original_price": 61237000.0,
+    "discount_percent": 28.0,
+    "category": "tablet",
+    "brand": "Xiaomi",
+    "rating": 3.8,
+    "review_count": 1073,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_bc1edc90.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.801983",
+    "url": "https://fptshop.com/product/8b6d754d"
+  },
+  {
+    "product_id": "FPTSHOP_131f8e71",
+    "name": "Apple Huawei MatePad Pro",
+    "price": 17677000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Apple",
+    "rating": 4.5,
+    "review_count": 268,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Huawei MatePad Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_afaae78f.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:10.906598",
+    "url": "https://fptshop.com/product/fc5bcffe"
+  },
+  {
+    "product_id": "FPTSHOP_bfe0f5db",
+    "name": "Asanzo Xiaomi Pad 6 Pro",
+    "price": 22096000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Asanzo",
+    "rating": 3.9,
+    "review_count": 1285,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Xiaomi Pad 6 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_7b127b3b.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:11.012443",
+    "url": "https://fptshop.com/product/87b4c6e6"
+  },
+  {
+    "product_id": "FPTSHOP_a06a1b12",
+    "name": "Apple Lenovo Tab P12 Pro",
+    "price": 35773000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tablet",
+    "brand": "Apple",
+    "rating": 4.9,
+    "review_count": 87,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Lenovo Tab P12 Pro chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_3ab9b788.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:11.112949",
+    "url": "https://fptshop.com/product/5b2b752b"
+  },
+  {
+    "product_id": "FPTSHOP_7b2a09e4",
+    "name": "Samsung Product 9129",
+    "price": 43267000.0,
+    "original_price": 48421000.0,
+    "discount_percent": 10.6,
+    "category": "dong-ho-thong-minh",
+    "brand": "Samsung",
+    "rating": 4.0,
+    "review_count": 1535,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9129 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_8ee50066.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:12.427783",
+    "url": "https://fptshop.com/product/362724e5"
+  },
+  {
+    "product_id": "FPTSHOP_acece236",
+    "name": "OPPO Product 8947",
+    "price": 4949000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dong-ho-thong-minh",
+    "brand": "OPPO",
+    "rating": 3.6,
+    "review_count": 1169,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8947 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_85d2866e.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:12.528812",
+    "url": "https://fptshop.com/product/7470f596"
+  },
+  {
+    "product_id": "FPTSHOP_e4c28d00",
+    "name": "Vivo Product 9887",
+    "price": 41909000.0,
+    "original_price": 47789000.0,
+    "discount_percent": 12.3,
+    "category": "dong-ho-thong-minh",
+    "brand": "Vivo",
+    "rating": 4.3,
+    "review_count": 1021,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9887 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_1b27ad5c.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:12.644865",
+    "url": "https://fptshop.com/product/43cc09c3"
+  },
+  {
+    "product_id": "FPTSHOP_53d4fd92",
+    "name": "VinSmart Product 2952",
+    "price": 22851000.0,
+    "original_price": 30594000.0,
+    "discount_percent": 25.3,
+    "category": "dong-ho-thong-minh",
+    "brand": "VinSmart",
+    "rating": 4.8,
+    "review_count": 1605,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2952 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_0b165a19.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:12.745632",
+    "url": "https://fptshop.com/product/4ce0ac3e"
+  },
+  {
+    "product_id": "FPTSHOP_65ad0a39",
+    "name": "Xiaomi Product 9718",
+    "price": 35693000.0,
+    "original_price": 48214000.0,
+    "discount_percent": 26.0,
+    "category": "dong-ho-thong-minh",
+    "brand": "Xiaomi",
+    "rating": 3.8,
+    "review_count": 1244,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9718 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_9ddf4d12.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:12.847380",
+    "url": "https://fptshop.com/product/e7aabc53"
+  },
+  {
+    "product_id": "FPTSHOP_24a54717",
+    "name": "FPT Product 3194",
+    "price": 26942000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dong-ho-thong-minh",
+    "brand": "FPT",
+    "rating": 5.0,
+    "review_count": 918,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3194 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_2f805708.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:12.961711",
+    "url": "https://fptshop.com/product/3d6d3120"
+  },
+  {
+    "product_id": "FPTSHOP_bd941fa9",
+    "name": "OPPO Product 1972",
+    "price": 18158000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dong-ho-thong-minh",
+    "brand": "OPPO",
+    "rating": 3.8,
+    "review_count": 1175,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 1972 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_9c00a9cc.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:13.062477",
+    "url": "https://fptshop.com/product/ab72f4c7"
+  },
+  {
+    "product_id": "FPTSHOP_462db80b",
+    "name": "Samsung Product 3199",
+    "price": 39883000.0,
+    "original_price": 46749000.0,
+    "discount_percent": 14.7,
+    "category": "dong-ho-thong-minh",
+    "brand": "Samsung",
+    "rating": 4.7,
+    "review_count": 813,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3199 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_0a04d2b1.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:13.163231",
+    "url": "https://fptshop.com/product/18961ca7"
+  },
+  {
+    "product_id": "FPTSHOP_f5ed3ccb",
+    "name": "OPPO Product 1147",
+    "price": 802000.0,
+    "original_price": 1161000.0,
+    "discount_percent": 30.9,
+    "category": "dong-ho-thong-minh",
+    "brand": "OPPO",
+    "rating": 4.0,
+    "review_count": 1836,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1147 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_c5eb0a02.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:13.271388",
+    "url": "https://fptshop.com/product/d2a6305c"
+  },
+  {
+    "product_id": "FPTSHOP_e4520130",
+    "name": "OPPO Product 7018",
+    "price": 14346000.0,
+    "original_price": 20147000.0,
+    "discount_percent": 28.8,
+    "category": "dong-ho-thong-minh",
+    "brand": "OPPO",
+    "rating": 4.8,
+    "review_count": 206,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7018 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_e4e2f1d7.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:13.374640",
+    "url": "https://fptshop.com/product/527a26e0"
+  },
+  {
+    "product_id": "FPTSHOP_83624336",
+    "name": "VinSmart Product 9831",
+    "price": 18599000.0,
+    "original_price": 26458000.0,
+    "discount_percent": 29.7,
+    "category": "dong-ho-thong-minh",
+    "brand": "VinSmart",
+    "rating": 3.8,
+    "review_count": 31,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9831 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_d824d63a.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:13.483770",
+    "url": "https://fptshop.com/product/8cb1ca64"
+  },
+  {
+    "product_id": "FPTSHOP_faed2e21",
+    "name": "Xiaomi Product 6885",
+    "price": 45878000.0,
+    "original_price": 56350000.0,
+    "discount_percent": 18.6,
+    "category": "dong-ho-thong-minh",
+    "brand": "Xiaomi",
+    "rating": 4.1,
+    "review_count": 1710,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6885 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_bdc257cd.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:13.588369",
+    "url": "https://fptshop.com/product/623822f0"
+  },
+  {
+    "product_id": "FPTSHOP_17f206fc",
+    "name": "VinSmart Product 4758",
+    "price": 47155000.0,
+    "original_price": 51888000.0,
+    "discount_percent": 9.1,
+    "category": "tai-nghe",
+    "brand": "VinSmart",
+    "rating": 4.5,
+    "review_count": 1368,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4758 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_98eba819.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:14.901012",
+    "url": "https://fptshop.com/product/0f8e68ef"
+  },
+  {
+    "product_id": "FPTSHOP_a1a9f619",
+    "name": "Asanzo Product 1774",
+    "price": 24321000.0,
+    "original_price": 28982000.0,
+    "discount_percent": 16.1,
+    "category": "tai-nghe",
+    "brand": "Asanzo",
+    "rating": 3.8,
+    "review_count": 986,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1774 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_fb926cbc.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.011547",
+    "url": "https://fptshop.com/product/395efca4"
+  },
+  {
+    "product_id": "FPTSHOP_41916c14",
+    "name": "Viettel Product 2700",
+    "price": 10828000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "Viettel",
+    "rating": 4.3,
+    "review_count": 683,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 2700 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_3fd3012b.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.112212",
+    "url": "https://fptshop.com/product/0c35c991"
+  },
+  {
+    "product_id": "FPTSHOP_0558e395",
+    "name": "Viettel Product 6786",
+    "price": 17276000.0,
+    "original_price": 25001000.0,
+    "discount_percent": 30.9,
+    "category": "tai-nghe",
+    "brand": "Viettel",
+    "rating": 5.0,
+    "review_count": 89,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 6786 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_075dde76.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.229577",
+    "url": "https://fptshop.com/product/496624e5"
+  },
+  {
+    "product_id": "FPTSHOP_62be5198",
+    "name": "Realme Product 3600",
+    "price": 2406000.0,
+    "original_price": 2947000.0,
+    "discount_percent": 18.3,
+    "category": "tai-nghe",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 492,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3600 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_abe30ffd.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.340541",
+    "url": "https://fptshop.com/product/1b7f8d10"
+  },
+  {
+    "product_id": "FPTSHOP_c2b47d23",
+    "name": "OPPO Product 8423",
+    "price": 49863000.0,
+    "original_price": 56549000.0,
+    "discount_percent": 11.8,
+    "category": "tai-nghe",
+    "brand": "OPPO",
+    "rating": 3.8,
+    "review_count": 1657,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8423 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_892c9dff.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.461085",
+    "url": "https://fptshop.com/product/9492506a"
+  },
+  {
+    "product_id": "FPTSHOP_2c831ff7",
+    "name": "Realme Product 8654",
+    "price": 20169000.0,
+    "original_price": 26671000.0,
+    "discount_percent": 24.4,
+    "category": "tai-nghe",
+    "brand": "Realme",
+    "rating": 4.1,
+    "review_count": 1745,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8654 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_1e95ad9d.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.567110",
+    "url": "https://fptshop.com/product/2b1a011a"
+  },
+  {
+    "product_id": "FPTSHOP_71c7ebdd",
+    "name": "Asanzo Product 9595",
+    "price": 2748000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "Asanzo",
+    "rating": 3.7,
+    "review_count": 1489,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9595 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_a61f58f7.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.670944",
+    "url": "https://fptshop.com/product/03a4df5f"
+  },
+  {
+    "product_id": "FPTSHOP_e50ecd44",
+    "name": "Realme Product 4769",
+    "price": 32000000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "Realme",
+    "rating": 4.7,
+    "review_count": 1257,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4769 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_26c63d5d.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.772115",
+    "url": "https://fptshop.com/product/87931c86"
+  },
+  {
+    "product_id": "FPTSHOP_99c12aed",
+    "name": "VinSmart Product 5062",
+    "price": 48774000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "tai-nghe",
+    "brand": "VinSmart",
+    "rating": 4.7,
+    "review_count": 1067,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 5062 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_7c6f19a3.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.878034",
+    "url": "https://fptshop.com/product/a4c5cfc3"
+  },
+  {
+    "product_id": "FPTSHOP_41fa9e8e",
+    "name": "Xiaomi Product 4945",
+    "price": 29741000.0,
+    "original_price": 43730000.0,
+    "discount_percent": 32.0,
+    "category": "tai-nghe",
+    "brand": "Xiaomi",
+    "rating": 4.9,
+    "review_count": 215,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4945 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_db18f111.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:15.989399",
+    "url": "https://fptshop.com/product/bdaa0d2f"
+  },
+  {
+    "product_id": "FPTSHOP_a0f14620",
+    "name": "Vivo Product 1872",
+    "price": 27723000.0,
+    "original_price": 34035000.0,
+    "discount_percent": 18.5,
+    "category": "tai-nghe",
+    "brand": "Vivo",
+    "rating": 3.7,
+    "review_count": 454,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1872 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_007c6a38.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:16.101171",
+    "url": "https://fptshop.com/product/c71b68f8"
+  },
+  {
+    "product_id": "FPTSHOP_d8bf234b",
+    "name": "Apple Product 9268",
+    "price": 11074000.0,
+    "original_price": 12484000.0,
+    "discount_percent": 11.3,
+    "category": "loa",
+    "brand": "Apple",
+    "rating": 4.5,
+    "review_count": 206,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9268 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_d4f962d0.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:17.407949",
+    "url": "https://fptshop.com/product/678ba19b"
+  },
+  {
+    "product_id": "FPTSHOP_541ddfeb",
+    "name": "Asanzo Product 8456",
+    "price": 42354000.0,
+    "original_price": 59134000.0,
+    "discount_percent": 28.4,
+    "category": "loa",
+    "brand": "Asanzo",
+    "rating": 4.1,
+    "review_count": 320,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8456 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_262c0190.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:17.514359",
+    "url": "https://fptshop.com/product/a8bae892"
+  },
+  {
+    "product_id": "FPTSHOP_8d64da43",
+    "name": "VinSmart Product 5448",
+    "price": 41305000.0,
+    "original_price": 47015000.0,
+    "discount_percent": 12.1,
+    "category": "loa",
+    "brand": "VinSmart",
+    "rating": 4.6,
+    "review_count": 318,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5448 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_81a4ab9a.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:17.629441",
+    "url": "https://fptshop.com/product/5ff326af"
+  },
+  {
+    "product_id": "FPTSHOP_7bb7e96d",
+    "name": "OPPO Product 9391",
+    "price": 27731000.0,
+    "original_price": 40684000.0,
+    "discount_percent": 31.8,
+    "category": "loa",
+    "brand": "OPPO",
+    "rating": 4.0,
+    "review_count": 1858,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9391 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_830f6f8f.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:17.734696",
+    "url": "https://fptshop.com/product/a7de04ed"
+  },
+  {
+    "product_id": "FPTSHOP_ebf50346",
+    "name": "Realme Product 6584",
+    "price": 29512000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa",
+    "brand": "Realme",
+    "rating": 4.2,
+    "review_count": 558,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6584 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_52e35dd4.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:17.850029",
+    "url": "https://fptshop.com/product/b7e6fc60"
+  },
+  {
+    "product_id": "FPTSHOP_68c6fb9e",
+    "name": "Xiaomi Product 1555",
+    "price": 12645000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa",
+    "brand": "Xiaomi",
+    "rating": 4.8,
+    "review_count": 1844,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1555 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_395a4777.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:17.961202",
+    "url": "https://fptshop.com/product/752266ae"
+  },
+  {
+    "product_id": "FPTSHOP_5a794a9a",
+    "name": "Asanzo Product 5027",
+    "price": 2008000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "loa",
+    "brand": "Asanzo",
+    "rating": 3.6,
+    "review_count": 1216,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5027 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6ca562a9.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:18.072650",
+    "url": "https://fptshop.com/product/93f8f5b6"
+  },
+  {
+    "product_id": "FPTSHOP_de48d7ad",
+    "name": "Samsung Product 1003",
+    "price": 15891000.0,
+    "original_price": 23612000.0,
+    "discount_percent": 32.7,
+    "category": "loa",
+    "brand": "Samsung",
+    "rating": 4.0,
+    "review_count": 106,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1003 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_5af15502.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:18.173734",
+    "url": "https://fptshop.com/product/9a853847"
+  },
+  {
+    "product_id": "FPTSHOP_09434d4f",
+    "name": "Samsung Product 7971",
+    "price": 20231000.0,
+    "original_price": 29178000.0,
+    "discount_percent": 30.7,
+    "category": "loa",
+    "brand": "Samsung",
+    "rating": 3.9,
+    "review_count": 866,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7971 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_518eec1c.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:18.290927",
+    "url": "https://fptshop.com/product/8db8c18a"
+  },
+  {
+    "product_id": "FPTSHOP_bc484bea",
+    "name": "Samsung Product 4384",
+    "price": 8796000.0,
+    "original_price": 10554000.0,
+    "discount_percent": 16.7,
+    "category": "loa",
+    "brand": "Samsung",
+    "rating": 4.5,
+    "review_count": 666,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4384 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_ede74cf4.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:18.406354",
+    "url": "https://fptshop.com/product/ffb9a6e5"
+  },
+  {
+    "product_id": "FPTSHOP_4a580ef1",
+    "name": "Samsung Product 6431",
+    "price": 16668000.0,
+    "original_price": 21496000.0,
+    "discount_percent": 22.5,
+    "category": "loa",
+    "brand": "Samsung",
+    "rating": 3.7,
+    "review_count": 105,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 6431 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_8efe371d.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:18.513710",
+    "url": "https://fptshop.com/product/937fe74d"
+  },
+  {
+    "product_id": "FPTSHOP_e0276258",
+    "name": "OPPO Product 4801",
+    "price": 45736000.0,
+    "original_price": 60341000.0,
+    "discount_percent": 24.2,
+    "category": "phu-kien",
+    "brand": "OPPO",
+    "rating": 5.0,
+    "review_count": 223,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4801 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6e432256.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:19.839316",
+    "url": "https://fptshop.com/product/13e0eefc"
+  },
+  {
+    "product_id": "FPTSHOP_b584b270",
+    "name": "VinSmart Product 4333",
+    "price": 3791000.0,
+    "original_price": 4483000.0,
+    "discount_percent": 15.4,
+    "category": "phu-kien",
+    "brand": "VinSmart",
+    "rating": 4.1,
+    "review_count": 1278,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4333 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_ba922630.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:19.947780",
+    "url": "https://fptshop.com/product/80cc0ab6"
+  },
+  {
+    "product_id": "FPTSHOP_fe0eb951",
+    "name": "Vivo Product 7931",
+    "price": 41672000.0,
+    "original_price": 54914000.0,
+    "discount_percent": 24.1,
+    "category": "phu-kien",
+    "brand": "Vivo",
+    "rating": 4.7,
+    "review_count": 1512,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7931 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_684056eb.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.051999",
+    "url": "https://fptshop.com/product/a530659e"
+  },
+  {
+    "product_id": "FPTSHOP_01090339",
+    "name": "Samsung Product 3044",
+    "price": 21973000.0,
+    "original_price": 31710000.0,
+    "discount_percent": 30.7,
+    "category": "phu-kien",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 314,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3044 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_4f7061b6.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.155903",
+    "url": "https://fptshop.com/product/ab274eb6"
+  },
+  {
+    "product_id": "FPTSHOP_d4b234c6",
+    "name": "Xiaomi Product 1140",
+    "price": 47819000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phu-kien",
+    "brand": "Xiaomi",
+    "rating": 4.8,
+    "review_count": 412,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1140 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_391e197a.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.257044",
+    "url": "https://fptshop.com/product/3572d7e1"
+  },
+  {
+    "product_id": "FPTSHOP_8125e3bf",
+    "name": "Viettel Product 1694",
+    "price": 2616000.0,
+    "original_price": 3531000.0,
+    "discount_percent": 25.9,
+    "category": "phu-kien",
+    "brand": "Viettel",
+    "rating": 3.7,
+    "review_count": 402,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1694 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_861440c6.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.362672",
+    "url": "https://fptshop.com/product/54914fd3"
+  },
+  {
+    "product_id": "FPTSHOP_6c22024e",
+    "name": "OPPO Product 5728",
+    "price": 19335000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phu-kien",
+    "brand": "OPPO",
+    "rating": 4.3,
+    "review_count": 62,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5728 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_7e981604.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.463829",
+    "url": "https://fptshop.com/product/bdc6a5fc"
+  },
+  {
+    "product_id": "FPTSHOP_aa0b622b",
+    "name": "Vivo Product 8952",
+    "price": 47743000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phu-kien",
+    "brand": "Vivo",
+    "rating": 4.5,
+    "review_count": 1474,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8952 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_a50c31be.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.572495",
+    "url": "https://fptshop.com/product/c6ad01a2"
+  },
+  {
+    "product_id": "FPTSHOP_4528f311",
+    "name": "OPPO Product 2696",
+    "price": 18765000.0,
+    "original_price": 24616000.0,
+    "discount_percent": 23.8,
+    "category": "phu-kien",
+    "brand": "OPPO",
+    "rating": 4.9,
+    "review_count": 1556,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2696 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_6c7be375.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.674036",
+    "url": "https://fptshop.com/product/957934fc"
+  },
+  {
+    "product_id": "FPTSHOP_114f6da2",
+    "name": "Samsung Product 6948",
+    "price": 7090000.0,
+    "original_price": 10016000.0,
+    "discount_percent": 29.2,
+    "category": "phu-kien",
+    "brand": "Samsung",
+    "rating": 4.5,
+    "review_count": 1121,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6948 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_4870209d.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.784780",
+    "url": "https://fptshop.com/product/e7cd774d"
+  },
+  {
+    "product_id": "FPTSHOP_1ba37c53",
+    "name": "Apple Product 9820",
+    "price": 15352000.0,
+    "original_price": 17240000.0,
+    "discount_percent": 10.9,
+    "category": "phu-kien",
+    "brand": "Apple",
+    "rating": 3.8,
+    "review_count": 1070,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9820 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_719856a0.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.885313",
+    "url": "https://fptshop.com/product/937b4b35"
+  },
+  {
+    "product_id": "FPTSHOP_fc4248c1",
+    "name": "VinSmart Product 9136",
+    "price": 27944000.0,
+    "original_price": 32394000.0,
+    "discount_percent": 13.7,
+    "category": "phu-kien",
+    "brand": "VinSmart",
+    "rating": 4.8,
+    "review_count": 1574,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9136 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_758780b9.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:20.990943",
+    "url": "https://fptshop.com/product/c410035e"
+  },
+  {
+    "product_id": "FPTSHOP_2350137c",
+    "name": "Xiaomi Product 1659",
+    "price": 746000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-tinh-ban",
+    "brand": "Xiaomi",
+    "rating": 4.3,
+    "review_count": 1215,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1659 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_88809f19.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.311305",
+    "url": "https://fptshop.com/product/81d3b655"
+  },
+  {
+    "product_id": "FPTSHOP_f36e7b1b",
+    "name": "Apple Product 9447",
+    "price": 38326000.0,
+    "original_price": 56568000.0,
+    "discount_percent": 32.2,
+    "category": "may-tinh-ban",
+    "brand": "Apple",
+    "rating": 3.8,
+    "review_count": 1419,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9447 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_3624cf3a.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.412670",
+    "url": "https://fptshop.com/product/30641d2a"
+  },
+  {
+    "product_id": "FPTSHOP_66e5417b",
+    "name": "OPPO Product 8407",
+    "price": 44201000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-tinh-ban",
+    "brand": "OPPO",
+    "rating": 4.2,
+    "review_count": 1121,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8407 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_9527f392.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.523951",
+    "url": "https://fptshop.com/product/27aa5055"
+  },
+  {
+    "product_id": "FPTSHOP_881d4bed",
+    "name": "Asanzo Product 5599",
+    "price": 3763000.0,
+    "original_price": 4841000.0,
+    "discount_percent": 22.3,
+    "category": "may-tinh-ban",
+    "brand": "Asanzo",
+    "rating": 4.0,
+    "review_count": 101,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5599 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_e139ef70.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.626178",
+    "url": "https://fptshop.com/product/6067ac8c"
+  },
+  {
+    "product_id": "FPTSHOP_f41348ce",
+    "name": "OPPO Product 3054",
+    "price": 21659000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-tinh-ban",
+    "brand": "OPPO",
+    "rating": 4.0,
+    "review_count": 658,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3054 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_5651dd34.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.734339",
+    "url": "https://fptshop.com/product/7c7e2150"
+  },
+  {
+    "product_id": "FPTSHOP_8bf42c8f",
+    "name": "OPPO Product 1327",
+    "price": 45789000.0,
+    "original_price": 66323000.0,
+    "discount_percent": 31.0,
+    "category": "may-tinh-ban",
+    "brand": "OPPO",
+    "rating": 3.6,
+    "review_count": 473,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1327 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_ab01ab18.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.851077",
+    "url": "https://fptshop.com/product/c54fa14a"
+  },
+  {
+    "product_id": "FPTSHOP_b0d4f598",
+    "name": "Asanzo Product 3832",
+    "price": 36890000.0,
+    "original_price": 47769000.0,
+    "discount_percent": 22.8,
+    "category": "may-tinh-ban",
+    "brand": "Asanzo",
+    "rating": 4.9,
+    "review_count": 819,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3832 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_7bad3424.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:22.967774",
+    "url": "https://fptshop.com/product/039f67fe"
+  },
+  {
+    "product_id": "FPTSHOP_384efaa5",
+    "name": "FPT Product 1517",
+    "price": 45457000.0,
+    "original_price": 66706000.0,
+    "discount_percent": 31.9,
+    "category": "may-tinh-ban",
+    "brand": "FPT",
+    "rating": 4.7,
+    "review_count": 1695,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 1517 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_e7b23abd.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:23.068258",
+    "url": "https://fptshop.com/product/d6fc469f"
+  },
+  {
+    "product_id": "FPTSHOP_193651db",
+    "name": "Samsung Product 2472",
+    "price": 41685000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-tinh-ban",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 884,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2472 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_fcc1ca8a.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:23.168998",
+    "url": "https://fptshop.com/product/2fae027e"
+  },
+  {
+    "product_id": "FPTSHOP_12de9e15",
+    "name": "Apple Product 8232",
+    "price": 31134000.0,
+    "original_price": 46369000.0,
+    "discount_percent": 32.9,
+    "category": "may-tinh-ban",
+    "brand": "Apple",
+    "rating": 3.9,
+    "review_count": 603,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8232 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_8996e948.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:23.269258",
+    "url": "https://fptshop.com/product/363afe06"
+  },
+  {
+    "product_id": "FPTSHOP_834df1c7",
+    "name": "OPPO Product 6934",
+    "price": 10104000.0,
+    "original_price": 11565000.0,
+    "discount_percent": 12.6,
+    "category": "may-tinh-ban",
+    "brand": "OPPO",
+    "rating": 4.2,
+    "review_count": 62,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6934 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_c2c63b6d.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:23.369988",
+    "url": "https://fptshop.com/product/1d88c8f0"
+  },
+  {
+    "product_id": "FPTSHOP_40954938",
+    "name": "Vivo Product 7882",
+    "price": 12921000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-tinh-ban",
+    "brand": "Vivo",
+    "rating": 3.8,
+    "review_count": 1446,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7882 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://fptshop.com/images/product_0779eab0.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "fptshop",
+    "crawl_timestamp": "2025-10-01 21:15:23.483924",
+    "url": "https://fptshop.com/product/0a1c77f8"
+  }
+]
