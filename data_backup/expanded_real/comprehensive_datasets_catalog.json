@@ -1,0 +1,161 @@
+{
+  "catalog_created": "2025-10-01T21:55:24.669547",
+  "total_datasets": 9,
+  "datasets": {
+    "existing_real_datasets": {
+      "existing_kaggle": {
+        "retail_transactions": {
+          "path": "../data/raw/kaggle_datasets/data.csv",
+          "columns": [
+            "InvoiceNo",
+            "StockCode",
+            "Description",
+            "Quantity",
+            "InvoiceDate",
+            "UnitPrice",
+            "CustomerID",
+            "Country"
+          ],
+          "sample_data": [
+            {
+              "InvoiceNo": 536365,
+              "StockCode": "85123A",
+              "Description": "WHITE HANGING HEART T-LIGHT HOLDER",
+              "Quantity": 6,
+              "InvoiceDate": "12/1/2010 8:26",
+              "UnitPrice": 2.55,
+              "CustomerID": 17850,
+              "Country": "United Kingdom"
+            },
+            {
+              "InvoiceNo": 536365,
+              "StockCode": "71053",
+              "Description": "WHITE METAL LANTERN",
+              "Quantity": 6,
+              "InvoiceDate": "12/1/2010 8:26",
+              "UnitPrice": 3.39,
+              "CustomerID": 17850,
+              "Country": "United Kingdom"
+            }
+          ]
+        },
+        "customers": {
+          "path": "../data/customers.csv",
+          "columns": [
+            "customer_id",
+            "customer_name",
+            "email",
+            "phone",
+            "address",
+            "city",
+            "country",
+            "registration_date",
+            "customer_segment",
+            "lifetime_value",
+            "age",
+            "gender",
+            "created_at"
+          ],
+          "sample_data": [
+            {
+              "customer_id": "CUST_00000000",
+              "customer_name": "Brady Hernandez",
+              "email": "vduong@example.org",
+              "phone": "(00)632-4688",
+              "address": "102 Burton Trail\nNorth Kellybury, NV 09057",
+              "city": "Thị xã JaneThị xã",
+              "country": "Vietnam",
+              "registration_date": "2024-08-17",
+              "customer_segment": "New",
+              "lifetime_value": 3375.42,
+              "age": 52,
+              "gender": "Male",
+              "created_at": "2025-09-17 15:09:33.920737"
+            },
+            {
+              "customer_id": "CUST_00000001",
+              "customer_name": "Tyler King",
+              "email": "sullivankevin@example.net",
+              "phone": "01 8909 7957",
+              "address": "27 John Hẻm\nJanePhường, 898373",
+              "city": "JaneQuận",
+              "country": "USA",
+              "registration_date": "2023-11-18",
+              "customer_segment": "VIP",
+              "lifetime_value": 241.4,
+              "age": 41,
+              "gender": "Male",
+              "created_at": "2025-09-17 15:09:33.921136"
+            }
+          ]
+        }
+      },
+      "api_downloaded": [
+        {
+          "name": "DummyJSON Electronics",
+          "file": "..\\data\\real_datasets\\dummyjson_electronics.csv",
+          "records": 5,
+          "source": "https://dummyjson.com"
+        },
+        {
+          "name": "FakeStore Electronics",
+          "file": "..\\data\\real_datasets\\fakestore_electronics.csv",
+          "records": 6,
+          "source": "https://fakestoreapi.com"
+        }
+      ],
+      "kaggle_electronics": {
+        "name": "Kaggle UK Retail Electronics",
+        "file": "..\\data\\real_datasets\\kaggle_electronics_filtered.csv",
+        "records": 20,
+        "source": "Kaggle UK Retail Dataset",
+        "countries": [
+          "United Kingdom",
+          "EIRE"
+        ]
+      }
+    },
+    "newly_collected": [
+      {
+        "name": "DummyJSON Expanded Electronics",
+        "file": "..\\data\\expanded_real\\dummyjson_expanded_electronics.csv",
+        "records": 24,
+        "categories": [
+          "smartphones",
+          "laptops",
+          "tablets"
+        ],
+        "source": "https://dummyjson.com"
+      },
+      {
+        "name": "Platzi Electronics",
+        "file": "..\\data\\expanded_real\\platzi_electronics.csv",
+        "records": 10,
+        "source": "https://api.escuelajs.co"
+      },
+      {
+        "name": "JSONPlaceholder Customers",
+        "file": "..\\data\\expanded_real\\jsonplaceholder_customers.csv",
+        "records": 10,
+        "source": "https://jsonplaceholder.typicode.com"
+      },
+      {
+        "name": "Synthetic Realistic Transactions",
+        "file": "..\\data\\expanded_real\\synthetic_realistic_transactions.csv",
+        "records": 5000,
+        "source": "Generated from real customer patterns"
+      }
+    ]
+  },
+  "data_summary": {
+    "electronics_products": 34,
+    "customer_records": 10,
+    "transaction_records": 5000,
+    "total_records": 5044
+  },
+  "source_breakdown": {
+    "kaggle_datasets": 0,
+    "public_apis": 0,
+    "synthetic_realistic": 0
+  }
+}

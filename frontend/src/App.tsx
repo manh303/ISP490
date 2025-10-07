@@ -18,22 +18,47 @@ import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
+import VietnamElectronicsDashboard from "./pages/Dashboard/VietnamElectronicsDashboard";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
+import { AuthProvider, ProtectedRoute } from "./contexts/AuthContext";
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <Router>
         <ScrollToTop />
         <Routes>
-          {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
-            {/* <Route index path="/" element={<Home />} /> */}
+          {/* Public Auth Routes - Must come first */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <SignIn />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/signin"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <SignIn />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Others Page */}
+          {/* Protected Dashboard Layout */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Dashboard routes - all protected */}
+            <Route path="/dashboard" element={<VietnamElectronicsDashboard />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
@@ -56,19 +81,51 @@ export default function App() {
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
           </Route>
+          <Route
+            path="/signup"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <SignUp />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <ForgotPassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reset-password/:token"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <ResetPassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/verify-code"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <VerifyCode />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/password-reset-success"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <PasswordResetSuccess />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Auth Layout */}
-          <Route index path="/" element={<SignIn />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/verify-code" element={<VerifyCode />} />
-          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-    </>
+    </AuthProvider>
   );
 }
