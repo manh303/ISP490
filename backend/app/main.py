@@ -785,6 +785,14 @@ except Exception as e:
             "timestamp": datetime.now().isoformat()
         }
 
+# Load Simple Authentication endpoints
+try:
+    from simple_auth import simple_auth_router
+    app.include_router(simple_auth_router)
+    logger.info("✅ Simple Authentication endpoints loaded successfully")
+except Exception as e:
+    logger.warning(f"⚠️ Simple Auth endpoints not available: {e}")
+
 # ====================================
 # ADVANCED ANALYTICS ENDPOINTS
 # ====================================
