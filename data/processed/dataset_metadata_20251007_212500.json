@@ -1,0 +1,15 @@
+{
+  "generated_at": "2025-10-07T21:24:56.774772",
+  "generator_version": "3.0.0",
+  "target_counts": {
+    "products": 20000,
+    "customers": 10000,
+    "orders": 50000
+  },
+  "actual_counts": {
+    "products": 20000,
+    "customers": 10000,
+    "orders": 50000,
+    "total_records": 80000
+  }
+}

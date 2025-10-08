@@ -6,7 +6,7 @@ import os
 # Add app directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
-from simple_main import app
+from main import app
 
 @pytest.fixture
 def client():
