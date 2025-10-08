@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-10-07T21:44:15.538244",
+  "overall_status": "GOOD",
+  "components": {
+    "ecommerce-dss-project-postgres-1": {
+      "status": "healthy",
+      "details": "Up 2 hours (healthy)"
+    },
+    "ecommerce-dss-project-mongodb-1": {
+      "status": "healthy",
+      "details": "Up 2 hours (healthy)"
+    },
+    "redis": {
+      "status": "healthy",
+      "details": "Up 45 minutes\nUp 2 hours (healthy)"
+    },
+    "kafka": {
+      "status": "healthy",
+      "details": "Up 2 hours (healthy)\nUp 45 minutes"
+    },
+    "ecommerce-dss-project-backend-1": {
+      "status": "healthy",
+      "details": "Up 2 hours (healthy)"
+    },
+    "ecommerce-dss-project-frontend-1": {
+      "status": "healthy",
+      "details": "Up About an hour (unhealthy)"
+    },
+    "ecommerce-dss-project-airflow-webserver-1": {
+      "status": "healthy",
+      "details": "Up About an hour (healthy)"
+    },
+    "ecommerce-dss-project-airflow-scheduler-1": {
+      "status": "healthy",
+      "details": "Up About an hour (healthy)"
+    }
+  },
+  "data_flow": {
+    "postgresql": {
+      "status": "connected",
+      "data": "products \n----------\n    20000\n(1 row)\n\n customers \n-----------\n     10000\n(1 row)\n\n orders \n--------\n  50000\n(1 row)"
+    },
+    "mongodb": {
+      "status": "connected",
+      "products_detailed": "0"
+    },
+    "redis": {
+      "status": "connected"
+    },
+    "kafka": {
+      "status": "connected",
+      "total_topics": 14,
+      "vietnam_topics": [
+        "vietnam_alerts",
+        "vietnam_analytics",
+        "vietnam_customers",
+        "vietnam_products",
+        "vietnam_products_large",
+        "vietnam_sales_events",
+        "vietnam_user_activities"
+      ]
+    },
+    "airflow": {
+      "status": "failed",
+      "error": "The system cannot find the path specified."
+    },
+    "backend_api": {
+      "status": "healthy",
+      "services": {
+        "postgresql": "healthy",
+        "mongodb": "healthy",
+        "redis": "healthy"
+      }
+    },
+    "frontend": {
+      "status": "failed"
+    },
+    "data_quality": {
+      "status": "analyzed",
+      "analysis": ""
+    }
+  },
+  "performance": {
+    "database_query_ms": 215.31105041503906
+  },
+  "errors": []
+}
