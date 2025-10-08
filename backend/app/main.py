@@ -53,6 +53,7 @@ from loguru import logger
 
 # Add project paths
 sys.path.append('/app/backend')
+sys.path.append('/app/app')  # Add app directory for simple_auth module
 sys.path.append('/app/data-pipeline/src')
 sys.path.append('/app/streaming')
 
@@ -792,6 +793,14 @@ try:
     logger.info("✅ Simple Authentication endpoints loaded successfully")
 except Exception as e:
     logger.warning(f"⚠️ Simple Auth endpoints not available: {e}")
+
+# Load Simple DSS endpoints
+try:
+    from simple_dss import simple_dss_router
+    app.include_router(simple_dss_router)
+    logger.info("✅ Simple DSS endpoints loaded successfully")
+except Exception as e:
+    logger.warning(f"⚠️ Simple DSS endpoints not available: {e}")
 
 # ====================================
 # ADVANCED ANALYTICS ENDPOINTS

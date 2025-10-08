@@ -24,6 +24,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
 import { AuthProvider, ProtectedRoute } from "./contexts/AuthContext";
+import DSSPage from "./pages/DSSPage.jsx";
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
           >
             {/* Dashboard routes - all protected */}
             <Route path="/dashboard" element={<VietnamElectronicsDashboard />} />
+            <Route path="/dss" element={<DSSPage />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />

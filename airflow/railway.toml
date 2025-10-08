@@ -1,0 +1,19 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "airflow webserver"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+
+[[services]]
+name = "airflow-webserver"
+source = "."
+[[services.env]]
+PORT = "8080"
+
+[[services]]
+name = "airflow-scheduler"
+source = "."
+command = "airflow scheduler"
