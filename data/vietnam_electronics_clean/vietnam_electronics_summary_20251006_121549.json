@@ -1,0 +1,47 @@
+{
+  "report_generated": "2025-10-06T12:15:49.617036",
+  "total_products": 554,
+  "unique_brands": 25,
+  "categories": {
+    "Smartphones": 148,
+    "Headphones": 50,
+    "phones-tablets": 42,
+    "laptop": 41,
+    "Speakers": 39,
+    "tablet": 35,
+    "Desktop Computers": 33,
+    "Laptops": 30,
+    "Audio Devices": 25,
+    "Gaming": 20,
+    "Wearables": 15,
+    "laptop-linh-kien-may-tinh": 10,
+    "dien-thoai-may-tinh-bang": 9,
+    "laptop-thiet-bi-it": 8,
+    "dien-thoai": 8,
+    "loa": 7,
+    "cameras": 4,
+    "tai-nghe": 3,
+    "dong-ho-thong-minh": 3,
+    "dien-tu-dien-lanh": 3,
+    "may-tinh-ban": 3,
+    "sac-du-phong": 2,
+    "may-anh": 2,
+    "phu-kien": 2,
+    "thiet-bi-so-phu-kien-so": 2,
+    "loa-bluetooth": 1
+  },
+  "price_analysis": {
+    "avg_price_vnd": 19940387.889908258,
+    "min_price_vnd": 513000.0,
+    "max_price_vnd": 58797360.0
+  },
+  "data_sources": {
+    "mobile_devices": 240,
+    "computing": 122,
+    "general": 80,
+    "audio": 64,
+    "products_en": 35,
+    "dummyjson_expanded_electronics": 9,
+    "photography": 4
+  }
+}
