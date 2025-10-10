@@ -1,0 +1,16 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "./start.sh"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+
+[[services]]
+name = "backend-api"
+source = "."
+
+[[services.env]]
+PORT = "8000"
+PYTHONPATH = "/app"
