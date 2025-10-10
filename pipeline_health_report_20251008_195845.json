@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-10-08T19:58:45.552846",
+  "postgresql": {
+    "tables_count": 0,
+    "total_records": 0,
+    "tables": {}
+  },
+  "mongodb": {
+    "collections_count": 10,
+    "total_documents": 50171,
+    "collections": {
+      "ml_models": 1,
+      "pipeline_notifications": 12,
+      "system_health_metrics": 1,
+      "ml_features_clv": 10000,
+      "alerts": 104,
+      "ml_product_recommendations": 50,
+      "performance_reports": 1,
+      "ml_recommendations": 20000,
+      "ml_features_products": 20000,
+      "performance_alerts": 2
+    }
+  },
+  "api_endpoints": {
+    "total_endpoints": 4,
+    "successful_endpoints": 1,
+    "endpoints": {
+      "/health": {
+        "status_code": 200,
+        "response_time": 0.01157,
+        "success": true,
+        "data_size": 145
+      },
+      "/api/v1/analytics/summary": {
+        "status_code": 404,
+        "response_time": 0.019992,
+        "success": false
+      },
+      "/api/v1/dashboard/metrics": {
+        "status_code": 404,
+        "response_time": 0.02366,
+        "success": false
+      },
+      "/api/v1/reports/list": {
+        "status_code": 404,
+        "response_time": 0.00481,
+        "success": false
+      }
+    }
+  },
+  "overall_health": {
+    "postgres_score": 0,
+    "mongodb_score": 100,
+    "api_score": 25.0,
+    "overall_score": 41.67
+  }
+}
