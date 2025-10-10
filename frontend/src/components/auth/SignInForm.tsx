@@ -1,50 +1,91 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 // import Label from "../form/Label";
 import Input from "../form/input/InputField";
 // import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import { useAuth } from "../../contexts/AuthContext";
+import authService from "../../services/authService";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: ""
   });
   const [errors, setErrors] = useState({
-    email: "",
+    username: "",
     password: "",
     general: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [testCredentials, setTestCredentials] = useState<Array<{
+    username: string;
+    password: string;
+    role: string;
+    description: string;
+  }>>([]);
+  const [showTestCredentials, setShowTestCredentials] = useState(false);
+
+  const { login, state } = useAuth();
+  const navigate = useNavigate();
+
+  // Load test credentials on component mount
+  useEffect(() => {
+    const loadTestCredentials = async () => {
+      try {
+        const credentials = await authService.getTestCredentials();
+        setTestCredentials(credentials);
+      } catch (error) {
+        console.error('Failed to load test credentials:', error);
+      }
+    };
+
+    loadTestCredentials();
+  }, []);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [state.isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({ email: "", password: "", general: "" });
-    
+    setErrors({ username: "", password: "", general: "" });
+
     // Basic validation
-    if (!formData.email || !formData.password) {
-      setErrors({ 
-        email: !formData.email ? "Email is required" : "",
+    if (!formData.username || !formData.password) {
+      setErrors({
+        username: !formData.username ? "Username is required" : "",
         password: !formData.password ? "Password is required" : "",
-        general: "Invalid username or password"
+        general: "Please fill in all fields"
       });
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      // Handle successful login here
-      console.log("Login successful");
+      await login({
+        username: formData.username,
+        password: formData.password,
+        remember_me: rememberMe
+      });
+      // Navigation will happen automatically via useEffect
     } catch (error) {
-      setErrors({ ...errors, general: "Invalid username or password" });
-    } finally {
-      setIsLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      setErrors({
+        username: "",
+        password: "",
+        general: errorMessage
+      });
     }
+  };
+
+  const fillTestCredentials = (username: string, password: string) => {
+    setFormData({ username, password });
+    setShowTestCredentials(false);
   };
 
   return (
@@ -76,13 +117,13 @@ export default function SignInForm() {
                   <Input
                     type="text"
                     placeholder="Username"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className={errors.email ? "border-red-500" : ""}
+                    value={formData.username}
+                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                    className={errors.username ? "border-red-500" : ""}
                   />
-                  {errors.email && (
+                  {errors.username && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {errors.email}
+                      {errors.username}
                     </p>
                   )}
                 </div>
@@ -115,13 +156,25 @@ export default function SignInForm() {
                     </p>
                   )}
                 </div>
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    id="remember-me"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    Remember me
+                  </label>
+                </div>
                 <div>
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     size="sm"
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                   >
-                    {isLoading ? (
+                    {state.isLoading ? (
                       <>
                         <svg className="w-4 h-4 mr-2 animate-spin" viewBox="0 0 24 24">
                           <circle
@@ -156,6 +209,64 @@ export default function SignInForm() {
                 
               </div>
             </form>
+
+            {/* Test Credentials Section */}
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+              <button
+                type="button"
+                onClick={() => setShowTestCredentials(!showTestCredentials)}
+                className="w-full flex items-center justify-between text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <span>🧪 Test Credentials</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${showTestCredentials ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showTestCredentials && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Click any credential below to auto-fill the form:
+                  </p>
+                  {testCredentials.map((cred, index) => (
+                    <div
+                      key={index}
+                      onClick={() => fillTestCredentials(cred.username, cred.password)}
+                      className="cursor-pointer p-2 bg-white dark:bg-gray-700 rounded border hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {cred.username}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {cred.description}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            cred.role === 'admin'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                              : cred.role === 'manager'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                              : cred.role === 'analyst'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                          }`}
+                        >
+                          {cred.role}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400">

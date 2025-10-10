@@ -1,0 +1,49 @@
+{
+  "generation_summary": {
+    "total_records": 80000,
+    "products": 20000,
+    "customers": 10000,
+    "orders": 50000
+  },
+  "product_insights": {
+    "average_price_vnd": 25119209,
+    "average_price_usd": 1046.63,
+    "average_rating": 4.0,
+    "vietnamese_products": 8061,
+    "vietnamese_ratio": 0.403,
+    "category_distribution": {
+      "Sports": 3290,
+      "Home": 3321,
+      "Electronics": 3353,
+      "Books": 3365,
+      "Beauty": 3291,
+      "Fashion": 3380
+    }
+  },
+  "customer_insights": {
+    "average_age": 41.4,
+    "average_monthly_spending_vnd": 5201822,
+    "average_monthly_spending_usd": 216.74,
+    "total_customer_base": 10000
+  },
+  "order_insights": {
+    "total_revenue_vnd": 7565965917609,
+    "total_revenue_usd": 315248579.9,
+    "average_order_value_vnd": 151319318,
+    "average_order_value_usd": 6304.97,
+    "delivery_success_rate": 0.751,
+    "platform_distribution": {
+      "Shopee": 10235,
+      "Tiki": 9915,
+      "Lazada": 9975,
+      "Sendo": 10079,
+      "FPT Shop": 9796
+    }
+  },
+  "market_insights": {
+    "total_platforms": 5,
+    "total_categories": 6,
+    "top_platform": "Shopee",
+    "top_category": "Fashion"
+  }
+}

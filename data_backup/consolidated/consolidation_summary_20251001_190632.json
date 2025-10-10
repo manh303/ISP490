@@ -1,0 +1,21 @@
+{
+  "consolidation_date": "2025-10-01T19:06:24.370304",
+  "duration_seconds": 7.787665,
+  "datasets_created": {
+    "products": 120,
+    "customers": 5000,
+    "orders": 10000
+  },
+  "total_records": 15120,
+  "market_focus": "Vietnam",
+  "schema_language": "English",
+  "data_quality": "High",
+  "files_created": {
+    "products": "../data/consolidated/vietnam_products_consolidated_20251001_190632.csv",
+    "customers": "../data/consolidated/vietnam_customers_consolidated_20251001_190632.csv",
+    "orders": "../data/consolidated/vietnam_orders_consolidated_20251001_190632.csv",
+    "market_insights": "../data/consolidated/vietnam_market_insights_20251001_190632.json"
+  },
+  "business_analytics_ready": true,
+  "dss_compatible": true
+}

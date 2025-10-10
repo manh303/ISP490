@@ -1,0 +1,2451 @@
+[
+  {
+    "product_id": "LAZADA_1dfd814c",
+    "name": "BKAV Product 4973",
+    "price": 722000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "BKAV",
+    "rating": 4.5,
+    "review_count": 713,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4973 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_a44f5e16.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:01.710968",
+    "url": "https://lazada.com/product/bb3dd1df"
+  },
+  {
+    "product_id": "LAZADA_8b6ef3ea",
+    "name": "Realme Product 2866",
+    "price": 3002000.0,
+    "original_price": 4357000.0,
+    "discount_percent": 31.1,
+    "category": "phones-tablets",
+    "brand": "Realme",
+    "rating": 3.9,
+    "review_count": 605,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2866 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_a60a262d.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:01.825667",
+    "url": "https://lazada.com/product/d7833dd2"
+  },
+  {
+    "product_id": "LAZADA_08d835f6",
+    "name": "VinSmart Product 3493",
+    "price": 2082000.0,
+    "original_price": 2991000.0,
+    "discount_percent": 30.4,
+    "category": "phones-tablets",
+    "brand": "VinSmart",
+    "rating": 4.5,
+    "review_count": 1361,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3493 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_e261d7cb.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:01.928447",
+    "url": "https://lazada.com/product/84959ff3"
+  },
+  {
+    "product_id": "LAZADA_13b9fc17",
+    "name": "Samsung Product 5827",
+    "price": 3966000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 4.0,
+    "review_count": 1225,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 5827 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_9c73700f.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.036578",
+    "url": "https://lazada.com/product/4bc98e73"
+  },
+  {
+    "product_id": "LAZADA_67613612",
+    "name": "Realme Product 3050",
+    "price": 1441000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Realme",
+    "rating": 3.5,
+    "review_count": 1765,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3050 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_a101cba5.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.137589",
+    "url": "https://lazada.com/product/859c9fca"
+  },
+  {
+    "product_id": "LAZADA_1999f35f",
+    "name": "FPT Product 8649",
+    "price": 1307000.0,
+    "original_price": 1838000.0,
+    "discount_percent": 28.9,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 4.9,
+    "review_count": 1727,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8649 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_fe71606e.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.243173",
+    "url": "https://lazada.com/product/08ccceef"
+  },
+  {
+    "product_id": "LAZADA_a0b35ba6",
+    "name": "FPT Product 3827",
+    "price": 15843000.0,
+    "original_price": 18259000.0,
+    "discount_percent": 13.2,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 3.7,
+    "review_count": 1952,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3827 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_8ba8aa9b.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.352912",
+    "url": "https://lazada.com/product/4723aabe"
+  },
+  {
+    "product_id": "LAZADA_8c6e4ef0",
+    "name": "Vivo Product 8803",
+    "price": 13348000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Vivo",
+    "rating": 4.3,
+    "review_count": 1631,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8803 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_edf59817.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.453676",
+    "url": "https://lazada.com/product/48500245"
+  },
+  {
+    "product_id": "LAZADA_419667d7",
+    "name": "Samsung Product 6083",
+    "price": 8867000.0,
+    "original_price": 9914000.0,
+    "discount_percent": 10.6,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 1078,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6083 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_6908db62.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.554365",
+    "url": "https://lazada.com/product/e0f99926"
+  },
+  {
+    "product_id": "LAZADA_2e0fa933",
+    "name": "Realme Product 2763",
+    "price": 8646000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Realme",
+    "rating": 4.8,
+    "review_count": 1727,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2763 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_34474197.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.656830",
+    "url": "https://lazada.com/product/72d96c19"
+  },
+  {
+    "product_id": "LAZADA_ba0756a2",
+    "name": "Samsung Product 2981",
+    "price": 12835000.0,
+    "original_price": 14857000.0,
+    "discount_percent": 13.6,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 5.0,
+    "review_count": 1934,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2981 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_4b4e6d12.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.765280",
+    "url": "https://lazada.com/product/6276d6d6"
+  },
+  {
+    "product_id": "LAZADA_9d567c66",
+    "name": "FPT Product 2056",
+    "price": 15830000.0,
+    "original_price": 21011000.0,
+    "discount_percent": 24.7,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 4.9,
+    "review_count": 248,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2056 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_456697cf.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.866584",
+    "url": "https://lazada.com/product/7e8f701d"
+  },
+  {
+    "product_id": "LAZADA_d639feed",
+    "name": "FPT Product 3723",
+    "price": 819000.0,
+    "original_price": 1083000.0,
+    "discount_percent": 24.4,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 3.9,
+    "review_count": 279,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3723 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_5f6e9d98.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:02.975534",
+    "url": "https://lazada.com/product/5daa79c9"
+  },
+  {
+    "product_id": "LAZADA_dcb4389d",
+    "name": "Apple Product 4597",
+    "price": 8636000.0,
+    "original_price": 11992000.0,
+    "discount_percent": 28.0,
+    "category": "phones-tablets",
+    "brand": "Apple",
+    "rating": 4.2,
+    "review_count": 328,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4597 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_929bf0fa.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.076567",
+    "url": "https://lazada.com/product/43e1208f"
+  },
+  {
+    "product_id": "LAZADA_c9252628",
+    "name": "Xiaomi Product 2538",
+    "price": 12336000.0,
+    "original_price": 16425000.0,
+    "discount_percent": 24.9,
+    "category": "phones-tablets",
+    "brand": "Xiaomi",
+    "rating": 4.8,
+    "review_count": 483,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 2538 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_cd2461b6.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.177032",
+    "url": "https://lazada.com/product/e7a74c22"
+  },
+  {
+    "product_id": "LAZADA_11f2d9ee",
+    "name": "FPT Product 9159",
+    "price": 5369000.0,
+    "original_price": 6892000.0,
+    "discount_percent": 22.1,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 4.2,
+    "review_count": 638,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9159 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_2702653f.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.293018",
+    "url": "https://lazada.com/product/04bc48ca"
+  },
+  {
+    "product_id": "LAZADA_068f5a8c",
+    "name": "Samsung Product 6696",
+    "price": 10965000.0,
+    "original_price": 12133000.0,
+    "discount_percent": 9.6,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 4.9,
+    "review_count": 1644,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6696 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_78dd3ef9.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.393782",
+    "url": "https://lazada.com/product/e2684074"
+  },
+  {
+    "product_id": "LAZADA_9c76b0e0",
+    "name": "FPT Product 7318",
+    "price": 23646000.0,
+    "original_price": 33527000.0,
+    "discount_percent": 29.5,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 3.8,
+    "review_count": 1550,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 7318 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_3fe113d9.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.507134",
+    "url": "https://lazada.com/product/9f5542d4"
+  },
+  {
+    "product_id": "LAZADA_3e7820ba",
+    "name": "Apple Product 1155",
+    "price": 15086000.0,
+    "original_price": 19343000.0,
+    "discount_percent": 22.0,
+    "category": "phones-tablets",
+    "brand": "Apple",
+    "rating": 3.6,
+    "review_count": 784,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1155 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_42da7d52.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.608826",
+    "url": "https://lazada.com/product/e65710a0"
+  },
+  {
+    "product_id": "LAZADA_a91b0be6",
+    "name": "BKAV Product 1095",
+    "price": 6246000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "BKAV",
+    "rating": 4.0,
+    "review_count": 1363,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1095 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_aae591c2.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.714602",
+    "url": "https://lazada.com/product/6284e986"
+  },
+  {
+    "product_id": "LAZADA_cb9184fe",
+    "name": "Samsung Product 5379",
+    "price": 16985000.0,
+    "original_price": 23072000.0,
+    "discount_percent": 26.4,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 3.8,
+    "review_count": 1867,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5379 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_2f7f8beb.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.825626",
+    "url": "https://lazada.com/product/71b9b297"
+  },
+  {
+    "product_id": "LAZADA_f06658f9",
+    "name": "Samsung Product 6684",
+    "price": 12832000.0,
+    "original_price": 15860000.0,
+    "discount_percent": 19.1,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 4.6,
+    "review_count": 1934,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6684 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_b0f32837.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:03.926058",
+    "url": "https://lazada.com/product/e3f916b1"
+  },
+  {
+    "product_id": "LAZADA_13c0f4cb",
+    "name": "FPT Product 7035",
+    "price": 20969000.0,
+    "original_price": 29366000.0,
+    "discount_percent": 28.6,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 3.6,
+    "review_count": 1427,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7035 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_72787ba0.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.026477",
+    "url": "https://lazada.com/product/45e5f8b2"
+  },
+  {
+    "product_id": "LAZADA_b84e2cb5",
+    "name": "Apple Product 1331",
+    "price": 5475000.0,
+    "original_price": 6563000.0,
+    "discount_percent": 16.6,
+    "category": "phones-tablets",
+    "brand": "Apple",
+    "rating": 3.9,
+    "review_count": 718,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1331 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_0c7aaf74.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.128529",
+    "url": "https://lazada.com/product/e6851692"
+  },
+  {
+    "product_id": "LAZADA_2875ad5b",
+    "name": "BKAV Product 3829",
+    "price": 19217000.0,
+    "original_price": 23193000.0,
+    "discount_percent": 17.1,
+    "category": "phones-tablets",
+    "brand": "BKAV",
+    "rating": 4.1,
+    "review_count": 1553,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3829 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_6b72d88f.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.230294",
+    "url": "https://lazada.com/product/3164e4ac"
+  },
+  {
+    "product_id": "LAZADA_bc0207b5",
+    "name": "Asanzo Product 6843",
+    "price": 13226000.0,
+    "original_price": 15254000.0,
+    "discount_percent": 13.3,
+    "category": "phones-tablets",
+    "brand": "Asanzo",
+    "rating": 3.5,
+    "review_count": 840,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6843 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_ad23781a.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.332637",
+    "url": "https://lazada.com/product/83989566"
+  },
+  {
+    "product_id": "LAZADA_793e026d",
+    "name": "FPT Product 8415",
+    "price": 17508000.0,
+    "original_price": 19419000.0,
+    "discount_percent": 9.8,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 3.7,
+    "review_count": 115,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8415 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_c88f3338.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.437921",
+    "url": "https://lazada.com/product/b36cbf19"
+  },
+  {
+    "product_id": "LAZADA_212e8ff9",
+    "name": "Viettel Product 7825",
+    "price": 12562000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Viettel",
+    "rating": 4.0,
+    "review_count": 12,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7825 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_2f7d7fb1.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.538185",
+    "url": "https://lazada.com/product/4393cfe3"
+  },
+  {
+    "product_id": "LAZADA_ef2745b0",
+    "name": "Samsung Product 8759",
+    "price": 11284000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 1689,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8759 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_074e0698.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.638390",
+    "url": "https://lazada.com/product/da1c9ac6"
+  },
+  {
+    "product_id": "LAZADA_866764ce",
+    "name": "Asanzo Product 4378",
+    "price": 20699000.0,
+    "original_price": 29669000.0,
+    "discount_percent": 30.2,
+    "category": "phones-tablets",
+    "brand": "Asanzo",
+    "rating": 4.6,
+    "review_count": 1087,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4378 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_f9757020.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.743792",
+    "url": "https://lazada.com/product/4612b24d"
+  },
+  {
+    "product_id": "LAZADA_d8c8fc91",
+    "name": "BKAV Product 3141",
+    "price": 9517000.0,
+    "original_price": 12124000.0,
+    "discount_percent": 21.5,
+    "category": "phones-tablets",
+    "brand": "BKAV",
+    "rating": 4.6,
+    "review_count": 1806,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3141 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_abffe7c4.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.845026",
+    "url": "https://lazada.com/product/01df089f"
+  },
+  {
+    "product_id": "LAZADA_784ffc77",
+    "name": "Vivo Product 9719",
+    "price": 20517000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Vivo",
+    "rating": 4.7,
+    "review_count": 1845,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9719 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_3f698e9b.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:04.950129",
+    "url": "https://lazada.com/product/10b107d0"
+  },
+  {
+    "product_id": "LAZADA_a97a5060",
+    "name": "Apple Product 3694",
+    "price": 12720000.0,
+    "original_price": 17111000.0,
+    "discount_percent": 25.7,
+    "category": "phones-tablets",
+    "brand": "Apple",
+    "rating": 3.8,
+    "review_count": 288,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3694 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_21478b79.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.054415",
+    "url": "https://lazada.com/product/a25fb008"
+  },
+  {
+    "product_id": "LAZADA_52a50b03",
+    "name": "Apple Product 9606",
+    "price": 6788000.0,
+    "original_price": 9420000.0,
+    "discount_percent": 27.9,
+    "category": "phones-tablets",
+    "brand": "Apple",
+    "rating": 3.8,
+    "review_count": 1874,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9606 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_67c4d723.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.160803",
+    "url": "https://lazada.com/product/9570a6fa"
+  },
+  {
+    "product_id": "LAZADA_c7ca1b30",
+    "name": "Realme Product 3255",
+    "price": 15542000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 659,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3255 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_d43ae5de.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.267115",
+    "url": "https://lazada.com/product/740d7d86"
+  },
+  {
+    "product_id": "LAZADA_3e4e51ed",
+    "name": "FPT Product 1324",
+    "price": 13168000.0,
+    "original_price": 17591000.0,
+    "discount_percent": 25.1,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 3.5,
+    "review_count": 1804,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 1324 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_26b999d5.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.370843",
+    "url": "https://lazada.com/product/ec53a1da"
+  },
+  {
+    "product_id": "LAZADA_dffe5cb5",
+    "name": "FPT Product 2191",
+    "price": 9563000.0,
+    "original_price": 12917000.0,
+    "discount_percent": 26.0,
+    "category": "phones-tablets",
+    "brand": "FPT",
+    "rating": 4.2,
+    "review_count": 1744,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2191 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_1142c3a3.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.477215",
+    "url": "https://lazada.com/product/52a33f11"
+  },
+  {
+    "product_id": "LAZADA_0e653743",
+    "name": "Samsung Product 9703",
+    "price": 20203000.0,
+    "original_price": 28929000.0,
+    "discount_percent": 30.2,
+    "category": "phones-tablets",
+    "brand": "Samsung",
+    "rating": 3.9,
+    "review_count": 766,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9703 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_e02c43f6.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.584607",
+    "url": "https://lazada.com/product/742ec3c7"
+  },
+  {
+    "product_id": "LAZADA_e02b58bb",
+    "name": "Apple Product 3507",
+    "price": 21983000.0,
+    "original_price": 29899000.0,
+    "discount_percent": 26.5,
+    "category": "phones-tablets",
+    "brand": "Apple",
+    "rating": 4.2,
+    "review_count": 1670,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3507 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_974e6ed8.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.686957",
+    "url": "https://lazada.com/product/b7cac2ea"
+  },
+  {
+    "product_id": "LAZADA_e0de86b0",
+    "name": "Viettel Product 4431",
+    "price": 8454000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "phones-tablets",
+    "brand": "Viettel",
+    "rating": 3.5,
+    "review_count": 1754,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4431 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_6371e08c.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.798588",
+    "url": "https://lazada.com/product/cfc90d6e"
+  },
+  {
+    "product_id": "LAZADA_b4a9955e",
+    "name": "BKAV Product 7710",
+    "price": 22571000.0,
+    "original_price": 32376000.0,
+    "discount_percent": 30.3,
+    "category": "phones-tablets",
+    "brand": "BKAV",
+    "rating": 4.8,
+    "review_count": 1285,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7710 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_84967543.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:05.899101",
+    "url": "https://lazada.com/product/6bdae626"
+  },
+  {
+    "product_id": "LAZADA_529d0313",
+    "name": "BKAV Product 5819",
+    "price": 10752000.0,
+    "original_price": 14007000.0,
+    "discount_percent": 23.2,
+    "category": "phones-tablets",
+    "brand": "BKAV",
+    "rating": 4.6,
+    "review_count": 1241,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5819 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_71bedb1e.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:06.002755",
+    "url": "https://lazada.com/product/9185297f"
+  },
+  {
+    "product_id": "LAZADA_29bcf5da",
+    "name": "Apple Product 4571",
+    "price": 8190000.0,
+    "original_price": 9743000.0,
+    "discount_percent": 15.9,
+    "category": "cameras",
+    "brand": "Apple",
+    "rating": 3.5,
+    "review_count": 118,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4571 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_cdba2892.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.143820",
+    "url": "https://lazada.com/product/ff4e12ad"
+  },
+  {
+    "product_id": "LAZADA_3b8fcee8",
+    "name": "Vivo Product 8132",
+    "price": 6177000.0,
+    "original_price": 7004000.0,
+    "discount_percent": 11.8,
+    "category": "cameras",
+    "brand": "Vivo",
+    "rating": 4.5,
+    "review_count": 1734,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8132 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_1fb59cab.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.250170",
+    "url": "https://lazada.com/product/1017b2b5"
+  },
+  {
+    "product_id": "LAZADA_e72ecff4",
+    "name": "Asanzo Product 7118",
+    "price": 24496000.0,
+    "original_price": 34307000.0,
+    "discount_percent": 28.6,
+    "category": "cameras",
+    "brand": "Asanzo",
+    "rating": 4.0,
+    "review_count": 1778,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7118 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_006d0e28.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.371584",
+    "url": "https://lazada.com/product/d85b88c7"
+  },
+  {
+    "product_id": "LAZADA_e70043d5",
+    "name": "Vivo Product 8886",
+    "price": 16238000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Vivo",
+    "rating": 3.7,
+    "review_count": 513,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8886 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_84f33cc6.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.481799",
+    "url": "https://lazada.com/product/f94531b8"
+  },
+  {
+    "product_id": "LAZADA_359b9402",
+    "name": "Samsung Product 2700",
+    "price": 19344000.0,
+    "original_price": 27158000.0,
+    "discount_percent": 28.8,
+    "category": "cameras",
+    "brand": "Samsung",
+    "rating": 4.5,
+    "review_count": 117,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2700 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_1ea0f57d.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.582610",
+    "url": "https://lazada.com/product/be2d8fdb"
+  },
+  {
+    "product_id": "LAZADA_661d2d45",
+    "name": "Samsung Product 9834",
+    "price": 12979000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 448,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9834 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_04950d16.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.690925",
+    "url": "https://lazada.com/product/f4726085"
+  },
+  {
+    "product_id": "LAZADA_0afea728",
+    "name": "Viettel Product 1941",
+    "price": 10357000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Viettel",
+    "rating": 4.0,
+    "review_count": 349,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1941 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_f16d880c.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.793973",
+    "url": "https://lazada.com/product/5a671893"
+  },
+  {
+    "product_id": "LAZADA_47da1e01",
+    "name": "FPT Product 4252",
+    "price": 16793000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "FPT",
+    "rating": 3.6,
+    "review_count": 1082,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4252 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_06d68dc7.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:15.905064",
+    "url": "https://lazada.com/product/d2b231b3"
+  },
+  {
+    "product_id": "LAZADA_ee47218d",
+    "name": "BKAV Product 6891",
+    "price": 13234000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "BKAV",
+    "rating": 4.9,
+    "review_count": 1628,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6891 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_b1f3584b.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.014327",
+    "url": "https://lazada.com/product/d742eaa5"
+  },
+  {
+    "product_id": "LAZADA_a7f6f96d",
+    "name": "Samsung Product 6353",
+    "price": 22120000.0,
+    "original_price": 30158000.0,
+    "discount_percent": 26.7,
+    "category": "cameras",
+    "brand": "Samsung",
+    "rating": 4.1,
+    "review_count": 146,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6353 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_35a7a547.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.127023",
+    "url": "https://lazada.com/product/92a62832"
+  },
+  {
+    "product_id": "LAZADA_ffb26b93",
+    "name": "Xiaomi Product 9985",
+    "price": 10869000.0,
+    "original_price": 12798000.0,
+    "discount_percent": 15.1,
+    "category": "cameras",
+    "brand": "Xiaomi",
+    "rating": 4.2,
+    "review_count": 835,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9985 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_a3e5b793.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.231831",
+    "url": "https://lazada.com/product/fe17ea2e"
+  },
+  {
+    "product_id": "LAZADA_c1bbe46d",
+    "name": "Asanzo Product 4529",
+    "price": 17274000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Asanzo",
+    "rating": 3.5,
+    "review_count": 1464,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4529 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_224f8fcb.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.341906",
+    "url": "https://lazada.com/product/bfe8a83c"
+  },
+  {
+    "product_id": "LAZADA_300afe2b",
+    "name": "Viettel Product 6418",
+    "price": 8762000.0,
+    "original_price": 10818000.0,
+    "discount_percent": 19.0,
+    "category": "cameras",
+    "brand": "Viettel",
+    "rating": 3.9,
+    "review_count": 1632,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6418 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_c069a9f3.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.451273",
+    "url": "https://lazada.com/product/22d0d270"
+  },
+  {
+    "product_id": "LAZADA_130a70bf",
+    "name": "Asanzo Product 6148",
+    "price": 3466000.0,
+    "original_price": 4729000.0,
+    "discount_percent": 26.7,
+    "category": "cameras",
+    "brand": "Asanzo",
+    "rating": 3.7,
+    "review_count": 1797,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6148 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_586020ad.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.557798",
+    "url": "https://lazada.com/product/edfdad68"
+  },
+  {
+    "product_id": "LAZADA_2b5135b7",
+    "name": "OPPO Product 9755",
+    "price": 1233000.0,
+    "original_price": 1549000.0,
+    "discount_percent": 20.4,
+    "category": "cameras",
+    "brand": "OPPO",
+    "rating": 4.0,
+    "review_count": 126,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9755 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_ef5151c1.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.666593",
+    "url": "https://lazada.com/product/839ca693"
+  },
+  {
+    "product_id": "LAZADA_d02c054e",
+    "name": "Realme Product 5594",
+    "price": 23480000.0,
+    "original_price": 33020000.0,
+    "discount_percent": 28.9,
+    "category": "cameras",
+    "brand": "Realme",
+    "rating": 4.2,
+    "review_count": 714,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 5594 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_e0193eb9.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.767851",
+    "url": "https://lazada.com/product/a71363cf"
+  },
+  {
+    "product_id": "LAZADA_7f14dada",
+    "name": "Realme Product 9857",
+    "price": 22859000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Realme",
+    "rating": 4.2,
+    "review_count": 637,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9857 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_39af90bc.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.874831",
+    "url": "https://lazada.com/product/f9a4238a"
+  },
+  {
+    "product_id": "LAZADA_cf154e81",
+    "name": "OPPO Product 3750",
+    "price": 7617000.0,
+    "original_price": 9705000.0,
+    "discount_percent": 21.5,
+    "category": "cameras",
+    "brand": "OPPO",
+    "rating": 4.2,
+    "review_count": 559,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3750 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_bc662dfc.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:16.977241",
+    "url": "https://lazada.com/product/b809ff5e"
+  },
+  {
+    "product_id": "LAZADA_c84a25c6",
+    "name": "BKAV Product 6965",
+    "price": 24595000.0,
+    "original_price": 32117000.0,
+    "discount_percent": 23.4,
+    "category": "cameras",
+    "brand": "BKAV",
+    "rating": 4.5,
+    "review_count": 347,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6965 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_8e1f84c0.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.081815",
+    "url": "https://lazada.com/product/9865e7f3"
+  },
+  {
+    "product_id": "LAZADA_204e75c1",
+    "name": "Viettel Product 9897",
+    "price": 137000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Viettel",
+    "rating": 4.9,
+    "review_count": 1973,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9897 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_bf844b65.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.182960",
+    "url": "https://lazada.com/product/efbc4af0"
+  },
+  {
+    "product_id": "LAZADA_94b8d3fa",
+    "name": "Asanzo Product 9351",
+    "price": 18459000.0,
+    "original_price": 23925000.0,
+    "discount_percent": 22.8,
+    "category": "cameras",
+    "brand": "Asanzo",
+    "rating": 4.0,
+    "review_count": 203,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9351 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_715357c1.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.287902",
+    "url": "https://lazada.com/product/1afeb737"
+  },
+  {
+    "product_id": "LAZADA_a6d36b9f",
+    "name": "Realme Product 4046",
+    "price": 24301000.0,
+    "original_price": 32195000.0,
+    "discount_percent": 24.5,
+    "category": "cameras",
+    "brand": "Realme",
+    "rating": 4.6,
+    "review_count": 805,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4046 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_e843a500.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.388261",
+    "url": "https://lazada.com/product/58b50116"
+  },
+  {
+    "product_id": "LAZADA_8658c2f2",
+    "name": "Xiaomi Product 5284",
+    "price": 1002000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Xiaomi",
+    "rating": 4.8,
+    "review_count": 1741,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 5284 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_3f07b629.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.490621",
+    "url": "https://lazada.com/product/eabd303e"
+  },
+  {
+    "product_id": "LAZADA_1080ac8f",
+    "name": "Apple Product 6807",
+    "price": 4023000.0,
+    "original_price": 5003000.0,
+    "discount_percent": 19.6,
+    "category": "cameras",
+    "brand": "Apple",
+    "rating": 4.3,
+    "review_count": 1030,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6807 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_79fe6f85.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.594243",
+    "url": "https://lazada.com/product/dd5e7aee"
+  },
+  {
+    "product_id": "LAZADA_cf847215",
+    "name": "Apple Product 5385",
+    "price": 11337000.0,
+    "original_price": 14638000.0,
+    "discount_percent": 22.6,
+    "category": "cameras",
+    "brand": "Apple",
+    "rating": 4.5,
+    "review_count": 1465,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5385 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_ea3fe3d2.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.705725",
+    "url": "https://lazada.com/product/cc6e288f"
+  },
+  {
+    "product_id": "LAZADA_35fdfbbe",
+    "name": "Samsung Product 1971",
+    "price": 17905000.0,
+    "original_price": 21677000.0,
+    "discount_percent": 17.4,
+    "category": "cameras",
+    "brand": "Samsung",
+    "rating": 4.5,
+    "review_count": 1415,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1971 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_7f800bd9.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.810535",
+    "url": "https://lazada.com/product/42c2c88a"
+  },
+  {
+    "product_id": "LAZADA_a726104f",
+    "name": "Apple Product 4950",
+    "price": 13280000.0,
+    "original_price": 15776000.0,
+    "discount_percent": 15.8,
+    "category": "cameras",
+    "brand": "Apple",
+    "rating": 4.2,
+    "review_count": 1405,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4950 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_68226b41.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:17.921674",
+    "url": "https://lazada.com/product/48062d93"
+  },
+  {
+    "product_id": "LAZADA_0f7d8b3d",
+    "name": "VinSmart Product 3551",
+    "price": 19166000.0,
+    "original_price": 26661000.0,
+    "discount_percent": 28.1,
+    "category": "cameras",
+    "brand": "VinSmart",
+    "rating": 4.1,
+    "review_count": 627,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3551 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_de8deda8.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.022005",
+    "url": "https://lazada.com/product/31377462"
+  },
+  {
+    "product_id": "LAZADA_473ed987",
+    "name": "Vivo Product 1496",
+    "price": 24835000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "cameras",
+    "brand": "Vivo",
+    "rating": 4.5,
+    "review_count": 1673,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1496 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_7300045e.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.136833",
+    "url": "https://lazada.com/product/c7c3315c"
+  },
+  {
+    "product_id": "LAZADA_6e419a77",
+    "name": "OPPO Product 8497",
+    "price": 6876000.0,
+    "original_price": 8449000.0,
+    "discount_percent": 18.6,
+    "category": "cameras",
+    "brand": "OPPO",
+    "rating": 4.0,
+    "review_count": 1805,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8497 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_480c231c.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.238466",
+    "url": "https://lazada.com/product/625e3413"
+  },
+  {
+    "product_id": "LAZADA_a27b9493",
+    "name": "Viettel Product 3418",
+    "price": 5843000.0,
+    "original_price": 7772000.0,
+    "discount_percent": 24.8,
+    "category": "cameras",
+    "brand": "Viettel",
+    "rating": 4.0,
+    "review_count": 1806,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3418 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_6f870eb5.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.347987",
+    "url": "https://lazada.com/product/f5026d4d"
+  },
+  {
+    "product_id": "LAZADA_a6630051",
+    "name": "Viettel Product 6818",
+    "price": 7972000.0,
+    "original_price": 11952000.0,
+    "discount_percent": 33.3,
+    "category": "cameras",
+    "brand": "Viettel",
+    "rating": 4.1,
+    "review_count": 1978,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6818 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_fbe69891.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.458877",
+    "url": "https://lazada.com/product/008eef54"
+  },
+  {
+    "product_id": "LAZADA_102d23e4",
+    "name": "BKAV Product 2100",
+    "price": 12945000.0,
+    "original_price": 15176000.0,
+    "discount_percent": 14.7,
+    "category": "cameras",
+    "brand": "BKAV",
+    "rating": 4.9,
+    "review_count": 1699,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2100 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_283b09b9.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.560039",
+    "url": "https://lazada.com/product/6fd34514"
+  },
+  {
+    "product_id": "LAZADA_359e7995",
+    "name": "Asanzo Product 4464",
+    "price": 9763000.0,
+    "original_price": 12283000.0,
+    "discount_percent": 20.5,
+    "category": "cameras",
+    "brand": "Asanzo",
+    "rating": 3.8,
+    "review_count": 940,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4464 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_918ec4b1.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.664155",
+    "url": "https://lazada.com/product/f5a344b4"
+  },
+  {
+    "product_id": "LAZADA_aedcc195",
+    "name": "Asanzo Product 6952",
+    "price": 17533000.0,
+    "original_price": 20235000.0,
+    "discount_percent": 13.4,
+    "category": "cameras",
+    "brand": "Asanzo",
+    "rating": 4.8,
+    "review_count": 1674,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6952 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_2104d6f9.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.777159",
+    "url": "https://lazada.com/product/b825aa60"
+  },
+  {
+    "product_id": "LAZADA_5036da94",
+    "name": "Vivo Product 6853",
+    "price": 14527000.0,
+    "original_price": 21429000.0,
+    "discount_percent": 32.2,
+    "category": "cameras",
+    "brand": "Vivo",
+    "rating": 3.7,
+    "review_count": 147,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6853 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_2a87a064.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.880862",
+    "url": "https://lazada.com/product/eaf63be4"
+  },
+  {
+    "product_id": "LAZADA_e0a284f7",
+    "name": "Viettel Product 1008",
+    "price": 11483000.0,
+    "original_price": 16756000.0,
+    "discount_percent": 31.5,
+    "category": "cameras",
+    "brand": "Viettel",
+    "rating": 3.8,
+    "review_count": 82,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1008 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://lazada.com/images/product_19669232.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "lazada",
+    "crawl_timestamp": "2025-10-01 21:18:18.988803",
+    "url": "https://lazada.com/product/46900fae"
+  }
+]

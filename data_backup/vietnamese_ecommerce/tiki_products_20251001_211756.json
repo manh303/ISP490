@@ -1,0 +1,4187 @@
+[
+  {
+    "product_id": "TIKI_fda79954",
+    "name": "Realme Product 3213",
+    "price": 18727000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 4.5,
+    "review_count": 620,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3213 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_da1496ce.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.368867",
+    "url": "https://tiki.com/product/067cc6e3"
+  },
+  {
+    "product_id": "TIKI_0bf287b0",
+    "name": "Asanzo Product 7594",
+    "price": 9554000.0,
+    "original_price": 12501000.0,
+    "discount_percent": 23.6,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Asanzo",
+    "rating": 4.4,
+    "review_count": 1247,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7594 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_a32dc6dd.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.470342",
+    "url": "https://tiki.com/product/96caba12"
+  },
+  {
+    "product_id": "TIKI_603b1db1",
+    "name": "Realme Product 4314",
+    "price": 33771000.0,
+    "original_price": 48595000.0,
+    "discount_percent": 30.5,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 974,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4314 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_b6ab9de3.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.575732",
+    "url": "https://tiki.com/product/a9b21fe9"
+  },
+  {
+    "product_id": "TIKI_2937f6cc",
+    "name": "BKAV Product 7206",
+    "price": 25252000.0,
+    "original_price": 35931000.0,
+    "discount_percent": 29.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "BKAV",
+    "rating": 3.5,
+    "review_count": 310,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7206 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_2736d7f0.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.676384",
+    "url": "https://tiki.com/product/d3de72f3"
+  },
+  {
+    "product_id": "TIKI_60d9bc41",
+    "name": "Samsung Product 5919",
+    "price": 19988000.0,
+    "original_price": 25143000.0,
+    "discount_percent": 20.5,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Samsung",
+    "rating": 4.5,
+    "review_count": 1802,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 5919 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_89f1b0d1.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.781760",
+    "url": "https://tiki.com/product/0d94f75c"
+  },
+  {
+    "product_id": "TIKI_eae1f495",
+    "name": "FPT Product 7217",
+    "price": 8755000.0,
+    "original_price": 11105000.0,
+    "discount_percent": 21.2,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "FPT",
+    "rating": 4.4,
+    "review_count": 1615,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7217 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0a8d6adc.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.886497",
+    "url": "https://tiki.com/product/b46ba59d"
+  },
+  {
+    "product_id": "TIKI_1973ea9c",
+    "name": "Asanzo Product 2038",
+    "price": 5351000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Asanzo",
+    "rating": 4.7,
+    "review_count": 788,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2038 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e2fcd76f.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:36.995677",
+    "url": "https://tiki.com/product/6b061403"
+  },
+  {
+    "product_id": "TIKI_ae0a80c8",
+    "name": "FPT Product 1653",
+    "price": 19946000.0,
+    "original_price": 22859000.0,
+    "discount_percent": 12.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "FPT",
+    "rating": 4.4,
+    "review_count": 222,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 1653 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_facfe105.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.099895",
+    "url": "https://tiki.com/product/13c64f11"
+  },
+  {
+    "product_id": "TIKI_de0136a7",
+    "name": "Realme Product 9993",
+    "price": 4552000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 3.9,
+    "review_count": 907,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9993 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_af875856.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.204088",
+    "url": "https://tiki.com/product/398f8670"
+  },
+  {
+    "product_id": "TIKI_cd4a6159",
+    "name": "Vivo Product 3358",
+    "price": 17255000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Vivo",
+    "rating": 3.9,
+    "review_count": 942,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3358 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_90294391.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.306547",
+    "url": "https://tiki.com/product/41d84c80"
+  },
+  {
+    "product_id": "TIKI_92724d82",
+    "name": "OPPO Product 5239",
+    "price": 31784000.0,
+    "original_price": 36491000.0,
+    "discount_percent": 12.9,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "OPPO",
+    "rating": 4.0,
+    "review_count": 1048,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5239 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9f0f26c6.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.408932",
+    "url": "https://tiki.com/product/018152fe"
+  },
+  {
+    "product_id": "TIKI_3cadbe8b",
+    "name": "Samsung Product 6678",
+    "price": 3640000.0,
+    "original_price": 4717000.0,
+    "discount_percent": 22.8,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Samsung",
+    "rating": 4.3,
+    "review_count": 1655,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6678 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_26f8d52c.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.518124",
+    "url": "https://tiki.com/product/ac3b3e9f"
+  },
+  {
+    "product_id": "TIKI_7b1898bd",
+    "name": "Asanzo Product 6200",
+    "price": 24553000.0,
+    "original_price": 33027000.0,
+    "discount_percent": 25.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Asanzo",
+    "rating": 3.5,
+    "review_count": 1359,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6200 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0845cfa4.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.631192",
+    "url": "https://tiki.com/product/486753ba"
+  },
+  {
+    "product_id": "TIKI_647099b0",
+    "name": "Apple Product 9597",
+    "price": 1882000.0,
+    "original_price": 2285000.0,
+    "discount_percent": 17.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Apple",
+    "rating": 4.4,
+    "review_count": 259,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9597 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e955c047.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.731684",
+    "url": "https://tiki.com/product/c2ad1cda"
+  },
+  {
+    "product_id": "TIKI_c5d2f9d2",
+    "name": "FPT Product 4707",
+    "price": 14435000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "FPT",
+    "rating": 4.0,
+    "review_count": 1550,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4707 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ff1dc2ae.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.836413",
+    "url": "https://tiki.com/product/fd85050f"
+  },
+  {
+    "product_id": "TIKI_e2e6d364",
+    "name": "VinSmart Product 1563",
+    "price": 34982000.0,
+    "original_price": 44415000.0,
+    "discount_percent": 21.2,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "VinSmart",
+    "rating": 3.8,
+    "review_count": 1502,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1563 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_7f746289.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:37.947466",
+    "url": "https://tiki.com/product/950689a8"
+  },
+  {
+    "product_id": "TIKI_0f0ad499",
+    "name": "Realme Product 4216",
+    "price": 20928000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 4.6,
+    "review_count": 671,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4216 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e848180f.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.053079",
+    "url": "https://tiki.com/product/b1fc552d"
+  },
+  {
+    "product_id": "TIKI_586e60a4",
+    "name": "Xiaomi Product 5151",
+    "price": 6680000.0,
+    "original_price": 7560000.0,
+    "discount_percent": 11.6,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Xiaomi",
+    "rating": 3.6,
+    "review_count": 341,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5151 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e60416cb.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.158385",
+    "url": "https://tiki.com/product/ecdb58f0"
+  },
+  {
+    "product_id": "TIKI_55252aee",
+    "name": "OPPO Product 4913",
+    "price": 1460000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "OPPO",
+    "rating": 4.5,
+    "review_count": 1311,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4913 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_33afba20.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.259344",
+    "url": "https://tiki.com/product/612b78d2"
+  },
+  {
+    "product_id": "TIKI_c133669c",
+    "name": "Realme Product 3289",
+    "price": 11649000.0,
+    "original_price": 15010000.0,
+    "discount_percent": 22.4,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 3.6,
+    "review_count": 1124,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 3289 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_39ffd07f.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.364171",
+    "url": "https://tiki.com/product/d1176e2d"
+  },
+  {
+    "product_id": "TIKI_47e0e8ac",
+    "name": "Apple Product 7190",
+    "price": 5978000.0,
+    "original_price": 8737000.0,
+    "discount_percent": 31.6,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Apple",
+    "rating": 4.0,
+    "review_count": 786,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7190 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_71759375.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.464643",
+    "url": "https://tiki.com/product/886c1b1e"
+  },
+  {
+    "product_id": "TIKI_2a0225d4",
+    "name": "Realme Product 7208",
+    "price": 8000000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 683,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 7208 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_2b8fd946.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.573823",
+    "url": "https://tiki.com/product/140de79f"
+  },
+  {
+    "product_id": "TIKI_b033e182",
+    "name": "Realme Product 9117",
+    "price": 5646000.0,
+    "original_price": 7070000.0,
+    "discount_percent": 20.1,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 4.9,
+    "review_count": 232,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9117 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_3d3b10c1.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.680401",
+    "url": "https://tiki.com/product/a0c380d2"
+  },
+  {
+    "product_id": "TIKI_99ded505",
+    "name": "Asanzo Product 2810",
+    "price": 31512000.0,
+    "original_price": 46269000.0,
+    "discount_percent": 31.9,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Asanzo",
+    "rating": 4.1,
+    "review_count": 974,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 2810 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5751cb46.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.782436",
+    "url": "https://tiki.com/product/1fa8fdca"
+  },
+  {
+    "product_id": "TIKI_b39d660e",
+    "name": "Asanzo Product 8034",
+    "price": 13845000.0,
+    "original_price": 16481000.0,
+    "discount_percent": 16.0,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Asanzo",
+    "rating": 3.7,
+    "review_count": 1175,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 8034 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9962fa9a.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.886318",
+    "url": "https://tiki.com/product/f0717673"
+  },
+  {
+    "product_id": "TIKI_7fe7a256",
+    "name": "FPT Product 4455",
+    "price": 30960000.0,
+    "original_price": 45601000.0,
+    "discount_percent": 32.1,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "FPT",
+    "rating": 3.9,
+    "review_count": 1096,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4455 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_f33a08a8.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:38.996540",
+    "url": "https://tiki.com/product/1c572746"
+  },
+  {
+    "product_id": "TIKI_2298e832",
+    "name": "Apple Product 7731",
+    "price": 1464000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Apple",
+    "rating": 4.5,
+    "review_count": 455,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 7731 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9f1b6171.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.100157",
+    "url": "https://tiki.com/product/c206bdf6"
+  },
+  {
+    "product_id": "TIKI_0b6de3eb",
+    "name": "FPT Product 7710",
+    "price": 17547000.0,
+    "original_price": 24869000.0,
+    "discount_percent": 29.4,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "FPT",
+    "rating": 4.1,
+    "review_count": 1711,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7710 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1d889176.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.203077",
+    "url": "https://tiki.com/product/62f70c90"
+  },
+  {
+    "product_id": "TIKI_c2e2c543",
+    "name": "FPT Product 6926",
+    "price": 27577000.0,
+    "original_price": 36843000.0,
+    "discount_percent": 25.1,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "FPT",
+    "rating": 4.6,
+    "review_count": 715,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6926 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_38c41b8b.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.309938",
+    "url": "https://tiki.com/product/6556308a"
+  },
+  {
+    "product_id": "TIKI_21da3320",
+    "name": "VinSmart Product 4681",
+    "price": 15018000.0,
+    "original_price": 21373000.0,
+    "discount_percent": 29.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "VinSmart",
+    "rating": 4.4,
+    "review_count": 1074,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4681 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_49069d61.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.418079",
+    "url": "https://tiki.com/product/6dec0336"
+  },
+  {
+    "product_id": "TIKI_c302d1a8",
+    "name": "Xiaomi Product 3032",
+    "price": 34384000.0,
+    "original_price": 46415000.0,
+    "discount_percent": 25.9,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Xiaomi",
+    "rating": 4.0,
+    "review_count": 129,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3032 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ab271904.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.518882",
+    "url": "https://tiki.com/product/4df3f2ab"
+  },
+  {
+    "product_id": "TIKI_6722bc79",
+    "name": "Realme Product 6903",
+    "price": 26677000.0,
+    "original_price": 30544000.0,
+    "discount_percent": 12.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Realme",
+    "rating": 4.8,
+    "review_count": 1991,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6903 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_3175bb27.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.625028",
+    "url": "https://tiki.com/product/f35d1348"
+  },
+  {
+    "product_id": "TIKI_608ec6f3",
+    "name": "Samsung Product 9900",
+    "price": 29412000.0,
+    "original_price": 38544000.0,
+    "discount_percent": 23.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 1597,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9900 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_04a25085.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.735919",
+    "url": "https://tiki.com/product/1e99a3eb"
+  },
+  {
+    "product_id": "TIKI_93ed7a15",
+    "name": "VinSmart Product 9554",
+    "price": 18761000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "VinSmart",
+    "rating": 3.7,
+    "review_count": 979,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9554 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_cd58165d.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.837386",
+    "url": "https://tiki.com/product/acf2a341"
+  },
+  {
+    "product_id": "TIKI_ebc13d25",
+    "name": "Samsung Product 1826",
+    "price": 1804000.0,
+    "original_price": 2237000.0,
+    "discount_percent": 19.4,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Samsung",
+    "rating": 3.6,
+    "review_count": 93,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 1826 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1cce9b0e.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:39.944243",
+    "url": "https://tiki.com/product/6bb78332"
+  },
+  {
+    "product_id": "TIKI_81eedd94",
+    "name": "Viettel Product 6281",
+    "price": 11475000.0,
+    "original_price": 13812000.0,
+    "discount_percent": 16.9,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Viettel",
+    "rating": 4.0,
+    "review_count": 1305,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 6281 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_92538a72.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:40.061993",
+    "url": "https://tiki.com/product/2104ebd7"
+  },
+  {
+    "product_id": "TIKI_60b7199f",
+    "name": "Asanzo Product 3224",
+    "price": 14226000.0,
+    "original_price": 17951000.0,
+    "discount_percent": 20.7,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "Asanzo",
+    "rating": 3.9,
+    "review_count": 374,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 3224 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_b633f5b6.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:40.165656",
+    "url": "https://tiki.com/product/81d04406"
+  },
+  {
+    "product_id": "TIKI_f806ab89",
+    "name": "OPPO Product 9400",
+    "price": 22652000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-thoai-may-tinh-bang",
+    "brand": "OPPO",
+    "rating": 3.6,
+    "review_count": 1881,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9400 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_6e6eec57.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:40.269952",
+    "url": "https://tiki.com/product/4289c788"
+  },
+  {
+    "product_id": "TIKI_13dbd3ce",
+    "name": "Apple Lenovo ThinkPad X1",
+    "price": 24604000.0,
+    "original_price": 29732000.0,
+    "discount_percent": 17.2,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Apple",
+    "rating": 3.7,
+    "review_count": 1657,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_94e21282.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:42.375433",
+    "url": "https://tiki.com/product/571ab02d"
+  },
+  {
+    "product_id": "TIKI_1eace85a",
+    "name": "Xiaomi Lenovo ThinkPad X1",
+    "price": 7415000.0,
+    "original_price": 10952000.0,
+    "discount_percent": 32.3,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Xiaomi",
+    "rating": 4.1,
+    "review_count": 286,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ef6a0f3a.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:42.476189",
+    "url": "https://tiki.com/product/dfec6d3f"
+  },
+  {
+    "product_id": "TIKI_f988bfa1",
+    "name": "FPT Lenovo ThinkPad X1",
+    "price": 25159000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "FPT",
+    "rating": 3.9,
+    "review_count": 723,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_4ebbc7de.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:42.577519",
+    "url": "https://tiki.com/product/caa82e94"
+  },
+  {
+    "product_id": "TIKI_d16833f2",
+    "name": "Samsung Acer Predator Helios",
+    "price": 13101000.0,
+    "original_price": 14476000.0,
+    "discount_percent": 9.5,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 589,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5c62f3db.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:42.687325",
+    "url": "https://tiki.com/product/b6f8d4f2"
+  },
+  {
+    "product_id": "TIKI_2fa8d478",
+    "name": "FPT MacBook Pro M3",
+    "price": 2850000.0,
+    "original_price": 3870000.0,
+    "discount_percent": 26.4,
+    "category": "laptop-thiet-bi-it",
+    "brand": "FPT",
+    "rating": 3.6,
+    "review_count": 157,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_aaa5723c.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:42.790415",
+    "url": "https://tiki.com/product/f58eb32b"
+  },
+  {
+    "product_id": "TIKI_d36353e0",
+    "name": "FPT Acer Predator Helios",
+    "price": 29177000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "FPT",
+    "rating": 4.4,
+    "review_count": 26,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_8cf03a44.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:42.901773",
+    "url": "https://tiki.com/product/9cc90a6e"
+  },
+  {
+    "product_id": "TIKI_2ea28f51",
+    "name": "Samsung MacBook Pro M3",
+    "price": 31783000.0,
+    "original_price": 36250000.0,
+    "discount_percent": 12.3,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Samsung",
+    "rating": 4.2,
+    "review_count": 463,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_7fc6668b.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.008938",
+    "url": "https://tiki.com/product/391cf953"
+  },
+  {
+    "product_id": "TIKI_4ac1097b",
+    "name": "Realme Acer Predator Helios",
+    "price": 9721000.0,
+    "original_price": 11143000.0,
+    "discount_percent": 12.8,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Realme",
+    "rating": 3.8,
+    "review_count": 174,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_34d83bee.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.109444",
+    "url": "https://tiki.com/product/3194659a"
+  },
+  {
+    "product_id": "TIKI_8a159770",
+    "name": "Samsung Asus ROG Strix",
+    "price": 20441000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Samsung",
+    "rating": 4.1,
+    "review_count": 1711,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_b6f3eb31.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.211274",
+    "url": "https://tiki.com/product/0f82794c"
+  },
+  {
+    "product_id": "TIKI_8eceea74",
+    "name": "BKAV HP Spectre x360",
+    "price": 8938000.0,
+    "original_price": 12678000.0,
+    "discount_percent": 29.5,
+    "category": "laptop-thiet-bi-it",
+    "brand": "BKAV",
+    "rating": 4.0,
+    "review_count": 656,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_bd65304e.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.313164",
+    "url": "https://tiki.com/product/3a354084"
+  },
+  {
+    "product_id": "TIKI_aed0109f",
+    "name": "Viettel Dell XPS 13",
+    "price": 25515000.0,
+    "original_price": 29239000.0,
+    "discount_percent": 12.7,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Viettel",
+    "rating": 4.5,
+    "review_count": 1620,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_19d766f0.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.413426",
+    "url": "https://tiki.com/product/3619d4ad"
+  },
+  {
+    "product_id": "TIKI_30b94706",
+    "name": "Samsung Dell XPS 13",
+    "price": 709000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Samsung",
+    "rating": 4.1,
+    "review_count": 1064,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ea2e304b.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.514151",
+    "url": "https://tiki.com/product/8cf622b2"
+  },
+  {
+    "product_id": "TIKI_6a66806f",
+    "name": "Asanzo Dell XPS 13",
+    "price": 15476000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Asanzo",
+    "rating": 4.3,
+    "review_count": 165,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_efc88227.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.628777",
+    "url": "https://tiki.com/product/d2ec558d"
+  },
+  {
+    "product_id": "TIKI_68de725c",
+    "name": "FPT Dell XPS 13",
+    "price": 17540000.0,
+    "original_price": 20440000.0,
+    "discount_percent": 14.2,
+    "category": "laptop-thiet-bi-it",
+    "brand": "FPT",
+    "rating": 3.5,
+    "review_count": 1307,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Dell XPS 13 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5e28f579.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.734869",
+    "url": "https://tiki.com/product/765f9972"
+  },
+  {
+    "product_id": "TIKI_42c21de1",
+    "name": "Xiaomi MacBook Pro M3",
+    "price": 12925000.0,
+    "original_price": 15415000.0,
+    "discount_percent": 16.2,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Xiaomi",
+    "rating": 5.0,
+    "review_count": 738,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_969c7302.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.841042",
+    "url": "https://tiki.com/product/40e90c5d"
+  },
+  {
+    "product_id": "TIKI_7213c428",
+    "name": "Vivo MacBook Pro M3",
+    "price": 29611000.0,
+    "original_price": 42338000.0,
+    "discount_percent": 30.1,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Vivo",
+    "rating": 4.1,
+    "review_count": 1877,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9daad91f.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:43.952484",
+    "url": "https://tiki.com/product/15cf7dbf"
+  },
+  {
+    "product_id": "TIKI_aab2c945",
+    "name": "VinSmart HP Spectre x360",
+    "price": 34911000.0,
+    "original_price": 41778000.0,
+    "discount_percent": 16.4,
+    "category": "laptop-thiet-bi-it",
+    "brand": "VinSmart",
+    "rating": 3.7,
+    "review_count": 424,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_a8a31dd9.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.060910",
+    "url": "https://tiki.com/product/cd232ba0"
+  },
+  {
+    "product_id": "TIKI_fbbaa89e",
+    "name": "VinSmart MacBook Pro M3",
+    "price": 22249000.0,
+    "original_price": 28642000.0,
+    "discount_percent": 22.3,
+    "category": "laptop-thiet-bi-it",
+    "brand": "VinSmart",
+    "rating": 3.8,
+    "review_count": 1545,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_da44ea11.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.174003",
+    "url": "https://tiki.com/product/f1fbed90"
+  },
+  {
+    "product_id": "TIKI_63f71cf8",
+    "name": "OPPO Asus ROG Strix",
+    "price": 9963000.0,
+    "original_price": 14208000.0,
+    "discount_percent": 29.9,
+    "category": "laptop-thiet-bi-it",
+    "brand": "OPPO",
+    "rating": 4.4,
+    "review_count": 68,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_3071e852.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.275443",
+    "url": "https://tiki.com/product/514a483c"
+  },
+  {
+    "product_id": "TIKI_e1c632ec",
+    "name": "Xiaomi Asus ROG Strix",
+    "price": 3894000.0,
+    "original_price": 4413000.0,
+    "discount_percent": 11.7,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Xiaomi",
+    "rating": 4.2,
+    "review_count": 597,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e7c3b2f5.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.381080",
+    "url": "https://tiki.com/product/6fb1e299"
+  },
+  {
+    "product_id": "TIKI_a0e6b6b5",
+    "name": "Asanzo Asus ROG Strix",
+    "price": 31646000.0,
+    "original_price": 41967000.0,
+    "discount_percent": 24.6,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Asanzo",
+    "rating": 4.2,
+    "review_count": 1758,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_d27bb96d.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.482711",
+    "url": "https://tiki.com/product/1cb12273"
+  },
+  {
+    "product_id": "TIKI_addbfc90",
+    "name": "Asanzo Acer Predator Helios",
+    "price": 17392000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Asanzo",
+    "rating": 3.7,
+    "review_count": 1846,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_4a055518.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.585775",
+    "url": "https://tiki.com/product/365526bd"
+  },
+  {
+    "product_id": "TIKI_f5beb2c5",
+    "name": "VinSmart Lenovo ThinkPad X1",
+    "price": 3034000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "VinSmart",
+    "rating": 3.6,
+    "review_count": 152,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_704c6d5d.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.690871",
+    "url": "https://tiki.com/product/b781d543"
+  },
+  {
+    "product_id": "TIKI_c353d7d7",
+    "name": "BKAV Asus ROG Strix",
+    "price": 6384000.0,
+    "original_price": 9207000.0,
+    "discount_percent": 30.7,
+    "category": "laptop-thiet-bi-it",
+    "brand": "BKAV",
+    "rating": 4.3,
+    "review_count": 1627,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9beeee52.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.791272",
+    "url": "https://tiki.com/product/ef71cc3b"
+  },
+  {
+    "product_id": "TIKI_797a82a9",
+    "name": "Realme Acer Predator Helios",
+    "price": 21542000.0,
+    "original_price": 32070000.0,
+    "discount_percent": 32.8,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Realme",
+    "rating": 4.5,
+    "review_count": 747,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5854c18e.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:44.898149",
+    "url": "https://tiki.com/product/55d0ab14"
+  },
+  {
+    "product_id": "TIKI_66dfcba1",
+    "name": "VinSmart MacBook Pro M3",
+    "price": 13078000.0,
+    "original_price": 18687000.0,
+    "discount_percent": 30.0,
+    "category": "laptop-thiet-bi-it",
+    "brand": "VinSmart",
+    "rating": 4.0,
+    "review_count": 1889,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_76ac8b09.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.003378",
+    "url": "https://tiki.com/product/0dd0b8ac"
+  },
+  {
+    "product_id": "TIKI_342a02cd",
+    "name": "Asanzo HP Spectre x360",
+    "price": 22639000.0,
+    "original_price": 29708000.0,
+    "discount_percent": 23.8,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Asanzo",
+    "rating": 4.1,
+    "review_count": 1409,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_09bf5a66.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.103543",
+    "url": "https://tiki.com/product/40cabc52"
+  },
+  {
+    "product_id": "TIKI_f4519190",
+    "name": "Viettel HP Spectre x360",
+    "price": 12927000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Viettel",
+    "rating": 4.6,
+    "review_count": 644,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_cf80417f.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.213924",
+    "url": "https://tiki.com/product/ebe0c114"
+  },
+  {
+    "product_id": "TIKI_024f7963",
+    "name": "BKAV Acer Predator Helios",
+    "price": 13039000.0,
+    "original_price": 18472000.0,
+    "discount_percent": 29.4,
+    "category": "laptop-thiet-bi-it",
+    "brand": "BKAV",
+    "rating": 3.7,
+    "review_count": 1554,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_f5578389.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.322441",
+    "url": "https://tiki.com/product/38641d60"
+  },
+  {
+    "product_id": "TIKI_2b234008",
+    "name": "Viettel MacBook Pro M3",
+    "price": 29492000.0,
+    "original_price": 41187000.0,
+    "discount_percent": 28.4,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Viettel",
+    "rating": 4.6,
+    "review_count": 121,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_8b688347.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.436095",
+    "url": "https://tiki.com/product/90dea031"
+  },
+  {
+    "product_id": "TIKI_a9fd84ec",
+    "name": "BKAV Lenovo ThinkPad X1",
+    "price": 12306000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "BKAV",
+    "rating": 3.8,
+    "review_count": 304,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e1b01869.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.541147",
+    "url": "https://tiki.com/product/7cc3a7d9"
+  },
+  {
+    "product_id": "TIKI_2bdfb117",
+    "name": "Vivo Acer Predator Helios",
+    "price": 2974000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Vivo",
+    "rating": 4.0,
+    "review_count": 917,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_d26992fe.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.648357",
+    "url": "https://tiki.com/product/d5df82f9"
+  },
+  {
+    "product_id": "TIKI_4e200f99",
+    "name": "VinSmart HP Spectre x360",
+    "price": 17990000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "VinSmart",
+    "rating": 4.6,
+    "review_count": 531,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm HP Spectre x360 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_01e89260.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.753718",
+    "url": "https://tiki.com/product/dfb1107c"
+  },
+  {
+    "product_id": "TIKI_5ba4bd76",
+    "name": "Samsung Acer Predator Helios",
+    "price": 31406000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Samsung",
+    "rating": 3.8,
+    "review_count": 1239,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Acer Predator Helios chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_59cb3d9a.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.858711",
+    "url": "https://tiki.com/product/7b3c13d2"
+  },
+  {
+    "product_id": "TIKI_8bc88685",
+    "name": "Apple Asus ROG Strix",
+    "price": 3525000.0,
+    "original_price": 4066000.0,
+    "discount_percent": 13.3,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Apple",
+    "rating": 4.7,
+    "review_count": 1780,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Asus ROG Strix chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_f0390936.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:45.958981",
+    "url": "https://tiki.com/product/ece07af9"
+  },
+  {
+    "product_id": "TIKI_7c891088",
+    "name": "Viettel MacBook Pro M3",
+    "price": 27765000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Viettel",
+    "rating": 3.6,
+    "review_count": 431,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm MacBook Pro M3 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_d04dc291.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:46.060020",
+    "url": "https://tiki.com/product/18339f55"
+  },
+  {
+    "product_id": "TIKI_5d5f880a",
+    "name": "Realme Lenovo ThinkPad X1",
+    "price": 11316000.0,
+    "original_price": 14631000.0,
+    "discount_percent": 22.7,
+    "category": "laptop-thiet-bi-it",
+    "brand": "Realme",
+    "rating": 3.6,
+    "review_count": 1393,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Lenovo ThinkPad X1 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5c5bd6b9.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:46.170449",
+    "url": "https://tiki.com/product/bcb98454"
+  },
+  {
+    "product_id": "TIKI_5d522afe",
+    "name": "Xiaomi Product 6006",
+    "price": 32976000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Xiaomi",
+    "rating": 3.6,
+    "review_count": 937,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 6006 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_467c87d1.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.276430",
+    "url": "https://tiki.com/product/e7e6ecc5"
+  },
+  {
+    "product_id": "TIKI_0be85800",
+    "name": "Viettel Product 4981",
+    "price": 3785000.0,
+    "original_price": 4917000.0,
+    "discount_percent": 23.0,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Viettel",
+    "rating": 4.1,
+    "review_count": 250,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4981 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1590181f.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.387342",
+    "url": "https://tiki.com/product/69ceaf1c"
+  },
+  {
+    "product_id": "TIKI_ccf49774",
+    "name": "OPPO Product 6979",
+    "price": 22399000.0,
+    "original_price": 32469000.0,
+    "discount_percent": 31.0,
+    "category": "dien-tu-dien-lanh",
+    "brand": "OPPO",
+    "rating": 4.5,
+    "review_count": 750,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6979 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0df11c6e.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.489741",
+    "url": "https://tiki.com/product/19411069"
+  },
+  {
+    "product_id": "TIKI_77fbf52d",
+    "name": "FPT Product 9701",
+    "price": 6074000.0,
+    "original_price": 8769000.0,
+    "discount_percent": 30.7,
+    "category": "dien-tu-dien-lanh",
+    "brand": "FPT",
+    "rating": 4.7,
+    "review_count": 31,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9701 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_cad3f48a.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.592395",
+    "url": "https://tiki.com/product/a3b0d0ed"
+  },
+  {
+    "product_id": "TIKI_cd09da61",
+    "name": "BKAV Product 7327",
+    "price": 28901000.0,
+    "original_price": 35894000.0,
+    "discount_percent": 19.5,
+    "category": "dien-tu-dien-lanh",
+    "brand": "BKAV",
+    "rating": 4.3,
+    "review_count": 830,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 7327 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_f3b7c811.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.709016",
+    "url": "https://tiki.com/product/377db915"
+  },
+  {
+    "product_id": "TIKI_c64ea201",
+    "name": "Asanzo Product 9210",
+    "price": 15639000.0,
+    "original_price": 21441000.0,
+    "discount_percent": 27.1,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Asanzo",
+    "rating": 3.6,
+    "review_count": 109,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9210 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_856c91d1.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.820986",
+    "url": "https://tiki.com/product/0f193c45"
+  },
+  {
+    "product_id": "TIKI_53e01d67",
+    "name": "FPT Product 4229",
+    "price": 31328000.0,
+    "original_price": 35810000.0,
+    "discount_percent": 12.5,
+    "category": "dien-tu-dien-lanh",
+    "brand": "FPT",
+    "rating": 4.2,
+    "review_count": 709,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4229 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_15eb53b9.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:48.935768",
+    "url": "https://tiki.com/product/69ec5f59"
+  },
+  {
+    "product_id": "TIKI_74ec2094",
+    "name": "Asanzo Product 2816",
+    "price": 2825000.0,
+    "original_price": 3531000.0,
+    "discount_percent": 20.0,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Asanzo",
+    "rating": 4.1,
+    "review_count": 417,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2816 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_52667351.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.043121",
+    "url": "https://tiki.com/product/dcc70db5"
+  },
+  {
+    "product_id": "TIKI_c1d70d33",
+    "name": "Xiaomi Product 6088",
+    "price": 23466000.0,
+    "original_price": 29520000.0,
+    "discount_percent": 20.5,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Xiaomi",
+    "rating": 4.2,
+    "review_count": 1340,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6088 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_4975febe.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.146704",
+    "url": "https://tiki.com/product/2ef53a43"
+  },
+  {
+    "product_id": "TIKI_8de34439",
+    "name": "BKAV Product 6744",
+    "price": 3016000.0,
+    "original_price": 4431000.0,
+    "discount_percent": 31.9,
+    "category": "dien-tu-dien-lanh",
+    "brand": "BKAV",
+    "rating": 4.4,
+    "review_count": 1671,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 6744 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_25156ee2.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.247910",
+    "url": "https://tiki.com/product/45facd13"
+  },
+  {
+    "product_id": "TIKI_689278d8",
+    "name": "Samsung Product 4642",
+    "price": 26342000.0,
+    "original_price": 29420000.0,
+    "discount_percent": 10.5,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Samsung",
+    "rating": 4.4,
+    "review_count": 355,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4642 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_36c9d523.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.354027",
+    "url": "https://tiki.com/product/d1873bbd"
+  },
+  {
+    "product_id": "TIKI_ad7582ea",
+    "name": "Asanzo Product 9470",
+    "price": 18857000.0,
+    "original_price": 26906000.0,
+    "discount_percent": 29.9,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Asanzo",
+    "rating": 4.4,
+    "review_count": 352,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9470 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ce9f90d7.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.454954",
+    "url": "https://tiki.com/product/cbf4f72a"
+  },
+  {
+    "product_id": "TIKI_c00edb77",
+    "name": "VinSmart Product 8608",
+    "price": 23442000.0,
+    "original_price": 30772000.0,
+    "discount_percent": 23.8,
+    "category": "dien-tu-dien-lanh",
+    "brand": "VinSmart",
+    "rating": 4.3,
+    "review_count": 265,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8608 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_59a0dae2.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.558981",
+    "url": "https://tiki.com/product/92e88f0e"
+  },
+  {
+    "product_id": "TIKI_db5abf7f",
+    "name": "Apple Product 3006",
+    "price": 13117000.0,
+    "original_price": 16816000.0,
+    "discount_percent": 22.0,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Apple",
+    "rating": 4.0,
+    "review_count": 286,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 3006 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0d9d1e2d.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.664720",
+    "url": "https://tiki.com/product/8197b48b"
+  },
+  {
+    "product_id": "TIKI_581e38b6",
+    "name": "Samsung Product 5089",
+    "price": 4333000.0,
+    "original_price": 6160000.0,
+    "discount_percent": 29.7,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Samsung",
+    "rating": 4.2,
+    "review_count": 1796,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 5089 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_c99ba7f9.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.769596",
+    "url": "https://tiki.com/product/34e54662"
+  },
+  {
+    "product_id": "TIKI_7274d1f4",
+    "name": "FPT Product 3576",
+    "price": 14974000.0,
+    "original_price": 19022000.0,
+    "discount_percent": 21.3,
+    "category": "dien-tu-dien-lanh",
+    "brand": "FPT",
+    "rating": 4.1,
+    "review_count": 1620,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3576 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5aaf5134.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.881058",
+    "url": "https://tiki.com/product/c3a0930a"
+  },
+  {
+    "product_id": "TIKI_d7c46941",
+    "name": "Asanzo Product 4005",
+    "price": 19096000.0,
+    "original_price": 27043000.0,
+    "discount_percent": 29.4,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Asanzo",
+    "rating": 4.2,
+    "review_count": 1906,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 4005 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_4161e9f3.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:49.991094",
+    "url": "https://tiki.com/product/7fc87364"
+  },
+  {
+    "product_id": "TIKI_bb4c4b7d",
+    "name": "Xiaomi Product 2525",
+    "price": 32403000.0,
+    "original_price": 44023000.0,
+    "discount_percent": 26.4,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Xiaomi",
+    "rating": 4.1,
+    "review_count": 347,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2525 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_82eb8dd4.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.103899",
+    "url": "https://tiki.com/product/7958d83b"
+  },
+  {
+    "product_id": "TIKI_4c697b6f",
+    "name": "Apple Product 4815",
+    "price": 28636000.0,
+    "original_price": 42406000.0,
+    "discount_percent": 32.5,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Apple",
+    "rating": 3.6,
+    "review_count": 363,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 4815 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_225ccc35.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.214773",
+    "url": "https://tiki.com/product/d5e39312"
+  },
+  {
+    "product_id": "TIKI_18997173",
+    "name": "OPPO Product 3879",
+    "price": 26846000.0,
+    "original_price": 36703000.0,
+    "discount_percent": 26.9,
+    "category": "dien-tu-dien-lanh",
+    "brand": "OPPO",
+    "rating": 4.2,
+    "review_count": 1669,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3879 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_00f8c7d4.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.320193",
+    "url": "https://tiki.com/product/8690ebc6"
+  },
+  {
+    "product_id": "TIKI_1c73e4f6",
+    "name": "Asanzo Product 5531",
+    "price": 10478000.0,
+    "original_price": 13228000.0,
+    "discount_percent": 20.8,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Asanzo",
+    "rating": 4.6,
+    "review_count": 686,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5531 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_d359deed.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.424474",
+    "url": "https://tiki.com/product/7e0d0430"
+  },
+  {
+    "product_id": "TIKI_b4d937af",
+    "name": "Apple Product 7602",
+    "price": 16297000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Apple",
+    "rating": 4.2,
+    "review_count": 1571,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7602 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_d0cf3edf.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.531447",
+    "url": "https://tiki.com/product/006d963f"
+  },
+  {
+    "product_id": "TIKI_ab090cfa",
+    "name": "Vivo Product 3959",
+    "price": 15787000.0,
+    "original_price": 23317000.0,
+    "discount_percent": 32.3,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Vivo",
+    "rating": 3.9,
+    "review_count": 174,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3959 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9dabc7f2.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.632500",
+    "url": "https://tiki.com/product/bb1a1a86"
+  },
+  {
+    "product_id": "TIKI_f8125f0d",
+    "name": "VinSmart Product 5873",
+    "price": 32402000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "VinSmart",
+    "rating": 4.1,
+    "review_count": 1601,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5873 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0d2b876a.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.737375",
+    "url": "https://tiki.com/product/97de3072"
+  },
+  {
+    "product_id": "TIKI_12f17b17",
+    "name": "BKAV Product 5746",
+    "price": 19605000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "BKAV",
+    "rating": 3.9,
+    "review_count": 527,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5746 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_c256f9c8.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.842366",
+    "url": "https://tiki.com/product/09cfea84"
+  },
+  {
+    "product_id": "TIKI_7cbf8bb7",
+    "name": "BKAV Product 5283",
+    "price": 2646000.0,
+    "original_price": 3959000.0,
+    "discount_percent": 33.2,
+    "category": "dien-tu-dien-lanh",
+    "brand": "BKAV",
+    "rating": 3.7,
+    "review_count": 21,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 5283 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1d82f36c.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:50.944598",
+    "url": "https://tiki.com/product/9ec1f9bc"
+  },
+  {
+    "product_id": "TIKI_1938c783",
+    "name": "Realme Product 9811",
+    "price": 517000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Realme",
+    "rating": 4.7,
+    "review_count": 1637,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9811 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_7ea49b16.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.057793",
+    "url": "https://tiki.com/product/3765aaec"
+  },
+  {
+    "product_id": "TIKI_9e86779f",
+    "name": "VinSmart Product 9886",
+    "price": 29729000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "VinSmart",
+    "rating": 4.3,
+    "review_count": 409,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9886 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_375a46b3.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.159295",
+    "url": "https://tiki.com/product/b78adafc"
+  },
+  {
+    "product_id": "TIKI_8ce80615",
+    "name": "Samsung Product 4254",
+    "price": 22479000.0,
+    "original_price": 30509000.0,
+    "discount_percent": 26.3,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Samsung",
+    "rating": 3.6,
+    "review_count": 193,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4254 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_f9e381c8.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.260810",
+    "url": "https://tiki.com/product/99ae62cc"
+  },
+  {
+    "product_id": "TIKI_ec0c4569",
+    "name": "Vivo Product 4950",
+    "price": 31034000.0,
+    "original_price": 42754000.0,
+    "discount_percent": 27.4,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Vivo",
+    "rating": 3.8,
+    "review_count": 500,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4950 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ff81157e.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.370120",
+    "url": "https://tiki.com/product/8efa0e44"
+  },
+  {
+    "product_id": "TIKI_9697f7d9",
+    "name": "VinSmart Product 9217",
+    "price": 17034000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "dien-tu-dien-lanh",
+    "brand": "VinSmart",
+    "rating": 3.9,
+    "review_count": 765,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 9217 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e2663510.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.470554",
+    "url": "https://tiki.com/product/d78cfb26"
+  },
+  {
+    "product_id": "TIKI_385a1f08",
+    "name": "FPT Product 8567",
+    "price": 29372000.0,
+    "original_price": 38240000.0,
+    "discount_percent": 23.2,
+    "category": "dien-tu-dien-lanh",
+    "brand": "FPT",
+    "rating": 4.3,
+    "review_count": 184,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8567 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_ca43822a.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.575895",
+    "url": "https://tiki.com/product/c05743a4"
+  },
+  {
+    "product_id": "TIKI_04417aca",
+    "name": "Asanzo Product 4490",
+    "price": 23575000.0,
+    "original_price": 27588000.0,
+    "discount_percent": 14.5,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Asanzo",
+    "rating": 4.2,
+    "review_count": 143,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4490 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_71ca5286.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.686992",
+    "url": "https://tiki.com/product/ac39eeb4"
+  },
+  {
+    "product_id": "TIKI_bd48209a",
+    "name": "Xiaomi Product 7320",
+    "price": 25509000.0,
+    "original_price": 30065000.0,
+    "discount_percent": 15.2,
+    "category": "dien-tu-dien-lanh",
+    "brand": "Xiaomi",
+    "rating": 3.7,
+    "review_count": 1368,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 7320 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_19e1ee18.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:51.790977",
+    "url": "https://tiki.com/product/c67fcd7d"
+  },
+  {
+    "product_id": "TIKI_836b536e",
+    "name": "Samsung Product 4606",
+    "price": 11329000.0,
+    "original_price": 12805000.0,
+    "discount_percent": 11.5,
+    "category": "may-anh",
+    "brand": "Samsung",
+    "rating": 5.0,
+    "review_count": 234,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 4606 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_73096b8d.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:53.898366",
+    "url": "https://tiki.com/product/44fe0906"
+  },
+  {
+    "product_id": "TIKI_884649e3",
+    "name": "VinSmart Product 5181",
+    "price": 24581000.0,
+    "original_price": 35765000.0,
+    "discount_percent": 31.3,
+    "category": "may-anh",
+    "brand": "VinSmart",
+    "rating": 3.6,
+    "review_count": 941,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5181 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e018803e.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.008974",
+    "url": "https://tiki.com/product/6577b9d4"
+  },
+  {
+    "product_id": "TIKI_be7d09df",
+    "name": "Viettel Product 3249",
+    "price": 18467000.0,
+    "original_price": 22192000.0,
+    "discount_percent": 16.8,
+    "category": "may-anh",
+    "brand": "Viettel",
+    "rating": 4.9,
+    "review_count": 1369,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 3249 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0598a646.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.115249",
+    "url": "https://tiki.com/product/5aa788e0"
+  },
+  {
+    "product_id": "TIKI_ef640f26",
+    "name": "Xiaomi Product 6036",
+    "price": 15101000.0,
+    "original_price": 22137000.0,
+    "discount_percent": 31.8,
+    "category": "may-anh",
+    "brand": "Xiaomi",
+    "rating": 3.5,
+    "review_count": 1672,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 6036 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_f4bc6107.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.221018",
+    "url": "https://tiki.com/product/08b11760"
+  },
+  {
+    "product_id": "TIKI_64b1b101",
+    "name": "Samsung Product 7619",
+    "price": 19010000.0,
+    "original_price": 27900000.0,
+    "discount_percent": 31.9,
+    "category": "may-anh",
+    "brand": "Samsung",
+    "rating": 4.7,
+    "review_count": 1258,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7619 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_a993c942.jpg"
+    ],
+    "specifications": {
+      "brand": "Samsung",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.338520",
+    "url": "https://tiki.com/product/61464f6f"
+  },
+  {
+    "product_id": "TIKI_2565b678",
+    "name": "Vivo Product 7777",
+    "price": 20609000.0,
+    "original_price": 27288000.0,
+    "discount_percent": 24.5,
+    "category": "may-anh",
+    "brand": "Vivo",
+    "rating": 4.2,
+    "review_count": 427,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 7777 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_af96a2bf.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.449679",
+    "url": "https://tiki.com/product/c44aab7a"
+  },
+  {
+    "product_id": "TIKI_ce1e3ee4",
+    "name": "Viettel Product 2754",
+    "price": 21457000.0,
+    "original_price": 27892000.0,
+    "discount_percent": 23.1,
+    "category": "may-anh",
+    "brand": "Viettel",
+    "rating": 3.8,
+    "review_count": 1844,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 2754 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0a0de1b5.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.552646",
+    "url": "https://tiki.com/product/7ead31b8"
+  },
+  {
+    "product_id": "TIKI_da924d9c",
+    "name": "BKAV Product 6468",
+    "price": 7912000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "BKAV",
+    "rating": 4.9,
+    "review_count": 80,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 6468 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_9c6db43c.jpg"
+    ],
+    "specifications": {
+      "brand": "BKAV",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.666491",
+    "url": "https://tiki.com/product/bae30d18"
+  },
+  {
+    "product_id": "TIKI_ed548ea8",
+    "name": "FPT Product 7062",
+    "price": 22075000.0,
+    "original_price": 29546000.0,
+    "discount_percent": 25.3,
+    "category": "may-anh",
+    "brand": "FPT",
+    "rating": 4.8,
+    "review_count": 1113,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7062 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1ccd819d.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.771136",
+    "url": "https://tiki.com/product/f4f216cb"
+  },
+  {
+    "product_id": "TIKI_b9da57de",
+    "name": "VinSmart Product 7874",
+    "price": 18468000.0,
+    "original_price": 27381000.0,
+    "discount_percent": 32.6,
+    "category": "may-anh",
+    "brand": "VinSmart",
+    "rating": 3.7,
+    "review_count": 1249,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 7874 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_cf0775d7.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.892551",
+    "url": "https://tiki.com/product/fbec1a0f"
+  },
+  {
+    "product_id": "TIKI_af66a66c",
+    "name": "Vivo Product 5512",
+    "price": 3039000.0,
+    "original_price": 3489000.0,
+    "discount_percent": 12.9,
+    "category": "may-anh",
+    "brand": "Vivo",
+    "rating": 4.2,
+    "review_count": 271,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 5512 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_0d8648ae.jpg"
+    ],
+    "specifications": {
+      "brand": "Vivo",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:54.997834",
+    "url": "https://tiki.com/product/c3b1154e"
+  },
+  {
+    "product_id": "TIKI_ee389fba",
+    "name": "FPT Product 2731",
+    "price": 5107000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "FPT",
+    "rating": 3.7,
+    "review_count": 1346,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 2731 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1eb9385c.jpg"
+    ],
+    "specifications": {
+      "brand": "FPT",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đen"
+    },
+    "availability": false,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.099076",
+    "url": "https://tiki.com/product/385b2898"
+  },
+  {
+    "product_id": "TIKI_a77e05b5",
+    "name": "Asanzo Product 1711",
+    "price": 27702000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "Asanzo",
+    "rating": 3.6,
+    "review_count": 1136,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 1711 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_6d2bcec6.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.203866",
+    "url": "https://tiki.com/product/72b2ea34"
+  },
+  {
+    "product_id": "TIKI_3ba06f26",
+    "name": "Realme Product 7643",
+    "price": 10231000.0,
+    "original_price": 13338000.0,
+    "discount_percent": 23.3,
+    "category": "may-anh",
+    "brand": "Realme",
+    "rating": 4.5,
+    "review_count": 1412,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 7643 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_1642287f.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.319148",
+    "url": "https://tiki.com/product/ca5e930b"
+  },
+  {
+    "product_id": "TIKI_a9c68345",
+    "name": "Asanzo Product 9695",
+    "price": 27541000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "Asanzo",
+    "rating": 4.8,
+    "review_count": 1990,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 9695 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_33c71a26.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.420604",
+    "url": "https://tiki.com/product/2a65aa64"
+  },
+  {
+    "product_id": "TIKI_b6e5223b",
+    "name": "Asanzo Product 2269",
+    "price": 3392000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "Asanzo",
+    "rating": 4.0,
+    "review_count": 487,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 2269 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_8d6c5bb0.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.523932",
+    "url": "https://tiki.com/product/99637b03"
+  },
+  {
+    "product_id": "TIKI_d161dd7d",
+    "name": "Viettel Product 4707",
+    "price": 3165000.0,
+    "original_price": 3484000.0,
+    "discount_percent": 9.2,
+    "category": "may-anh",
+    "brand": "Viettel",
+    "rating": 4.3,
+    "review_count": 991,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 4707 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_4a6b6e0a.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.627332",
+    "url": "https://tiki.com/product/f03fb16b"
+  },
+  {
+    "product_id": "TIKI_fb5466f1",
+    "name": "VinSmart Product 5020",
+    "price": 29580000.0,
+    "original_price": 36637000.0,
+    "discount_percent": 19.3,
+    "category": "may-anh",
+    "brand": "VinSmart",
+    "rating": 5.0,
+    "review_count": 734,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 5020 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5fc1b00d.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.733069",
+    "url": "https://tiki.com/product/5bb60da5"
+  },
+  {
+    "product_id": "TIKI_65e19e24",
+    "name": "Apple Product 1893",
+    "price": 20750000.0,
+    "original_price": 24661000.0,
+    "discount_percent": 15.9,
+    "category": "may-anh",
+    "brand": "Apple",
+    "rating": 4.5,
+    "review_count": 1016,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 1893 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_e04a2c24.jpg"
+    ],
+    "specifications": {
+      "brand": "Apple",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Đỏ"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.833574",
+    "url": "https://tiki.com/product/55ebc709"
+  },
+  {
+    "product_id": "TIKI_d2086e17",
+    "name": "Xiaomi Product 9319",
+    "price": 17857000.0,
+    "original_price": 26144000.0,
+    "discount_percent": 31.7,
+    "category": "may-anh",
+    "brand": "Xiaomi",
+    "rating": 3.8,
+    "review_count": 1787,
+    "seller": "Shop Uy tín",
+    "description": "Sản phẩm Product 9319 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_121a6c00.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:55.937138",
+    "url": "https://tiki.com/product/a7531b57"
+  },
+  {
+    "product_id": "TIKI_567a1197",
+    "name": "VinSmart Product 2818",
+    "price": 18035000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "VinSmart",
+    "rating": 3.7,
+    "review_count": 163,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2818 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_97b9555e.jpg"
+    ],
+    "specifications": {
+      "brand": "VinSmart",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:56.037329",
+    "url": "https://tiki.com/product/46af3e35"
+  },
+  {
+    "product_id": "TIKI_7579fe09",
+    "name": "Realme Product 5293",
+    "price": 29729000.0,
+    "original_price": 36348000.0,
+    "discount_percent": 18.2,
+    "category": "may-anh",
+    "brand": "Realme",
+    "rating": 4.4,
+    "review_count": 1672,
+    "seller": "Shop Chính hãng",
+    "description": "Sản phẩm Product 5293 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_952d923a.jpg"
+    ],
+    "specifications": {
+      "brand": "Realme",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Vàng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "Đà Nẵng"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:56.137640",
+    "url": "https://tiki.com/product/3f38f8cb"
+  },
+  {
+    "product_id": "TIKI_8ca9fb44",
+    "name": "Asanzo Product 8676",
+    "price": 26579000.0,
+    "original_price": 30210000.0,
+    "discount_percent": 12.0,
+    "category": "may-anh",
+    "brand": "Asanzo",
+    "rating": 4.0,
+    "review_count": 577,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 8676 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_5d55ae92.jpg"
+    ],
+    "specifications": {
+      "brand": "Asanzo",
+      "warranty": "12 tháng",
+      "origin": "Việt Nam",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:56.242931",
+    "url": "https://tiki.com/product/9c24a84a"
+  },
+  {
+    "product_id": "TIKI_3e674e11",
+    "name": "OPPO Product 8868",
+    "price": 7254000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "OPPO",
+    "rating": 3.8,
+    "review_count": 598,
+    "seller": "Shop FPT",
+    "description": "Sản phẩm Product 8868 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_72f3a5d7.jpg"
+    ],
+    "specifications": {
+      "brand": "OPPO",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Đen"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": true,
+      "location": "Hà Nội"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:56.354432",
+    "url": "https://tiki.com/product/31afcc64"
+  },
+  {
+    "product_id": "TIKI_31440f49",
+    "name": "Viettel Product 2326",
+    "price": 10553000.0,
+    "original_price": 12437000.0,
+    "discount_percent": 15.2,
+    "category": "may-anh",
+    "brand": "Viettel",
+    "rating": 3.9,
+    "review_count": 606,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 2326 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_806d6fb7.jpg"
+    ],
+    "specifications": {
+      "brand": "Viettel",
+      "warranty": "12 tháng",
+      "origin": "Import",
+      "color": "Trắng"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": true,
+      "fast_delivery": false,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:56.469058",
+    "url": "https://tiki.com/product/ac0b6194"
+  },
+  {
+    "product_id": "TIKI_a2b29ac9",
+    "name": "Xiaomi Product 9003",
+    "price": 13714000.0,
+    "original_price": null,
+    "discount_percent": null,
+    "category": "may-anh",
+    "brand": "Xiaomi",
+    "rating": 4.3,
+    "review_count": 533,
+    "seller": "Shop CellphoneS",
+    "description": "Sản phẩm Product 9003 chính hãng, bảo hành 12 tháng",
+    "images": [
+      "https://tiki.com/images/product_d024953c.jpg"
+    ],
+    "specifications": {
+      "brand": "Xiaomi",
+      "warranty": "12 tháng",
+      "origin": "Chính hãng",
+      "color": "Xanh"
+    },
+    "availability": true,
+    "shipping_info": {
+      "free_shipping": false,
+      "fast_delivery": true,
+      "location": "TP.HCM"
+    },
+    "platform": "tiki",
+    "crawl_timestamp": "2025-10-01 21:17:56.582226",
+    "url": "https://tiki.com/product/96cb0c8b"
+  }
+]
