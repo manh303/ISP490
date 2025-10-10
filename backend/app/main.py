@@ -816,31 +816,31 @@ async def get_analytics_dashboard(
         metrics = {}
 
         # Total customers
-        result = await db.fetch_one("SELECT COUNT(DISTINCT customer_unique_id) as total FROM dw_ecommerce_data")
+        result = await db.fetch_one("SELECT COUNT(DISTINCT customer_id) as total FROM vietnam_customers_large")
         metrics['total_customers'] = result['total'] if result else 0
 
         # Total orders
-        result = await db.fetch_one("SELECT COUNT(DISTINCT order_id) as total FROM dw_ecommerce_data")
+        result = await db.fetch_one("SELECT COUNT(DISTINCT order_id) as total FROM vietnam_orders_large")
         metrics['total_orders'] = result['total'] if result else 0
 
         # Total revenue
-        result = await db.fetch_one("SELECT SUM(payment_value) as total FROM dw_ecommerce_data WHERE payment_value IS NOT NULL")
+        result = await db.fetch_one("SELECT SUM(total_amount_vnd) as total FROM vietnam_orders_large WHERE total_amount_vnd IS NOT NULL")
         metrics['total_revenue'] = float(result['total']) if result and result['total'] else 0
 
         # Average order value
-        result = await db.fetch_one("SELECT AVG(payment_value) as avg FROM dw_ecommerce_data WHERE payment_value IS NOT NULL")
+        result = await db.fetch_one("SELECT AVG(total_amount_vnd) as avg FROM vietnam_orders_large WHERE total_amount_vnd IS NOT NULL")
         metrics['avg_order_value'] = float(result['avg']) if result and result['avg'] else 0
 
         # Recent activity (last 30 days simulation)
         recent_activity = await db.fetch_all("""
             SELECT
-                DATE(order_purchase_timestamp) as date,
+                DATE(order_date) as date,
                 COUNT(DISTINCT order_id) as orders,
-                SUM(payment_value) as revenue
-            FROM dw_ecommerce_data
-            WHERE order_purchase_timestamp IS NOT NULL
-            AND payment_value IS NOT NULL
-            GROUP BY DATE(order_purchase_timestamp)
+                SUM(total_amount_vnd) as revenue
+            FROM vietnam_orders_large
+            WHERE order_date IS NOT NULL
+            AND total_amount_vnd IS NOT NULL
+            GROUP BY DATE(order_date)
             ORDER BY date DESC
             LIMIT 30
         """)
@@ -848,14 +848,14 @@ async def get_analytics_dashboard(
         # Top products
         top_products = await db.fetch_all("""
             SELECT
-                product_category_name_english,
+                category_l1,
                 COUNT(*) as sales_count,
-                SUM(payment_value) as total_revenue,
-                AVG(review_score) as avg_rating
-            FROM dw_ecommerce_data
-            WHERE product_category_name_english IS NOT NULL
-            AND payment_value IS NOT NULL
-            GROUP BY product_category_name_english
+                SUM(price_vnd) as total_revenue,
+                AVG(rating) as avg_rating
+            FROM vietnam_products_large
+            WHERE category_l1 IS NOT NULL
+            AND price_vnd IS NOT NULL
+            GROUP BY category_l1
             ORDER BY sales_count DESC
             LIMIT 10
         """)
@@ -869,11 +869,11 @@ async def get_analytics_dashboard(
                     WHEN COUNT(order_id) >= 2 THEN 'Potential Loyalists'
                     ELSE 'New Customers'
                 END as segment,
-                COUNT(DISTINCT customer_unique_id) as customer_count,
-                AVG(payment_value) as avg_order_value
-            FROM dw_ecommerce_data
-            WHERE customer_unique_id IS NOT NULL
-            GROUP BY customer_unique_id
+                COUNT(DISTINCT customer_id) as customer_count,
+                AVG(total_amount_vnd) as avg_order_value
+            FROM vietnam_orders_large
+            WHERE customer_id IS NOT NULL
+            GROUP BY customer_id
             HAVING COUNT(order_id) > 0
         """)
 
@@ -919,7 +919,7 @@ async def get_real_time_stats(
 
         # Database quick stats
         try:
-            result = await db.fetch_one("SELECT COUNT(*) as count FROM dw_ecommerce_data")
+            result = await db.fetch_one("SELECT COUNT(*) as count FROM vietnam_products_large")
             stats["database_records"] = result['count'] if result else 0
         except Exception:
             stats["database_records"] = 0
