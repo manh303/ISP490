@@ -1,0 +1,165 @@
+{
+  "crawl_summary": {
+    "total_products": 622,
+    "platforms_crawled": 5,
+    "duration_seconds": 119.387405,
+    "products_per_second": 5.21,
+    "timestamp": "2025-10-01T21:18:21.111063"
+  },
+  "platform_breakdown": {
+    "cellphones": {
+      "product_count": 146,
+      "avg_price": 21303836.0,
+      "price_range": [
+        510000.0,
+        44017000.0
+      ],
+      "avg_rating": 4.3,
+      "categories": [
+        "dien-thoai",
+        "sac-du-phong",
+        "tablet",
+        "tai-nghe",
+        "loa-bluetooth",
+        "laptop"
+      ],
+      "brands": [
+        "VinSmart",
+        "Xiaomi",
+        "Asanzo",
+        "Vivo",
+        "OPPO",
+        "Viettel",
+        "Apple",
+        "Samsung",
+        "Realme",
+        "BKAV",
+        "FPT"
+      ]
+    },
+    "fptshop": {
+      "product_count": 168,
+      "avg_price": 24898494.0,
+      "price_range": [
+        513000.0,
+        49977000.0
+      ],
+      "avg_rating": 4.2,
+      "categories": [
+        "dong-ho-thong-minh",
+        "phu-kien",
+        "dien-thoai",
+        "may-tinh-ban",
+        "loa",
+        "tablet",
+        "tai-nghe",
+        "laptop"
+      ],
+      "brands": [
+        "VinSmart",
+        "Xiaomi",
+        "Asanzo",
+        "Vivo",
+        "OPPO",
+        "Viettel",
+        "Apple",
+        "Samsung",
+        "Realme",
+        "BKAV",
+        "FPT"
+      ]
+    },
+    "sendo": {
+      "product_count": 94,
+      "avg_price": 14899426.0,
+      "price_range": [
+        538000.0,
+        29055000.0
+      ],
+      "avg_rating": 4.2,
+      "categories": [
+        "dien-thoai-may-tinh-bang",
+        "laptop-linh-kien-may-tinh",
+        "thiet-bi-so-phu-kien-so"
+      ],
+      "brands": [
+        "FPT",
+        "VinSmart",
+        "Xiaomi",
+        "Asanzo",
+        "OPPO",
+        "Viettel",
+        "Apple",
+        "Samsung",
+        "Realme",
+        "BKAV",
+        "Vivo"
+      ]
+    },
+    "tiki": {
+      "product_count": 135,
+      "avg_price": 17367963.0,
+      "price_range": [
+        517000.0,
+        34982000.0
+      ],
+      "avg_rating": 4.1,
+      "categories": [
+        "dien-thoai-may-tinh-bang",
+        "dien-tu-dien-lanh",
+        "laptop-thiet-bi-it",
+        "may-anh"
+      ],
+      "brands": [
+        "VinSmart",
+        "Xiaomi",
+        "Asanzo",
+        "Vivo",
+        "OPPO",
+        "Apple",
+        "Viettel",
+        "Samsung",
+        "Realme",
+        "BKAV",
+        "FPT"
+      ]
+    },
+    "lazada": {
+      "product_count": 79,
+      "avg_price": 12468316.0,
+      "price_range": [
+        137000.0,
+        24835000.0
+      ],
+      "avg_rating": 4.2,
+      "categories": [
+        "cameras",
+        "phones-tablets"
+      ],
+      "brands": [
+        "VinSmart",
+        "Xiaomi",
+        "Asanzo",
+        "Vivo",
+        "OPPO",
+        "Apple",
+        "Viettel",
+        "Samsung",
+        "Realme",
+        "BKAV",
+        "FPT"
+      ]
+    }
+  },
+  "statistics": {
+    "total_requests": 0,
+    "successful_requests": 23,
+    "failed_requests": 4,
+    "products_collected": 622,
+    "platforms_processed": 5
+  },
+  "performance_metrics": {
+    "success_rate": 23.0,
+    "products_per_platform": 124.0
+  }
+}

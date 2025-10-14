@@ -1,0 +1,73 @@
+version: '3.8'
+services:
+  # ====================================
+  # AIRFLOW SERVICES (Cloud Ready)
+  # ====================================
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DATABASE_URL}
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+      # Cloud connections
+      AIRFLOW_CONN_POSTGRES_DEFAULT: ${DATABASE_URL}
+      AIRFLOW_VAR_MONGODB_URI: ${MONGO_URL}
+      AIRFLOW_VAR_KAFKA_SERVERS: ${KAFKA_SERVERS}
+      AIRFLOW_VAR_REDIS_URL: ${REDIS_URL}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+    ports:
+      - "8080:8080"
+    command: webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DATABASE_URL}
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      # Cloud connections
+      AIRFLOW_CONN_POSTGRES_DEFAULT: ${DATABASE_URL}
+      AIRFLOW_VAR_MONGODB_URI: ${MONGO_URL}
+      AIRFLOW_VAR_KAFKA_SERVERS: ${KAFKA_SERVERS}
+      AIRFLOW_VAR_REDIS_URL: ${REDIS_URL}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname \"$${HOSTNAME}\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ====================================
+  # REDIS FOR TASK COORDINATION
+  # ====================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
