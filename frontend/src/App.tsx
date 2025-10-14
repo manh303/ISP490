@@ -20,17 +20,14 @@ import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
-<<<<<<< HEAD
 import DashboardLayout from "./layout/DashboardLayout";
-=======
 import VietnamElectronicsDashboard from "./pages/Dashboard/VietnamElectronicsDashboard";
-import AppLayout from "./layout/AppLayout";
->>>>>>> main
 import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
 import { AuthProvider, ProtectedRoute } from "./contexts/AuthContext";
 import DSSPage from "./pages/DSSPage.jsx";
+import AppLayout from "./layout/DashboardLayout";
 
 export default function App() {
   return (
@@ -38,11 +35,10 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-<<<<<<< HEAD
           {/* Dashboard Layout */}
           <Route element={<DashboardLayout />}>
-           
-=======
+            <Route path="/dashboard" element={<VietnamElectronicsDashboard />} />
+          </Route>
           {/* Public Auth Routes - Must come first */}
           <Route
             path="/"
@@ -60,7 +56,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
->>>>>>> main
 
           {/* Protected Dashboard Layout */}
           <Route
@@ -95,7 +90,6 @@ export default function App() {
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
           </Route>
-<<<<<<< HEAD
           {/* Public Layout cho Home */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
@@ -108,7 +102,6 @@ export default function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-code" element={<VerifyCode />} />
           <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
-=======
           <Route
             path="/signup"
             element={
@@ -150,7 +143,6 @@ export default function App() {
             }
           />
 
->>>>>>> main
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
