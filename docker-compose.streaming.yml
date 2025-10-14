@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Kafka to PostgreSQL Streaming Consumer
+  kafka-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.kafka-consumer
+    container_name: kafka-postgres-consumer
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=ecommerce_dss
+      - POSTGRES_USER=dss_user
+      - POSTGRES_PASSWORD=dss_password_123
+      - KAFKA_SERVERS=kafka:29092
+      - CONSUMER_GROUP=realtime_postgres_consumer
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - dss_network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    command: python fixed_kafka_consumer.py
+
+  # Kafka Data Generator (for testing)
+  kafka-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.kafka-consumer
+    container_name: kafka-data-generator
+    environment:
+      - KAFKA_SERVERS=kafka:29092
+    depends_on:
+      - kafka
+    networks:
+      - dss_network
+    restart: "no"  # Run once for testing
+    command: python generate_streaming_data.py
+
+networks:
+  dss_network:
+    external: true
