@@ -20,22 +20,59 @@ import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
+<<<<<<< HEAD
 import DashboardLayout from "./layout/DashboardLayout";
+=======
+import VietnamElectronicsDashboard from "./pages/Dashboard/VietnamElectronicsDashboard";
+import AppLayout from "./layout/AppLayout";
+>>>>>>> main
 import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
+import { AuthProvider, ProtectedRoute } from "./contexts/AuthContext";
+import DSSPage from "./pages/DSSPage.jsx";
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <Router>
         <ScrollToTop />
         <Routes>
+<<<<<<< HEAD
           {/* Dashboard Layout */}
           <Route element={<DashboardLayout />}>
            
+=======
+          {/* Public Auth Routes - Must come first */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <SignIn />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/signin"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <SignIn />
+              </ProtectedRoute>
+            }
+          />
+>>>>>>> main
 
-            {/* Others Page */}
+          {/* Protected Dashboard Layout */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Dashboard routes - all protected */}
+            <Route path="/dashboard" element={<VietnamElectronicsDashboard />} />
+            <Route path="/dss" element={<DSSPage />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
@@ -58,6 +95,7 @@ export default function App() {
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
           </Route>
+<<<<<<< HEAD
           {/* Public Layout cho Home */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
@@ -70,10 +108,53 @@ export default function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-code" element={<VerifyCode />} />
           <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+=======
+          <Route
+            path="/signup"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <SignUp />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <ForgotPassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reset-password/:token"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <ResetPassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/verify-code"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <VerifyCode />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/password-reset-success"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <PasswordResetSuccess />
+              </ProtectedRoute>
+            }
+          />
+
+>>>>>>> main
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-    </>
+    </AuthProvider>
   );
 }
