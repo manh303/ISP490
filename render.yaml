@@ -28,6 +28,12 @@ services:
         value: HS256
       - key: JWT_EXPIRATION_HOURS
         value: 24
+      - key: LOG_LEVEL
+        value: INFO
+      - key: WORKERS
+        value: 1
+      - key: TIMEOUT
+        value: 120
     healthCheckPath: /health
 
 
@@ -47,14 +53,3 @@ services:
           type: web
           name: ecommerce-dss-backend
           envVarKey: RENDER_EXTERNAL_URL
-
-# Environment configurations
-environments:
-  - name: production
-    variables:
-      - key: LOG_LEVEL
-        value: INFO
-      - key: WORKERS
-        value: 1
-      - key: TIMEOUT
-        value: 120
