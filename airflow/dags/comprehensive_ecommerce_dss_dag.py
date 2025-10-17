@@ -102,6 +102,32 @@ def get_redis_client():
     """Get Redis client"""
     return redis.from_url(REDIS_URL)
 
+def clean_mongo_data(data):
+    """Remove ObjectId and other non-serializable MongoDB types from data"""
+    import json
+    from bson import ObjectId
+
+    if isinstance(data, dict):
+        cleaned = {}
+        for key, value in data.items():
+            if key == '_id':
+                continue  # Skip ObjectId fields
+            cleaned[key] = clean_mongo_data(value)
+        return cleaned
+    elif isinstance(data, list):
+        return [clean_mongo_data(item) for item in data]
+    elif isinstance(data, ObjectId):
+        return str(data)  # Convert ObjectId to string
+    elif isinstance(data, datetime):
+        return data.isoformat()  # Convert datetime to string
+    else:
+        # For any other non-serializable types, convert to string
+        try:
+            json.dumps(data)
+            return data
+        except (TypeError, ValueError):
+            return str(data)
+
 def send_alert(message: str, severity: str = "INFO"):
     """Send alert to monitoring system"""
     try:
@@ -535,6 +561,279 @@ def process_streaming_data(**context):
 
     except Exception as e:
         error_msg = f"Streaming data processing failed: {str(e)}"
+        logging.error(error_msg)
+        send_alert(error_msg, "HIGH")
+        raise
+
+def populate_datawarehouse(**context):
+    """Populate datawarehouse tables from streaming data"""
+    dw_results = {}
+
+    try:
+        engine = get_db_connection()
+        mongo_client = get_mongo_client()
+        db = mongo_client['ecommerce_dss']
+
+        # Create datawarehouse schemas if they don't exist
+        with engine.begin() as conn:
+            from sqlalchemy import text
+
+            # Create schemas
+            conn.execute(text("CREATE SCHEMA IF NOT EXISTS bronze;"))
+            conn.execute(text("CREATE SCHEMA IF NOT EXISTS silver;"))
+            conn.execute(text("CREATE SCHEMA IF NOT EXISTS gold;"))
+            conn.execute(text("CREATE SCHEMA IF NOT EXISTS dw_core;"))
+
+        # 1. BRONZE LAYER - Raw streaming data from MongoDB to PostgreSQL
+        try:
+            # Load processed streaming orders from MongoDB
+            processed_orders = list(db.processed_orders_stream.find({}))
+
+            if processed_orders:
+                # Create bronze orders table
+                with engine.begin() as conn:
+                    conn.execute(text("""
+                        CREATE TABLE IF NOT EXISTS bronze.orders_raw (
+                            id SERIAL PRIMARY KEY,
+                            order_id VARCHAR(100),
+                            customer_id VARCHAR(100),
+                            kafka_topic VARCHAR(100),
+                            kafka_partition INTEGER,
+                            kafka_offset BIGINT,
+                            original_data JSONB,
+                            processed_at TIMESTAMP,
+                            inserted_at TIMESTAMP DEFAULT NOW()
+                        );
+                    """))
+
+                # Insert streaming data into bronze layer
+                insert_count = 0
+                for order_doc in processed_orders:
+                    try:
+                        original_data = order_doc.get('original_data', {})
+                        kafka_meta = order_doc.get('kafka_metadata', {})
+
+                        with engine.begin() as conn:
+                            conn.execute(text("""
+                                INSERT INTO bronze.orders_raw
+                                (order_id, customer_id, kafka_topic, kafka_partition, kafka_offset, original_data, processed_at)
+                                VALUES (:order_id, :customer_id, :topic, :partition, :offset, :data, :processed_at)
+                                ON CONFLICT DO NOTHING;
+                            """), {
+                                'order_id': original_data.get('order_id'),
+                                'customer_id': original_data.get('customer_id'),
+                                'topic': kafka_meta.get('topic'),
+                                'partition': kafka_meta.get('partition'),
+                                'offset': kafka_meta.get('offset'),
+                                'data': json.dumps(original_data),
+                                'processed_at': order_doc.get('processed_at')
+                            })
+                            insert_count += 1
+                    except Exception as e:
+                        logging.warning(f"Failed to insert order into bronze: {e}")
+
+                dw_results['bronze_orders'] = {
+                    'status': 'completed',
+                    'records_inserted': insert_count
+                }
+            else:
+                dw_results['bronze_orders'] = {
+                    'status': 'skipped',
+                    'reason': 'no_streaming_data'
+                }
+
+        except Exception as e:
+            logging.error(f"Bronze layer population failed: {e}")
+            dw_results['bronze_orders'] = {'status': 'failed', 'error': str(e)}
+
+        # 2. SILVER LAYER - Cleaned and validated data
+        try:
+            with engine.begin() as conn:
+                # Create silver orders table
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS silver.orders_clean (
+                        order_id VARCHAR(100) PRIMARY KEY,
+                        customer_id VARCHAR(100),
+                        product_id VARCHAR(100),
+                        quantity INTEGER,
+                        total_amount DECIMAL(15,2),
+                        currency VARCHAR(10) DEFAULT 'VND',
+                        order_date TIMESTAMP,
+                        payment_method VARCHAR(50),
+                        platform VARCHAR(50),
+                        status VARCHAR(50),
+                        city VARCHAR(100),
+                        district VARCHAR(100),
+                        processed_at TIMESTAMP DEFAULT NOW(),
+                        data_quality_score DECIMAL(3,2) DEFAULT 1.0
+                    );
+                """))
+
+                # Transform bronze to silver with data cleaning
+                result = conn.execute(text("""
+                    INSERT INTO silver.orders_clean
+                    (order_id, customer_id, product_id, quantity, total_amount, order_date,
+                     payment_method, platform, status, city, district, processed_at)
+                    SELECT DISTINCT
+                        (original_data->>'order_id')::VARCHAR(100),
+                        (original_data->>'customer_id')::VARCHAR(100),
+                        (original_data->>'product_id')::VARCHAR(100),
+                        COALESCE((original_data->>'quantity')::INTEGER, 1),
+                        COALESCE((original_data->>'total_amount')::DECIMAL, 0),
+                        (original_data->>'order_date')::TIMESTAMP,
+                        (original_data->>'payment_method')::VARCHAR(50),
+                        (original_data->>'platform')::VARCHAR(50),
+                        (original_data->>'status')::VARCHAR(50),
+                        (original_data->'shipping_address'->>'city')::VARCHAR(100),
+                        (original_data->'shipping_address'->>'district')::VARCHAR(100),
+                        NOW()
+                    FROM bronze.orders_raw
+                    WHERE original_data->>'order_id' IS NOT NULL
+                    ON CONFLICT (order_id) DO UPDATE SET
+                        total_amount = EXCLUDED.total_amount,
+                        status = EXCLUDED.status,
+                        processed_at = NOW();
+                """))
+
+                silver_count = result.rowcount
+                dw_results['silver_orders'] = {
+                    'status': 'completed',
+                    'records_processed': silver_count
+                }
+
+        except Exception as e:
+            logging.error(f"Silver layer population failed: {e}")
+            dw_results['silver_orders'] = {'status': 'failed', 'error': str(e)}
+
+        # 3. GOLD LAYER - Business-ready aggregated data
+        try:
+            with engine.begin() as conn:
+                # Create gold layer tables
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS gold.daily_sales_summary (
+                        date_key DATE PRIMARY KEY,
+                        total_orders INTEGER,
+                        total_revenue DECIMAL(15,2),
+                        avg_order_value DECIMAL(15,2),
+                        unique_customers INTEGER,
+                        top_payment_method VARCHAR(50),
+                        top_platform VARCHAR(50),
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    );
+                """))
+
+                # Populate gold layer with daily aggregations
+                result = conn.execute(text("""
+                    INSERT INTO gold.daily_sales_summary
+                    (date_key, total_orders, total_revenue, avg_order_value, unique_customers,
+                     top_payment_method, top_platform, updated_at)
+                    SELECT
+                        DATE(order_date) as date_key,
+                        COUNT(*) as total_orders,
+                        SUM(total_amount) as total_revenue,
+                        AVG(total_amount) as avg_order_value,
+                        COUNT(DISTINCT customer_id) as unique_customers,
+                        MODE() WITHIN GROUP (ORDER BY payment_method) as top_payment_method,
+                        MODE() WITHIN GROUP (ORDER BY platform) as top_platform,
+                        NOW()
+                    FROM silver.orders_clean
+                    WHERE order_date >= CURRENT_DATE - INTERVAL '30 days'
+                    GROUP BY DATE(order_date)
+                    ON CONFLICT (date_key) DO UPDATE SET
+                        total_orders = EXCLUDED.total_orders,
+                        total_revenue = EXCLUDED.total_revenue,
+                        avg_order_value = EXCLUDED.avg_order_value,
+                        unique_customers = EXCLUDED.unique_customers,
+                        top_payment_method = EXCLUDED.top_payment_method,
+                        top_platform = EXCLUDED.top_platform,
+                        updated_at = NOW();
+                """))
+
+                gold_count = result.rowcount
+                dw_results['gold_daily_summary'] = {
+                    'status': 'completed',
+                    'records_processed': gold_count
+                }
+
+        except Exception as e:
+            logging.error(f"Gold layer population failed: {e}")
+            dw_results['gold_daily_summary'] = {'status': 'failed', 'error': str(e)}
+
+        # 4. DW_CORE - Fact and dimension tables
+        try:
+            with engine.begin() as conn:
+                # Create fact table
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS dw_core.fact_orders (
+                        order_key SERIAL PRIMARY KEY,
+                        order_id VARCHAR(100) UNIQUE,
+                        customer_key INTEGER,
+                        product_key INTEGER,
+                        date_key DATE,
+                        quantity INTEGER,
+                        unit_price DECIMAL(15,2),
+                        total_amount DECIMAL(15,2),
+                        order_date TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    );
+                """))
+
+                # Create dimension tables
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS dw_core.dim_customers (
+                        customer_key SERIAL PRIMARY KEY,
+                        customer_id VARCHAR(100) UNIQUE,
+                        customer_segment VARCHAR(50),
+                        city VARCHAR(100),
+                        district VARCHAR(100),
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    );
+                """))
+
+                # Populate fact table from silver layer
+                result = conn.execute(text("""
+                    INSERT INTO dw_core.fact_orders
+                    (order_id, date_key, quantity, total_amount, unit_price, order_date)
+                    SELECT
+                        order_id,
+                        DATE(order_date),
+                        quantity,
+                        total_amount,
+                        total_amount / GREATEST(quantity, 1),
+                        order_date
+                    FROM silver.orders_clean
+                    WHERE order_date >= CURRENT_DATE - INTERVAL '7 days'
+                    ON CONFLICT (order_id) DO UPDATE SET
+                        total_amount = EXCLUDED.total_amount,
+                        quantity = EXCLUDED.quantity,
+                        unit_price = EXCLUDED.unit_price;
+                """))
+
+                fact_count = result.rowcount
+                dw_results['dw_core_facts'] = {
+                    'status': 'completed',
+                    'records_processed': fact_count
+                }
+
+        except Exception as e:
+            logging.error(f"DW Core population failed: {e}")
+            dw_results['dw_core_facts'] = {'status': 'failed', 'error': str(e)}
+
+        # Store results
+        context['task_instance'].xcom_push(key='datawarehouse_population', value=dw_results)
+
+        successful_layers = len([r for r in dw_results.values() if r.get('status') == 'completed'])
+        total_records = sum(r.get('records_processed', r.get('records_inserted', 0))
+                          for r in dw_results.values() if r.get('status') == 'completed')
+
+        send_alert(f"Datawarehouse populated: {successful_layers} layers, {total_records} total records processed", "INFO")
+
+        return dw_results
+
+    except Exception as e:
+        error_msg = f"Datawarehouse population failed: {str(e)}"
         logging.error(error_msg)
         send_alert(error_msg, "HIGH")
         raise
@@ -1136,8 +1435,9 @@ def monitor_system_health(**context):
 
         db.system_health_metrics.insert_one(health_doc)
 
-        # Store results
-        context['task_instance'].xcom_push(key='system_health', value=health_status)
+        # Store results (clean health_status, no ObjectId contamination)
+        clean_health_status = clean_mongo_data(health_status)
+        context['task_instance'].xcom_push(key='system_health', value=clean_health_status)
 
         # Send appropriate alert
         if health_score >= 90:
@@ -1267,11 +1567,14 @@ def generate_performance_report(**context):
             'pipeline_status': 'completed'
         }
 
-        # Store report in MongoDB
+        # Store report in MongoDB (this may add ObjectId to report_data)
         db.performance_reports.insert_one(report_data)
 
-        # Store results
-        context['task_instance'].xcom_push(key='performance_report', value=report_data)
+        # Create a clean copy for XCom (remove all ObjectId and non-serializable data)
+        xcom_report_data = clean_mongo_data(report_data)
+
+        # Store results in XCom (using completely clean copy)
+        context['task_instance'].xcom_push(key='performance_report', value=xcom_report_data)
 
         # Send summary alert
         summary = f"""Performance Report Generated:
@@ -1282,7 +1585,8 @@ def generate_performance_report(**context):
 
         send_alert(summary, "INFO")
 
-        return report_data
+        # Return clean data without ObjectId for Airflow task return value
+        return xcom_report_data
 
     except Exception as e:
         error_msg = f"Performance report generation failed: {str(e)}"
@@ -1507,6 +1811,12 @@ with TaskGroup("data_processing", dag=dag) as data_processing_group:
         dag=dag
     )
 
+    populate_datawarehouse_task = PythonOperator(
+        task_id='populate_datawarehouse',
+        python_callable=populate_datawarehouse,
+        dag=dag
+    )
+
 # Machine learning task group
 with TaskGroup("machine_learning", dag=dag) as ml_group:
     prepare_features_task = PythonOperator(
@@ -1555,17 +1865,41 @@ with TaskGroup("backup_cleanup", dag=dag) as backup_group:
         dag=dag
     )
 
-# Email notification task (on success)
-success_email_task = EmailOperator(
+def send_success_notification(**context):
+    """Send success notification (without email dependency)"""
+    try:
+        execution_date = context['ds']
+        dag_run_id = context['dag_run'].run_id
+
+        message = f"""
+        E-commerce DSS Pipeline Completed Successfully
+
+        Execution Date: {execution_date}
+        DAG Run ID: {dag_run_id}
+        Timestamp: {datetime.now()}
+
+        All tasks completed successfully. Data pipeline is operational.
+        """
+
+        send_alert(message, "SUCCESS")
+        logging.info("Success notification sent via alert system")
+
+        return {
+            "status": "notification_sent",
+            "execution_date": execution_date,
+            "dag_run_id": dag_run_id,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logging.warning(f"Could not send notification: {e}")
+        # Don't fail the task if notification fails
+        return {"status": "notification_failed", "error": str(e)}
+
+# Success notification task (no email dependency)
+success_notification_task = PythonOperator(
     task_id='send_success_notification',
-    to=['manhndhe173383@fpt.edu.vn'],
-    subject='E-commerce DSS Pipeline - Success',
-    html_content="""
-    <h3>E-commerce DSS Pipeline Completed Successfully</h3>
-    <p>Execution Date: {{ ds }}</p>
-    <p>DAG Run ID: {{ dag_run.run_id }}</p>
-    <p>All tasks completed successfully. Check the performance report for details.</p>
-    """,
+    python_callable=send_success_notification,
     trigger_rule=TriggerRule.ALL_SUCCESS,
     dag=dag
 )
@@ -1578,7 +1912,7 @@ success_email_task = EmailOperator(
 start_task >> check_sources_task >> data_collection_group
 data_collection_group >> data_processing_group >> ml_group
 ml_group >> monitoring_group
-monitoring_group >> backup_group >> success_email_task >> end_task
+monitoring_group >> backup_group >> success_notification_task >> end_task
 
 # Internal task group dependencies
 # Data collection group
@@ -1586,6 +1920,7 @@ collect_external_data_task >> setup_streaming_task
 
 # Data processing group
 validate_quality_task >> [process_streaming_task, transform_aggregate_task]
+process_streaming_task >> populate_datawarehouse_task
 
 # ML group
 prepare_features_task >> train_models_task >> generate_predictions_task
