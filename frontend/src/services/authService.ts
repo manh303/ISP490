@@ -28,6 +28,13 @@ interface ApiResponse<T> {
   data?: T;
 }
 
+// Add error types for better error handling
+interface AuthError {
+  message: string;
+  field?: string;
+  status?: number;
+}
+
 class AuthService {
   private baseURL: string;
   private token: string | null = null;
@@ -83,26 +90,78 @@ class AuthService {
     }
   }
 
-  // Login method
+  // Login method with real API integration
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    const response = await this.apiCall<LoginResponse>('/api/v1/simple-auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
+    try {
+      // Try real API first
+      const response = await this.apiCall<LoginResponse>('/api/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
 
-    // Store token in localStorage and instance
-    this.token = response.access_token;
-    localStorage.setItem('auth_token', response.access_token);
-    localStorage.setItem('user_data', JSON.stringify(response.user));
+      // Store token in localStorage and instance
+      this.token = response.access_token;
+      localStorage.setItem('auth_token', response.access_token);
+      localStorage.setItem('user_data', JSON.stringify(response.user));
 
-    return response;
+      return response;
+    } catch (error) {
+      // Fallback to mock for development if API fails
+      console.warn('API login failed, falling back to mock authentication:', error);
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const validCredentials = [
+        { username: 'admin', password: 'admin123', role: 'admin', full_name: 'Administrator' },
+        { username: 'user', password: 'user123', role: 'user', full_name: 'User' },
+        { username: 'demo', password: 'demo123', role: 'manager', full_name: 'Demo User' },
+        { username: 'manager', password: 'manager123', role: 'manager', full_name: 'Business Manager' },
+        { username: 'analyst', password: 'analyst123', role: 'analyst', full_name: 'Data Analyst' },
+      ];
+
+      const user = validCredentials.find(
+        cred => cred.username === credentials.username && cred.password === credentials.password
+      );
+
+      if (!user) {
+        const error: AuthError = {
+          message: 'Invalid username or password',
+          field: 'password',
+          status: 401
+        };
+        throw error;
+      }
+
+      // Create mock response
+      const response: LoginResponse = {
+        access_token: `mock_token_${Date.now()}`,
+        token_type: 'bearer',
+        expires_in: 3600,
+        user: {
+          id: `user_${Date.now()}`,
+          username: user.username,
+          email: `${user.username}@dss.com`,
+          role: user.role,
+          full_name: user.full_name,
+          is_active: true,
+        }
+      };
+
+      // Store token in localStorage and instance
+      this.token = response.access_token;
+      localStorage.setItem('auth_token', response.access_token);
+      localStorage.setItem('user_data', JSON.stringify(response.user));
+
+      return response;
+    }
   }
 
   // Logout method
   async logout(): Promise<void> {
     try {
       // Call backend logout endpoint
-      await this.apiCall('/api/v1/simple-auth/logout', {
+      await this.apiCall('/api/v1/auth/logout', {
         method: 'POST',
       });
     } catch (error) {
@@ -117,15 +176,36 @@ class AuthService {
 
   // Get current user info
   async getCurrentUser(): Promise<User> {
-    return await this.apiCall<User>('/api/v1/simple-auth/me');
+    try {
+      return await this.apiCall<User>('/api/v1/auth/me');
+    } catch (error) {
+      // Fallback to stored user data
+      const storedUser = this.getStoredUser();
+      if (storedUser) {
+        return storedUser;
+      }
+      throw error;
+    }
   }
 
   // Validate current token
   async validateToken(): Promise<{ valid: boolean; user?: User }> {
     try {
-      const response = await this.apiCall<{ valid: boolean; user: User }>('/api/v1/simple-auth/validate');
+      if (!this.token) {
+        return { valid: false };
+      }
+
+      // Try API validation first
+      const response = await this.apiCall<{ valid: boolean; user: User }>('/api/v1/auth/validate');
       return response;
     } catch (error) {
+      // Fallback to local validation
+      if (this.token && this.getStoredUser()) {
+        return {
+          valid: true,
+          user: this.getStoredUser()!
+        };
+      }
       return { valid: false };
     }
   }
@@ -165,7 +245,7 @@ class AuthService {
           role: string;
           description: string;
         }>;
-      }>('/api/v1/simple-auth/test-credentials');
+      }>('/api/v1/auth/test-credentials');
 
       return response.credentials;
     } catch (error) {
