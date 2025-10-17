@@ -268,31 +268,32 @@ async def get_dss_dashboard(
             "timestamp": datetime.now().isoformat()
         }
 
-        # Total customers
-        cursor.execute("SELECT COUNT(DISTINCT customer_unique_id) FROM dw_ecommerce_data")
+        # Total customers from streaming data
+        cursor.execute("SELECT COUNT(DISTINCT customer_id) FROM raw_data.customers")
         total_customers = cursor.fetchone()[0] or 0
 
-        # Total orders
-        cursor.execute("SELECT COUNT(DISTINCT order_id) FROM dw_ecommerce_data")
+        # Total orders from streaming data
+        cursor.execute("SELECT COUNT(DISTINCT order_id) FROM raw_data.orders")
         total_orders = cursor.fetchone()[0] or 0
 
-        # Total revenue
-        cursor.execute("SELECT SUM(payment_value) FROM dw_ecommerce_data WHERE payment_value IS NOT NULL")
+        # Total revenue from streaming data
+        cursor.execute("SELECT SUM(total_amount) FROM raw_data.orders WHERE total_amount IS NOT NULL")
         result = cursor.fetchone()
         total_revenue = float(result[0]) if result and result[0] else 0
 
-        # Average order value
-        cursor.execute("SELECT AVG(payment_value) FROM dw_ecommerce_data WHERE payment_value IS NOT NULL")
+        # Average order value from streaming data
+        cursor.execute("SELECT AVG(total_amount) FROM raw_data.orders WHERE total_amount IS NOT NULL")
         result = cursor.fetchone()
         avg_order_value = float(result[0]) if result and result[0] else 0
 
-        # Top products by revenue
+        # Top products by revenue (from real streaming data)
         cursor.execute("""
-            SELECT product_category_name, SUM(payment_value) as revenue,
-                   COUNT(DISTINCT order_id) as orders
-            FROM dw_ecommerce_data
-            WHERE payment_value IS NOT NULL AND product_category_name IS NOT NULL
-            GROUP BY product_category_name
+            SELECT p.category, SUM(o.total_amount) as revenue,
+                   COUNT(DISTINCT o.order_id) as orders
+            FROM raw_data.orders o
+            JOIN raw_data.products p ON p.product_id = o.product_id
+            WHERE o.total_amount IS NOT NULL AND p.category IS NOT NULL
+            GROUP BY p.category
             ORDER BY revenue DESC
             LIMIT 10
         """)
