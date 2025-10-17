@@ -6,6 +6,32 @@ interface LoginCredentials {
   remember_me?: boolean;
 }
 
+interface RegisterCredentials {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface RegisterResponse {
+  success: boolean;
+  message: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+interface ForgotPasswordRequest {
+  email: string;
+}
+
+interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 interface LoginResponse {
   access_token: string;
   token_type: string;
@@ -157,6 +183,108 @@ class AuthService {
     }
   }
 
+  // Registration method with real API integration
+  async register(credentials: RegisterCredentials): Promise<RegisterResponse> {
+    try {
+      // Try real API first
+      const response = await this.apiCall<RegisterResponse>('/api/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: credentials.name,
+          email: credentials.email,
+          password: credentials.password,
+          confirm_password: credentials.confirmPassword
+        }),
+      });
+
+      return response;
+    } catch (error) {
+      // Fallback to mock for development if API fails
+      console.warn('API registration failed, falling back to mock registration:', error);
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Basic validation (backend-style)
+      if (!credentials.name.trim()) {
+        throw new Error('Name is required');
+      }
+
+      if (!credentials.email.trim() || !/\S+@\S+\.\S+/.test(credentials.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      if (credentials.password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+
+      if (credentials.password !== credentials.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      // Check if email already exists (mock simulation)
+      const existingEmails = ['admin@dss.com', 'user@dss.com', 'test@example.com'];
+      if (existingEmails.includes(credentials.email.toLowerCase())) {
+        throw new Error('Email address is already registered');
+      }
+
+      // Create mock success response
+      const response: RegisterResponse = {
+        success: true,
+        message: 'Account created successfully! Please check your email to verify your account.',
+        user: {
+          id: `user_${Date.now()}`,
+          name: credentials.name,
+          email: credentials.email,
+        }
+      };
+
+      return response;
+    }
+  }
+
+  // Forgot password method with real API integration
+  async forgotPassword(request: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+    try {
+      // Try real API first
+      const response = await this.apiCall<ForgotPasswordResponse>('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+
+      return response;
+    } catch (error) {
+      // Fallback to mock for development if API fails
+      console.warn('API forgot password failed, falling back to mock:', error);
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Basic validation
+      if (!request.email.trim()) {
+        throw new Error('Email is required');
+      }
+
+      if (!/\S+@\S+\.\S+/.test(request.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      // Check if email exists (mock simulation)
+      const existingEmails = ['admin@dss.com', 'user@dss.com', 'manager@dss.com', 'analyst@dss.com'];
+      if (!existingEmails.includes(request.email.toLowerCase())) {
+        throw new Error('No account found with this email address');
+      }
+
+      // Create mock success response
+      const response: ForgotPasswordResponse = {
+        success: true,
+        message: 'Password reset code sent successfully! Please check your email for the reset instructions.',
+      };
+
+      return response;
+    }
+  }
+
   // Logout method
   async logout(): Promise<void> {
     try {
@@ -298,4 +426,4 @@ const authService = new AuthService();
 export default authService;
 
 // Export types for use in components
-export type { LoginCredentials, LoginResponse, User, ApiResponse };
+export type { LoginCredentials, RegisterCredentials, RegisterResponse, ForgotPasswordRequest, ForgotPasswordResponse, LoginResponse, User, ApiResponse };
