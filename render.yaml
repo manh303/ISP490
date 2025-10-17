@@ -21,7 +21,7 @@ services:
       - key: DEBUG
         value: false
       - key: CORS_ORIGINS
-        value: https://isp-490.vercel.app,http://localhost:3000
+        value: https://isp-490.vercel.app,https://ecommerce-dss-frontend.vercel.app,http://localhost:3000
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: JWT_ALGORITHM
@@ -36,20 +36,3 @@ services:
         value: 120
     healthCheckPath: /health
 
-
-  # Frontend Service (Optional)
-  - type: web
-    name: ecommerce-dss-frontend
-    env: static
-    plan: free
-    buildCommand: |
-      npm ci &&
-      npm run build
-    staticPublishPath: ./dist
-    pullRequestPreviewsEnabled: false
-    envVars:
-      - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: ecommerce-dss-backend
-          envVarKey: RENDER_EXTERNAL_URL
