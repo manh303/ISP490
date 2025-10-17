@@ -1,0 +1,68 @@
+II) Dòng REAL-TIME (stream) – từ sự kiện → dashboard/alarm (giây–phút)
+R1. App/web phát sinh sự kiện → Kafka
+
+Từ đâu: Website/App/E-commerce/Payment/Shipping publish event.
+
+Đi đâu: Kafka topics (VD)
+
+events.orders, events.clicks, events.payments, events.shipments.
+
+Ghi chú: gắn event_id (UUID), event_time (ISO), source, schema_version.
+
+R2. Kafka nhận → lưu giữ ngắn hạn (retention)
+
+Ở đâu: Kafka Brokers (RF=3).
+
+Mục tiêu: đệm và cho phép nhiều consumer đọc song song; bảo đảm không mất dữ liệu.
+
+R3. Spark Structured Streaming consume các topic
+
+Xử lý:
+
+Validation: ràng buộc field, kiểu dữ liệu; reject/DLQ nếu sai.
+
+Dedup/idempotent: theo event_id + watermark thời gian.
+
+Mask PII: hash email/phone nếu có.
+
+Enrichment (nhẹ): join dimension “nhanh” đã cache (VD: dim_channel).
+
+R4. Ghi Bronze (raw_stream) vào MongoDB (Data Lake)
+
+Từ đâu: Spark Streaming output.
+
+Đi đâu: MongoDB collections (ví dụ)
+
+raw_stream.orders_yyyy_mm_dd, raw_stream.clicks_yyyy_mm_dd (partition bằng ngày).
+
+Mục tiêu: giữ nguyên bản gốc để có thể replay.
+
+R5. Chuẩn hóa Silver (processed_stream) trong Mongo
+
+Xử lý: flatten JSON, đổi kiểu (string→number/date), chuẩn hóa mã kênh/SKU.
+
+Đi đâu: processed_stream.orders, processed_stream.clicks (sharded theo event_date).
+
+Kèm theo: ghi lineage (nguồn, version transform).
+
+R6. Tính online features + phát hiện bất thường
+
+Online features (ví dụ): views_15m, add_to_cart_rate_1h, sales_velocity_6h.
+
+Đi đâu: Mongo Feature Store online: features_user_*, features_sku_* (TTL).
+
+Anomaly/Fraud/OOS: nếu vượt ngưỡng → publish alerts.anomaly (Kafka) và ghi processed_stream.alerts (Mongo).
+
+R7. Cập nhật Gold realtime (tuỳ yêu cầu)
+
+Spark micro-batch upsert các bảng tổng hợp nóng trong PostgreSQL (ví dụ: gold_kpi_rt), hoặc cập nhật materialized view.
+
+Mục tiêu: dashboard thấy số liệu gần-real-time.
+
+R8. Model Serving/Rule Engine + API realtime
+
+Lấy từ đâu: Online features (Mongo) + model (đã đăng ký ở MLflow).
+
+Trả đi đâu: FastAPI gửi scores/alerts cho FE qua SSE/WebSocket, đồng thời log vào decision_audit.
+
+Kết quả: Dashboard realtime/Alert hiển thị ngay (giây → phút).

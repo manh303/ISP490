@@ -1,0 +1,81 @@
+services:
+  # Backend API Service
+  - type: web
+    name: ecommerce-dss-backend
+    env: python
+    plan: free
+    buildCommand: |
+      cd backend &&
+      pip install --upgrade pip &&
+      pip install -r requirements.txt
+    startCommand: |
+      cd backend &&
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-dss-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ecommerce-dss-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: CORS_ORIGINS
+        value: https://ecommerce-dss-frontend.onrender.com,http://localhost:3000
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRATION_HOURS
+        value: 24
+    healthCheckPath: /health
+
+  # PostgreSQL Database
+  - type: postgres
+    name: ecommerce-dss-db
+    plan: free
+    databaseName: ecommerce_dss
+    user: dss_user
+
+  # Redis Cache
+  - type: redis
+    name: ecommerce-dss-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
+  # Frontend Service (Optional)
+  - type: web
+    name: ecommerce-dss-frontend
+    env: static
+    plan: free
+    buildCommand: |
+      npm ci &&
+      npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: ecommerce-dss-backend
+          envVarKey: RENDER_EXTERNAL_URL
+
+# Environment configurations
+environments:
+  - name: production
+    variables:
+      - key: LOG_LEVEL
+        value: INFO
+      - key: WORKERS
+        value: 1
+      - key: TIMEOUT
+        value: 120
