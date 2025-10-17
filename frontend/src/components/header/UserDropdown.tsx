@@ -3,11 +3,13 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { state, logout } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -19,14 +21,24 @@ export default function UserDropdown() {
 
   const handleLogout = async () => {
     try {
+      showToast('Signing out...', 'info', 2000);
       await logout();
       closeDropdown();
-      navigate('/signin');
+      showToast('✅ Successfully signed out. See you soon!', 'success', 3000);
+
+      // Delay navigation slightly to show success message
+      setTimeout(() => {
+        navigate('/signin');
+      }, 500);
     } catch (error) {
       console.error('Logout failed:', error);
-      // Still navigate to signin even if logout fails
+      showToast('❌ Logout failed, but redirecting to sign in...', 'warning', 3000);
       closeDropdown();
-      navigate('/signin');
+
+      // Still navigate to signin even if logout fails
+      setTimeout(() => {
+        navigate('/signin');
+      }, 1000);
     }
   };
 
