@@ -82,29 +82,37 @@ export default function SignInForm() {
     } catch (error: any) {
       console.error('Login error:', error);
 
-      // Extract error message from different error formats
-      let errorMessage = 'Login failed. Please try again.';
+      // Add a small delay to show the error properly (prevents flashing)
+      setTimeout(() => {
+        // Extract error message from different error formats
+        let errorMessage = 'Login failed. Please try again.';
 
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.detail) {
-        errorMessage = error.detail;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
+        if (error?.message) {
+          errorMessage = error.message;
+        } else if (error?.detail) {
+          if (typeof error.detail === 'object' && error.detail.message) {
+            errorMessage = error.detail.message;
+          } else if (typeof error.detail === 'string') {
+            errorMessage = error.detail;
+          }
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
 
-      // Show specific error for invalid credentials
-      if (errorMessage.toLowerCase().includes('invalid') ||
-          errorMessage.toLowerCase().includes('unauthorized') ||
-          errorMessage.toLowerCase().includes('password')) {
-        errorMessage = '❌ Invalid username or password. Please check your credentials and try again.';
-      }
+        // Show specific error for invalid credentials
+        if (errorMessage.toLowerCase().includes('invalid') ||
+            errorMessage.toLowerCase().includes('unauthorized') ||
+            errorMessage.toLowerCase().includes('password') ||
+            errorMessage.toLowerCase().includes('username')) {
+          errorMessage = '❌ Invalid username or password. Please check your credentials and try again.';
+        }
 
-      setErrors({
-        username: "",
-        password: "",
-        general: errorMessage
-      });
+        setErrors({
+          username: "",
+          password: "",
+          general: errorMessage
+        });
+      }, 100); // Small delay to prevent flashing
     }
   };
 
