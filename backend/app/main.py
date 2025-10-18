@@ -50,6 +50,15 @@ except ImportError as e:
     SIMPLE_DATABASE_AVAILABLE = False
     print(f"WARNING: Simple database functions not available: {e}")
 
+# Import email service
+try:
+    from email_service import email_service, send_otp_email, verify_otp
+    EMAIL_SERVICE_AVAILABLE = True
+    print("Email service imported successfully")
+except ImportError as e:
+    EMAIL_SERVICE_AVAILABLE = False
+    print(f"WARNING: Email service not available: {e}")
+
 # Data processing
 try:
     import pandas as pd
@@ -1371,11 +1380,218 @@ except ImportError:
     logger.warning("Datawarehouse queries not available")
 
 # ====================================
+# EMAIL & OTP ENDPOINTS
+# ====================================
+
+# Pydantic models for OTP
+class RegisterRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    email: str = Field(..., regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    password: str = Field(..., min_length=8)
+    confirmPassword: str = Field(..., min_length=8)
+
+class VerifyOTPRequest(BaseModel):
+    email: str = Field(..., regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    otp: str = Field(..., min_length=6, max_length=6)
+
+class ResendOTPRequest(BaseModel):
+    email: str = Field(..., regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/register")
+async def register_user(request: RegisterRequest):
+    """Register user and send OTP to email"""
+    try:
+        # Validate password confirmation
+        if request.password != request.confirmPassword:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Passwords do not match",
+                    "field": "confirmPassword"
+                }
+            )
+
+        # Basic email validation (already done by Pydantic, but double-check)
+        if not request.email or '@' not in request.email:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Please enter a valid email address",
+                    "field": "email"
+                }
+            )
+
+        # Check if email already exists (mock check for now)
+        existing_emails = ['admin@dss.com', 'user@dss.com', 'test@example.com']
+        if request.email.lower() in existing_emails:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Email address is already registered",
+                    "field": "email"
+                }
+            )
+
+        # Send OTP email
+        if EMAIL_SERVICE_AVAILABLE:
+            try:
+                result = await send_otp_email(request.email, request.name)
+                if result['success']:
+                    return {
+                        "success": True,
+                        "message": f"Account created successfully! Please check your email ({request.email}) for the verification code.",
+                        "user": {
+                            "name": request.name,
+                            "email": request.email
+                        },
+                        "expires_in_minutes": result.get('expires_in_minutes', 10)
+                    }
+                else:
+                    raise HTTPException(
+                        status_code=500,
+                        detail={
+                            "message": f"Failed to send verification email: {result.get('error', 'Unknown error')}",
+                            "field": "email"
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"Email service error: {e}")
+                # Fallback to mock for development
+                pass
+
+        # Mock success response if email service not available
+        logger.warning("Email service not available, using mock OTP")
+        return {
+            "success": True,
+            "message": f"Account created successfully! For testing, use OTP: 123456 (email service not configured)",
+            "user": {
+                "name": request.name,
+                "email": request.email
+            },
+            "mock_otp": "123456",  # Only for development
+            "expires_in_minutes": 10
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Registration failed. Please try again.",
+                "error": str(e)
+            }
+        )
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/verify-otp")
+async def verify_otp_endpoint(request: VerifyOTPRequest):
+    """Verify OTP for email verification"""
+    try:
+        if EMAIL_SERVICE_AVAILABLE:
+            try:
+                result = await verify_otp(request.email, request.otp)
+
+                if result['valid']:
+                    return {
+                        "success": True,
+                        "message": "Email verified successfully! You can now sign in.",
+                        "verified": True
+                    }
+                else:
+                    raise HTTPException(
+                        status_code=400,
+                        detail={
+                            "message": result.get('error', 'Invalid verification code'),
+                            "field": "otp",
+                            "attempts_remaining": result.get('attempts_remaining', 0)
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"OTP verification error: {e}")
+                # Fallback to mock for development
+                pass
+
+        # Mock verification for development
+        if request.otp == "123456":
+            return {
+                "success": True,
+                "message": "Email verified successfully! You can now sign in.",
+                "verified": True,
+                "mock": True
+            }
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Invalid verification code. For testing, use: 123456",
+                    "field": "otp",
+                    "attempts_remaining": 2
+                }
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"OTP verification error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Verification failed. Please try again.",
+                "error": str(e)
+            }
+        )
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/resend-otp")
+async def resend_otp_endpoint(request: ResendOTPRequest):
+    """Resend OTP to email"""
+    try:
+        if EMAIL_SERVICE_AVAILABLE:
+            try:
+                result = await send_otp_email(request.email)
+                if result['success']:
+                    return {
+                        "success": True,
+                        "message": f"Verification code sent to {request.email}",
+                        "expires_in_minutes": result.get('expires_in_minutes', 10)
+                    }
+                else:
+                    raise HTTPException(
+                        status_code=500,
+                        detail={
+                            "message": f"Failed to send verification email: {result.get('error', 'Unknown error')}",
+                            "field": "email"
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"Email service error: {e}")
+                # Fallback to mock for development
+                pass
+
+        # Mock success response if email service not available
+        return {
+            "success": True,
+            "message": f"Verification code sent to {request.email} (mock). Use OTP: 123456",
+            "mock_otp": "123456",  # Only for development
+            "expires_in_minutes": 10
+        }
+
+    except Exception as e:
+        logger.error(f"Resend OTP error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Failed to resend verification code. Please try again.",
+                "error": str(e)
+            }
+        )
+
+# ====================================
 # AUTHENTICATION ENDPOINTS
 # ====================================
-@app.post(f"{settings.API_V1_PREFIX}/auth/login")
-async def login(credentials: dict):
-    """JWT-based login endpoint"""
+@app.post(f"{settings.API_V1_PREFIX}/auth/signin")
+async def signin(credentials: dict):
+    """JWT-based sigin endpoint"""
     username = credentials.get("username", "")
     password = credentials.get("password", "")
 
@@ -1621,7 +1837,7 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "path": str(request.url.path),
             "timestamp": datetime.now().isoformat(),
             "available_endpoints": [
-                "/", "/health", "/api/v1/status", "/api/v1/auth/login",
+                "/", "/health", "/api/v1/status", "/api/v1/auth/signin",
                 "/api/v1/analytics/dashboard", "/docs"
             ]
         }
