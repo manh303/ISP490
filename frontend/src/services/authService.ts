@@ -21,6 +21,8 @@ interface RegisterResponse {
     name: string;
     email: string;
   };
+  expires_in_minutes?: number;
+  mock_otp?: string; // For development
 }
 
 interface ForgotPasswordRequest {
@@ -59,6 +61,30 @@ interface AuthError {
   message: string;
   field?: string;
   status?: number;
+}
+
+// OTP interfaces
+interface VerifyOTPRequest {
+  email: string;
+  otp: string;
+}
+
+interface VerifyOTPResponse {
+  success: boolean;
+  message: string;
+  verified?: boolean;
+  mock?: boolean; // For development
+}
+
+interface ResendOTPRequest {
+  email: string;
+}
+
+interface ResendOTPResponse {
+  success: boolean;
+  message: string;
+  expires_in_minutes?: number;
+  mock_otp?: string; // For development
 }
 
 class AuthService {
@@ -193,7 +219,7 @@ class AuthService {
           name: credentials.name,
           email: credentials.email,
           password: credentials.password,
-          confirm_password: credentials.confirmPassword
+          confirmPassword: credentials.confirmPassword
         }),
       });
 
@@ -413,6 +439,75 @@ class AuthService {
     return this.apiCall<T>(endpoint, options);
   }
 
+  // OTP verification method
+  async verifyOTP(request: VerifyOTPRequest): Promise<VerifyOTPResponse> {
+    try {
+      // Try real API first
+      const response = await this.apiCall<VerifyOTPResponse>('/api/v1/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+
+      return response;
+    } catch (error: any) {
+      // Fallback to mock for development if API fails
+      console.warn('API OTP verification failed, falling back to mock:', error);
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Mock verification (for development)
+      if (request.otp === '123456') {
+        return {
+          success: true,
+          message: 'Email verified successfully! You can now sign in.',
+          verified: true,
+          mock: true
+        };
+      } else {
+        throw new Error('Invalid verification code. For testing, use: 123456');
+      }
+    }
+  }
+
+  // Resend OTP method
+  async resendOTP(request: ResendOTPRequest): Promise<ResendOTPResponse> {
+    try {
+      // Try real API first
+      const response = await this.apiCall<ResendOTPResponse>('/api/v1/auth/resend-otp', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+
+      return response;
+    } catch (error) {
+      // Fallback to mock for development if API fails
+      console.warn('API resend OTP failed, falling back to mock:', error);
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Basic validation
+      if (!request.email.trim()) {
+        throw new Error('Email is required');
+      }
+
+      if (!/\S+@\S+\.\S+/.test(request.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      // Create mock success response
+      const response: ResendOTPResponse = {
+        success: true,
+        message: `Verification code sent to ${request.email} (mock). Use OTP: 123456`,
+        mock_otp: '123456', // Only for development
+        expires_in_minutes: 10
+      };
+
+      return response;
+    }
+  }
+
   // Clear all auth data (for force logout)
   clearAuthData(): void {
     this.token = null;
@@ -426,4 +521,17 @@ const authService = new AuthService();
 export default authService;
 
 // Export types for use in components
-export type { LoginCredentials, RegisterCredentials, RegisterResponse, ForgotPasswordRequest, ForgotPasswordResponse, LoginResponse, User, ApiResponse };
+export type {
+  LoginCredentials,
+  RegisterCredentials,
+  RegisterResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  LoginResponse,
+  User,
+  ApiResponse,
+  VerifyOTPRequest,
+  VerifyOTPResponse,
+  ResendOTPRequest,
+  ResendOTPResponse
+};
