@@ -5,6 +5,8 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Input from "../form/input/InputField";
 // import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import authService from "../../services/authService";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +27,7 @@ export default function SignUpForm() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
@@ -69,16 +72,16 @@ export default function SignUpForm() {
             <form onSubmit={async (e) => {
               e.preventDefault();
               setErrors({ name: "", email: "", password: "", confirmPassword: "", general: "" });
-              
+
               // Basic validation
               let hasErrors = false;
               const newErrors = { name: "", email: "", password: "", confirmPassword: "", general: "" };
-              
+
               if (!formData.name.trim()) {
                 newErrors.name = "Name is required";
                 hasErrors = true;
               }
-              
+
               if (!formData.email.trim()) {
                 newErrors.email = "Email is required";
                 hasErrors = true;
@@ -86,7 +89,7 @@ export default function SignUpForm() {
                 newErrors.email = "Please enter a valid email address";
                 hasErrors = true;
               }
-              
+
               if (!formData.password) {
                 newErrors.password = "Password is required";
                 hasErrors = true;
@@ -94,31 +97,70 @@ export default function SignUpForm() {
                 newErrors.password = "Password must be at least 8 characters";
                 hasErrors = true;
               }
-              
+
               if (formData.password !== formData.confirmPassword) {
                 newErrors.confirmPassword = "Passwords do not match";
                 hasErrors = true;
               }
-              
+
               if (!isChecked) {
                 newErrors.general = "You must agree to the Terms and Conditions";
                 hasErrors = true;
               }
-              
+
               if (hasErrors) {
                 setErrors(newErrors);
+                showToast("Please fix the errors below", "error");
                 return;
               }
-              
+
               setIsLoading(true);
               try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Navigate to verify code page with email
-                navigate(`/verify-code?email=${encodeURIComponent(formData.email)}`);
-              } catch (error) {
-                setErrors({ ...newErrors, general: "Something went wrong. Please try again." });
+                showToast("Creating your account...", "info", 2000);
+
+                // Call the registration API
+                const response = await authService.register({
+                  name: formData.name,
+                  email: formData.email,
+                  password: formData.password,
+                  confirmPassword: formData.confirmPassword
+                });
+
+                if (response.success) {
+                  // Show success message
+                  showToast(`✅ ${response.message}`, "success", 5000);
+
+                  // Navigate to verify code page with email after a short delay
+                  setTimeout(() => {
+                    navigate(`/verify-code?email=${encodeURIComponent(formData.email)}`);
+                  }, 1500);
+                } else {
+                  setErrors({ ...newErrors, general: response.message || "Registration failed. Please try again." });
+                  showToast("❌ Registration failed", "error");
+                }
+              } catch (error: any) {
+                console.error('Registration error:', error);
+
+                // Extract error message from different error formats
+                let errorMessage = 'Registration failed. Please try again.';
+
+                if (error?.message) {
+                  errorMessage = error.message;
+                } else if (typeof error === 'string') {
+                  errorMessage = error;
+                }
+
+                // Show specific error for common issues
+                if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('registered')) {
+                  errorMessage = '❌ This email address is already registered. Please use a different email or try signing in.';
+                } else if (errorMessage.toLowerCase().includes('password')) {
+                  errorMessage = '❌ Password requirements not met. Please check your password.';
+                } else {
+                  errorMessage = `❌ ${errorMessage}`;
+                }
+
+                setErrors({ ...newErrors, general: errorMessage });
+                showToast(errorMessage, "error");
               } finally {
                 setIsLoading(false);
               }
@@ -248,24 +290,26 @@ export default function SignUpForm() {
                     </p>
                   )}
                 </div>
-                {/* <!-- Checkbox --> */}
-                {/* <div className="flex items-start gap-3">
-                  <Checkbox
-                    className="w-5 h-5 mt-0.5"
+                {/* Terms and Conditions Checkbox */}
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="terms"
                     checked={isChecked}
-                    onChange={setIsChecked}
+                    onChange={(e) => setIsChecked(e.target.checked)}
+                    className="w-4 h-4 mt-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
-                  <p className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    By creating an account means you agree to the{" "}
-                    <span className="text-gray-800 dark:text-white/90">
-                      Terms and Conditions,
+                  <label htmlFor="terms" className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    By creating an account you agree to the{" "}
+                    <span className="text-gray-800 dark:text-white/90 font-medium">
+                      Terms and Conditions
                     </span>{" "}
                     and our{" "}
-                    <span className="text-gray-800 dark:text-white">
+                    <span className="text-gray-800 dark:text-white/90 font-medium">
                       Privacy Policy
                     </span>
-                  </p>
-                </div> */}
+                  </label>
+                </div>
                 
                 {/* Error Message */}
                 {errors.general && (

@@ -360,7 +360,7 @@ class VietnamKafkaStreamer:
             return
 
         self.running = True
-        logger.info("🚀 Starting Kafka streaming...")
+        logger.info("Starting Kafka streaming...")
 
         message_count = 0
         start_time = time.time()
@@ -538,7 +538,7 @@ kafka_streamer = VietnamKafkaStreamer()
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
-    logger.info("🚀 Starting Vietnam E-commerce Streaming API...")
+    logger.info("Starting Vietnam E-commerce Streaming API...")
 
     try:
         # Initialize database connections
@@ -549,6 +549,9 @@ async def lifespan(app: FastAPI):
 
         # Start Kafka streaming in background
         asyncio.create_task(kafka_streamer.start_streaming())
+
+        # Start background connection stats task
+        asyncio.create_task(update_connection_stats())
 
         logger.info("✅ Streaming API started successfully")
 
@@ -868,34 +871,30 @@ async def websocket_stream(
         connection_manager.disconnect(connection_id)
 
 # ====================================================================
-# BACKGROUND TASKS
+# BACKGROUND TASKS (Handled by lifespan)
 # ====================================================================
 
-@app.on_event("startup")
-async def startup_tasks():
-    """Background startup tasks"""
+# Background tasks are now managed by the lifespan context manager
+# This ensures proper startup and shutdown handling
 
-    # Send periodic connection stats
-    async def update_connection_stats():
-        while True:
-            try:
-                stats = connection_manager.get_stats()
-                await db_manager.redis_client.hset(
-                    "websocket_stats",
-                    mapping={
-                        "total_connections": stats["total_connections"],
-                        "topic_subscriptions": json.dumps(stats["topic_subscriptions"]),
-                        "timestamp": datetime.now().isoformat()
-                    }
-                )
-                await asyncio.sleep(10)  # Update every 10 seconds
+async def update_connection_stats():
+    """Background task to update connection statistics"""
+    while True:
+        try:
+            stats = connection_manager.get_stats()
+            await db_manager.redis_client.hset(
+                "websocket_stats",
+                mapping={
+                    "total_connections": stats["total_connections"],
+                    "topic_subscriptions": json.dumps(stats["topic_subscriptions"]),
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+            await asyncio.sleep(10)  # Update every 10 seconds
 
-            except Exception as e:
-                logger.error(f"❌ Error updating connection stats: {e}")
-                await asyncio.sleep(30)
-
-    # Start background task
-    asyncio.create_task(update_connection_stats())
+        except Exception as e:
+            logger.error(f"❌ Error updating connection stats: {e}")
+            await asyncio.sleep(30)
 
 # ====================================================================
 # MAIN EXECUTION
