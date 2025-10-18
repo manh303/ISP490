@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 
 const HomeHeader: React.FC = () => {
   return (
@@ -27,39 +28,43 @@ const HomeHeader: React.FC = () => {
           DSS Analytics
         </div>
         <nav style={{display: 'flex', gap: 32}}>
-          <a href="#" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Trang Chủ</a>
-          <a href="#" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Giải Pháp</a>
-          <a href="#" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Về Chúng Tôi</a>
-          <a href="#" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Liên Hệ</a>
+          <Link to="/" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Trang Chủ</Link>
+          <Link to="/solutions" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Giải Pháp</Link>
+          <Link to="/about" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Về Chúng Tôi</Link>
+          <Link to="/contact" style={{color: '#666', textDecoration: 'none', fontSize: '15px'}}>Liên Hệ</Link>
         </nav>
       </div>
       <div style={{display: 'flex', gap: 12}}>
-        <button style={{
-          background: 'transparent',
-          color: '#0066ff',
-          border: '1.5px solid #0066ff',
-          borderRadius: 4,
-          fontWeight: 500,
-          fontSize: 14,
-          padding: '8px 24px',
-          cursor: 'pointer',
-          transition: 'all 0.2s'
-        }}>
-          Đăng Nhập
-        </button>
-        <button style={{
-          background: '#0066ff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          fontWeight: 500,
-          fontSize: 14,
-          padding: '8px 24px',
-          cursor: 'pointer',
-          transition: 'all 0.2s'
-        }}>
-          Đăng Ký
-        </button>
+        <Link to="/signin" style={{textDecoration: 'none'}}>
+          <button style={{
+            background: 'transparent',
+            color: '#0066ff',
+            border: '1.5px solid #0066ff',
+            borderRadius: 4,
+            fontWeight: 500,
+            fontSize: 14,
+            padding: '8px 24px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}>
+            Đăng Nhập
+          </button>
+        </Link>
+        <Link to="/signup" style={{textDecoration: 'none'}}>
+          <button style={{
+            background: '#0066ff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            fontWeight: 500,
+            fontSize: 14,
+            padding: '8px 24px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}>
+            Đăng Ký
+          </button>
+        </Link>
       </div>
     </header>
   );
