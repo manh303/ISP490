@@ -131,8 +131,8 @@ export function ExplorePage({ navigateTo, isLoggedIn, onLogout }: ExplorePagePro
 
   return (
     <div className="min-h-screen bg-white">
-      <Header navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={onLogout} />
-      
+      {/* <Header navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={onLogout} />
+       */}
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-br from-blue-600 to-blue-700 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -345,7 +345,7 @@ export function ExplorePage({ navigateTo, isLoggedIn, onLogout }: ExplorePagePro
         </div>
       </section>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

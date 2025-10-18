@@ -11,7 +11,7 @@ interface SendMessagePageProps {
 export function SendMessagePage({ navigateTo, isLoggedIn, onLogout }: SendMessagePageProps) {
   return (
     <div className="min-h-screen bg-white">
-      <Header navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={onLogout} />
+      {/* <Header navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={onLogout} /> */}
       
       {/* Hero Section */}
       <section className="py-16 bg-gray-100">
@@ -79,7 +79,7 @@ export function SendMessagePage({ navigateTo, isLoggedIn, onLogout }: SendMessag
         </div>
       </section>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

@@ -1,20 +1,31 @@
 import { BarChart3, LogOut } from "lucide-react";
 import { Button } from "../../components/ui/figma/button";
-import type { Page } from "../../App";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../contexts/AuthContext";
 
-interface HeaderProps {
-  navigateTo: (page: Page) => void;
-  isLoggedIn: boolean;
-  onLogout: () => void;
-}
+export function Header() {
+  const navigate = useNavigate();
+  const { state, logout } = useAuth();
 
-export function Header({ navigateTo, isLoggedIn, onLogout }: HeaderProps) {
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/home');
+    } catch (err) {
+      console.error('Logout failed', err);
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo */}
-        <button 
-          onClick={() => navigateTo("home")}
+        <button
+          onClick={() => handleNavigate('/home')}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
           <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-2 rounded-lg">
@@ -25,26 +36,26 @@ export function Header({ navigateTo, isLoggedIn, onLogout }: HeaderProps) {
 
         {/* Navigation Links */}
         <nav className="flex items-center gap-8">
-          <button 
-            onClick={() => navigateTo("home")}
+          <button
+            onClick={() => handleNavigate('/home')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Trang Chủ
           </button>
-          <button 
-            onClick={() => navigateTo("solutions")}
+          <button
+            onClick={() => handleNavigate('/solutions')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Giải Pháp
           </button>
-          <button 
-            onClick={() => navigateTo("about")}
+          <button
+            onClick={() => handleNavigate('/about')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Về Chúng Tôi
           </button>
-          <button 
-            onClick={() => navigateTo("contact")}
+          <button
+            onClick={() => handleNavigate('/contact')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Liên Hệ
@@ -53,17 +64,17 @@ export function Header({ navigateTo, isLoggedIn, onLogout }: HeaderProps) {
 
         {/* Auth Buttons */}
         <div className="flex items-center gap-4">
-          {isLoggedIn ? (
+          {state.isAuthenticated ? (
             <>
-              <Button 
+              <Button
                 variant="outline"
-                onClick={() => navigateTo("dashboard")}
+                onClick={() => handleNavigate('/dashboard')}
               >
                 Dashboard
               </Button>
-              <Button 
+              <Button
                 variant="ghost"
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="gap-2"
               >
                 <LogOut className="w-4 h-4" />
@@ -72,13 +83,16 @@ export function Header({ navigateTo, isLoggedIn, onLogout }: HeaderProps) {
             </>
           ) : (
             <>
-              <Button 
+              <Button
                 variant="outline"
-                onClick={() => navigateTo("login")}
+                onClick={() => handleNavigate('/public/login')}
               >
                 Đăng Nhập
               </Button>
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+              <Button
+                onClick={() => handleNavigate('/public/register')}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+              >
                 Đăng Ký
               </Button>
             </>
