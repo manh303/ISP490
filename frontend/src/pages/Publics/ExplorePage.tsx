@@ -5,8 +5,8 @@ import { Card } from "../../components/ui/figma/card";
 import { Button } from "../../components/ui/figma/button";
 import { Badge } from "../../components/ui/figma/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/figma/tabs";
-import { ImageWithFallback } from "../../components/ui/figma/ImageWithFallback";
-import type { Page } from "../App";
+import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
+import type { Page } from "../../App";
 
 interface ExplorePageProps {
   navigateTo: (page: Page) => void;

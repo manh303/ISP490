@@ -1,7 +1,7 @@
 import { GitBranch, DollarSign, TrendingUp, Settings, ArrowRight } from "lucide-react";
 import { Card } from "../../components/ui/figma/card";
 import { Button } from "../../components/ui/figma/button";
-import type { Page } from "../App";
+import type { Page } from "../../App";
 
 interface FeaturesProps {
   navigateTo: (page: Page) => void;
