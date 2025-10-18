@@ -8,14 +8,17 @@ import os
 import asyncio
 import secrets
 import string
-import smtplib
+import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Any
 import logging
 from dataclasses import dataclass
-import redis.asyncio as redis
+try:
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +177,7 @@ class EmailService:
         self.otp_manager = OTPManager(redis_client)
 
     async def send_email(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
-        """Send email using Gmail SMTP"""
+        """Send email using Gmail SMTP (async)"""
         try:
             # Create message
             msg = MIMEMultipart('alternative')
@@ -186,11 +189,14 @@ class EmailService:
             html_part = MIMEText(html_content, 'html')
             msg.attach(html_part)
 
-            # Send email
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                self._send_smtp_email,
-                msg
+            # Send email using aiosmtplib
+            await aiosmtplib.send(
+                msg,
+                hostname=self.config.smtp_server,
+                port=self.config.smtp_port,
+                start_tls=True,
+                username=self.config.sender_email,
+                password=self.config.sender_password,
             )
 
             logger.info(f"Email sent successfully to {to_email}")
@@ -205,13 +211,6 @@ class EmailService:
                 'success': False,
                 'error': str(e)
             }
-
-    def _send_smtp_email(self, msg):
-        """Send email via SMTP (blocking operation)"""
-        with smtplib.SMTP(self.config.smtp_server, self.config.smtp_port) as server:
-            server.starttls()
-            server.login(self.config.sender_email, self.config.sender_password)
-            server.send_message(msg)
 
     async def send_otp_email(self, email: str, name: str = None) -> Dict[str, Any]:
         """Generate and send OTP to email"""

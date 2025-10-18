@@ -146,7 +146,7 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
       // Try real API first
-      const response = await this.apiCall<LoginResponse>('/api/v1/auth/login', {
+      const response = await this.apiCall<LoginResponse>('/api/v1/auth/signin', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
