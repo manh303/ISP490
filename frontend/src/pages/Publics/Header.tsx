@@ -1,6 +1,6 @@
 import { BarChart3, LogOut } from "lucide-react";
 import { Button } from "../../components/ui/figma/button";
-import type { Page } from "../App";
+import type { Page } from "../../App";
 
 interface HeaderProps {
   navigateTo: (page: Page) => void;
