@@ -92,7 +92,7 @@ export default function App() {
           </Route>
           {/* Public Layout cho Home */}
           <Route element={<PublicLayout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
           </Route>
 
           {/* Auth Layout */}
