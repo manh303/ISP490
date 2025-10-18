@@ -1,7 +1,7 @@
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "../../components/ui/figma/button";
-import { ImageWithFallback } from "../../components/ui/figma/ImageWithFallback";
-import type { Page } from "../App";
+import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
+import type { Page } from "../../App";
 
 interface HeroProps {
   navigateTo: (page: Page) => void;
