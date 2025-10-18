@@ -1,6 +1,6 @@
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import type { Page } from "../App";
+import type { Page } from "../../App";
 
 interface SendMessagePageProps {
   navigateTo: (page: Page) => void;
