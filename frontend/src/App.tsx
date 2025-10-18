@@ -26,14 +26,16 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
 import { AuthProvider, ProtectedRoute } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import DSSPage from "./pages/DSSPage.jsx";
 import AppLayout from "./layout/DashboardLayout";
 
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <ScrollToTop />
+      <ToastProvider>
+        <Router>
+          <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<DashboardLayout />}>
@@ -146,7 +148,8 @@ export default function App() {
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }
