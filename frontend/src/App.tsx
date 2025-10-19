@@ -44,26 +44,78 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const pageToPath = (page: Page) => {
+    switch (page) {
+      case "home":
+        return "/";
+      case "login":
+        return "/public/login";
+      case "register":
+        return "/public/register";
+      case "forgot-password":
+        return "/public/forgot-password";
+      case "dashboard":
+        return "/dashboard";
+      case "about":
+        return "/about";
+      case "solutions":
+        return "/solutions";
+      case "contact":
+        return "/contact";
+      case "send-message":
+        return "/send-message";
+      case "explore":
+        return "/explore";
+      default:
+        return "/";
+    }
+  };
+
   const handleLogin = () => {
     setIsLoggedIn(true);
     setCurrentPage("dashboard");
+    const path = pageToPath("dashboard");
+    window.history.pushState({}, "", path);
+    window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentPage("home");
+    const path = pageToPath("home");
+    window.history.pushState({}, "", path);
+    window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
   const navigateTo = (page: Page) => {
     // Public pages - anyone can access
-    if (page === "login" || page === "register" || page === "forgot-password" || page === "home" || page === "about" || page === "solutions" || page === "contact" || page === "send-message" || page === "explore") {
+    if (
+      page === "login" ||
+      page === "register" ||
+      page === "forgot-password" ||
+      page === "home" ||
+      page === "about" ||
+      page === "solutions" ||
+      page === "contact" ||
+      page === "send-message" ||
+      page === "explore"
+    ) {
       setCurrentPage(page);
+      const path = pageToPath(page);
+      window.history.pushState({}, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     }
     // Protected pages - need login
     else if (isLoggedIn) {
       setCurrentPage(page);
+      const path = pageToPath(page);
+      window.history.pushState({}, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     } else {
       setCurrentPage("login");
+      const path = pageToPath("login");
+      window.history.pushState({}, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     }
   };
   return (
@@ -113,9 +165,9 @@ export default function App() {
             </Route>
             {/* Public Layout */}
             <Route element={<PublicLayout />}>
-              <Route path="/home" element={<Home />} />
+              {/* <Route path="/" element={<Home />} /> */}
               <Route
-                path="/public/home"
+                path="/"
                 element={<HomePage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />}
               />
               <Route path="/public/login" element={<LoginPage onLogin={handleLogin} navigateTo={navigateTo} />} />
