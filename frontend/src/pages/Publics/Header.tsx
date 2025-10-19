@@ -14,7 +14,7 @@ export function Header() {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/home');
+      navigate('/');
     } catch (err) {
       console.error('Logout failed', err);
     }
@@ -25,7 +25,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo */}
         <button
-          onClick={() => handleNavigate('/home')}
+          onClick={() => handleNavigate('/')}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
           <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-2 rounded-lg">
@@ -37,7 +37,7 @@ export function Header() {
         {/* Navigation Links */}
         <nav className="flex items-center gap-8">
           <button
-            onClick={() => handleNavigate('/home')}
+            onClick={() => handleNavigate('/')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
             Trang Chủ
@@ -85,13 +85,13 @@ export function Header() {
             <>
               <Button
                 variant="outline"
-                onClick={() => handleNavigate('/public/login')}
+                onClick={() => handleNavigate('/signin')}
               >
                 Đăng Nhập
               </Button>
               <Button
-                onClick={() => handleNavigate('/public/register')}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                onClick={() => handleNavigate('/signup')}
+                className="inline-flex items-center justify-center gap-2 rounded-lg transition px-4 py-3 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
               >
                 Đăng Ký
               </Button>

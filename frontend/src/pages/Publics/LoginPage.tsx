@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import type { Page } from "../App";
+import type { Page } from "../../App";
 
 interface LoginPageProps {
   onLogin: () => void;
