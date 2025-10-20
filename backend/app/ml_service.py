@@ -66,13 +66,13 @@ class MLInferenceService:
             clv_model_path = models_path / "clv_model.pkl"
             if clv_model_path.exists():
                 self.models['clv_prediction'] = joblib.load(clv_model_path)
-                print("✅ Loaded CLV prediction model")
+                print("Loaded CLV prediction model")
 
             # Load churn model
             churn_model_path = models_path / "churn_model.pkl"
             if churn_model_path.exists():
                 self.models['churn_prediction'] = joblib.load(churn_model_path)
-                print("✅ Loaded churn prediction model")
+                print("Loaded churn prediction model")
 
             # Load clustering model
             clustering_model_path = models_path / "customer_clustering_model.pkl"
@@ -81,7 +81,7 @@ class MLInferenceService:
                 self.models['customer_segmentation'] = joblib.load(clustering_model_path)
                 if clustering_scaler_path.exists():
                     self.scalers['customer_segmentation'] = joblib.load(clustering_scaler_path)
-                print("✅ Loaded customer segmentation model")
+                print("Loaded customer segmentation model")
 
         except Exception as e:
             print(f"Error loading pipeline models: {e}")
@@ -101,7 +101,7 @@ class MLInferenceService:
 
                 # Store metadata
                 self.metadata[model_name] = model_info
-                print(f"✅ Loaded model: {model_name}")
+                print(f"Loaded model: {model_name}")
 
         except Exception as e:
             print(f"Error loading model {model_name}: {e}")

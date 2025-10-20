@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { ChevronLeftIcon } from "../../icons";
+import authService from "../../services/authService";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function VerifyCodeForm() {
   const [code, setCode] = useState<string[]>(["", "", "", "", "", ""]);
@@ -12,6 +14,7 @@ export default function VerifyCodeForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "user@example.com";
+  const { showToast } = useToast();
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -92,20 +95,38 @@ export default function VerifyCodeForm() {
     setError("");
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      showToast("Verifying code...", "info", 2000);
 
-      // Simulate verification
-      if (verificationCode === "123456") {
-        // Success - redirect to dashboard or next step
-        navigate("/signin?verified=true");
+      // Call the OTP verification API
+      const response = await authService.verifyOTP({
+        email: email,
+        otp: verificationCode
+      });
+
+      if (response.success) {
+        showToast(`✅ ${response.message}`, "success", 3000);
+        setTimeout(() => {
+          navigate("/signin?verified=true");
+        }, 1500);
       } else {
-        setError("Invalid verification code. Please try again.");
+        const errorMsg = response.message || "Invalid verification code. Please try again.";
+        setError(errorMsg);
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
+        showToast(`❌ ${errorMsg}`, "error");
       }
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
+    } catch (error: any) {
+      console.error('Verification error:', error);
+
+      let errorMessage = 'Something went wrong. Please try again.';
+      if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+      setCode(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+      showToast(`❌ ${errorMessage}`, "error");
     } finally {
       setIsLoading(false);
     }
@@ -118,18 +139,38 @@ export default function VerifyCodeForm() {
     setError("");
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      showToast("Resending verification code...", "info", 2000);
 
-      // Start countdown (60 seconds)
-      setCountdown(60);
+      // Call the resend OTP API
+      const response = await authService.resendOTP({
+        email: email
+      });
 
-      // Clear existing code
-      setCode(["", "", "", "", "", ""]);
-      inputRefs.current[0]?.focus();
+      if (response.success) {
+        showToast(`✅ ${response.message}`, "success", 3000);
 
-    } catch (error) {
-      setError("Failed to resend code. Please try again.");
+        // Start countdown (60 seconds)
+        setCountdown(60);
+
+        // Clear existing code
+        setCode(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else {
+        const errorMsg = response.message || "Failed to resend code. Please try again.";
+        setError(errorMsg);
+        showToast(`❌ ${errorMsg}`, "error");
+      }
+
+    } catch (error: any) {
+      console.error('Resend code error:', error);
+
+      let errorMessage = 'Failed to resend code. Please try again.';
+      if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+      showToast(`❌ ${errorMessage}`, "error");
     } finally {
       setIsResending(false);
     }
