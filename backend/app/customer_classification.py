@@ -369,13 +369,13 @@ class CustomerClassificationService:
 
         # Risk-based recommendations
         if churn_prob > 0.7:
-            recommendations.append("🚨 High churn risk - immediate retention action needed")
+            recommendations.append("ALERT: High churn risk - immediate retention action needed")
         elif churn_prob > 0.4:
-            recommendations.append("⚠️ Medium churn risk - monitor closely and engage proactively")
+            recommendations.append("WARNING: Medium churn risk - monitor closely and engage proactively")
 
         # Value-based recommendations
         if clv > 10000000:  # High CLV
-            recommendations.append("💎 High-value customer - provide white-glove service")
+            recommendations.append("VIP: High-value customer - provide white-glove service")
 
         return recommendations[:5]  # Limit to top 5 recommendations
 
