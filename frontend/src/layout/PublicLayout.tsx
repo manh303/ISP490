@@ -1,16 +1,17 @@
 import React from 'react';
-import HomeHeader from '../components/home/HomeHeader';
-import HomeFooter from '../components/home/HomeFooter';
+
 import { Outlet } from 'react-router';
+import { Header } from '../pages/Publics/Header';
+import { Footer } from '../pages/Publics/Footer';
 
 const CustomerLayoutContent: React.FC = () => {
   return (
     <div className="customer-layout min-h-screen flex flex-col bg-[#f7f8fa]">
-      <HomeHeader />
+      <Header />
       <main className="flex-1">
         <Outlet />
       </main>
-      <HomeFooter />
+      <Footer />
     </div>
   );
 };

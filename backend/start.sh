@@ -1,6 +1,6 @@
 #!/bin/bash
 # Railway startup script
-echo "🚀 Starting FastAPI backend..."
+echo "Starting FastAPI backend..."
 
 # Set environment variables
 export PYTHONPATH="${PYTHONPATH}:/app"
