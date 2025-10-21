@@ -1,0 +1,155 @@
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+    <script charset="utf-8" src="//g.alicdn.com/mtb/lib-windvane/3.0.6/windvane.js" crossorigin=""></script>
+    <script charset="utf-8" async="" src="//g.alicdn.com/bsop-static/sufei-punish/0.1.110/build/htmltocanvas.min.js" crossorigin=""></script>
+    <script src="//g.alicdn.com/code/lib/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="//g.alicdn.com/sd/sufei-utils/0.0.3/sufeiUtils.js"></script><style type="text/css">#bx-pu-qrcode-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  width: auto !important;
+  text-align: center;
+  margin: auto;
+  padding: 0;
+  z-index: 999;
+}
+#bx-pu-qrcode-wrap img {
+  margin: auto;
+}
+#bx-pu-qrcode-wrap.pc-ajax img {
+  width: 60px;
+  height: 60px;
+}
+#bx-pu-qrcode-wrap.pc-ajax .hide {
+  top: 20px;
+  margin-left: 40px;
+}
+#bx-pu-qrcode-wrap.mobile .hide {
+  top: 30px;
+  margin-left: 50px;
+}
+#bx-pu-qrcode-wrap .hide {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  background: #cbcbcb;
+  border-radius: 20px;
+  -webkit-box-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  align-items: center;
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  margin-left: 50px;
+}
+#bx-pu-qrcode-wrap .hide .hide-text {
+  width: 6px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 4px;
+}
+#bx-pu-qrcode-wrap .hide:hover {
+  background: #f40;
+}
+.feedback-show {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  background: #cbcbcb;
+  border-radius: 20px;
+  display: none;
+  -webkit-box-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  align-items: center;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2147483647;
+}
+.feedback-show:hover {
+  background: #f40;
+}
+</style>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+      	#bx-pu-qrcode-wrap {
+      		max-width: 110px !important;
+      	}
+    </style>
+</head>
+
+<body>
+    <iframe src="//www.lazada.vn:443/catalog/_____tmd_____/punish?recaptcha=1&amp;iframe=1&amp;x5step=2&amp;x5secdata=xg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog&amp;uuid=7186866a3cfd4d48463ffab5a8382ed8&amp;qrcode=cYaGajz9TUhGP_q1qDgu2A|aPaTEQ|Z-4zlA_0|Bjl1Tg&amp;redirectURL=https%3a%2f%2fwww.lazada.vn:443/catalog%2F_____tmd_____%2Fpage%2Fthird_validate_close_page%3Frand%3DS3WxGHAgAt756EpznwfNzJq2AFA2qBNla3j6EINUS8We9dazM_iKElp8DwVSHZUevpC41Bx7RzivXIj9RnZgdg%26uuid%3D7186866a3cfd4d48463ffab5a8382ed8%26x5secdata%3Dxg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog" style="border:none;height: 100%;" width="100%" height="100%" allow="publickey-credentials-get *"></iframe>
+    <div id="bx-pu-qrcode-wrap" style="display: none;">
+        <div id="qrcode" title="cYaGajz9TUhGP_q1qDgu2A|aPaTEQ|Z-4zlA_0|Bjl1Tg"><canvas width="80" height="80" style="display: none;"></canvas><img src="data:image/png;base64,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" style="display: block;"></div>
+        <div id="feedback"><div class="hide"><div class="hide-text"></div></div><a id="feedback" style="text-decoration:none;font-size:12px;color:#999" href="https://www.lazada.vn//catalog//_____tmd_____/page/feedback?rand=S3WxGHAgAt756EpznwfNzJq2AFA2qBNla3j6EINUS8We9dazM_iKElp8DwVSHZUevpC41Bx7RzivXIj9RnZgdg&amp;x5secdata=xg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog&amp;uuid=7186866a3cfd4d48463ffab5a8382ed8&amp;type=11" target="_blank">Click to feedback &gt;</a></div>
+    </div>
+    <script>
+        window._config_ = {
+            "action": "captcharecaptcha",
+      		"HOST": "www.lazada.vn:443",
+            "PATH": "/catalog",
+            "NCTOKENSTR": "7186866a3cfd4d48463ffab5a8382ed8",
+            "SECDATA": "xg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog",
+            "url": "//www.lazada.vn:443/catalog/_____tmd_____/punish?recaptcha=1&iframe=1&x5step=2&x5secdata=xg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog&uuid=7186866a3cfd4d48463ffab5a8382ed8&qrcode=cYaGajz9TUhGP_q1qDgu2A|aPaTEQ|Z-4zlA_0|Bjl1Tg&redirectURL=https%3a%2f%2fwww.lazada.vn:443/catalog%2F_____tmd_____%2Fpage%2Fthird_validate_close_page%3Frand%3DS3WxGHAgAt756EpznwfNzJq2AFA2qBNla3j6EINUS8We9dazM_iKElp8DwVSHZUevpC41Bx7RzivXIj9RnZgdg%26uuid%3D7186866a3cfd4d48463ffab5a8382ed8%26x5secdata%3Dxg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog"
+        };
+    </script>
+    <!--rgv587_flag:sm-->
+  	<script>
+      	var custom_config = {"loginDialogWidth":"810px","loginDialogHeight":"360px","templateName":"LAZADA通用模板"};
+      	var templateName = "";
+      	if (typeof custom_config === "object") {
+      		templateName = custom_config["templateName"] || "";
+      		window._custom_config_ = window._custom_config_ || {};
+      		for (var key in custom_config) {
+      			window._custom_config_[key] = custom_config[key];
+      		}
+      	}
+    </script>
+    <script charset="utf-8" type="text/javascript" src="https://g.alicdn.com/trace/trace/1.3.22/??sdk.js,resourceError-plugin.js,perf-plugin.js" crossorigin=""></script>
+    <script type="text/javascript">
+      	sufeiUtils.clearX5SecData();
+      	sufeiUtils.initListener();
+
+        // 将二维码渲染至指定父容器
+        sufeiUtils.renderQRCode({
+            id: "qrcode",
+            qrcode: "cYaGajz9TUhGP_q1qDgu2A|aPaTEQ|Z-4zlA_0|Bjl1Tg"
+        });
+
+        // 将二维码渲染至指定父容器
+        sufeiUtils.renderFeedbackLink({
+            id: "feedback",
+            x5secdata: "xg8a020c8f48929a67na7186866a3cfd4d48463ffab5a8382ed81760989969a1984346082a1743664020abaxc3aajrecaptcha33bbfb16b2eecae60a7be77e0693dc1b25c__bx__www.lazada.vn:443/catalog",
+            uuid: "7186866a3cfd4d48463ffab5a8382ed8",
+            type: "thirdValidate"
+        }, true);
+
+        var tracker = TraceSdk({
+            pid: 'punish-page',
+            env: 'pre',
+            plugins: [
+                [TracePerfPlugin, { enableLCP: false }],
+                [TraceResourceErrorPlugin]
+            ]
+        });
+        tracker.install();
+        tracker.log({
+            code: 11,  // 系统自动生成，请勿修改 100%
+            c1: '7186866a3cfd4d48463ffab5a8382ed8',
+            c2: '0.1.110',
+            msg: '三方通用解封页 - ' + window._config_.action,  // 异常信息，推荐传入
+            sampling: 1,  // 目前采样率为 100.00%
+        });
+    </script><div class="feedback-show" style="display: flex;"><svg t="1710420587888" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5918" width="12" height="12"><path d="M925.696 384q19.456 0 37.376 7.68t30.72 20.48 20.48 30.72 7.68 37.376q0 20.48-7.68 37.888t-20.48 30.208-30.72 20.48-37.376 7.68l-287.744 0 0 287.744q0 20.48-7.68 37.888t-20.48 30.208-30.72 20.48-37.376 7.68q-20.48 0-37.888-7.68t-30.208-20.48-20.48-30.208-7.68-37.888l0-287.744-287.744 0q-20.48 0-37.888-7.68t-30.208-20.48-20.48-30.208-7.68-37.888q0-19.456 7.68-37.376t20.48-30.72 30.208-20.48 37.888-7.68l287.744 0 0-287.744q0-19.456 7.68-37.376t20.48-30.72 30.208-20.48 37.888-7.68q39.936 0 68.096 28.16t28.16 68.096l0 287.744 287.744 0z" p-id="5919" fill="#ffffff"></path></svg></div>
+
+
+</body></html>
