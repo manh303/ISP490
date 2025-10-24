@@ -34,9 +34,6 @@ import { AboutPage } from "./pages/Publics/AboutPage.js";
 import { SolutionsPage } from "./pages/Publics/SolutionsPage.js";
 import { ContactPage } from "./pages/Publics/ContactPage.js";
 import { HomePage } from "./pages/Publics/HomePage.js";
-import { LoginPage } from "./pages/Publics/LoginPage.js";
-import { RegisterPage } from "./pages/Publics/RegisterPage.js";
-import { ForgotPasswordPage } from "./pages/Publics/ForgotPasswordPage.js";
 import { SendMessagePage } from "./pages/Publics/SendMessagePage.js";
 import { ExplorePage } from "./pages/Publics/ExplorePage.js";
 export type Page = "home" | "login" | "register" | "forgot-password" | "change-password" | "dashboard" | "scenario" | "revenue" | "forecast" | "operation" | "about" | "solutions" | "contact" | "send-message" | "explore";
@@ -49,11 +46,11 @@ export default function App() {
       case "home":
         return "/";
       case "login":
-        return "/public/login";
+        return "/signin";
       case "register":
-        return "/public/register";
+        return "/signup";
       case "forgot-password":
-        return "/public/forgot-password";
+        return "/forgot-password";
       case "dashboard":
         return "/dashboard";
       case "about":
@@ -170,9 +167,6 @@ export default function App() {
                 path="/"
                 element={<HomePage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />}
               />
-              <Route path="/public/login" element={<LoginPage onLogin={handleLogin} navigateTo={navigateTo} />} />
-              <Route path="/public/register" element={<RegisterPage navigateTo={navigateTo} />} />
-              <Route path="/public/forgot-password" element={<ForgotPasswordPage navigateTo={navigateTo} />} />
               <Route path="/about" element={<AboutPage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
               <Route path="/solutions" element={<SolutionsPage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
               <Route path="/contact" element={<ContactPage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
