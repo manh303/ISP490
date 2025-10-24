@@ -59,7 +59,7 @@ export default function SignInForm() {
     // Basic validation
     if (!formData.username || !formData.password) {
       setErrors({
-        username: !formData.username ? "Username is required" : "",
+        username: !formData.username ? "Email is required" : "",
         password: !formData.password ? "Password is required" : "",
         general: "Please fill in all required fields"
       });
@@ -123,6 +123,15 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1">
+         <div className="w-full max-w-md pt-10 mx-auto">
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        >
+          <ChevronLeftIcon className="size-5" />
+          Back to home
+        </Link>
+      </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8 text-center">
@@ -159,7 +168,7 @@ export default function SignInForm() {
                 <div>
                   <Input
                     type="text"
-                    placeholder="Username"
+                    placeholder="Email"
                     value={formData.username}
                     onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                     className={errors.username ? "border-red-500" : ""}
