@@ -5,7 +5,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Input from "../form/input/InputField";
 // import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import authService from "../../services/authService";
+import { authAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function SignUpForm() {
@@ -128,11 +128,11 @@ export default function SignUpForm() {
                 showToast("Creating your account...", "info", 2000);
 
                 // Call the registration API
-                const response = await authService.register({
+                const response = await authAPI.signup({
                   name: formData.name,
                   email: formData.email,
                   password: formData.password,
-                  confirmPassword: formData.confirmPassword
+                  confirm_password: formData.confirmPassword
                 });
 
                 if (response.success) {
