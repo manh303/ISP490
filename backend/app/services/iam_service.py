@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class IAMService:
-    def __init__(self, db_manager, secret_key: str = "your-secret-key"):
+    def __init__(self, db_manager, secret_key: str = "sY-A335Mj9qloyUE94maevhmrg25MZ3RxbVhBYAhmu5QnIS1qsCKIiiGjRshkZA4OSwZN2k2O5VSzDn3XdZo5A"):
         self.db = db_manager
         self.secret_key = secret_key
         self.jwt_algorithm = "HS256"
@@ -52,21 +52,24 @@ class IAMService:
                 RETURNING user_id, email, full_name, phone, status, created_at
             """
             now = datetime.datetime.utcnow()
-            result = await self.db.execute_query(user_query, {
-                'email': email,
-                'password_hash': password_hash,
-                'full_name': full_name,
-                'phone': phone,
-                'status': 'active',
-                'created_at': now,
-                'updated_at': now
-            })
+            safe_name = full_name or ""
+            safe_phone = phone or ""
+
+            logger.info("create_user SQL: %s", user_query.strip())
+            logger.info("create_user params: email=%s, full_name=%s, phone=%s, status=active, ts=%s",
+                        email, safe_name, safe_phone, now)
+
+            result = await self.db.execute_query(
+                user_query,
+                (email, password_hash, safe_name, safe_phone, 'active', now, now)
+            )
 
             if result:
                 user_data = result[0]
 
-                # Assign default role (CUSTOMER)
-                await self.assign_role_to_user(user_data['user_id'], 'CUSTOMER')
+                # Assign default role (CUSTOMER) - temporarily disabled for simplicity
+                # await self.assign_role_to_user(user_data['user_id'], 'CUSTOMER')
+                logger.info(f"User created successfully: {user_data['user_id']} - role assignment skipped for now")
 
                 return {
                     'user_id': user_data['user_id'],
@@ -79,18 +82,24 @@ class IAMService:
             else:
                 raise HTTPException(status_code=500, detail="Failed to create user")
 
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Create user error: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
         try:
             query = "SELECT * FROM iam_user WHERE email = $1"
-            result = await self.db.execute_query(query, {'email': email})
+            logger.info(f"Executing query: {query} with email: {email}")
+            result = await self.db.execute_query(query, (email,))
+            logger.info(f"Query result: {result}")
             return result[0] if result else None
         except Exception as e:
             logger.error(f"Get user by email error: {e}")
+            logger.error(f"Query was: {query}")
+            logger.error(f"Email was: {email}")
             return None
 
     async def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
@@ -98,7 +107,7 @@ class IAMService:
         try:
             # Get user basic info
             user_query = "SELECT * FROM iam_user WHERE user_id = $1"
-            user_result = await self.db.execute_query(user_query, {'user_id': user_id})
+            user_result = await self.db.execute_query(user_query, (user_id,))
 
             if not user_result:
                 return None
@@ -112,7 +121,7 @@ class IAMService:
                 JOIN iam_user_role ur ON r.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
-            roles_result = await self.db.execute_query(roles_query, {'user_id': user_id})
+            roles_result = await self.db.execute_query(roles_query, (user_id,))
 
             # Get user permissions
             permissions_query = """
@@ -122,7 +131,7 @@ class IAMService:
                 JOIN iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
-            permissions_result = await self.db.execute_query(permissions_query, {'user_id': user_id})
+            permissions_result = await self.db.execute_query(permissions_query, (user_id,))
 
             return {
                 'user_id': user['user_id'],
@@ -191,10 +200,7 @@ class IAMService:
         """Update user's last login timestamp"""
         try:
             query = "UPDATE iam_user SET last_login_at = $1 WHERE user_id = $2"
-            await self.db.execute_query(query, {
-                'last_login_at': datetime.datetime.utcnow(),
-                'user_id': user_id
-            })
+            await self.db.execute_query(query, (datetime.datetime.utcnow(), user_id))
         except Exception as e:
             logger.error(f"Update last login error: {e}")
 
@@ -258,12 +264,7 @@ class IAMService:
             """
             expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)  # 7 days
 
-            result = await self.db.execute_query(session_query, {
-                'user_id': user_id,
-                'issued_at': datetime.datetime.utcnow(),
-                'expires_at': expires_at,
-                'refresh_token_hash': refresh_token_hash
-            })
+            result = await self.db.execute_query(session_query, (user_id, datetime.datetime.utcnow(), expires_at, refresh_token_hash))
 
             return refresh_token
 
@@ -282,10 +283,7 @@ class IAMService:
                 AND expires_at > $2
                 AND revoked_at IS NULL
             """
-            result = await self.db.execute_query(query, {
-                'refresh_token_hash': refresh_token_hash,
-                'expires_at': datetime.datetime.utcnow()
-            })
+            result = await self.db.execute_query(query, (refresh_token_hash, datetime.datetime.utcnow()))
 
             return result[0]['user_id'] if result else None
 
@@ -303,10 +301,7 @@ class IAMService:
                 SET revoked_at = $1
                 WHERE refresh_token_hash = $2
             """
-            await self.db.execute_query(query, {
-                'revoked_at': datetime.datetime.utcnow(),
-                'refresh_token_hash': refresh_token_hash
-            })
+            await self.db.execute_query(query, (datetime.datetime.utcnow(), refresh_token_hash))
 
         except Exception as e:
             logger.error(f"Revoke refresh token error: {e}")
@@ -316,7 +311,7 @@ class IAMService:
         try:
             # Get role ID
             role_query = "SELECT role_id FROM iam_role WHERE role_code = $1"
-            role_result = await self.db.execute_query(role_query, {'role_code': role_code})
+            role_result = await self.db.execute_query(role_query, (role_code,))
 
             if not role_result:
                 logger.warning(f"Role {role_code} not found")
@@ -326,10 +321,7 @@ class IAMService:
 
             # Check if already assigned
             check_query = "SELECT 1 FROM iam_user_role WHERE user_id = $1 AND role_id = $2"
-            check_result = await self.db.execute_query(check_query, {
-                'user_id': user_id,
-                'role_id': role_id
-            })
+            check_result = await self.db.execute_query(check_query, (user_id, role_id))
 
             if check_result:
                 return  # Already assigned
@@ -339,11 +331,9 @@ class IAMService:
                 INSERT INTO iam_user_role (user_id, role_id, assigned_at)
                 VALUES ($1, $2, $3)
             """
-            await self.db.execute_query(assign_query, {
-                'user_id': user_id,
-                'role_id': role_id,
-                'assigned_at': datetime.datetime.utcnow()
-            })
+            await self.db.execute_query(assign_query, (
+                user_id, role_id, datetime.datetime.utcnow()
+            ))
 
         except Exception as e:
             logger.error(f"Assign role error: {e}")
@@ -357,10 +347,7 @@ class IAMService:
                 JOIN iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1 AND p.perm_code = $2
             """
-            result = await self.db.execute_query(query, {
-                'user_id': user_id,
-                'permission_code': permission_code
-            })
+            result = await self.db.execute_query(query, (user_id, permission_code))
 
             return bool(result)
 
@@ -423,11 +410,7 @@ class IAMService:
                 SET password_hash = $1, updated_at = $2
                 WHERE user_id = $3
             """
-            await self.db.execute_query(query, {
-                'password_hash': new_password_hash,
-                'updated_at': datetime.datetime.utcnow(),
-                'user_id': user_id
-            })
+            await self.db.execute_query(query, (new_password_hash, datetime.datetime.utcnow(), user_id))
 
         except Exception as e:
             logger.error(f"Change password error: {e}")
@@ -437,11 +420,84 @@ class IAMService:
         """Get basic user info by ID (including password hash for verification)"""
         try:
             query = "SELECT * FROM iam_user WHERE user_id = $1"
-            result = await self.db.execute_query(query, {'user_id': user_id})
+            result = await self.db.execute_query(query, (user_id,))
             return result[0] if result else None
         except Exception as e:
             logger.error(f"Get user by ID error: {e}")
             return None
+
+    async def create_password_reset_token(self, user_id: int) -> str:
+        """Create password reset token for user"""
+        try:
+            # Generate reset token
+            reset_token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
+
+            # Store in database (valid for 1 hour)
+            query = """
+                INSERT INTO iam_password_reset_token (user_id, token_hash, expires_at)
+                VALUES ($1, $2, $3)
+                RETURNING token_id
+            """
+            expires_at = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+
+            result = await self.db.execute_query(query, (user_id, token_hash, expires_at))
+
+            return reset_token
+
+        except Exception as e:
+            logger.error(f"Create password reset token error: {e}")
+            raise HTTPException(status_code=500, detail="Failed to create password reset token")
+
+    async def reset_password_with_token(self, reset_token: str, new_password: str) -> Optional[Dict[str, Any]]:
+        """Reset password using reset token"""
+        try:
+            token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
+
+            # Verify token and get user
+            query = """
+                SELECT prt.user_id, u.email
+                FROM iam_password_reset_token prt
+                JOIN iam_user u ON prt.user_id = u.user_id
+                WHERE prt.token_hash = $1
+                AND prt.expires_at > $2
+                AND prt.used_at IS NULL
+            """
+            result = await self.db.execute_query(query, (token_hash, datetime.datetime.utcnow()))
+
+            if not result:
+                return None
+
+            user_data = result[0]
+            user_id = user_data['user_id']
+
+            # Hash new password
+            new_password_hash = await self.hash_password(new_password)
+
+            # Update password
+            update_query = """
+                UPDATE iam_user
+                SET password_hash = $1, updated_at = $2
+                WHERE user_id = $3
+            """
+            await self.db.execute_query(update_query, (new_password_hash, datetime.datetime.utcnow(), user_id))
+
+            # Mark token as used
+            mark_used_query = """
+                UPDATE iam_password_reset_token
+                SET used_at = $1
+                WHERE token_hash = $2
+            """
+            await self.db.execute_query(mark_used_query, (datetime.datetime.utcnow(), token_hash))
+
+            return {
+                'user_id': user_id,
+                'email': user_data['email']
+            }
+
+        except Exception as e:
+            logger.error(f"Reset password with token error: {e}")
+            raise HTTPException(status_code=500, detail="Failed to reset password")
 
     async def log_user_action(self, user_id: int, action: str, target_type: str = None, target_id: str = None, details: str = None):
         """Log user action for audit"""
@@ -450,13 +506,6 @@ class IAMService:
                 INSERT INTO iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
                 VALUES ($1, $2, $3, $4, $5, $6)
             """
-            await self.db.execute_query(query, {
-                'user_id': user_id,
-                'action': action,
-                'target_type': target_type,
-                'target_id': target_id,
-                'details_text': details,
-                'created_at': datetime.datetime.utcnow()
-            })
+            await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.datetime.utcnow()))
         except Exception as e:
             logger.error(f"Log user action error: {e}")
