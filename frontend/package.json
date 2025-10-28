@@ -13,7 +13,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "api": "node api/server.js",
+    "seed": "node api/seeds/seedData.js"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",
@@ -36,7 +38,21 @@
     "react-helmet-async": "^2.0.5",
     "react-router": "^7.1.5",
     "swiper": "^11.2.3",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.6",
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "js-cookie": "^3.0.5",
+    "@types/js-cookie": "^3.0.6",
+    "react-hook-form": "^7.53.0",
+    "zod": "^3.23.8",
+    "@hookform/resolvers": "^3.9.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
@@ -46,6 +62,8 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
+    "@types/pg": "^8.10.9",
+    "@types/cors": "^2.8.17",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.19.0",
     "eslint-plugin-react-hooks": "^5.0.0",
