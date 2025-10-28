@@ -28,7 +28,7 @@ export default function SignInForm() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
@@ -40,7 +40,6 @@ export default function SignInForm() {
     if (!formData.email || !formData.password) {
       setErrors({
         email: !formData.email ? "Email is required" : "",
-        username: !formData.username ? "Email is required" : "",
         password: !formData.password ? "Password is required" : "",
         general: "Please fill in all required fields"
       });
@@ -84,12 +83,12 @@ export default function SignInForm() {
 
       // Show specific error for invalid credentials
       if (errorMessage.toLowerCase().includes('invalid') ||
-          errorMessage.toLowerCase().includes('unauthorized') ||
-          errorMessage.toLowerCase().includes('incorrect') ||
-          errorMessage.toLowerCase().includes('password') ||
-          errorMessage.toLowerCase().includes('username') ||
-          errorMessage.toLowerCase().includes('credential')) {
-        errorMessage = '❌ Invalid username or password. Please check your credentials and try again.';
+        errorMessage.toLowerCase().includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('incorrect') ||
+        errorMessage.toLowerCase().includes('password') ||
+        errorMessage.toLowerCase().includes('email') ||
+        errorMessage.toLowerCase().includes('credential')) {
+        errorMessage = '❌ Invalid email or password. Please check your credentials and try again.';
       }
 
       setErrors({
@@ -104,7 +103,7 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1">
-         <div className="w-full max-w-md pt-10 mx-auto">
+      <div className="w-full max-w-md pt-10 mx-auto">
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -126,11 +125,10 @@ export default function SignInForm() {
 
           {/* Success/Error Message */}
           {errors.general && (
-            <div className={`flex items-center gap-2 p-3 mb-4 text-sm border rounded-lg ${
-              errors.general.includes('✅')
+            <div className={`flex items-center gap-2 p-3 mb-4 text-sm border rounded-lg ${errors.general.includes('✅')
                 ? 'text-green-700 bg-green-100 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
                 : 'text-red-700 bg-red-100 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
-            }`}>
+              }`}>
               {errors.general.includes('✅') ? (
                 <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -153,11 +151,6 @@ export default function SignInForm() {
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     className={errors.email ? "border-red-500" : ""}
-                    type="text"
-                    placeholder="Email"
-                    value={formData.username}
-                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                    className={errors.username ? "border-red-500" : ""}
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -244,7 +237,7 @@ export default function SignInForm() {
                     Forgot Password?
                   </Link>
                 </div>
-                
+
               </div>
             </form>
 
