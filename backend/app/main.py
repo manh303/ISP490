@@ -11,6 +11,7 @@ import logging
 import secrets
 import hashlib
 import smtplib
+import bcrypt
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -50,6 +51,23 @@ except ImportError:
     except ImportError as e2:
         IAM_AVAILABLE = False
         print(f"WARNING: IAM system not available: {e2}")
+
+# Import email service
+try:
+    from .email_service import EmailService, send_otp_email, verify_otp
+    email_service_module = True
+    print("Email service imported successfully")
+except ImportError:
+    try:
+        import sys
+        import os
+        sys.path.append(os.path.dirname(__file__))
+        from email_service import EmailService, send_otp_email, verify_otp
+        email_service_module = True
+        print("Email service imported successfully (alternative path)")
+    except ImportError as e2:
+        email_service_module = False
+        print(f"WARNING: Email service not available: {e2}")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -145,19 +163,44 @@ class DatabaseManager:
             self.is_connected = False
             logger.info("Disconnected from database")
 
-    async def execute_query(self, query: str, values: dict = None):
-        """Execute a query safely"""
+    async def execute_query(self, query: str, values = None):
+        """Execute a query safely - supports both dict and tuple parameters"""
         if not self.is_connected:
             return []
 
         try:
             if values:
-                result = await self.database.fetch_all(query, values)
+                if isinstance(values, (tuple, list)):
+                    # Convert positional parameters to named parameters for databases library
+                    # Find $1, $2, etc. and replace with :param1, :param2, etc.
+                    import re
+                    converted_query = query
+                    converted_values = {}
+
+                    # Find all $n parameters
+                    param_matches = re.findall(r'\$(\d+)', query)
+                    if param_matches:
+                        for param_num in param_matches:
+                            param_name = f"param{param_num}"
+                            converted_query = converted_query.replace(f"${param_num}", f":{param_name}")
+                            param_index = int(param_num) - 1  # Convert to 0-based index
+                            if param_index < len(values):
+                                converted_values[param_name] = values[param_index]
+
+                        result = await self.database.fetch_all(converted_query, converted_values)
+                    else:
+                        # No positional parameters, use as-is
+                        result = await self.database.fetch_all(query, dict(zip(range(len(values)), values)))
+                else:
+                    # Dict parameters (original behavior)
+                    result = await self.database.fetch_all(query, values)
             else:
                 result = await self.database.fetch_all(query)
             return [dict(row) for row in result]
         except Exception as e:
             logger.error(f"Query execution error: {e}")
+            logger.error(f"Query: {query}")
+            logger.error(f"Values: {values}")
             return []
 
 # ====================================
@@ -456,6 +499,23 @@ class SignInResponse(BaseModel):
     access_token: str
     user: dict
 
+# Forgot password models
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ForgotPasswordResponse(BaseModel):
+    success: bool
+    message: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
+class ResetPasswordResponse(BaseModel):
+    success: bool
+    message: str
+
 # Define valid users for authentication - 3 main roles
 VALID_USERS = {
     "admin@dss.com": {
@@ -478,8 +538,52 @@ VALID_USERS = {
     }
 }
 
+async def authenticate_user_db(email: str, password: str, db: DatabaseManager):
+    """Authenticate user from database"""
+    try:
+        query = """
+        SELECT user_id, email, password_hash, full_name, status
+        FROM iam_user
+        WHERE email = $1 AND status = 'active'
+        """
+        result = await db.execute_query(query, (email.lower(),))
+        
+        if not result or len(result) == 0:
+            return None
+        
+        user = result[0]
+        password_hash = user['password_hash']
+        
+        # Verify password using bcrypt
+        if not bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
+            return None
+        
+        # Get user roles
+        role_query = """
+        SELECT r.role_code, r.role_name
+        FROM iam_user_role ur
+        JOIN iam_role r ON ur.role_id = r.role_id
+        WHERE ur.user_id = $1
+        """
+        roles_result = await db.execute_query(role_query, (user['user_id'],))
+        role_codes = [r['role_code'] for r in roles_result] if roles_result else []
+        
+        # Determine main role (first role or CUSTOMER by default)
+        main_role = role_codes[0] if role_codes else 'CUSTOMER'
+        
+        return {
+            'user_id': user['user_id'],
+            'email': user['email'],
+            'full_name': user['full_name'],
+            'role': main_role,
+            'roles': role_codes
+        }
+    except Exception as e:
+        logger.error(f"Database authentication error: {e}")
+        return None
+
 def authenticate_user(email: str, password: str):
-    """Authenticate user with email and password"""
+    """Fallback: authenticate user with hardcoded users"""
     user_data = VALID_USERS.get(email.lower())
     if not user_data or user_data["password"] != password:
         return None
@@ -600,7 +704,7 @@ async def create_user_in_db(db: DatabaseManager, name: str, email: str, password
     # Insert user
     query = """
     INSERT INTO iam_user (email, password_hash, full_name, status, created_at, updated_at)
-    VALUES ($1, $2, $3, 'pending', NOW(), NOW())
+    VALUES ($1, $2, $3, 'active', NOW(), NOW())
     RETURNING user_id
     """
     result = await db.execute_query(query, (email, password_hash, name))
@@ -620,18 +724,19 @@ async def create_user_in_db(db: DatabaseManager, name: str, email: str, password
     return user_id
 
 async def store_verification_token(db: DatabaseManager, email: str, token_hash: str) -> None:
-    """Store email verification token"""
-    if not db.is_connected:
-        return
-
-    expires_at = datetime.utcnow() + timedelta(minutes=10)
-
-    query = """
-    INSERT INTO iam_email_verification_token (email, token_hash, expires_at, created_at)
-    VALUES ($1, $2, $3, NOW())
-    """
-    await db.execute_query(query, (email, token_hash, expires_at))
-
+    # Nếu đã có token trước đó, upsert hoặc ghi đè
+    await db.execute_query(
+        """
+        INSERT INTO iam_email_verification (email, token_hash, created_at, expires_at, consumed)
+        VALUES ($1, $2, NOW(), NOW() + INTERVAL '15 minutes', false)
+        ON CONFLICT (email) DO UPDATE
+        SET token_hash = EXCLUDED.token_hash,
+            created_at = NOW(),
+            expires_at = NOW() + INTERVAL '15 minutes',
+            consumed = false
+        """,
+        (email, token_hash)
+    )
 async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -> bool:
     """Verify email verification token"""
     if not db.is_connected:
@@ -688,7 +793,13 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
     try:
         logger.info(f"Simple signin attempt for: {request.email}")
 
-        user_data = authenticate_user(request.email, request.password)
+        # Try database authentication first
+        user_data = await authenticate_user_db(request.email, request.password, db)
+        
+        # Fallback to hardcoded users if DB auth fails
+        if not user_data:
+            user_data = authenticate_user(request.email, request.password)
+        
         if not user_data:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -723,6 +834,117 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
     except Exception as e:
         logger.error(f"Signin error: {e}")
         raise HTTPException(status_code=500, detail="Signin failed")
+
+# Forgot Password - with OTP generation and email
+@app.post(f"{settings.API_V1_PREFIX}/auth/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = Depends(get_database)):
+    """Request password reset OTP code"""
+    try:
+        email = request.email.strip().lower()
+        if not email:
+            raise HTTPException(status_code=400, detail="Email is required")
+
+        # Check if email exists
+        email_exists = await check_email_exists(db, email)
+        
+        # Always respond success (avoid user enumeration)
+        if not email_exists:
+            logger.info(f"Forgot password requested for non-existent email: {email}")
+            return ForgotPasswordResponse(
+                success=True,
+                message="If this email exists, we've sent a reset code."
+            )
+
+        # Use the new EmailService to send OTP
+        if email_service_module:
+            try:
+                result = await send_otp_email(email, name="User")
+                if result['success']:
+                    logger.info(f"✅ OTP sent to {email}")
+                    return ForgotPasswordResponse(
+                        success=True,
+                        message="A verification code has been sent to your email."
+                    )
+                else:
+                    logger.error(f"Failed to send OTP: {result.get('error')}")
+                    return ForgotPasswordResponse(
+                        success=False,
+                        message="Failed to send email. Please try again later."
+                    )
+            except Exception as e:
+                logger.error(f"Email service error: {e}")
+                return ForgotPasswordResponse(
+                    success=False,
+                    message="Failed to send email. Please check server logs."
+                )
+        else:
+            # Fallback if email service not available
+            logger.warning("Email service not available - check logs for OTP")
+            return ForgotPasswordResponse(
+                success=True,
+                message="Reset code would be sent (check server logs in dev mode)"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Forgot-password error: {e}")
+        raise HTTPException(status_code=500, detail="Forgot password failed")
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = Depends(get_database)):
+    """Reset password using OTP"""
+    try:
+        email = request.email.strip().lower()
+        otp = request.otp.strip()
+        new_password = request.new_password
+
+        # Validate input
+        if not email or not otp or not new_password:
+            raise HTTPException(status_code=400, detail="Email, OTP, and new password are required")
+
+        if len(new_password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+
+        # Verify OTP
+        if email_service_module:
+            otp_result = await verify_otp(email, otp)
+            
+            if not otp_result.get('valid'):
+                error = otp_result.get('error', 'Invalid OTP')
+                attempts = otp_result.get('attempts_remaining', 0)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{error}. Attempts remaining: {attempts}"
+                )
+
+            # OTP verified - reset password
+            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
+            query = """
+            UPDATE iam_user
+            SET password_hash = $1, updated_at = NOW()
+            WHERE email = $2
+            RETURNING user_id
+            """
+            result = await db.execute_query(query, (password_hash, email))
+            
+            if not result:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            logger.info(f"Password reset successful for {email}")
+            return ResetPasswordResponse(
+                success=True,
+                message="Password reset successfully. You can now sign in."
+            )
+        else:
+            raise HTTPException(status_code=500, detail="OTP verification service not available")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
 @app.post(f"{settings.API_V1_PREFIX}/auth/signin", response_model=SignInResponse)
 async def auth_login_alias(request: SignInRequest, db: DatabaseManager = Depends(get_database)):
@@ -797,20 +1019,18 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
         user_id = await create_user_in_db(db, request.name, request.email.lower(), password_hash)
 
         # Store verification token
-        await store_verification_token(db, request.email.lower(), token_hash)
+        # Temporarily disabled: email verification storage requires table iam_email_verification
+        # await store_verification_token(db, request.email.lower(), token_hash)
 
         # Send verification email
-        email_sent = email_service.send_verification_email(
-            request.email,
-            verification_code,
-            request.name
-        )
+        # Temporarily disabled email sending to avoid dependency during active-by-default signup
+        email_sent = False
 
         logger.info(f"User signup: {request.email} (ID: {user_id}) - Email sent: {email_sent}")
 
         return SignupResponse(
             success=True,
-            message="Account created successfully. Please check your email for verification code.",
+            message="Account created successfully. You can now sign in.",
             verification_sent=email_sent,
             email=request.email
         )
