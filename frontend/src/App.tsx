@@ -23,6 +23,8 @@ import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import DashboardLayout from "./layout/DashboardLayout";
 import VietnamElectronicsDashboard from "./pages/Dashboard/VietnamElectronicsDashboard";
+import RoleBasedDashboard from "./components/dashboard/RoleBasedDashboard";
+import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
 import PasswordResetSuccess from "./components/auth/PasswordResetSuccess";
@@ -142,6 +144,21 @@ export default function App() {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/blank" element={<Blank />} />
 
+          {/* Protected Dashboard Layout */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Dashboard routes - all protected */}
+            <Route path="/dashboard" element={<RoleBasedDashboard />} />
+            <Route path="/dashboard/vietnam-electronics" element={<VietnamElectronicsDashboard />} />
+            <Route path="/dss" element={<DSSPage />} />
+            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/blank" element={<Blank />} />
               {/* Forms */}
               <Route path="/form-elements" element={<FormElements />} />
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import authService from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import Cookies from 'js-cookie';
 import AIRecommendations from '../components/AIRecommendations';
 
 interface DSSData {
@@ -14,6 +15,7 @@ interface DSSData {
 }
 
 const DSSPage: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [loading, setLoading] = useState<boolean>(false);
   const [dssData, setDssData] = useState<DSSData | null>(null);
@@ -21,26 +23,13 @@ const DSSPage: React.FC = () => {
   const [startedActions, setStartedActions] = useState<Set<string>>(new Set());
   const [actionModal, setActionModal] = useState<any>(null);
 
-  // Auto-login and get auth token
-  const getAuthToken = async (): Promise<string | null> => {
-    let token = authService.getToken();
-
-    if (!token) {
-      try {
-        // Auto-login with admin credentials for demo
-        await authService.login({
-          username: 'admin',
-          password: 'admin123'
-        });
-        token = authService.getToken();
-      } catch (error) {
-        console.error('Auto-login failed:', error);
-        setError('Authentication failed. Please check backend connection.');
-        return null;
-      }
+  // Get auth token from AuthContext
+  const getAuthToken = (): string | null => {
+    if (!isAuthenticated) {
+      setError('Please log in to access DSS data.');
+      return null;
     }
-
-    return token;
+    return Cookies.get('access_token');
   };
 
   const fetchDSSData = async (endpoint: string) => {
