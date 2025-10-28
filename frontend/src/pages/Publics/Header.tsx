@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 export function Header() {
   const navigate = useNavigate();
-  const { state, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -64,7 +64,7 @@ export function Header() {
 
         {/* Auth Buttons */}
         <div className="flex items-center gap-4">
-          {state.isAuthenticated ? (
+          {isAuthenticated ? (
             <>
               <Button
                 variant="outline"

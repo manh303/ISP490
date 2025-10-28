@@ -114,6 +114,10 @@ export interface SignupRequest { name: string; email: string; password: string; 
 export interface SignupResponse { success: boolean; message: string; verification_sent: boolean; email: string; }
 export interface VerifyEmailRequest { email: string; verification_code: string; }
 export interface VerifyEmailResponse { success: boolean; message: string; user_created: boolean; user_id?: number; }
+export interface ForgotPasswordRequest { email: string; }
+export interface ForgotPasswordResponse { success: boolean; message: string; data?: { reset_token?: string; note?: string; } }
+export interface ResetPasswordRequest { email: string; otp: string; new_password: string; }
+export interface ResetPasswordResponse { success: boolean; message: string; }
 
 /* ----------------------------- API ------------------------------ */
 
@@ -180,7 +184,7 @@ export const authAPI = {
 
     // Trả đúng shape FE mong đợi
     return {
-      success: !!backendData?.success ?? true,
+      success: backendData?.success !== undefined ? backendData.success : true,
       message: backendData?.message || 'Login success',
       data: {
         access_token: access, // <- lặp lại ở đây cho khớp SignInResponse
@@ -249,15 +253,13 @@ export const authAPI = {
     (await api.post('/v1/auth/signup', data)).data,
 
   verifyEmail: async (data: VerifyEmailRequest) =>
-    (await api.post('/v1/auth/verify-email', data)).data
+    (await api.post('/v1/auth/verify-email', data)).data,
+
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> =>
+    (await api.post('/v1/auth/forgot-password', data)).data,
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> =>
+    (await api.post('/v1/auth/reset-password', data)).data
 };
 
 export default api;
-
-/* Re-export types cho tiện import */
-export type {
-  SignupRequest,
-  SignupResponse,
-  VerifyEmailRequest,
-  VerifyEmailResponse
-};

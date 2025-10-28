@@ -48,6 +48,20 @@ class ChangePasswordRequest(BaseModel):
 class RefreshTokenRequest(BaseModel):
     refresh_token: str = Field(..., description="Refresh token")
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., description="Password reset token")
+    new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirm new password")
+
+class SignupRequest(BaseModel):
+    name: str = Field(..., max_length=100, description="Full name")
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, description="User password (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirm password")
+
 class UserResponse(BaseModel):
     user_id: int
     email: str
@@ -163,8 +177,8 @@ async def register(request: RegisterRequest, iam: IAMService = Depends(get_iam_s
             }
         )
 
-@router.post("/login", response_model=LoginResponse)
-async def login(request: LoginRequest, iam: IAMService = Depends(get_iam_service)):
+@router.post("/signin", response_model=LoginResponse)
+async def signin(request: LoginRequest, iam: IAMService = Depends(get_iam_service)):
     """Authenticate user and return tokens"""
     try:
         # Authenticate user
@@ -429,6 +443,162 @@ async def get_user_permissions(current_user: Dict[str, Any] = Depends(get_curren
         }
     }
 
+# Frontend compatible signup endpoint
+@router.post("/signup", response_model=Dict[str, Any])
+async def signup(request: SignupRequest, iam: IAMService = Depends(get_iam_service)):
+    """Sign up new user (frontend compatible endpoint)"""
+    try:
+        # Validate password confirmation
+        if request.password != request.confirm_password:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "success": False,
+                    "message": "Passwords do not match",
+                    "field": "confirm_password"
+                }
+            )
+
+        # Create user
+        user = await iam.create_user(
+            email=request.email,
+            password=request.password,
+            full_name=request.name
+        )
+
+        # Log registration
+        await iam.log_user_action(
+            user_id=user['user_id'],
+            action="USER_SIGNUP",
+            details=f"User signed up with email: {request.email}"
+        )
+
+        return {
+            "success": True,
+            "message": "Account created successfully! You can now sign in.",
+            "data": {
+                "user": {
+                    "user_id": user['user_id'],
+                    "email": user['email'],
+                    "full_name": user['full_name'],
+                    "status": user['status']
+                }
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Signup error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "message": "Account creation failed",
+                "error": str(e)
+            }
+        )
+
+# Forgot Password endpoints
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest, iam: IAMService = Depends(get_iam_service)):
+    """Request password reset token"""
+    try:
+        # Check if user exists
+        user = await iam.get_user_by_email(request.email)
+        if not user:
+            # Don't reveal if email exists for security
+            return {
+                "success": True,
+                "message": "If your email is registered, you will receive a password reset link."
+            }
+
+        # Generate password reset token
+        reset_token = await iam.create_password_reset_token(user['user_id'])
+
+        # In a real app, you would send this via email
+        # For development, we'll return it in the response
+        logger.info(f"Password reset token for {request.email}: {reset_token}")
+
+        # Log password reset request
+        await iam.log_user_action(
+            user_id=user['user_id'],
+            action="PASSWORD_RESET_REQUEST",
+            details=f"Password reset requested for email: {request.email}"
+        )
+
+        return {
+            "success": True,
+            "message": "If your email is registered, you will receive a password reset link.",
+            "data": {
+                "reset_token": reset_token,  # Remove this in production
+                "note": "In production, this token would be sent via email"
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Forgot password error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "message": "Password reset request failed",
+                "error": str(e)
+            }
+        )
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest, iam: IAMService = Depends(get_iam_service)):
+    """Reset password using token"""
+    try:
+        # Validate password confirmation
+        if request.new_password != request.confirm_password:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "success": False,
+                    "message": "Passwords do not match",
+                    "field": "confirm_password"
+                }
+            )
+
+        # Reset password using token
+        result = await iam.reset_password_with_token(request.token, request.new_password)
+
+        if not result:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "success": False,
+                    "message": "Invalid or expired reset token"
+                }
+            )
+
+        # Log password reset
+        await iam.log_user_action(
+            user_id=result['user_id'],
+            action="PASSWORD_RESET_SUCCESS",
+            details=f"Password reset completed for user: {result['email']}"
+        )
+
+        return {
+            "success": True,
+            "message": "Password reset successfully. You can now sign in with your new password."
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "message": "Password reset failed",
+                "error": str(e)
+            }
+        )
+
 # Test endpoints for development
 @router.get("/test-credentials")
 async def get_test_credentials():
@@ -462,6 +632,6 @@ async def get_test_credentials():
                     "description": "Customer User"
                 }
             ],
-            "note": "These are test accounts for development. Use /auth/register to create new accounts."
+            "note": "These are test accounts for development. Use /auth/signup to create new accounts."
         }
     }
