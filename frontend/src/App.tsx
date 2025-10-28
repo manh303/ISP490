@@ -19,6 +19,7 @@ import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import VietnamElectronicsDashboard from "./pages/Dashboard/VietnamElectronicsDashboard";
+import RoleBasedDashboard from "./components/dashboard/RoleBasedDashboard";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 // import Home from "./pages/Dashboard/Home";
@@ -61,7 +62,8 @@ export default function App() {
             }
           >
             {/* Dashboard routes - all protected */}
-            <Route path="/dashboard" element={<VietnamElectronicsDashboard />} />
+            <Route path="/dashboard" element={<RoleBasedDashboard />} />
+            <Route path="/dashboard/vietnam-electronics" element={<VietnamElectronicsDashboard />} />
             <Route path="/dss" element={<DSSPage />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
