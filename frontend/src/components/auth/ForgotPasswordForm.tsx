@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import Input from "../form/input/InputField";
 import authService from "../../services/authService";
 import { useToast } from "../../contexts/ToastContext";
+import { ChevronLeftIcon } from "../../icons";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -76,6 +77,18 @@ export default function ForgotPasswordForm() {
   };
   return (
     <div className="flex items-center justify-center min-h-screen p-6 bg-white dark:bg-slate-900">
+
+     {/* Back to home link */}
+     <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
+       <Link
+         to="/"
+         className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+       >
+         <ChevronLeftIcon className="size-5" />
+         Back to home
+       </Link>
+     </div>
+
       <div className="w-full max-w-sm">
         <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-transparent rounded-xl shadow-lg p-8 text-center">
           <div className="flex justify-center mb-6">

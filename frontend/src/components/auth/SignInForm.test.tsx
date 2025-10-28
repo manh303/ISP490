@@ -102,7 +102,7 @@ describe('SignInForm', () => {
     const loginButton = screen.getByRole('button', { name: /login/i })
     await userEvent.click(loginButton)
 
-    expect(screen.getByText('Username is required')).toBeInTheDocument()
+    expect(screen.getByText('Email is required')).toBeInTheDocument()
     expect(screen.getByText('Password is required')).toBeInTheDocument()
   })
 
