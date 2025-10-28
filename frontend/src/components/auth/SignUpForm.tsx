@@ -139,9 +139,9 @@ export default function SignUpForm() {
                   // Show success message
                   showToast(`✅ ${response.message}`, "success", 5000);
 
-                  // Navigate to verify code page with email after a short delay
+                  // Navigate to sign in page after a short delay
                   setTimeout(() => {
-                    navigate(`/verify-code?email=${encodeURIComponent(formData.email)}`);
+                    navigate("/signin");
                   }, 1500);
                 } else {
                   setErrors({ ...newErrors, general: response.message || "Registration failed. Please try again." });

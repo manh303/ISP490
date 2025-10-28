@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router";
+import { Link, useParams, useNavigate, useSearchParams } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
-// import Label from "../form/Label";
 import Input from "../form/input/InputField";
+import { authAPI } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function ResetPasswordForm() {
   const [formData, setFormData] = useState({
@@ -18,7 +19,12 @@ export default function ResetPasswordForm() {
   const [tokenError, setTokenError] = useState("");
   
   const { token } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  // Get token from URL params or search params
+  const resetToken = token || searchParams.get('token');
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -48,25 +54,53 @@ export default function ResetPasswordForm() {
     setTokenError("");
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate token validation
-      if (!token || token === "invalid") {
-        setTokenError("Invalid or expired reset link. Please request a new password reset.");
+      if (!resetToken) {
+        setTokenError("No reset token found. Please request a new password reset.");
         return;
       }
 
-      // Success
-      setIsSuccess(true);
-      
-      // Redirect to sign in after 3 seconds
-      setTimeout(() => {
-        navigate("/signin");
-      }, 3000);
-      
-    } catch (error) {
-      setTokenError("Something went wrong. Please try again.");
+      showToast("Resetting your password...", "info", 2000);
+
+      const response = await authAPI.resetPassword({
+        token: resetToken,
+        new_password: formData.password,
+        confirm_password: formData.confirmPassword
+      });
+
+      if (response.success) {
+        setIsSuccess(true);
+        showToast(`✅ ${response.message}`, "success", 5000);
+
+        // Redirect to sign in after 3 seconds
+        setTimeout(() => {
+          navigate("/signin");
+        }, 3000);
+      } else {
+        setTokenError(response.message || "Password reset failed. Please try again.");
+        showToast("❌ Password reset failed", "error");
+      }
+
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+
+      let errorMessage = 'Password reset failed. Please try again.';
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      // Show specific error for common issues
+      if (errorMessage.toLowerCase().includes('token') && errorMessage.toLowerCase().includes('expired')) {
+        errorMessage = 'Reset token has expired. Please request a new password reset.';
+      } else if (errorMessage.toLowerCase().includes('token') && errorMessage.toLowerCase().includes('invalid')) {
+        errorMessage = 'Invalid reset token. Please check your token or request a new password reset.';
+      } else if (errorMessage.toLowerCase().includes('password')) {
+        errorMessage = 'Password requirements not met. Please check your password.';
+      }
+
+      setTokenError(errorMessage);
+      showToast(`❌ ${errorMessage}`, "error");
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +136,7 @@ export default function ResetPasswordForm() {
   }, [formData.password]);
 
   // Show error if token is missing
-  if (!token) {
+  if (!resetToken) {
     return (
       <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
         <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
