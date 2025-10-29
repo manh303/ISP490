@@ -224,9 +224,9 @@ app = FastAPI(
     **IMPORTANT**: Click the **🔒 Authorize** button below to authenticate!
     
     **Quick Start**:
-    1. **Get Token**: Call `/api/v1/admin/test/admin-token` first
-    2. **Click 🔒 Authorize**: Enter `Bearer <your_token>`
-    3. **Test APIs**: All admin endpoints will work
+    1. **Easy Testing**: Use `/api/v1/test-admin/users` (no auth needed)
+    2. **With Auth**: Get token from `/api/v1/test-admin/get-token`
+    3. **Click 🔒 Authorize**: Enter `Bearer <your_token>`
     
     **Default Admin**: `admin@dss.com` / `admin123`
     
