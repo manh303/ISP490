@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { ChevronLeftIcon } from "../../icons";
-import authService from "../../services/authService";
+import { authAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function VerifyCodeForm() {
@@ -97,16 +97,16 @@ export default function VerifyCodeForm() {
     try {
       showToast("Verifying code...", "info", 2000);
 
-      // Call the OTP verification API
-      const response = await authService.verifyOTP({
+      // Call the email verification API
+      const response = await authAPI.verifyEmail({
         email: email,
-        otp: verificationCode
+        verification_code: verificationCode
       });
 
-      if (response.success) {
+      if (response.success && response.user_created) {
         showToast(`✅ ${response.message}`, "success", 3000);
         setTimeout(() => {
-          navigate("/signin?verified=true");
+          navigate("/signin");
         }, 1500);
       } else {
         const errorMsg = response.message || "Invalid verification code. Please try again.";
@@ -133,47 +133,9 @@ export default function VerifyCodeForm() {
   };
 
   const handleResendCode = async () => {
-    if (countdown > 0) return;
-
-    setIsResending(true);
-    setError("");
-
-    try {
-      showToast("Resending verification code...", "info", 2000);
-
-      // Call the resend OTP API
-      const response = await authService.resendOTP({
-        email: email
-      });
-
-      if (response.success) {
-        showToast(`✅ ${response.message}`, "success", 3000);
-
-        // Start countdown (60 seconds)
-        setCountdown(60);
-
-        // Clear existing code
-        setCode(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      } else {
-        const errorMsg = response.message || "Failed to resend code. Please try again.";
-        setError(errorMsg);
-        showToast(`❌ ${errorMsg}`, "error");
-      }
-
-    } catch (error: any) {
-      console.error('Resend code error:', error);
-
-      let errorMessage = 'Failed to resend code. Please try again.';
-      if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      setError(errorMessage);
-      showToast(`❌ ${errorMessage}`, "error");
-    } finally {
-      setIsResending(false);
-    }
+    // For now, disable resend - user needs to signup again if code expired
+    showToast("Please sign up again if your verification code has expired", "info");
+    setError("Verification code expired. Please sign up again.");
   };
 
   return (
