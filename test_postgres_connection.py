@@ -10,9 +10,9 @@ def test_postgres():
         conn = psycopg2.connect(
             host='localhost',
             port=5432,
-            database='ecommerce_dss',
-            user='dss_user',
-            password='dss_password_123'
+            database='user',
+            user='postgres',
+            password='123'
         )
         cursor = conn.cursor()
         cursor.execute("SELECT version();")
