@@ -8,6 +8,34 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 router = APIRouter(prefix="/test-admin", tags=["🧪 Test Admin"])
 
+@router.get("/get-token")
+async def get_admin_token():
+    """🔑 Get admin token for testing authenticated endpoints"""
+    try:
+        from main import create_access_token
+        
+        admin_user = {
+            "user_id": 1,
+            "full_name": "System Administrator",
+            "role": "ADMIN"
+        }
+        
+        token = create_access_token(admin_user, "admin@dss.com")
+        
+        return {
+            "success": True,
+            "message": "Admin token generated",
+            "access_token": token,
+            "usage": "Use this token in Authorize button: Bearer " + token[:30] + "..."
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "Failed to generate token",
+            "error": str(e)
+        }
+
 @router.get("/users")
 async def test_get_users():
     """Test get users directly from database"""
