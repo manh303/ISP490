@@ -5,7 +5,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Input from "../form/input/InputField";
 // import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import authService from "../../services/authService";
+import { authAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function SignUpForm() {
@@ -55,6 +55,15 @@ export default function SignUpForm() {
   const passwordStrength = getPasswordStrength(formData.password);
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
+        <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        >
+          <ChevronLeftIcon className="size-5" />
+          Back to home
+        </Link>
+      </div>
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -119,20 +128,20 @@ export default function SignUpForm() {
                 showToast("Creating your account...", "info", 2000);
 
                 // Call the registration API
-                const response = await authService.register({
+                const response = await authAPI.signup({
                   name: formData.name,
                   email: formData.email,
                   password: formData.password,
-                  confirmPassword: formData.confirmPassword
+                  confirm_password: formData.confirmPassword
                 });
 
                 if (response.success) {
                   // Show success message
                   showToast(`✅ ${response.message}`, "success", 5000);
 
-                  // Navigate to verify code page with email after a short delay
+                  // Navigate to sign in page after a short delay
                   setTimeout(() => {
-                    navigate(`/verify-code?email=${encodeURIComponent(formData.email)}`);
+                    navigate("/signin");
                   }, 1500);
                 } else {
                   setErrors({ ...newErrors, general: response.message || "Registration failed. Please try again." });
