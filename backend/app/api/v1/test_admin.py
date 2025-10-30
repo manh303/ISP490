@@ -125,6 +125,82 @@ async def test_create_user():
             "error": str(e)
         }
 
+@router.get("/user-detail/{user_id}")
+async def test_get_user_detail(user_id: int):
+    """🔍 Test get user detail with comprehensive information"""
+    try:
+        from main import db_manager
+        
+        if not db_manager.is_connected:
+            await db_manager.connect()
+            
+        query = """
+        SELECT u.user_id, u.email, u.full_name, u.phone, u.status,
+               u.last_login_at, u.created_at, u.updated_at,
+               r.role_code, r.role_name, r.description as role_description
+        FROM iam_user u
+        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        WHERE u.user_id = $1
+        """
+        
+        result = await db_manager.execute_query(query, (user_id,))
+        
+        if not result:
+            return {
+                "success": False,
+                "message": "User not found",
+                "user_id": user_id
+            }
+            
+        user_data = result[0]
+        user_data['is_deleted'] = user_data['status'] == 'disabled'
+        
+        return {
+            "success": True,
+            "message": "User detail retrieved successfully",
+            "data": user_data
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "Failed to get user detail",
+            "error": str(e),
+            "user_id": user_id
+        }
+
+@router.get("/users/deleted")
+async def test_get_deleted_users():
+    """Test get deleted users"""
+    try:
+        from main import db_manager
+        
+        if not db_manager.is_connected:
+            await db_manager.connect()
+            
+        query = """
+        SELECT u.user_id, u.email, u.full_name, u.status, u.updated_at
+        FROM iam_user u
+        WHERE u.status = 'disabled'
+        ORDER BY u.updated_at DESC
+        """
+        
+        users = await db_manager.execute_query(query)
+        
+        return {
+            "success": True,
+            "message": f"Found {len(users)} deleted users",
+            "data": users
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "Failed to get deleted users",
+            "error": str(e)
+        }
+
 @router.put("/users/{user_id}/disable")
 async def test_disable_user(user_id: int):
     """Test soft delete user"""
@@ -159,37 +235,6 @@ async def test_disable_user(user_id: int):
         return {
             "success": False,
             "message": "Failed to disable user",
-            "error": str(e)
-        }
-
-@router.get("/users/deleted")
-async def test_get_deleted_users():
-    """Test get deleted users"""
-    try:
-        from main import db_manager
-        
-        if not db_manager.is_connected:
-            await db_manager.connect()
-            
-        query = """
-        SELECT u.user_id, u.email, u.full_name, u.status, u.updated_at
-        FROM iam_user u
-        WHERE u.status = 'disabled'
-        ORDER BY u.updated_at DESC
-        """
-        
-        users = await db_manager.execute_query(query)
-        
-        return {
-            "success": True,
-            "message": f"Found {len(users)} deleted users",
-            "data": users
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Failed to get deleted users",
             "error": str(e)
         }
 
