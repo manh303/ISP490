@@ -39,20 +39,6 @@ class UserListResponse(BaseModel):
     page: int
     limit: int
 
-class UserDetailResponse(BaseModel):
-    user_id: int
-    email: str
-    full_name: Optional[str]
-    phone: Optional[str]
-    status: str
-    role_code: Optional[str]
-    role_name: Optional[str]
-    role_description: Optional[str]
-    last_login_at: Optional[datetime]
-    created_at: datetime
-    updated_at: datetime
-    is_deleted: bool = Field(default=False, description="Whether user is soft deleted")
-
 class UserActionResponse(BaseModel):
     success: bool
     message: str
