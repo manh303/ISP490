@@ -288,10 +288,6 @@ try:
     from api.v1.admin import router as admin_router
     app.include_router(admin_router, prefix=f"{settings.API_V1_PREFIX}")
     logger.info("Admin routes included")
-    
-    # Debug: Print all routes
-    for route in admin_router.routes:
-        logger.info(f"Admin route: {route.methods} {settings.API_V1_PREFIX}{route.path}")
 except ImportError as e:
     logger.warning(f"Admin routes not available: {e}")
 
@@ -300,10 +296,6 @@ try:
     from api.v1.test_admin import router as test_admin_router
     app.include_router(test_admin_router, prefix=f"{settings.API_V1_PREFIX}")
     logger.info("Test Admin routes included")
-    
-    # Debug: Print all routes
-    for route in test_admin_router.routes:
-        logger.info(f"Test Admin route: {route.methods} {settings.API_V1_PREFIX}{route.path}")
 except ImportError as e:
     logger.warning(f"Test Admin routes not available: {e}")
 
@@ -1170,8 +1162,7 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "available_endpoints": [
                 "/", "/health", "/api/v1/status",
                 "/api/v1/auth/signin", "/api/v1/auth/signup", "/api/v1/auth/verify-email",
-                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/test-admin/users",
-                "/api/v1/test-admin/user/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/docs"
             ]
         }
     )
