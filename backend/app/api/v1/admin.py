@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from models.admin import (
     UserCreateRequest, UserUpdateRequest, UserPasswordUpdateRequest,
-    UserResponse, UserListResponse, UserActionResponse
+    UserResponse, UserListResponse, UserActionResponse, UserDetailResponse
 )
 from services.user_management_service import UserManagementService
 from utils.admin_helpers import get_current_admin_user, validate_role_code, format_user_response
@@ -132,26 +132,42 @@ async def get_deleted_users(
         logger.error(f"Get deleted users error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get deleted users")
 
-@router.get("/users/{user_id}", response_model=UserResponse)
-async def get_user(
+@router.get("/users/{user_id}", response_model=UserDetailResponse,
+           summary="🔍 Get User Detail",
+           description="Get comprehensive user information including role details and audit info. **Admin Only!**")
+async def get_user_detail(
     user_id: int,
     user_service: UserManagementService = Depends(get_user_service),
     current_user: dict = Depends(get_current_admin_user_swagger)
 ):
-    """Get user by ID"""
+    """
+    Get detailed user information
+    
+    **Required**: Admin role and valid JWT token
+    
+    **Returns**:
+    - Complete user profile information
+    - Role details (name, description)
+    - Audit information (created_by, updated_by, etc.)
+    - Deletion status (is_deleted flag)
+    
+    **Error Handling**:
+    - 404: User does not exist
+    - User is soft deleted: Returns info with is_deleted=true
+    """
     try:
-        # Get user
-        user = await user_service.get_user_by_id(user_id)
+        # Get detailed user info
+        user = await user_service.get_user_detail(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        return UserResponse(**format_user_response(user))
+        return UserDetailResponse(**user)
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Get user error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get user")
+        logger.error(f"Get user detail error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get user detail")
 
 @router.post("/users", response_model=UserActionResponse)
 async def create_user(

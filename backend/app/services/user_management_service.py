@@ -187,6 +187,27 @@ class UserManagementService:
         """
         await self.db.execute_query(assign_query, (user_id, role_id))
 
+    async def get_user_detail(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get detailed user information including role details and audit info"""
+        query = """
+        SELECT u.user_id, u.email, u.full_name, u.phone, u.status,
+               u.last_login_at, u.created_at, u.updated_at,
+               r.role_code, r.role_name, r.description as role_description
+        FROM iam_user u
+        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        WHERE u.user_id = $1
+        """
+        
+        result = await self.db.execute_query(query, (user_id,))
+        if not result:
+            return None
+            
+        user_data = result[0]
+        user_data['is_deleted'] = user_data['status'] == 'disabled'
+        
+        return user_data
+
     async def _update_user_role(self, user_id: int, role_code: str):
         """Update user role"""
         # Remove existing roles
