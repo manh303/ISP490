@@ -295,6 +295,14 @@ try:
 except ImportError as e:
     logger.warning(f"Admin routes not available: {e}")
 
+# Include Profile router
+try:
+    from api.v1.profile import router as profile_router
+    app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Profile routes included")
+except ImportError as e:
+    logger.warning(f"Profile routes not available: {e}")
+
 # Include Test Admin router
 try:
     from api.v1.test_admin import router as test_admin_router
@@ -1170,8 +1178,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "available_endpoints": [
                 "/", "/health", "/api/v1/status",
                 "/api/v1/auth/signin", "/api/v1/auth/signup", "/api/v1/auth/verify-email",
-                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/test-admin/users",
-                "/api/v1/test-admin/user/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
+                "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
             ]
         }
     )
