@@ -235,11 +235,13 @@ class UserManagementService:
         await self.db.execute_query(update_query, (full_name, phone, email, user_id))
         
         return await self.get_user_by_id(user_id)
-
     async def _update_user_role(self, user_id: int, role_code: str):
         """Update user role"""
         # Remove existing roles
         await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+        
+        # Assign new role
+        await self._assign_role(user_id, role_code)lf.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
         
         # Assign new role
         await self._assign_role(user_id, role_code)
