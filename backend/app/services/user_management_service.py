@@ -208,6 +208,34 @@ class UserManagementService:
         
         return user_data
 
+    async def get_profile(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user profile by user ID"""
+        return await self.get_user_by_id(user_id)
+
+    async def update_profile(self, user_id: int, full_name: Optional[str] = None, 
+                           phone: Optional[str] = None, email: Optional[str] = None) -> Dict[str, Any]:
+        """Update user profile"""
+        # Check if email already exists (if updating email)
+        if email:
+            existing = await self.db.execute_query(
+                "SELECT user_id FROM iam_user WHERE email = $1 AND user_id != $2", (email, user_id)
+            )
+            if existing:
+                raise ValueError("Email already exists")
+        
+        # Update user profile
+        update_query = """
+        UPDATE iam_user 
+        SET full_name = COALESCE($1, full_name),
+            phone = COALESCE($2, phone),
+            email = COALESCE($3, email),
+            updated_at = NOW()
+        WHERE user_id = $4
+        """
+        await self.db.execute_query(update_query, (full_name, phone, email, user_id))
+        
+        return await self.get_user_by_id(user_id)
+
     async def _update_user_role(self, user_id: int, role_code: str):
         """Update user role"""
         # Remove existing roles
