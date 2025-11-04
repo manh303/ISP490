@@ -82,7 +82,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:dss_password_123@localhost:5432/ecommerce_dss")
+    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a/ecommerce_dss")
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
