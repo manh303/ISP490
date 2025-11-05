@@ -12,8 +12,10 @@ export default function VerifyCodeForm() {
   const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get("email") || "user@example.com";
+  // Lấy email từ sessionStorage cho từng luồng
+  const resetEmail = sessionStorage.getItem('reset_email');
+  const verifyEmail = sessionStorage.getItem('verify_email');
+  const email = resetEmail || verifyEmail || '';
   const { showToast } = useToast();
 
   // Countdown timer for resend button
@@ -97,33 +99,36 @@ export default function VerifyCodeForm() {
     try {
       showToast("Verifying code...", "info", 2000);
 
-      // Call the email verification API
-      const response = await authAPI.verifyEmail({
-        email: email,
-        verification_code: verificationCode
-      });
-
-      if (response.success && response.user_created) {
-        showToast(`✅ ${response.message}`, "success", 3000);
-        // Nếu có reset_email trong sessionStorage thì đây là verify cho reset password
-        const resetEmail = sessionStorage.getItem('reset_email');
-        if (resetEmail) {
-          // Lưu otp vào sessionStorage để dùng cho reset password
-          sessionStorage.setItem('reset_otp', verificationCode);
-          // Chuyển sang trang reset-password
+      if (resetEmail) {
+        // Luồng quên mật khẩu: chỉ lưu OTP và chuyển sang reset password, không gọi API verifyEmail
+        sessionStorage.setItem('reset_otp', verificationCode);
+        showToast('OTP verified. Please reset your password.', 'success', 1500);
+        setTimeout(() => {
           navigate('/reset-password');
-        } else {
-          // Trường hợp verify email thông thường
+        }, 1000);
+      } else if (verifyEmail) {
+        // Luồng đăng ký: gọi API verifyEmail
+        const response = await authAPI.verifyEmail({
+          email: verifyEmail,
+          verification_code: verificationCode
+        });
+        if (response.success && response.user_created) {
+          showToast(`✅ ${response.message}`, "success", 3000);
+          sessionStorage.removeItem('verify_email');
           setTimeout(() => {
-            navigate("/signin");
+            navigate('/signin');
           }, 1500);
+        } else {
+          const errorMsg = response.message || "Invalid verification code. Please try again.";
+          setError(errorMsg);
+          setCode(["", "", "", "", "", ""]);
+          inputRefs.current[0]?.focus();
+          showToast(`❌ ${errorMsg}`, "error");
         }
       } else {
-        const errorMsg = response.message || "Invalid verification code. Please try again.";
-        setError(errorMsg);
-        setCode(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-        showToast(`❌ ${errorMsg}`, "error");
+        // Không có email nào: báo lỗi
+        setError('No verification context found. Please start from the correct flow.');
+        showToast('❌ No verification context found.', 'error');
       }
     } catch (error: any) {
       console.error('Verification error:', error);
@@ -150,7 +155,7 @@ export default function VerifyCodeForm() {
 
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
-    <div className="w-full max-w-md pt-10 mx-auto">
+      <div className="w-full max-w-md pt-10 mx-auto">
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -163,10 +168,14 @@ export default function VerifyCodeForm() {
         <div className="text-center">
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Verify Code
+              {resetEmail ? 'Reset Password: Enter OTP' : verifyEmail ? 'Verify Email: Enter Code' : 'Verify Code'}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter the 6-digit code sent to your email
+              {resetEmail
+                ? 'Enter the OTP code sent to your email to reset your password.'
+                : verifyEmail
+                ? 'Enter the verification code sent to your email to activate your account.'
+                : 'Enter the 6-digit code sent to your email.'}
             </p>
             {/* <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               {email}
