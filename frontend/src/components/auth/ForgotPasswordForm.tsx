@@ -76,23 +76,21 @@ export default function ForgotPasswordForm() {
     }
   };
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 bg-white dark:bg-slate-900">
+    <div className="flex flex-col flex-1 justify-center items-center min-h-screen">
+      <div className="w-full max-w-md pt-10 mx-auto">
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        >
+          <ChevronLeftIcon className="size-5" />
+          Back to home
+        </Link>
+      </div>
 
-     {/* Back to home link */}
-     <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
-       <Link
-         to="/"
-         className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-       >
-         <ChevronLeftIcon className="size-5" />
-         Back to home
-       </Link>
-     </div>
-
-      <div className="w-full max-w-sm">
-        <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-transparent rounded-xl shadow-lg p-8 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center justify-center w-20 h-20 rounded-full bg-blue-50">
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+        <div>
+          <div className="mb-5 sm:mb-8 flex justify-center w-full">
+            <div className="flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mx-auto">
               {/* mail icon */}
               <svg
                 width="34"
@@ -100,14 +98,14 @@ export default function ForgotPasswordForm() {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-blue-600"
+                className="text-blue-600 dark:text-blue-400"
               >
-                <path d="M3 8.5L12 13L21 8.5" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 8.5L12 13L21 8.5" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
-          <div className="mb-4">
+          <div className="mb-4 text-center">
             <h1 className="mb-2 font-semibold text-gray-900 dark:text-white text-2xl">
               {success ? "Check Your Email!" : "Forgot Password?"}
             </h1>
@@ -139,7 +137,6 @@ export default function ForgotPasswordForm() {
                       </p>
                     )}
                   </div>
-
                   {/* Error Message */}
                   {errors.general && (
                     <div className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
@@ -149,7 +146,6 @@ export default function ForgotPasswordForm() {
                       <span className="font-medium">{errors.general}</span>
                     </div>
                   )}
-
                   <div>
                     <button
                       type="submit"
@@ -184,7 +180,6 @@ export default function ForgotPasswordForm() {
               </form>
             </div>
           )}
-
           {success && (
             <div className="space-y-4">
               <div className="p-4 bg-green-100 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
@@ -202,16 +197,16 @@ export default function ForgotPasswordForm() {
               </p>
             </div>
           )}
-          <div className="mt-6">
+          <div className="mt-6 text-center">
             <Link to="/signin" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
               <svg className="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18l-6-6 6-6" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15 18l-6-6 6-6" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Back to Login
             </Link>
           </div>
         </div>
       </div>
-    </div>
+  </div >
   );
 }
