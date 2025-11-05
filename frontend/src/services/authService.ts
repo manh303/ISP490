@@ -32,6 +32,10 @@ interface NormalizedLogin {
 }
 
 class AuthService {
+  async forgotPassword(email: string) {
+    const payload = { email: email.trim() };
+    return await this.call('/api/v1/auth/forgot-password', { method: 'POST', body: JSON.stringify(payload) });
+  }
   private baseURL: string;
   private token: string | null;
 

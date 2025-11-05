@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import Input from "../form/input/InputField";
-import authService from "../../services/authService";
+// import authService from "../../services/authService";
 import { useToast } from "../../contexts/ToastContext";
 import { ChevronLeftIcon } from "../../icons";
+import { authAPI } from "../../services/api";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -37,16 +38,16 @@ export default function ForgotPasswordForm() {
     try {
       showToast("Sending reset code...", "info", 2000);
 
-      const response = await authService.forgotPassword({ email });
+      const response = await authAPI.forgotPassword({ email });
 
       if (response.success) {
         setSuccess(true);
-        showToast(`✅ ${response.message}`, "success", 6000);
+        showToast(`✅ ${response.message}`, "success", 2000);
 
-        // Auto-redirect to sign in after showing success message
-        setTimeout(() => {
-          navigate('/signin');
-        }, 3000);
+        sessionStorage.setItem('reset_email', email);
+
+        // Chuyển sang trang verify-code
+        navigate(`/verify-code`);
       } else {
         setErrors({ email: "", general: response.message || "Failed to send reset code. Please try again." });
         showToast("❌ Failed to send reset code", "error");
