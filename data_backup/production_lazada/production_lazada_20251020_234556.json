@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "crawl_timestamp": "2025-10-20T23:45:56.330933",
+    "crawler_version": "production_v1.0",
+    "total_products": 2,
+    "products_with_prices": 0,
+    "statistics": {
+      "start_time": "2025-10-20 23:45:06.906222",
+      "products_found": 2,
+      "products_with_prices": 0,
+      "products_with_ratings": 0,
+      "pages_processed": 1,
+      "categories_processed": 1,
+      "price_extraction_attempts": 2,
+      "successful_price_extractions": 0
+    }
+  },
+  "products": [
+    {
+      "url": "https://www.lazada.vn/products/pdp-i3218897360.html",
+      "product_id": "5a3b9150-47a2-4ac5-95e9-018ba44a6f38",
+      "name": "Điện thoại thông minh POCO C75 (6+128GB | 8+256GB) | Màn hình 6,88\" | Pin 5160mAh | Camera kép 50MP AI",
+      "price": 0.0,
+      "rating": null,
+      "images": [
+        "https://img.lazcdn.com/us/lzd_seller_ai_business/seller/ai/222388bb-cb8c-494e-93d5-0138f0d2cb93.png_200x200q80.avif"
+      ],
+      "brand": null,
+      "category": "Điện Thoại Di Động",
+      "seller_name": null,
+      "description": null,
+      "availability": true,
+      "crawl_timestamp": "2025-10-20 23:45:36.152823",
+      "platform": "lazada_vn"
+    },
+    {
+      "url": "https://www.lazada.vn/products/pdp-i3216375050.html",
+      "product_id": "fdf2b007-1818-4476-b2b4-50122139b9d6",
+      "name": "Điện thoại thông minh REDMI Note 14 Pro+ 5G (8+256GB) | Màn hình 6.67\" | Snap 7S Gen 3 | Camera AI 200MP",
+      "price": 0.0,
+      "rating": null,
+      "images": [],
+      "brand": null,
+      "category": "Điện Thoại Di Động",
+      "seller_name": null,
+      "description": null,
+      "availability": true,
+      "crawl_timestamp": "2025-10-20 23:45:43.865628",
+      "platform": "lazada_vn"
+    }
+  ]
+}
