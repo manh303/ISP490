@@ -18,14 +18,8 @@ export default function ResetPasswordForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [tokenError, setTokenError] = useState("");
   
-  const { token } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-
-  // Get token from URL params or search params
-  const resetToken = token || searchParams.get('token');
-
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
@@ -54,17 +48,23 @@ export default function ResetPasswordForm() {
     setTokenError("");
 
     try {
-      if (!resetToken) {
-        setTokenError("No reset token found. Please request a new password reset.");
+      // Lấy email và otp từ sessionStorage
+      const email = sessionStorage.getItem('reset_email') || '';
+      const otp = sessionStorage.getItem('reset_otp') || '';
+
+      if (!email || !otp) {
+        setTokenError('Missing email or OTP. Please go back and verify again.');
+        showToast('❌ Missing email or OTP', 'error');
+        setIsLoading(false);
         return;
       }
 
       showToast("Resetting your password...", "info", 2000);
 
       const response = await authAPI.resetPassword({
-        token: resetToken,
-        new_password: formData.password,
-        confirm_password: formData.confirmPassword
+        email,
+        otp,
+        new_password: formData.password
       });
 
       if (response.success) {
@@ -73,7 +73,7 @@ export default function ResetPasswordForm() {
 
         // Redirect to sign in after 3 seconds
         setTimeout(() => {
-          navigate("/signin");
+          navigate("/password-reset-success");
         }, 3000);
       } else {
         setTokenError(response.message || "Password reset failed. Please try again.");
@@ -136,62 +136,7 @@ export default function ResetPasswordForm() {
   }, [formData.password]);
 
   // Show error if token is missing
-  if (!resetToken) {
-    return (
-      <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
-        <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
-          <Link
-            to="/"
-            className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-          >
-            <ChevronLeftIcon className="size-5" />
-            Back to home
-          </Link>
-        </div>
-        <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto text-center">
-          <div className="mb-5">
-            <div className="flex justify-center mb-4">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20">
-                <svg
-                  className="w-8 h-8 text-red-600 dark:text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Invalid Reset Link
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              This password reset link is invalid or has expired.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <Link
-              to="/forgot-password"
-              className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
-            >
-              Request New Reset Link
-            </Link>
-            <Link
-              to="/signin"
-              className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
-            >
-              Back to Sign In
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ...không cần kiểm tra token nữa...
 
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
