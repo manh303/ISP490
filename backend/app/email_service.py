@@ -27,8 +27,8 @@ class EmailConfig:
     """Email configuration settings"""
     smtp_server: str = "smtp.gmail.com"
     smtp_port: int = 587
-    sender_email: str = os.getenv("SMTP_USERNAME", "your-email@gmail.com")
-    sender_password: str = os.getenv("SMTP_PASSWORD", "your-app-password")
+    sender_email: str = os.getenv("SMTP_USERNAME", "manhndhe173383@fpt.edu.vn")
+    sender_password: str = os.getenv("SMTP_PASSWORD", "gfwu cmmg zptl ucox")
     sender_name: str = "DSS E-commerce"
 
     # OTP settings
