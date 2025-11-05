@@ -1,4 +1,4 @@
-import { Card } from ".../../../components/ui/figma/card";
+import { Card } from "../../../../components/ui/figma/card";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { dashboardData, pieChartData } from "../../data/analystData";
 
@@ -66,7 +66,7 @@ export function VisualizationSection() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  // label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"

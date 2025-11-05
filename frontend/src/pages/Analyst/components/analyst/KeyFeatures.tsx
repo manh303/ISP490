@@ -1,4 +1,4 @@
-import { Card } from ".../../../components/ui/figma/card";
+import { Card } from "../../../../components/ui/figma/card";
 import { LayoutDashboard, Lightbulb, FileDown } from "lucide-react";
 import { features } from "../../data/analystData";
 
