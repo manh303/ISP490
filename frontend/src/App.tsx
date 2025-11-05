@@ -38,8 +38,20 @@ import { HomePage } from "./pages/Publics/HomePage.js";
 import { SendMessagePage } from "./pages/Publics/SendMessagePage.js";
 import { ExplorePage } from "./pages/Publics/ExplorePage.js";
 import AdminPage from "./pages/Admin/AdminPage.js";
+import AdminUserManagement from "./pages/Admin/AdminUserManagement";
 import AnalystPage from "./pages/Analyst/AnalystPage.js";
 import CustomerPage from "./pages/Customer/CustomerPage.js";
+import { Dashboard } from "./pages/Publics/Dashboard.js";
+import UserDetails from "./components/admin/UserDetails";
+import { useParams } from "react-router";
+import DeletedUsersList from "./components/admin/DeletedUsersList.js";
+
+function UserDetailsWrapper() {
+  const { userId } = useParams();
+  const id = userId ? Number(userId) : null;
+  if (id === null || isNaN(id)) return <div>Invalid user ID</div>;
+  return <UserDetails userId={id} onBack={() => window.history.back()} />;
+}
 export type Page = "home" | "login" | "register" | "forgot-password" | "change-password" | "dashboard" | "scenario" | "revenue" | "forecast" | "operation" | "about" | "solutions" | "contact" | "send-message" | "explore";
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -135,8 +147,8 @@ export default function App() {
               }
             >
               {/* Dashboard routes - all protected */}
-              <Route path="/dashboard" element={<RoleBasedDashboard />} />
-              <Route path="/dashboard/vietnam-electronics" element={<VietnamElectronicsDashboard />} />
+              {/* <Route path="/dashboard" element={<RoleBasedDashboard />} />
+              <Route path="/dashboard/vietnam-electronics" element={<VietnamElectronicsDashboard />} /> */}
               <Route path="/dss" element={<DSSPage />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/calendar" element={<Calendar />} />
@@ -179,6 +191,10 @@ export default function App() {
                <Route path="/analyst-home" element={<AnalystPage />} />
                <Route path="/customer-home" element={<CustomerPage />} />
                <Route path="/admin-home" element={<AdminPage />} />
+               <Route path="/dashboard" element={<DashboardLayout><Dashboard navigateTo={navigateTo} onLogout={handleLogout} /></DashboardLayout>} />
+               <Route path="/admin/users" element={<AdminUserManagement />} />
+              <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => {}} />} />
+               <Route path="/user/:userId" element={<UserDetailsWrapper />} />
             </Route>
 
             {/* Auth Layout */}
