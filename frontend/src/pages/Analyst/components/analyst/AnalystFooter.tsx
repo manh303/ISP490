@@ -1,4 +1,4 @@
-import { Separator } from ".../../../components/ui/figma/separator";
+import { Separator } from "../../../../components/ui/figma/separator";
 import { BarChart3, Mail, MapPin, Phone } from "lucide-react";
 
 export function AnalystFooter() {

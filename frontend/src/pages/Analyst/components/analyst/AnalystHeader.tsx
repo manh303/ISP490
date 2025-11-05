@@ -1,4 +1,4 @@
-import { Button } from ".../../../components/ui/figma/button";
+import { Button } from "../../../../components/ui/figma/button";
 import { BarChart3 } from "lucide-react";
 
 export function AnalystHeader() {
