@@ -105,9 +105,19 @@ export default function VerifyCodeForm() {
 
       if (response.success && response.user_created) {
         showToast(`✅ ${response.message}`, "success", 3000);
-        setTimeout(() => {
-          navigate("/signin");
-        }, 1500);
+        // Nếu có reset_email trong sessionStorage thì đây là verify cho reset password
+        const resetEmail = sessionStorage.getItem('reset_email');
+        if (resetEmail) {
+          // Lưu otp vào sessionStorage để dùng cho reset password
+          sessionStorage.setItem('reset_otp', verificationCode);
+          // Chuyển sang trang reset-password
+          navigate('/reset-password');
+        } else {
+          // Trường hợp verify email thông thường
+          setTimeout(() => {
+            navigate("/signin");
+          }, 1500);
+        }
       } else {
         const errorMsg = response.message || "Invalid verification code. Please try again.";
         setError(errorMsg);
