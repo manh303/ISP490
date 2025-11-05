@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Mobiles & Tablets",
+    "url": "https://www.lazada.vn/dien-thoai-may-tinh-bang/",
+    "subcategories": [
+      {"name": "Smartphones", "url": "https://www.lazada.vn/dien-thoai/"},
+      {"name": "Tablets", "url": "https://www.lazada.vn/may-tinh-bang/"}
+    ]
+  },
+  {
+    "name": "Computers & Laptops",
+    "url": "https://www.lazada.vn/may-tinh-laptop/",
+    "subcategories": [
+      {"name": "Laptops", "url": "https://www.lazada.vn/laptop/"},
+      {"name": "Desktops", "url": "https://www.lazada.vn/may-tinh-de-ban/"}
+    ]
+  }
+]

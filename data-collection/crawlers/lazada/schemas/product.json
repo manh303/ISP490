@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "url": {"type": "string"},
+    "price": {
+      "type": "object",
+      "properties": {
+        "current": {"type": "number"},
+        "original": {"type": "number"},
+        "currency": {"type": "string"}
+      }
+    },
+    "rating": {
+      "type": "object",
+      "properties": {
+        "score": {"type": "number"},
+        "count": {"type": "integer"}
+      }
+    },
+    "seller": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "url": {"type": "string"}
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "category": {"type": "string"},
+    "brand": {"type": "string"},
+    "sold_count": {"type": "integer"},
+    "description": {"type": "string"},
+    "specifications": {"type": "object"},
+    "crawled_at": {"type": "string", "format": "date-time"},
+    "source": {"type": "string", "enum": ["lazada"]}
+  },
+  "required": ["id", "name", "url", "price", "source", "crawled_at"]
+}
