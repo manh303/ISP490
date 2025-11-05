@@ -712,7 +712,7 @@ class EnhancedMultiPlatformCrawler:
             for category_name, url in categories['tiki'].items():
                 self.log(f"Starting Tiki {category_name}")
                 try:
-                    products = self.crawl_tiki_pages(url, category_name, max_pages=3)
+                    products = self.crawl_tiki_pages(url, category_name, max_pages=40)
                     all_products.extend(products)
                     self.results['categories_crawled'].append(f"tiki_{category_name}")
 
