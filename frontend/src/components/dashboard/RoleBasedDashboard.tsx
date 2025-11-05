@@ -28,15 +28,14 @@ function normalizeRole(user: any): 'admin' | 'analyst' | 'customer' {
 function alias(role: string): 'admin' | 'analyst' | 'customer' {
   switch (role) {
     case 'super_admin':
-    case 'sysadmin':
-    case 'administrator':
+    case 'superadmin':
     case 'admin':
+    case 'manager':
       return 'admin';
     case 'analyst':
-    case 'bi':
-    case 'data_analyst':
       return 'analyst';
     case 'customer':
+    case 'viewer':
     case 'user':
     default:
       return 'customer';
