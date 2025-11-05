@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Điện thoại",
+    "url": "https://fptshop.com.vn/dien-thoai",
+    "subcategories": [
+      {"name": "iPhone", "url": "https://fptshop.com.vn/dien-thoai/apple-iphone"},
+      {"name": "Samsung", "url": "https://fptshop.com.vn/dien-thoai/samsung"}
+    ]
+  },
+  {
+    "name": "Laptop",
+    "url": "https://fptshop.com.vn/may-tinh-xach-tay",
+    "subcategories": [
+      {"name": "Laptop Gaming", "url": "https://fptshop.com.vn/may-tinh-xach-tay/laptop-gaming"},
+      {"name": "Laptop Văn Phòng", "url": "https://fptshop.com.vn/may-tinh-xach-tay/laptop-van-phong"}
+    ]
+  }
+]
