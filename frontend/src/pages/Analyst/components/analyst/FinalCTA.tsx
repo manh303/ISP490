@@ -1,4 +1,4 @@
-import { Button } from ".../../../components/ui/figma/button";
+import { Button } from "../../../../components/ui/figma/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 export function FinalCTA() {

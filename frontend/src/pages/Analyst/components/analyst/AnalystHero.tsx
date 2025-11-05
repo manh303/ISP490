@@ -1,5 +1,5 @@
-import { Button } from ".../../../components/ui/figma/button";
-import { Card } from ".../../../components/ui/figma/card";
+import { Button } from "../../../../components/ui/figma/button";
+import { Card } from "../../../../components/ui/figma/card";
 import { ArrowRight, TrendingUp, PieChart, BarChart3, Activity } from "lucide-react";
 
 export function AnalystHero() {
