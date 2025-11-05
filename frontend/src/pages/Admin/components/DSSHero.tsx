@@ -1,6 +1,6 @@
 import { Button } from "../../../components/ui/figma/button";
 import { ArrowRight } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from '../../../components/figma/ImageWithFallback';
 
 export function DSSHero() {
   return (

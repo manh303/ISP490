@@ -36,6 +36,9 @@ import { ContactPage } from "./pages/Publics/ContactPage.js";
 import { HomePage } from "./pages/Publics/HomePage.js";
 import { SendMessagePage } from "./pages/Publics/SendMessagePage.js";
 import { ExplorePage } from "./pages/Publics/ExplorePage.js";
+import AdminPage from "./pages/Admin/AdminPage.js";
+import AnalystPage from "./pages/Analyst/AnalystPage.js";
+import CustomerPage from "./pages/Customer/CustomerPage.js";
 export type Page = "home" | "login" | "register" | "forgot-password" | "change-password" | "dashboard" | "scenario" | "revenue" | "forecast" | "operation" | "about" | "solutions" | "contact" | "send-message" | "explore";
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -172,6 +175,9 @@ export default function App() {
               <Route path="/contact" element={<ContactPage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
               <Route path="/send-message" element={<SendMessagePage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
               <Route path="/explore" element={<ExplorePage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
+               <Route path="/analyst-home" element={<AnalystPage />} />
+               <Route path="/customer-home" element={<CustomerPage />} />
+               <Route path="/admin-home" element={<AdminPage />} />
             </Route>
 
             {/* Auth Layout */}
