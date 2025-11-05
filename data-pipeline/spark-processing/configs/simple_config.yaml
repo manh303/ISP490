@@ -1,0 +1,52 @@
+# Simple Spark Processing Configuration
+
+spark:
+  app_name: "SimpleEcommerceProcessor"
+  master: "local[*]"
+  configs:
+    spark.sql.adaptive.enabled: "true"
+    spark.sql.adaptive.coalescePartitions.enabled: "true"
+
+data_sources:
+  tiki:
+    json_path: "../../../data-collection/data/progress_dien_thoai_1761328038.json"
+    platform: "tiki"
+
+  lazada:
+    json_path: "../../../data-collection/outputs/fixed_lazada_products.json"
+    csv_path: "../../../data-collection/outputs/fixed_lazada_products.csv"
+    platform: "lazada"
+
+  fptshop:
+    json_path: "data-collection/crawlers/fptshop/runners/*.json"
+    platform: "fptshop"
+
+  cellphones:
+    json_path: "data-collection/data/cellphones_*.jsonl"
+    platform: "cellphones"
+
+database:
+  # Database connection cho PostgreSQL
+  postgresql:
+    url: "jdbc:postgresql://localhost:5432/ecommerce"
+    properties:
+      user: "dss_user"
+      password: "dss_password_123"
+      driver: "org.postgresql.Driver"
+    tables:
+      products: "products"
+      categories: "categories"
+      reviews: "reviews"
+
+output:
+  base_path: "outputs/simple_processing"
+  formats: ["parquet", "json", "csv"]
+  partitions:
+    - "platform"
+    - "category"
+
+processing:
+  remove_duplicates: true
+  handle_outliers: true
+  text_cleaning: true
+  feature_engineering: true
