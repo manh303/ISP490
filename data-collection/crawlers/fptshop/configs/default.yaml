@@ -1,0 +1,24 @@
+# FPTShop crawler configuration
+crawler:
+  name: fptshop
+  rate_limit: 2  # seconds between requests
+  timeout: 30
+  retries: 3
+
+headers:
+  User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+  Accept-Language: "vi-VN,vi;q=0.9,en;q=0.8"
+  Accept-Encoding: "gzip, deflate"
+  Connection: "keep-alive"
+
+seeds:
+  categories:
+    - "dien-thoai"
+    - "laptop"
+    - "may-tinh-bang"
+    - "dong-ho-thong-minh"
+
+pagination:
+  max_pages: 50
+  items_per_page: 20
