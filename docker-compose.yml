@@ -147,6 +147,8 @@ services:
     volumes:
       - ./data:/app/data
       - ./streaming/spark-jobs:/app/streaming
+      - ./data-collection/data:/app/raw_data
+      - ./data-pipeline/scipts/spark_processing:/app/scripts
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
     networks:
@@ -179,6 +181,8 @@ services:
     volumes:
       - ./data:/app/data
       - ./streaming/spark-jobs:/app/streaming
+      - ./data-collection/data:/app/raw_data
+      - ./data-pipeline/scipts/spark_processing:/app/scripts
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
     networks:
@@ -206,6 +210,8 @@ services:
     volumes:
       - ./data:/app/data
       - ./streaming/spark-jobs:/app/streaming
+      - ./data-collection/data:/app/raw_data
+      - ./data-pipeline/scipts/spark_processing:/app/scripts
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
     networks:
