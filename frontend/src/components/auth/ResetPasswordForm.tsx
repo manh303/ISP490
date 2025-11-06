@@ -6,6 +6,11 @@ import { authAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function ResetPasswordForm() {
+  // Kiểm tra email và otp trong sessionStorage
+  const email = sessionStorage.getItem('reset_email') || '';
+  const otp = sessionStorage.getItem('reset_otp') || '';
+
+  const missingInfo = !email || !otp;
   const [formData, setFormData] = useState({
     password: "",
     confirmPassword: ""
@@ -18,14 +23,8 @@ export default function ResetPasswordForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [tokenError, setTokenError] = useState("");
   
-  const { token } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-
-  // Get token from URL params or search params
-  const resetToken = token || searchParams.get('token');
-
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
@@ -54,17 +53,23 @@ export default function ResetPasswordForm() {
     setTokenError("");
 
     try {
-      if (!resetToken) {
-        setTokenError("No reset token found. Please request a new password reset.");
+      // Lấy email và otp từ sessionStorage
+      const email = sessionStorage.getItem('reset_email') || '';
+      const otp = sessionStorage.getItem('reset_otp') || '';
+
+      if (!email || !otp) {
+        setTokenError('Missing email or OTP. Please go back and verify again.');
+        showToast('❌ Missing email or OTP', 'error');
+        setIsLoading(false);
         return;
       }
 
       showToast("Resetting your password...", "info", 2000);
 
       const response = await authAPI.resetPassword({
-        token: resetToken,
-        new_password: formData.password,
-        confirm_password: formData.confirmPassword
+        email,
+        otp,
+        new_password: formData.password
       });
 
       if (response.success) {
@@ -73,7 +78,7 @@ export default function ResetPasswordForm() {
 
         // Redirect to sign in after 3 seconds
         setTimeout(() => {
-          navigate("/signin");
+          navigate("/password-reset-success");
         }, 3000);
       } else {
         setTokenError(response.message || "Password reset failed. Please try again.");
@@ -85,6 +90,9 @@ export default function ResetPasswordForm() {
 
       let errorMessage = 'Password reset failed. Please try again.';
       if (error?.message) {
+              // Xóa email và otp khỏi sessionStorage sau khi reset thành công
+              sessionStorage.removeItem('reset_email');
+              sessionStorage.removeItem('reset_otp');
         errorMessage = error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
@@ -136,7 +144,7 @@ export default function ResetPasswordForm() {
   }, [formData.password]);
 
   // Show error if token is missing
-  if (!resetToken) {
+  if (missingInfo) {
     return (
       <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
         <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -168,10 +176,10 @@ export default function ResetPasswordForm() {
               </div>
             </div>
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Invalid Reset Link
+              Missing Verification Info
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              This password reset link is invalid or has expired.
+              Email or OTP is missing. Please go back and verify your email again.
             </p>
           </div>
           <div className="space-y-4">
@@ -179,7 +187,7 @@ export default function ResetPasswordForm() {
               to="/forgot-password"
               className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
             >
-              Request New Reset Link
+              Go to Forgot Password
             </Link>
             <Link
               to="/signin"
