@@ -241,7 +241,8 @@ class UserManagementService:
         await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
         
         # Assign new role
-        await self._assign_role(user_id, role_code)lf.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+        await self._assign_role(user_id, role_code)
+        await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
         
         # Assign new role
         await self._assign_role(user_id, role_code)
