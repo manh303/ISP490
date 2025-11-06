@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 /** API root (ví dụ: http://localhost:8000) */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ecommerce-dss-backend.onrender.com/';
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({
@@ -200,7 +200,7 @@ export const authAPI = {
   },
 
   logout: async (refreshToken: string): Promise<ApiResponse> => {
-    const res = await api.post('/auth/logout', { refresh_token: refreshToken });
+    const res = await api.post('/auth/signout', { refresh_token: refreshToken });
     Cookies.remove('access_token');
     Cookies.remove('refresh_token');
     return res.data;
@@ -251,6 +251,9 @@ export const authAPI = {
 
   signup: async (data: SignupRequest) =>
     (await api.post('/v1/auth/signup', data)).data,
+
+  signout: async (refreshToken: string) =>
+    (await api.post('/v1/auth/signout', { refresh_token: refreshToken })).data,
 
   verifyEmail: async (data: VerifyEmailRequest) =>
     (await api.post('/v1/auth/verify-email', data)).data,

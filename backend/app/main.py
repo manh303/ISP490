@@ -599,6 +599,10 @@ class ResetPasswordResponse(BaseModel):
     success: bool
     message: str
 
+class SignOutResponse(BaseModel):
+    success: bool
+    message: str
+
 # Define valid users for authentication - 3 main roles
 VALID_USERS = {
     "admin@dss.com": {
@@ -1031,6 +1035,40 @@ async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = De
 
 
 
+@app.post(f"{settings.API_V1_PREFIX}/auth/signout", response_model=SignOutResponse)
+async def signout(request: Request):
+    """Sign out user - invalidate token on client side"""
+    try:
+        # Check Authorization header
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            return SignOutResponse(
+                success=True,
+                message="Signed out successfully"
+            )
+
+        # Expect "Bearer <token>"
+        try:
+            token = auth_header.split()[1]
+            payload = decode_access_token(token)
+            if payload:
+                user_email = payload.get("email", "unknown")
+                logger.info(f"User signed out: {user_email}")
+        except Exception:
+            pass  # Token invalid, but still return success
+
+        return SignOutResponse(
+            success=True,
+            message="Signed out successfully"
+        )
+
+    except Exception as e:
+        logger.error(f"Signout error: {e}")
+        return SignOutResponse(
+            success=True,
+            message="Signed out successfully"
+        )
+
 @app.get("/api/auth/profile")
 async def get_auth_profile(request: Request):
     """Get current user profile from token"""
@@ -1166,7 +1204,7 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "timestamp": datetime.now().isoformat(),
             "available_endpoints": [
                 "/", "/health", "/api/v1/status",
-                "/api/v1/auth/signin", "/api/v1/auth/signup", "/api/v1/auth/verify-email",
+                "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
                 "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
                 "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
             ]
