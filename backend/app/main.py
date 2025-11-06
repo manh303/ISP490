@@ -21,6 +21,7 @@ from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import uvicorn
 
@@ -82,7 +83,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a/ecommerce_dss")
+    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:69420@localhost:5432/ecommerce_dss")
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
@@ -211,18 +212,100 @@ db_manager = DatabaseManager()
 # ====================================
 # FASTAPI APPLICATION
 # ====================================
+from fastapi.openapi.utils import get_openapi
+from fastapi.security import HTTPBearer
+
 app = FastAPI(
-    title="Vietnam E-commerce DSS API ",
-    description="Essential APIs for DSS Dashboard and Authentication",
+    title="Vietnam E-commerce DSS API",
+    description="""
+    ## Vietnam E-commerce Decision Support System API
+    
+    ### 🔐 Authentication Required
+    **IMPORTANT**: Click the **🔒 Authorize** button below to authenticate!
+    
+    **Quick Start**:
+    1. **Easy Testing**: Use `/api/v1/test-admin/users` (no auth needed)
+    2. **With Auth**: Get token from `/api/v1/test-admin/get-token`
+    3. **Click 🔒 Authorize**: Enter `Bearer <your_token>`
+    
+    **Default Admin**: `admin@dss.com` / `admin123`
+    
+    ### 📋 User Management Features
+    - ✅ Create, Read, Update users
+    - ✅ Soft delete (move to deleted list)
+    - ✅ Restore from deleted list  
+    - ✅ Permanent delete (with confirmation)
+    - ✅ Role-based access control
+    """,
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    contact={
+        "name": "DSS API Support",
+        "email": "admin@dss.com"
+    }
 )
+
+# Add security scheme for Swagger UI
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Vietnam E-commerce DSS API",
+        version="2.0.0",
+        description=app.description,
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "HTTPBearer": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter: Bearer <your_token>"
+        }
+    }
+    # Add security to all admin endpoints
+    for path, path_item in openapi_schema["paths"].items():
+        if "/admin/" in path and path != "/api/v1/admin/test/admin-token":
+            for method, operation in path_item.items():
+                if method.lower() in ["get", "post", "put", "delete"]:
+                    operation["security"] = [{"HTTPBearer": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
 #     app.include_router(auth_router, prefix=f"{settings.API_V1_PREFIX}")
 #     logger.info("IAM routes included")
+
+# Include Admin router
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from api.v1.admin import router as admin_router
+    app.include_router(admin_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Admin routes included")
+except ImportError as e:
+    logger.warning(f"Admin routes not available: {e}")
+
+# Include Profile router
+try:
+    from api.v1.profile import router as profile_router
+    app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Profile routes included")
+except ImportError as e:
+    logger.warning(f"Profile routes not available: {e}")
+
+# Include Test Admin router
+try:
+    from api.v1.test_admin import router as test_admin_router
+    app.include_router(test_admin_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Test Admin routes included")
+except ImportError as e:
+    logger.warning(f"Test Admin routes not available: {e}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -950,10 +1033,7 @@ async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = De
         logger.error(f"Reset password error: {e}")
         raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
-@app.post(f"{settings.API_V1_PREFIX}/auth/signin", response_model=SignInResponse)
-async def auth_login_alias(request: SignInRequest, db: DatabaseManager = Depends(get_database)):
-    """Alias for signin - frontend compatibility"""
-    return await simple_signin(request, db)
+
 
 @app.post(f"{settings.API_V1_PREFIX}/auth/signout", response_model=SignOutResponse)
 async def signout(request: Request):
@@ -1123,9 +1203,10 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "path": str(request.url.path),
             "timestamp": datetime.now().isoformat(),
             "available_endpoints": [
-            "/", "/health", "/api/v1/status",
-            "/api/v1/auth/signin", "/api/v1/auth/signout", "/api/v1/auth/signup", "/api/v1/auth/verify-email",
-                "/api/v1/dss/dashboard", "/docs"
+                "/", "/health", "/api/v1/status",
+                "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
+                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
+                "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
             ]
         }
     )
