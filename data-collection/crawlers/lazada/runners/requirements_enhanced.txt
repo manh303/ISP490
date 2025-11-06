@@ -1,0 +1,39 @@
+# Enhanced Lazada Crawler Requirements
+# Core crawler dependencies
+selenium>=4.15.0
+webdriver-manager>=4.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Data processing and analysis
+pandas>=2.1.0
+numpy>=1.25.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# Text processing and NLP
+nltk>=3.8.1
+textblob>=0.17.1
+regex>=2023.10.3
+
+# Machine learning (optional)
+scikit-learn>=1.3.0
+scipy>=1.11.0
+
+# Data export formats
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Utilities
+python-dateutil>=2.8.0
+tqdm>=4.66.0
+colorama>=0.4.6
+
+# Optional: For advanced text analysis
+# langdetect>=1.0.9
+# wordcloud>=1.9.2
+
+# Optional: For database integration
+# pymongo>=4.6.0
+# psycopg2-binary>=2.9.0
+# sqlalchemy>=2.0.0

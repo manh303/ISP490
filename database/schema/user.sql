@@ -14,7 +14,7 @@ CREATE TABLE iam_user (
   mfa_secret     TEXT,                        -- nếu dùng TOTP
   created_at     TIMESTAMP NOT NULL,
   updated_at     TIMESTAMP NOT NULL
-);
+);3
 
 CREATE TABLE iam_role (
   role_id     SERIAL PRIMARY KEY,
