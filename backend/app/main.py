@@ -896,7 +896,7 @@ class EmailService:
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
         self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
         self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
@@ -1366,17 +1366,11 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "path": str(request.url.path),
             "timestamp": datetime.now().isoformat(),
             "available_endpoints": [
-<<<<<<< HEAD
             "/", "/health", "/api/v1/status",
             "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
             "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
             "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
-=======
-                "/", "/health", "/api/v1/status",
-                "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
-                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
-                "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
->>>>>>> b5d51b58ac41a32af9f352c99355b9c9fcc384e0
+
             ]
         }
     )
