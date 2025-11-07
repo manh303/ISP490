@@ -1,6 +1,15 @@
 
 import React, { useState } from "react";
 import { userApi } from "../../services/userApi";
+import { Button } from '../../components/ui/figma/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/figma/select';
+
 interface CreateUserFormProps {
   onCreated: () => void;
 }
@@ -47,37 +56,42 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
   };
 
   return (
-    <form className="max-w-md mx-auto p-4 border rounded" onSubmit={handleSubmit}>
+    <form className="bg-white rounded-lg shadow border border-gray-200 max-w-md mx-auto p-6" onSubmit={handleSubmit}>
       <h2 className="text-xl font-semibold mb-4">Tạo người dùng mới</h2>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {success && <p className="text-green-500 mb-2">{success}</p>}
-      <div className="mb-2">
-        <label>Họ tên</label>
-        <input className="w-full border p-2" value={fullName} onChange={e => setFullName(e.target.value)} required />
+      {error && <div className="text-red-500 mb-2">{error}</div>}
+      {success && <div className="text-green-500 mb-2">{success}</div>}
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-1">Họ tên</label>
+        <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" value={fullName} onChange={e => setFullName(e.target.value)} required />
       </div>
-      <div className="mb-2">
-        <label>Email</label>
-        <input className="w-full border p-2" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-1">Email</label>
+        <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
       </div>
-      <div className="mb-2">
-        <label>Số điện thoại</label>
-        <input className="w-full border p-2" value={phone} onChange={e => setPhone(e.target.value)} required />
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-1">Số điện thoại</label>
+        <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" value={phone} onChange={e => setPhone(e.target.value)} required />
       </div>
-      <div className="mb-2">
-        <label>Vai trò</label>
-        <select className="w-full border p-2" value={roleCode} onChange={e => setRoleCode(e.target.value)} required>
-          {ROLE_OPTIONS.map(opt => (
-            <option key={opt.code} value={opt.code}>{opt.name}</option>
-          ))}
-        </select>
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-1">Vai trò</label>
+        <Select value={roleCode} onValueChange={setRoleCode}>
+          <SelectTrigger className="w-full border border-gray-300 bg-white">
+            <SelectValue placeholder="Chọn vai trò" />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLE_OPTIONS.map(opt => (
+              <SelectItem key={opt.code} value={opt.code}>{opt.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-      <div className="mb-2">
-        <label>Mật khẩu</label>
-        <input className="w-full border p-2" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+      <div className="mb-6">
+        <label className="block text-gray-700 mb-1">Mật khẩu</label>
+        <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
       </div>
-      <button className="px-4 py-2 bg-green-500 text-white rounded" type="submit" disabled={loading}>
+      <Button className="w-full" type="submit" disabled={loading}>
         {loading ? "Đang tạo..." : "Tạo người dùng"}
-      </button>
+      </Button>
     </form>
   );
 }
