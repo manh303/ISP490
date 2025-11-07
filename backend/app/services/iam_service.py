@@ -8,7 +8,7 @@ import secrets
 import datetime
 from typing import Optional, Dict, List, Any
 import bcrypt
-import jwt
+# JWT removed
 from fastapi import HTTPException
 import logging
 
@@ -204,107 +204,7 @@ class IAMService:
         except Exception as e:
             logger.error(f"Update last login error: {e}")
 
-    async def create_access_token(self, user: Dict[str, Any]) -> str:
-        """Create JWT access token"""
-        try:
-            payload = {
-                'user_id': user['user_id'],
-                'email': user['email'],
-                'roles': [role['role_code'] for role in user.get('roles', [])],
-                'permissions': [perm['perm_code'] for perm in user.get('permissions', [])],
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=self.token_expire_hours),
-                'iat': datetime.datetime.utcnow()
-            }
-
-            token = jwt.encode(payload, self.secret_key, algorithm=self.jwt_algorithm)
-            return token
-
-        except Exception as e:
-            logger.error(f"Create access token error: {e}")
-            raise HTTPException(status_code=500, detail="Failed to create token")
-
-    def verify_access_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """Verify JWT access token"""
-        try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.jwt_algorithm])
-            user_id = payload.get('user_id')
-
-            if not user_id:
-                return None
-
-            # Return minimal user data from token for quick verification
-            return {
-                'user_id': user_id,
-                'email': payload.get('email'),
-                'roles': [{'role_code': role} for role in payload.get('roles', [])],
-                'permissions': [{'perm_code': perm} for perm in payload.get('permissions', [])],
-                'token_valid': True
-            }
-
-        except jwt.ExpiredSignatureError:
-            return None
-        except jwt.InvalidTokenError:
-            return None
-        except Exception as e:
-            logger.error(f"Verify access token error: {e}")
-            return None
-
-    async def create_refresh_token(self, user_id: int) -> str:
-        """Create refresh token and store in database"""
-        try:
-            # Generate refresh token
-            refresh_token = secrets.token_urlsafe(32)
-            refresh_token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-
-            # Store in database
-            session_query = """
-                INSERT INTO iam_user_session (user_id, issued_at, expires_at, refresh_token_hash)
-                VALUES ($1, $2, $3, $4)
-                RETURNING session_id
-            """
-            expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)  # 7 days
-
-            result = await self.db.execute_query(session_query, (user_id, datetime.datetime.utcnow(), expires_at, refresh_token_hash))
-
-            return refresh_token
-
-        except Exception as e:
-            logger.error(f"Create refresh token error: {e}")
-            raise HTTPException(status_code=500, detail="Failed to create refresh token")
-
-    async def verify_refresh_token(self, refresh_token: str) -> Optional[int]:
-        """Verify refresh token and return user_id"""
-        try:
-            refresh_token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-
-            query = """
-                SELECT user_id FROM iam_user_session
-                WHERE refresh_token_hash = $1
-                AND expires_at > $2
-                AND revoked_at IS NULL
-            """
-            result = await self.db.execute_query(query, (refresh_token_hash, datetime.datetime.utcnow()))
-
-            return result[0]['user_id'] if result else None
-
-        except Exception as e:
-            logger.error(f"Verify refresh token error: {e}")
-            return None
-
-    async def revoke_refresh_token(self, refresh_token: str):
-        """Revoke refresh token"""
-        try:
-            refresh_token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-
-            query = """
-                UPDATE iam_user_session
-                SET revoked_at = $1
-                WHERE refresh_token_hash = $2
-            """
-            await self.db.execute_query(query, (datetime.datetime.utcnow(), refresh_token_hash))
-
-        except Exception as e:
-            logger.error(f"Revoke refresh token error: {e}")
+    # Token functionality removed - using session-based auth
 
     async def assign_role_to_user(self, user_id: int, role_code: str):
         """Assign role to user"""
@@ -426,78 +326,7 @@ class IAMService:
             logger.error(f"Get user by ID error: {e}")
             return None
 
-    async def create_password_reset_token(self, user_id: int) -> str:
-        """Create password reset token for user"""
-        try:
-            # Generate reset token
-            reset_token = secrets.token_urlsafe(32)
-            token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
-
-            # Store in database (valid for 1 hour)
-            query = """
-                INSERT INTO iam_password_reset_token (user_id, token_hash, expires_at)
-                VALUES ($1, $2, $3)
-                RETURNING token_id
-            """
-            expires_at = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-
-            result = await self.db.execute_query(query, (user_id, token_hash, expires_at))
-
-            return reset_token
-
-        except Exception as e:
-            logger.error(f"Create password reset token error: {e}")
-            raise HTTPException(status_code=500, detail="Failed to create password reset token")
-
-    async def reset_password_with_token(self, reset_token: str, new_password: str) -> Optional[Dict[str, Any]]:
-        """Reset password using reset token"""
-        try:
-            token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
-
-            # Verify token and get user
-            query = """
-                SELECT prt.user_id, u.email
-                FROM iam_password_reset_token prt
-                JOIN iam_user u ON prt.user_id = u.user_id
-                WHERE prt.token_hash = $1
-                AND prt.expires_at > $2
-                AND prt.used_at IS NULL
-            """
-            result = await self.db.execute_query(query, (token_hash, datetime.datetime.utcnow()))
-
-            if not result:
-                return None
-
-            user_data = result[0]
-            user_id = user_data['user_id']
-
-            # Hash new password
-            new_password_hash = await self.hash_password(new_password)
-
-            # Update password
-            update_query = """
-                UPDATE iam_user
-                SET password_hash = $1, updated_at = $2
-                WHERE user_id = $3
-            """
-            await self.db.execute_query(update_query, (new_password_hash, datetime.datetime.utcnow(), user_id))
-
-            # Mark token as used
-            mark_used_query = """
-                UPDATE iam_password_reset_token
-                SET used_at = $1
-                WHERE token_hash = $2
-            """
-            await self.db.execute_query(mark_used_query, (datetime.datetime.utcnow(), token_hash))
-
-            return {
-                'user_id': user_id,
-                'email': user_data['email']
-            }
-
-        except Exception as e:
-            logger.error(f"Reset password with token error: {e}")
-            raise HTTPException(status_code=500, detail="Failed to reset password")
+    # Password reset token functionality removed
 
     async def log_user_action(self, user_id: int, action: str, target_type: str = None, target_id: str = None, details: str = None):
         """Log user action for audit"""
