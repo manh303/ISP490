@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+// import DashboardLayout from "././layout/DashboardLayout";
+import { Dashboard } from "./pages/Publics/Dashboard";
 import { BrowserRouter as Router, Routes, Route } from "react-router";
 import Home from "./pages/Home";
 import PublicLayout from "./layout/PublicLayout";
@@ -41,11 +43,12 @@ import AdminPage from "./pages/Admin/AdminPage.js";
 import AdminUserManagement from "./pages/Admin/AdminUserManagement";
 import AnalystPage from "./pages/Analyst/AnalystPage.js";
 import CustomerPage from "./pages/Customer/CustomerPage.js";
-import { Dashboard } from "./pages/Publics/Dashboard.js";
+// import { Dashboard } from "./pages/Publics/Dashboard.js";
 import UserDetails from "./components/admin/UserDetails";
 import { useParams } from "react-router";
 import DeletedUsersList from "./components/admin/DeletedUsersList.js";
 
+// Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
   const { userId } = useParams();
   const id = userId ? Number(userId) : null;
@@ -142,18 +145,16 @@ export default function App() {
             <Route
               element={
                 <ProtectedRoute>
-                  <AppLayout />
+                  <DashboardLayout />
                 </ProtectedRoute>
               }
             >
-              {/* Dashboard routes - all protected */}
-              {/* <Route path="/dashboard" element={<RoleBasedDashboard />} />
-              <Route path="/dashboard/vietnam-electronics" element={<VietnamElectronicsDashboard />} /> */}
+              <Route path="/dashboard" element={<Dashboard navigateTo={navigateTo} onLogout={handleLogout} />} />
               <Route path="/dss" element={<DSSPage />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/blank" element={<Blank />} />
-
+              <Route path="/users" element={<AdminUserManagement />} />
               {/* Forms */}
               <Route path="/form-elements" element={<FormElements />} />
 
@@ -191,11 +192,13 @@ export default function App() {
                <Route path="/analyst-home" element={<AnalystPage />} />
                <Route path="/customer-home" element={<CustomerPage />} />
                <Route path="/admin-home" element={<AdminPage />} />
-               <Route path="/dashboard" element={<DashboardLayout><Dashboard navigateTo={navigateTo} onLogout={handleLogout} /></DashboardLayout>} />
                <Route path="/admin/users" element={<AdminUserManagement />} />
               <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => {}} />} />
                <Route path="/user/:userId" element={<UserDetailsWrapper />} />
             </Route>
+
+            {/* Standalone admin dashboard route, with DashboardLayout wrapper */}
+          
 
             {/* Auth Layout */}
             <Route path="/" element={<Home />} />
