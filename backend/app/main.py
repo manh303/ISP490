@@ -83,7 +83,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:69420@localhost:5432/ecommerce_dss")
+    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss")
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
@@ -213,63 +213,27 @@ db_manager = DatabaseManager()
 # FASTAPI APPLICATION
 # ====================================
 from fastapi.openapi.utils import get_openapi
-from fastapi.security import HTTPBearer
 
 app = FastAPI(
     title="Vietnam E-commerce DSS API",
-    description="""
-    ## Vietnam E-commerce Decision Support System API
-    
-    ### 🔐 Authentication Required
-    **IMPORTANT**: Click the **🔒 Authorize** button below to authenticate!
-    
-    **Quick Start**:
-    1. **Easy Testing**: Use `/api/v1/test-admin/users` (no auth needed)
-    2. **With Auth**: Get token from `/api/v1/test-admin/get-token`
-    3. **Click 🔒 Authorize**: Enter `Bearer <your_token>`
-    
-    **Default Admin**: `admin@dss.com` / `admin123`
-    
-    ### 📋 User Management Features
-    - ✅ Create, Read, Update users
-    - ✅ Soft delete (move to deleted list)
-    - ✅ Restore from deleted list  
-    - ✅ Permanent delete (with confirmation)
-    - ✅ Role-based access control
-    """,
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc",
-    contact={
-        "name": "DSS API Support",
-        "email": "admin@dss.com"
-    }
+    redoc_url="/redoc"
 )
 
-# Add security scheme for Swagger UI
+# Custom OpenAPI schema without security schemes
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="Vietnam E-commerce DSS API",
-        version="2.0.0",
+        title=app.title,
+        version=app.version,
         description=app.description,
         routes=app.routes,
     )
-    openapi_schema["components"]["securitySchemes"] = {
-        "HTTPBearer": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-            "description": "Enter: Bearer <your_token>"
-        }
-    }
-    # Add security to all admin endpoints
-    for path, path_item in openapi_schema["paths"].items():
-        if "/admin/" in path and path != "/api/v1/admin/test/admin-token":
-            for method, operation in path_item.items():
-                if method.lower() in ["get", "post", "put", "delete"]:
-                    operation["security"] = [{"HTTPBearer": []}]
+    # Remove any security schemes to hide Authorize button
+    if "components" in openapi_schema:
+        openapi_schema["components"].pop("securitySchemes", None)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
