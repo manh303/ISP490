@@ -21,6 +21,7 @@ from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import uvicorn
 
@@ -82,7 +83,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:dss_password_123@localhost:5432/ecommerce_dss")
+    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss")
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
@@ -211,18 +212,64 @@ db_manager = DatabaseManager()
 # ====================================
 # FASTAPI APPLICATION
 # ====================================
+from fastapi.openapi.utils import get_openapi
+
 app = FastAPI(
-    title="Vietnam E-commerce DSS API ",
-    description="Essential APIs for DSS Dashboard and Authentication",
+    title="Vietnam E-commerce DSS API",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc",
+    redoc_url="/redoc"
 )
+
+# Custom OpenAPI schema without security schemes
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    # Remove any security schemes to hide Authorize button
+    if "components" in openapi_schema:
+        openapi_schema["components"].pop("securitySchemes", None)
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
 #     app.include_router(auth_router, prefix=f"{settings.API_V1_PREFIX}")
 #     logger.info("IAM routes included")
+
+# Include Admin router
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from api.v1.admin import router as admin_router
+    app.include_router(admin_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Admin routes included")
+except ImportError as e:
+    logger.warning(f"Admin routes not available: {e}")
+
+# Include Profile router
+try:
+    from api.v1.profile import router as profile_router
+    app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Profile routes included")
+except ImportError as e:
+    logger.warning(f"Profile routes not available: {e}")
+
+# Include Test Admin router
+try:
+    from api.v1.test_admin import router as test_admin_router
+    app.include_router(test_admin_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Test Admin routes included")
+except ImportError as e:
+    logger.warning(f"Test Admin routes not available: {e}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -349,6 +396,205 @@ async def api_status():
 # ====================================
 # DSS ENDPOINTS (Essential for Dashboard)
 # ====================================
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/overview")
+async def get_ecommerce_overview(db: DatabaseManager = Depends(get_database)):
+    """Get ecommerce platform overview metrics"""
+    try:
+        if not db.is_connected:
+            # Return mock data if database not connected
+            return {
+                "success": True,
+                "data": {
+                    "total_products": 1250,
+                    "platforms": 2,
+                    "avg_price": 15000000,
+                    "rated_products": 980
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            source_platform,
+            COUNT(*) as total_products,
+            AVG(CAST(raw_data->>'price' AS DECIMAL)) as avg_price,
+            COUNT(CASE WHEN raw_data->>'rating' IS NOT NULL THEN 1 END) as rated_products
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+        GROUP BY source_platform
+        """
+
+        result = await db.execute_query(query)
+
+        # Aggregate metrics
+        total_products = sum(row['total_products'] for row in result)
+        platforms = len(result)
+        avg_price = sum(row['avg_price'] or 0 for row in result) / len(result) if result else 0
+        rated_products = sum(row['rated_products'] for row in result)
+
+        return {
+            "success": True,
+            "data": {
+                "total_products": total_products,
+                "platforms": platforms,
+                "avg_price": avg_price,
+                "rated_products": rated_products,
+                "platform_breakdown": result
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Ecommerce overview error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/price-comparison")
+async def get_price_comparison(db: DatabaseManager = Depends(get_database)):
+    """Get price comparison data between platforms"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"source_platform": "tiki", "product_name": "iPhone 15", "brand": "Apple", "price": 25000000, "discount": 10},
+                    {"source_platform": "lazada", "product_name": "Samsung Galaxy", "brand": "Samsung", "price": 22000000, "discount": 12}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            source_platform,
+            raw_data->>'product_name' as product_name,
+            raw_data->>'brand' as brand,
+            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
+            CAST(raw_data->>'discount_percent' AS DECIMAL) as discount
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+            AND (raw_data->>'price' IS NOT NULL OR raw_data->>'price_current' IS NOT NULL)
+            AND CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) > 0
+        LIMIT 100
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Price comparison error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/brand-analysis")
+async def get_brand_analysis(db: DatabaseManager = Depends(get_database)):
+    """Get brand performance analysis"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"brand": "Apple", "source_platform": "tiki", "product_count": 50, "avg_price": 25000000, "avg_rating": 4.5},
+                    {"brand": "Samsung", "source_platform": "lazada", "product_count": 45, "avg_price": 18000000, "avg_rating": 4.3}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            COALESCE(raw_data->>'brand', raw_data->>'brand_name', 'Unknown') as brand,
+            source_platform,
+            COUNT(*) as product_count,
+            AVG(CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL)) as avg_price,
+            AVG(CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL)) as avg_rating
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+        GROUP BY brand, source_platform
+        HAVING COUNT(*) > 1 AND brand != 'Unknown' AND brand IS NOT NULL
+        ORDER BY product_count DESC
+        LIMIT 20
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Brand analysis error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/trending-products")
+async def get_trending_products(db: DatabaseManager = Depends(get_database)):
+    """Get trending products data"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"product_name": "iPhone 15 Pro", "brand": "Apple", "source_platform": "tiki", "price": 25000000, "rating": 4.5, "review_count": 150, "sold_count": 50},
+                    {"product_name": "Samsung Galaxy S24", "brand": "Samsung", "source_platform": "lazada", "price": 22000000, "rating": 4.3, "review_count": 200, "sold_count": 75}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            raw_data->>'product_name' as product_name,
+            COALESCE(raw_data->>'brand', raw_data->>'brand_name') as brand,
+            source_platform,
+            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
+            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) as rating,
+            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) as review_count,
+            CAST(COALESCE(raw_data->>'sold_count', '0') AS INTEGER) as sold_count,
+            created_at
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+            AND raw_data->>'product_name' IS NOT NULL
+            AND LENGTH(raw_data->>'product_name') > 5
+        ORDER BY
+            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) DESC,
+            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) DESC
+        LIMIT 20
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Trending products error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 @app.get(f"{settings.API_V1_PREFIX}/dss/dashboard")
 async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_database)):
     """Get DSS dashboard data. If Authorization header with valid JWT is provided,
@@ -516,6 +762,10 @@ class ResetPasswordResponse(BaseModel):
     success: bool
     message: str
 
+class SignOutResponse(BaseModel):
+    success: bool
+    message: str
+
 # Define valid users for authentication - 3 main roles
 VALID_USERS = {
     "admin@dss.com": {
@@ -646,7 +896,7 @@ class EmailService:
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
         self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
         self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
@@ -946,10 +1196,41 @@ async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = De
         logger.error(f"Reset password error: {e}")
         raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
-@app.post(f"{settings.API_V1_PREFIX}/auth/signin", response_model=SignInResponse)
-async def auth_login_alias(request: SignInRequest, db: DatabaseManager = Depends(get_database)):
-    """Alias for signin - frontend compatibility"""
-    return await simple_signin(request, db)
+
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/signout", response_model=SignOutResponse)
+async def signout(request: Request):
+    """Sign out user - invalidate token on client side"""
+    try:
+        # Check Authorization header
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            return SignOutResponse(
+                success=True,
+                message="Signed out successfully"
+            )
+
+        # Expect "Bearer <token>"
+        try:
+            token = auth_header.split()[1]
+            payload = decode_access_token(token)
+            if payload:
+                user_email = payload.get("email", "unknown")
+                logger.info(f"User signed out: {user_email}")
+        except Exception:
+            pass  # Token invalid, but still return success
+
+        return SignOutResponse(
+            success=True,
+            message="Signed out successfully"
+        )
+
+    except Exception as e:
+        logger.error(f"Signout error: {e}")
+        return SignOutResponse(
+            success=True,
+            message="Signed out successfully"
+        )
 
 @app.get("/api/auth/profile")
 async def get_auth_profile(request: Request):
@@ -1086,8 +1367,10 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "timestamp": datetime.now().isoformat(),
             "available_endpoints": [
             "/", "/health", "/api/v1/status",
-            "/api/v1/auth/signin", "/api/v1/auth/signup", "/api/v1/auth/verify-email",
-                "/api/v1/dss/dashboard", "/docs"
+            "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
+            "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
+            "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+
             ]
         }
     )

@@ -6,35 +6,16 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-router = APIRouter(prefix="/test-admin", tags=["🧪 Test Admin"])
+router = APIRouter(prefix="/test-admin", tags=["🧪 Test Admin (No Auth)"])
 
-@router.get("/get-token")
-async def get_admin_token():
-    """🔑 Get admin token for testing authenticated endpoints"""
-    try:
-        from main import create_access_token
-        
-        admin_user = {
-            "user_id": 1,
-            "full_name": "System Administrator",
-            "role": "ADMIN"
-        }
-        
-        token = create_access_token(admin_user, "admin@dss.com")
-        
-        return {
-            "success": True,
-            "message": "Admin token generated",
-            "access_token": token,
-            "usage": "Use this token in Authorize button: Bearer " + token[:30] + "..."
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Failed to generate token",
-            "error": str(e)
-        }
+@router.get("/session-info")
+async def get_session_info():
+    """📋 Get session info (no token needed)"""
+    return {
+        "success": True,
+        "message": "Session-based authentication active",
+        "note": "Token authentication has been removed"
+    }
 
 @router.get("/users")
 async def test_get_users():
@@ -227,6 +208,77 @@ async def test_restore_user(user_id: int):
         return {
             "success": False,
             "message": "Failed to restore user",
+            "error": str(e)
+        }
+
+@router.get("/profile/{user_id}")
+async def test_get_profile(user_id: int):
+    """👤 Test get user profile"""
+    try:
+        from main import db_manager
+        from services.user_management_service import UserManagementService
+        
+        if not db_manager.is_connected:
+            await db_manager.connect()
+            
+        service = UserManagementService(db_manager)
+        profile = await service.get_profile(user_id)
+        
+        if not profile:
+            return {
+                "success": False,
+                "message": "Profile not found",
+                "user_id": user_id
+            }
+        
+        return {
+            "success": True,
+            "message": "Profile retrieved successfully",
+            "data": profile
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "Failed to get profile",
+            "error": str(e)
+        }
+
+@router.put("/profile/{user_id}")
+async def test_update_profile(user_id: int, full_name: str = None, phone: str = None, email: str = None):
+    """✏️ Test update user profile"""
+    try:
+        from main import db_manager
+        from services.user_management_service import UserManagementService
+        
+        if not db_manager.is_connected:
+            await db_manager.connect()
+            
+        service = UserManagementService(db_manager)
+        
+        # Update profile
+        updated_profile = await service.update_profile(
+            user_id=user_id,
+            full_name=full_name,
+            phone=phone,
+            email=email
+        )
+        
+        return {
+            "success": True,
+            "message": "Profile updated successfully",
+            "data": updated_profile
+        }
+        
+    except ValueError as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "Failed to update profile",
             "error": str(e)
         }
 
