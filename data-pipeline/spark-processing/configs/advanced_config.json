@@ -1,0 +1,112 @@
+{
+  "spark": {
+    "app_name": "AdvancedEcommerceProcessor",
+    "master": "local[*]",
+    "configs": {
+      "spark.sql.adaptive.enabled": "true",
+      "spark.sql.adaptive.coalescePartitions.enabled": "true",
+      "spark.sql.adaptive.skewJoin.enabled": "true",
+      "spark.sql.adaptive.localShuffleReader.enabled": "true",
+      "spark.sql.adaptive.advisoryPartitionSizeInBytes": "128MB",
+      "spark.sql.execution.arrow.pyspark.enabled": "true",
+      "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+      "spark.sql.execution.arrow.maxRecordsPerBatch": "10000"
+    }
+  },
+  "data_sources": {
+    "json": {
+      "path": "data-collection/data/*.json",
+      "platform": "multi",
+      "schema_evolution": true
+    },
+    "csv": {
+      "path": "data-collection/data/*.csv",
+      "error_path": "/tmp/bad_records",
+      "multiline": true
+    },
+    "database": {
+      "url": "jdbc:postgresql://localhost:5432/ecommerce",
+      "table": "products",
+      "properties": {
+        "user": "postgres",
+        "password": "password",
+        "driver": "org.postgresql.Driver"
+      },
+      "predicates": [
+        "created_at >= '2024-01-01'",
+        "created_at < '2025-01-01'"
+      ]
+    }
+  },
+  "processing": {
+    "data_cleaning": {
+      "remove_duplicates": true,
+      "fuzzy_matching": true,
+      "outlier_detection": {
+        "enabled": true,
+        "method": "iqr",
+        "threshold": 1.5
+      },
+      "text_normalization": {
+        "unicode_normalization": true,
+        "remove_special_chars": true,
+        "lowercase": true
+      }
+    },
+    "feature_engineering": {
+      "time_features": true,
+      "text_features": {
+        "length": true,
+        "word_count": true,
+        "keyword_extraction": true
+      },
+      "price_features": {
+        "relative_pricing": true,
+        "volatility": true,
+        "category_comparison": true
+      },
+      "competitive_features": {
+        "brand_metrics": true,
+        "platform_comparison": true,
+        "market_share": true
+      }
+    },
+    "ml_analysis": {
+      "customer_segmentation": {
+        "enabled": true,
+        "algorithm": "kmeans",
+        "num_clusters": 5,
+        "features": ["current_price", "rating_score", "popularity_score"]
+      },
+      "price_prediction": {
+        "enabled": true,
+        "algorithm": "random_forest",
+        "features": ["rating_score", "rating_count", "sold_count", "brand_avg_price"],
+        "train_test_split": 0.8
+      },
+      "recommendation": {
+        "enabled": false,
+        "algorithm": "collaborative_filtering"
+      }
+    }
+  },
+  "output": {
+    "base_path": "outputs/advanced_processing",
+    "formats": ["parquet", "json"],
+    "partitions": ["platform", "category", "processing_date"],
+    "compression": "snappy",
+    "save_ml_models": true,
+    "save_analytics": true
+  },
+  "monitoring": {
+    "metrics": {
+      "data_quality": true,
+      "processing_time": true,
+      "memory_usage": true
+    },
+    "alerts": {
+      "data_quality_threshold": 0.95,
+      "processing_time_threshold": 3600
+    }
+  }
+}
