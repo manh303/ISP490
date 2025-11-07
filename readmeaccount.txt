@@ -14,4 +14,4 @@ Customer:
 Email: customer@dss.com
 Mật khẩu: customer123
 
-  POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:69420@localhost:5432/ecommerce_dss")
+  POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:dss_password_123@localhost:5432/ecommerce_dss")
