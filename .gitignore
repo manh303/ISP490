@@ -36,3 +36,5 @@ logs/
 
 # Node modules
 node_modules/
+backend/app/main.py
+backend/requirements.txt
