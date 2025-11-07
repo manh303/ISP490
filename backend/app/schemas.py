@@ -19,12 +19,7 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
+# Token models removed - using session-based auth
 
 class LoginRequest(BaseModel):
     username: str
