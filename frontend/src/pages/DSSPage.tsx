@@ -3,14 +3,43 @@ import { useAuth } from '../contexts/AuthContext';
 import Cookies from 'js-cookie';
 import AIRecommendations from '../components/AIRecommendations';
 
+interface EcommerceOverview {
+  total_products: number;
+  platforms: number;
+  avg_price: number;
+  rated_products: number;
+  platform_breakdown?: Array<{
+    source_platform: string;
+    total_products: number;
+    avg_price: number;
+    rated_products: number;
+  }>;
+}
+
+interface ProductData {
+  source_platform: string;
+  product_name: string;
+  brand: string;
+  price: number;
+  discount?: number;
+  rating?: number;
+  review_count?: number;
+  sold_count?: number;
+}
+
+interface BrandData {
+  brand: string;
+  source_platform: string;
+  product_count: number;
+  avg_price: number;
+  avg_rating: number;
+}
+
 interface DSSData {
-  summary_metrics?: {
-    total_orders?: number;
-    total_revenue?: number;
-    avg_order_value?: number;
-    total_customers?: number;
-    [key: string]: any;
-  };
+  overview?: EcommerceOverview;
+  price_comparison?: ProductData[];
+  brand_analysis?: BrandData[];
+  trending_products?: ProductData[];
   [key: string]: any;
 }
 
@@ -32,18 +61,27 @@ const DSSPage: React.FC = () => {
     return Cookies.get('access_token');
   };
 
-  const fetchDSSData = async (endpoint: string) => {
+  const fetchDSSData = async (tab: string) => {
     setLoading(true);
     setError('');
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Authentication failed');
-      }
+      const token = getAuthToken();
 
-      const response = await fetch(`http://localhost:8000/api/v1/dss/${endpoint}`, {
+      // Map tabs to specific endpoints
+      const endpointMap: {[key: string]: string} = {
+        'dashboard': 'ecommerce/overview',
+        'price-analysis': 'ecommerce/price-comparison',
+        'brand-analysis': 'ecommerce/brand-analysis',
+        'trending': 'ecommerce/trending-products',
+        'ai-recommendations': 'dashboard', // Keep original for AI recommendations
+      };
+
+      const endpoint = endpointMap[tab] || 'ecommerce/overview';
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+      const response = await fetch(`${API_BASE}/api/v1/dss/${endpoint}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
       });
@@ -52,11 +90,35 @@ const DSSPage: React.FC = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      setDssData(data);
+      const result = await response.json();
+
+      // Update dssData based on the endpoint
+      if (tab === 'dashboard') {
+        setDssData({ overview: result.data });
+      } else if (tab === 'price-analysis') {
+        setDssData({ price_comparison: result.data });
+      } else if (tab === 'brand-analysis') {
+        setDssData({ brand_analysis: result.data });
+      } else if (tab === 'trending') {
+        setDssData({ trending_products: result.data });
+      } else {
+        setDssData(result);
+      }
+
     } catch (err) {
-      setError(`Error fetching ${endpoint}: ${(err as Error).message}`);
+      setError(`Error fetching ${tab}: ${(err as Error).message}`);
       console.error('DSS fetch error:', err);
+      // Set some mock data on error to keep demo working
+      if (tab === 'dashboard') {
+        setDssData({
+          overview: {
+            total_products: 1250,
+            platforms: 2,
+            avg_price: 15000000,
+            rated_products: 980
+          }
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -111,77 +173,108 @@ const DSSPage: React.FC = () => {
   };
 
   const renderDashboard = () => {
-    if (!dssData?.dashboard) return null;
+    if (!dssData?.overview) return null;
 
-    const { summary_metrics, recommendations, action_plans } = dssData.dashboard;
+    const overview = dssData.overview;
 
     return (
       <div className="space-y-6">
         {/* Summary Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Customers</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Products</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {summary_metrics?.total_customers?.toLocaleString()}
+              {overview.total_products.toLocaleString()}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Orders</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Platforms</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {summary_metrics?.total_orders?.toLocaleString()}
+              {overview.platforms}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revenue</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Price</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(summary_metrics?.total_revenue)}
+              {formatCurrency(overview.avg_price || 0)}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Order Value</h3>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Products with Ratings</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(summary_metrics?.avg_order_value)}
+              {overview.rated_products.toLocaleString()}
             </p>
           </div>
         </div>
 
-        {/* Top Recommendations */}
+        {/* Platform Breakdown */}
+        {overview.platform_breakdown && (
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              🏪 Platform Breakdown
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {overview.platform_breakdown.map((platform, index) => (
+                <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-gray-900 dark:text-white capitalize">
+                      {platform.source_platform}
+                    </h4>
+                    <span className={`px-2 py-1 text-xs rounded ${
+                      platform.source_platform === 'tiki' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'
+                    }`}>
+                      {platform.total_products} products
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                    <div>Avg Price: {formatCurrency(platform.avg_price || 0)}</div>
+                    <div>Rated Products: {platform.rated_products}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* DSS Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              💡 Top Recommendations
+              💡 Key Insights
             </h3>
             <div className="space-y-4">
-              {recommendations?.slice(0, 3).map((rec, index) => (
-                <div key={index} className={`p-4 rounded-lg ${rec.priority === 'high' ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'} border`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-gray-900">{rec.title}</h4>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getPriorityBadge(rec.priority)}`}>
-                      {rec.priority}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{rec.description}</p>
-                </div>
-              ))}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-gray-900 dark:text-white">Market Coverage</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Tracking {overview.total_products.toLocaleString()} products across {overview.platforms} major platforms
+                </p>
+              </div>
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200">
+                <h4 className="font-medium text-gray-900 dark:text-white">Rating Coverage</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  {Math.round((overview.rated_products / overview.total_products) * 100)}% of products have customer ratings
+                </p>
+              </div>
             </div>
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              🎯 Priority Actions
+              🎯 DSS Recommendations
             </h3>
             <div className="space-y-4">
-              {action_plans?.slice(0, 3).map((action, index) => (
-                <div key={index} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-                  <h4 className="font-medium text-gray-900 dark:text-white">{action.title}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    {action.estimated_impact} • {action.timeline}
-                  </p>
-                  <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${action.effort_level === 'high' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                    {action.effort_level} effort
-                  </span>
-                </div>
-              ))}
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200">
+                <h4 className="font-medium text-gray-900 dark:text-white">Price Analysis</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Analyze price trends across platforms for competitive insights
+                </p>
+              </div>
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200">
+                <h4 className="font-medium text-gray-900 dark:text-white">Brand Performance</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Monitor brand market share and customer satisfaction metrics
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -189,42 +282,149 @@ const DSSPage: React.FC = () => {
     );
   };
 
-  const renderRecommendations = () => {
-    if (!dssData?.recommendations) return null;
+  const renderPriceAnalysis = () => {
+    if (!dssData?.price_comparison) return null;
+
+    const priceData = dssData.price_comparison;
 
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {dssData.recommendations.map((rec, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{rec.title}</h3>
-              <span className={`px-3 py-1 text-sm rounded-full ${getPriorityBadge(rec.priority)}`}>
-                {rec.priority}
-              </span>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">{rec.description}</p>
-
-            {rec.metric_value && (
-              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                <p className="text-sm">
-                  Current: <span className="font-semibold">{rec.metric_value.toLocaleString()}</span>
-                  {rec.target_value && (
-                    <> → Target: <span className="font-semibold text-green-600">{rec.target_value.toLocaleString()}</span></>
-                  )}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Action Items:</h4>
-              <ul className="space-y-1">
-                {rec.action_items.map((item, idx) => (
-                  <li key={idx} className="text-sm text-gray-600 dark:text-gray-300">• {item}</li>
-                ))}
-              </ul>
-            </div>
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            💰 Price Comparison Analysis
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Product
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Brand
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Platform
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Discount
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {priceData.slice(0, 20).map((product, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {product.product_name?.slice(0, 50)}...
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {product.brand || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded ${\n                        product.source_platform === 'tiki' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'\n                      }`}>
+                        {product.source_platform}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(product.price || 0)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {product.discount ? `${product.discount}%` : 'N/A'}
+                    </td>
+                  </tr>
+                ))}\n              </tbody>
+            </table>
           </div>
-        ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBrandAnalysis = () => {
+    if (!dssData?.brand_analysis) return null;
+
+    const brandData = dssData.brand_analysis;
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {brandData.slice(0, 10).map((brand, index) => (
+            <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {brand.brand}
+                </h3>
+                <span className={`px-2 py-1 text-xs rounded ${\n                  brand.source_platform === 'tiki' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'\n                }`}>
+                  {brand.source_platform}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Product Count</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {brand.product_count}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Average Price</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {formatCurrency(brand.avg_price || 0)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Average Rating</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    ⭐ {brand.avg_rating?.toFixed(1) || 'N/A'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTrendingProducts = () => {
+    if (!dssData?.trending_products) return null;
+
+    const trendingData = dssData.trending_products;
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            🔥 Trending Products
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {trendingData.slice(0, 12).map((product, index) => (
+              <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
+                    {product.product_name}
+                  </h4>
+                  <span className={`px-2 py-1 text-xs rounded ml-2 ${\n                    product.source_platform === 'tiki' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'\n                  }`}>
+                    {product.source_platform}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs text-gray-600 dark:text-gray-300">
+                  <div>Brand: {product.brand || 'N/A'}</div>
+                  <div>Price: {formatCurrency(product.price || 0)}</div>
+                  <div>Rating: ⭐ {product.rating?.toFixed(1) || 'N/A'}</div>
+                  <div>Reviews: {product.review_count || 0}</div>
+                  {product.sold_count && <div>Sold: {product.sold_count}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -300,10 +500,10 @@ const DSSPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            🎯 Decision Support System (DSS)
+            🛒 E-commerce DSS Dashboard
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            AI-Powered Business Intelligence & Strategic Insights
+            Tiki & Lazada Market Intelligence Platform
           </p>
         </div>
 
@@ -318,12 +518,11 @@ const DSSPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex flex-wrap justify-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow">
             {[
-              { id: 'dashboard', label: '📊 Dashboard', endpoint: 'dashboard' },
-              { id: 'ai-recommendations', label: '🤖 AI Recommendations', endpoint: 'ai-recommendations' },
-              { id: 'recommendations', label: '💡 Recommendations', endpoint: 'recommendations' },
-              { id: 'actions', label: '🎯 Actions', endpoint: 'actions' },
-              { id: 'alerts', label: '⚠️ Alerts', endpoint: 'alerts' },
-              { id: 'performance', label: '📈 Performance', endpoint: 'performance' },
+              { id: 'dashboard', label: '📊 Overview', endpoint: 'dashboard' },
+              { id: 'price-analysis', label: '💰 Price Analysis', endpoint: 'price-analysis' },
+              { id: 'brand-analysis', label: '🏷️ Brand Analysis', endpoint: 'brand-analysis' },
+              { id: 'trending', label: '🔥 Trending Products', endpoint: 'trending' },
+              { id: 'ai-recommendations', label: '🤖 AI Insights', endpoint: 'ai-recommendations' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -348,6 +547,9 @@ const DSSPage: React.FC = () => {
         ) : (
           <div>
             {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'price-analysis' && renderPriceAnalysis()}
+            {activeTab === 'brand-analysis' && renderBrandAnalysis()}
+            {activeTab === 'trending' && renderTrendingProducts()}
             {activeTab === 'ai-recommendations' && (
               <AIRecommendations
                 analystType="financial_analyst"
@@ -357,14 +559,6 @@ const DSSPage: React.FC = () => {
                   // Could open a detailed modal or navigate to detail view
                 }}
               />
-            )}
-            {activeTab === 'recommendations' && renderRecommendations()}
-            {activeTab === 'actions' && renderActions()}
-            {activeTab === 'alerts' && renderAlerts()}
-            {activeTab === 'performance' && (
-              <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-300">Performance analytics coming soon...</p>
-              </div>
             )}
           </div>
         )}

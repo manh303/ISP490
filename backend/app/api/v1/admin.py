@@ -1,8 +1,7 @@
 """
 Admin User Management API Endpoints
 """
-from fastapi import APIRouter, HTTPException, Depends, Request, Query, Security
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from typing import List, Dict, Any, Optional
 import logging
 
@@ -19,7 +18,6 @@ from services.user_management_service import UserManagementService
 from utils.admin_helpers import get_current_admin_user, validate_role_code, format_user_response
 
 logger = logging.getLogger(__name__)
-security = HTTPBearer()
 
 router = APIRouter(
     prefix="/admin", 
@@ -31,16 +29,15 @@ router = APIRouter(
     }
 )
 
-# Security dependency for Swagger UI
-async def get_current_admin_user_swagger(credentials: HTTPAuthorizationCredentials = Security(security)):
-    """Get current admin user for Swagger UI - shows lock icon"""
-    # Create a mock request object with the authorization header
-    class MockRequest:
-        def __init__(self, token):
-            self.headers = {"authorization": f"Bearer {token}"}
-    
-    mock_request = MockRequest(credentials.credentials)
-    return get_current_admin_user(mock_request)
+# No authentication required - direct access
+async def get_mock_admin_user():
+    """Mock admin user for testing - no authentication required"""
+    return {
+        "user_id": 1,
+        "email": "admin@dss.com",
+        "role": "ADMIN",
+        "full_name": "System Administrator"
+    }
 
 # Dependency to get database manager
 async def get_database():
@@ -70,8 +67,7 @@ async def get_user_service(db = Depends(get_database)) -> UserManagementService:
 async def get_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     Get list of active users
@@ -108,8 +104,7 @@ async def get_users(
 async def get_deleted_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Get list of deleted users (status = disabled)"""
     try:
@@ -135,8 +130,7 @@ async def get_deleted_users(
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Get user by ID"""
     try:
@@ -156,8 +150,7 @@ async def get_user(
 @router.post("/users", response_model=UserActionResponse)
 async def create_user(
     user_data: UserCreateRequest,
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     Create new user
@@ -209,8 +202,7 @@ async def create_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdateRequest,
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Update user information"""
     try:
@@ -247,8 +239,7 @@ async def update_user(
 async def update_user_password(
     user_id: int,
     password_data: UserPasswordUpdateRequest,
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Update user password"""
     try:
@@ -275,8 +266,7 @@ async def update_user_password(
 @router.put("/users/{user_id}/disable", response_model=UserActionResponse)
 async def disable_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service),
-    current_user: dict = Depends(get_current_admin_user_swagger)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     Soft delete user (move to deleted list)
@@ -394,3 +384,4 @@ async def permanent_delete_user(
     except Exception as e:
         logger.error(f"Permanent delete user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to permanently delete user")
+

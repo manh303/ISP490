@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/figma/button";
 import { Card } from "../../components/ui/figma/card";
-import type { Page } from "../App";
+import type { Page } from "../../App";
 
 interface DashboardProps {
   navigateTo: (page: Page) => void;
