@@ -394,3 +394,4 @@ async def permanent_delete_user(
     except Exception as e:
         logger.error(f"Permanent delete user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to permanently delete user")
+
