@@ -31,7 +31,9 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     subItems: [
       { name: "Ecommerce", path: "/dashboard", pro: false },
-      { name: "User Management", path: "/users", pro: false }
+      { name: "User Management", path: "/users", pro: false },
+      { name: "Data Engineer", path: "/data-engineer", pro: false },
+      { name: "Analyst", path: "/analyst", pro: false },
     ],
   },
   {
