@@ -47,6 +47,8 @@ import CustomerPage from "./pages/Customer/CustomerPage.js";
 import UserDetails from "./components/admin/UserDetails";
 import { useParams } from "react-router";
 import DeletedUsersList from "./components/admin/DeletedUsersList.js";
+import { AnalystWireframe } from "./pages/Analyst/AnalystWireframe.js";
+import { DataEngineerWireframe } from "./pages/DataEngineer/DataEngineerWireframe.js";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -155,6 +157,8 @@ export default function App() {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/blank" element={<Blank />} />
               <Route path="/users" element={<AdminUserManagement />} />
+               <Route path="/analyst" element={<AnalystWireframe />} />
+               <Route path="/data-engineer" element={<DataEngineerWireframe />} />
               {/* Forms */}
               <Route path="/form-elements" element={<FormElements />} />
 
