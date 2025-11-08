@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from models.user import ProfileResponse, ProfileUpdateRequest
-from models.admin import UserActionResponse
+from services.admin_service import UserActionResponse
 from services.user_management_service import UserManagementService
 
 logger = logging.getLogger(__name__)
