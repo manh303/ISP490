@@ -1,0 +1,36 @@
+[
+  {
+    "title": "Samsung Galaxy S24 Ultra - Sample Data",
+    "url": "https://www.lazada.vn/products/sample-galaxy-i345678.html",
+    "price": 26990000,
+    "price_text": "26.990.000 ₫",
+    "original_price": 29990000,
+    "original_price_text": "29.990.000 ₫",
+    "discount": "10%",
+    "rating": 4.7,
+    "review_count": "189",
+    "sold_count": "67",
+    "category": "smartphones",
+    "shop_name": "Samsung Official Store",
+    "location": "Hà Nội",
+    "image_url": "https://img.lazcdn.com/g/p/sample.jpg",
+    "crawled_at": "2025-11-08T12:15:41.066133"
+  },
+  {
+    "title": "Dell XPS 13 Plus - Sample Data",
+    "url": "https://www.lazada.vn/products/sample-dell-i567890.html",
+    "price": 32990000,
+    "price_text": "32.990.000 ₫",
+    "original_price": 36990000,
+    "original_price_text": "36.990.000 ₫",
+    "discount": "11%",
+    "rating": 4.6,
+    "review_count": "93",
+    "sold_count": "21",
+    "category": "laptops",
+    "shop_name": "Dell Official Store",
+    "location": "TP.HCM",
+    "image_url": "https://img.lazcdn.com/g/p/sample2.jpg",
+    "crawled_at": "2025-11-08T12:15:41.066140"
+  }
+]
