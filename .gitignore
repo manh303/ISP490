@@ -38,3 +38,6 @@ logs/
 node_modules/
 backend/app/main.py
 backend/requirements.txt
+
+data-collection/data/fixed_lazada_multi_category_full.csv
+data-collection/data/fixed_lazada_multi_category_full.json
