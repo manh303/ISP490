@@ -235,13 +235,28 @@ class UserManagementService:
         await self.db.execute_query(update_query, (full_name, phone, email, user_id))
         
         return await self.get_user_by_id(user_id)
+    async def update_last_login(self, user_id: int) -> bool:
+        """Update user's last login timestamp"""
+        query = """
+        UPDATE iam_user 
+        SET last_login_at = NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh', 
+            updated_at = NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh'
+        WHERE user_id = $1
+        RETURNING user_id, email, last_login_at
+        """
+        
+        result = await self.db.execute_query(query, (user_id,))
+        if result:
+            user = result[0]
+            logger.info(f"Last login updated: user_id={user['user_id']}, email={user['email']}, last_login_at={user['last_login_at']}")
+            return True
+        else:
+            logger.error(f"Failed to update last login for user_id: {user_id} - no rows affected")
+            return False
+    
     async def _update_user_role(self, user_id: int, role_code: str):
         """Update user role"""
         # Remove existing roles
-        await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
-        
-        # Assign new role
-        await self._assign_role(user_id, role_code)
         await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
         
         # Assign new role
