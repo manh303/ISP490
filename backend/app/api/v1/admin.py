@@ -11,12 +11,14 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from models.admin import (
+from services.admin_service import (
     UserCreateRequest, UserUpdateRequest, UserPasswordUpdateRequest,
-    UserResponse, UserListResponse, UserActionResponse
+    UserListResponse, UserActionResponse
 )
+from models.shared import UserResponse
 from services.user_management_service import UserManagementService
-from utils.admin_helpers import get_current_admin_user, validate_role_code, format_user_response
+from utils.admin_helpers import get_current_admin_user, format_user_response
+from constants.roles import validate_role_code
 
 logger = logging.getLogger(__name__)
 
@@ -30,15 +32,10 @@ router = APIRouter(
     }
 )
 
-# No authentication required - direct access
-async def get_mock_admin_user():
-    """Mock admin user for testing - no authentication required"""
-    return {
-        "user_id": 1,
-        "email": "admin@dss.com",
-        "role": "ADMIN",
-        "full_name": "System Administrator"
-    }
+# Admin access dependency
+async def require_admin_access(request: Request) -> Dict[str, Any]:
+    """Dependency to require admin access for endpoints"""
+    return get_current_admin_user(request)
 
 # Dependency to get database manager
 async def get_database():
@@ -67,7 +64,8 @@ async def get_user_service(db = Depends(get_database)) -> UserManagementService:
            description="Get paginated list of active users. **Requires Admin Token!**")
 async def get_users(
     page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    limit: int = Query(10, ge=1, le=100, description="Items per page"),
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """
@@ -151,6 +149,7 @@ async def get_user(
 @router.post("/users", response_model=UserActionResponse)
 async def create_user(
     user_data: UserCreateRequest,
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """
@@ -203,6 +202,7 @@ async def create_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdateRequest,
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """Update user information"""
@@ -334,8 +334,8 @@ async def restore_user(
 @router.delete("/users/{user_id}/permanent", response_model=UserActionResponse)
 async def permanent_delete_user(
     user_id: int,
-    request: Request,
     confirm: bool = Query(False, description="⚠️ REQUIRED: Set to true to confirm permanent deletion"),
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """
@@ -350,9 +350,6 @@ async def permanent_delete_user(
     **Example**: `/api/v1/admin/users/123/permanent?confirm=true`
     """
     try:
-        # Validate admin access
-        current_user = get_current_admin_user(request)
-        
         # Require confirmation
         if not confirm:
             raise HTTPException(
