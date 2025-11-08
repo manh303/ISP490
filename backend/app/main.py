@@ -16,9 +16,15 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+from middleware.activity_middleware import ActivityLoggingMiddleware
+from services.activity_logger import ActivityLogger
+from pydantic import field_validator
+from utils.validators import validate_phone, validate_password
+from constants.roles import ROLE_MENUS, get_role_menu
 
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -117,6 +123,17 @@ class SignupRequest(BaseModel):
     email: str = Field(..., description="Email address")
     password: str = Field(..., min_length=8, description="Password (min 8 chars)")
     confirm_password: str = Field(..., description="Confirm password")
+    phone: Optional[str] = Field(None, description="Phone number")
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_field(cls, v):
+        return validate_password(v, min_length=8)
+    
+    @field_validator('phone')
+    @classmethod
+    def validate_phone_field(cls, v):
+        return validate_phone(v)
 
 class SignupResponse(BaseModel):
     success: bool
@@ -210,6 +227,41 @@ class DatabaseManager:
 db_manager = DatabaseManager()
 
 # ====================================
+# LIFESPAN EVENT HANDLER
+# ====================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting Vietnam E-commerce DSS API...")
+    app.state.start_time = time.time()
+    
+    if DATABASE_AVAILABLE:
+        try:
+            await db_manager.connect()
+            if db_manager.is_connected:
+                logger.info("PostgreSQL database connected successfully!")
+                if IAM_AVAILABLE:
+                    try:
+                        init_iam_service(db_manager, settings.JWT_SECRET_KEY)
+                        logger.info("IAM service initialized successfully!")
+                    except Exception as e:
+                        logger.error(f"IAM service initialization failed: {e}")
+        except Exception as e:
+            logger.warning(f"PostgreSQL database connection failed: {e}")
+    
+    logger.info("API startup completed successfully!")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down API...")
+    try:
+        await db_manager.disconnect()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
+    logger.info("API shutdown completed")
+
+# ====================================
 # FASTAPI APPLICATION
 # ====================================
 from fastapi.openapi.utils import get_openapi
@@ -218,7 +270,8 @@ app = FastAPI(
     title="Vietnam E-commerce DSS API",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Custom OpenAPI schema without security schemes
@@ -280,6 +333,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add activity logging middleware
+app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+
 # Update security headers middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -294,45 +350,7 @@ async def add_security_headers(request: Request, call_next):
     })
     return response
 
-# ====================================
-# STARTUP/SHUTDOWN EVENTS
-# ====================================
-@app.on_event("startup")
-async def startup_event():
-    """Initialize connections"""
-    logger.info("Starting Vietnam E-commerce DSS API...")
-
-    # Set startup time
-    app.state.start_time = time.time()
-
-    # Try PostgreSQL connection
-    if DATABASE_AVAILABLE:
-        try:
-            await db_manager.connect()
-            if db_manager.is_connected:
-                logger.info("PostgreSQL database connected successfully!")
-
-                # Initialize IAM service if available
-                if IAM_AVAILABLE:
-                    try:
-                        init_iam_service(db_manager, settings.JWT_SECRET_KEY)
-                        logger.info("IAM service initialized successfully!")
-                    except Exception as e:
-                        logger.error(f"IAM service initialization failed: {e}")
-        except Exception as e:
-            logger.warning(f"PostgreSQL database connection failed: {e}")
-
-    logger.info("API startup completed successfully!")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup connections"""
-    logger.info("Shutting down API...")
-    try:
-        await db_manager.disconnect()
-    except Exception as e:
-        logger.error(f"Error during shutdown: {e}")
-    logger.info("API shutdown completed")
+# Startup/shutdown events now handled by lifespan context manager above
 
 # ====================================
 # DEPENDENCY INJECTION
@@ -601,24 +619,8 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
     return a role-specific dashboard and allowed actions/menus for that role.
     """
     try:
-        # Role-based menu definitions
-        ROLE_DASHBOARDS = {
-            "ADMIN": {
-                "modules": ["Dashboard", "User Management", "System Settings", "Audit Logs", "Data Management"],
-                "actions": ["view", "create", "update", "delete"],
-                "permissions": ["system.admin", "user.manage", "data.write", "analytics.view", "dss.dashboard"]
-            },
-            "ANALYST": {
-                "modules": ["Dashboard", "Customer Analytics", "Sales Analytics", "Reports", "Data Visualization"],
-                "actions": ["view", "export", "analyze"],
-                "permissions": ["data.read", "analytics.view", "reports.generate", "dss.dashboard"]
-            },
-            "CUSTOMER": {
-                "modules": ["Dashboard", "Orders", "Profile", "Purchase History"],
-                "actions": ["view", "create_order", "update_profile"],
-                "permissions": ["profile.view", "orders.create", "data.read_own"]
-            }
-        }
+        # Use shared role definitions
+        ROLE_DASHBOARDS = ROLE_MENUS
 
         # Default (unauthenticated) dashboard
         default_dashboard = {
@@ -637,7 +639,14 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
             "timestamp": datetime.now().isoformat(),
             "menu": {
                 "modules": ["Dashboard"],
-                "actions": ["view"]
+                "actions": ["view"],
+                "admin_features": {
+                    "user_management": False,
+                    "activity_logs": False,
+                    "system_settings": False,
+                    "user_creation": False,
+                    "user_deletion": False
+                }
             }
         }
 
@@ -652,12 +661,12 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
         except Exception:
             return default_dashboard
 
-        payload = decode_access_token(token)
+        payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
         if not payload or "role" not in payload:
             return default_dashboard
 
         role = payload.get("role")
-        role_cfg = ROLE_DASHBOARDS.get(role, ROLE_DASHBOARDS.get("CUSTOMER"))
+        role_cfg = get_role_menu(role)
 
         # Role-specific dashboard data
         role_dashboard = {
@@ -682,6 +691,8 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
     except Exception as e:
         logger.error(f"DSS dashboard error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Removed duplicate setup endpoint - use /setup-activity-logs instead
 
 @app.get(f"{settings.API_V1_PREFIX}/dss/overview")
 async def dss_overview():
@@ -729,6 +740,64 @@ async def get_dss_modules():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.post("/setup-activity-logs")
+async def setup_activity_logs_direct(db: DatabaseManager = Depends(get_database)):
+    """Create activity logs table and insert test data - Direct endpoint"""
+    try:
+        # Create table
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS user_activity_logs (
+            log_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            email VARCHAR(255),
+            action VARCHAR(100) NOT NULL,
+            resource VARCHAR(100),
+            details JSONB,
+            ip_address INET,
+            user_agent TEXT,
+            status VARCHAR(20) DEFAULT 'success',
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """
+        await db.execute_query(create_table_query)
+        
+        # Create indexes
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON user_activity_logs(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON user_activity_logs(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON user_activity_logs(action)"
+        ]
+        
+        for index_query in indexes:
+            await db.execute_query(index_query)
+        
+        # Insert test data
+        test_data_query = """
+        INSERT INTO user_activity_logs (user_id, email, action, resource, details, ip_address, status)
+        VALUES 
+            (1, 'admin@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
+            (3, 'customer@dss.com', 'GET /api/v1/dss/dashboard', '/api/v1/dss/dashboard', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (1, 'admin@dss.com', 'GET /api/v1/admin/users', '/api/v1/admin/users', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNOUT', '/api/v1/auth/signout', '{"method": "manual"}', '127.0.0.1', 'success')
+        """
+        await db.execute_query(test_data_query)
+        
+        return {
+            "success": True,
+            "message": "Activity logs table created and test data inserted successfully!",
+            "table_created": True,
+            "test_data_inserted": 5
+        }
+        
+    except Exception as e:
+        logger.error(f"Setup activity logs error: {e}")
+        return {
+            "success": False,
+            "message": f"Setup failed: {str(e)}",
+            "error": str(e)
+        }
+
 # ====================================
 # SIMPLE AUTHENTICATION (Temporary Fix)
 # ====================================
@@ -757,6 +826,11 @@ class ResetPasswordRequest(BaseModel):
     email: str
     otp: str
     new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_field(cls, v):
+        return validate_password(v, min_length=8)
 
 class ResetPasswordResponse(BaseModel):
     success: bool
@@ -767,6 +841,7 @@ class SignOutResponse(BaseModel):
     message: str
 
 # Define valid users for authentication - 3 main roles
+# Note: user_ids must match database values
 VALID_USERS = {
     "admin@dss.com": {
         "user_id": 1,
@@ -775,13 +850,13 @@ VALID_USERS = {
         "role": "ADMIN"
     },
     "analyst@dss.com": {
-        "user_id": 2,
+        "user_id": 3,  # Fixed: was 2, should be 3
         "password": "analyst123",
         "full_name": "Data Analyst",
         "role": "ANALYST"
     },
     "customer@dss.com": {
-        "user_id": 3,
+        "user_id": 4,  # Fixed: was 3, should be 4
         "password": "customer123",
         "full_name": "Customer User",
         "role": "CUSTOMER"
@@ -839,52 +914,23 @@ def authenticate_user(email: str, password: str):
         return None
     return user_data
 
-# ---------- REPLACE this function in main.py ----------
-def create_access_token(user_data: dict, email: str):
-    """Create JWT access token with role, roles[], permissions for cross-service guards"""
-    jwt_exp_hours = getattr(settings, 'JWT_EXPIRATION_HOURS', None)
-    jwt_exp_minutes_env = os.getenv("JWT_EXPIRE_MINUTES")
+# Use shared auth helpers
+from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
+def create_access_token(user_data: dict, email: str):
+    """Create JWT access token using shared helper"""
+    jwt_exp_hours = getattr(settings, 'JWT_EXPIRATION_HOURS', 24)
+    jwt_exp_minutes_env = os.getenv("JWT_EXPIRE_MINUTES")
+    
     if jwt_exp_minutes_env:
         try:
-            minutes = int(jwt_exp_minutes_env)
-            exp_time = datetime.utcnow() + timedelta(minutes=minutes)
+            expire_hours = int(jwt_exp_minutes_env) / 60
         except Exception:
-            exp_time = datetime.utcnow() + timedelta(hours=(jwt_exp_hours or 24))
+            expire_hours = jwt_exp_hours
     else:
-        exp_time = datetime.utcnow() + timedelta(hours=(jwt_exp_hours or 24))
-
-    # Default permissions per role (extend as needed)
-    DEFAULT_PERMS = {
-        "ADMIN": [
-            "system.admin", "user.manage", "data.read", "analytics.view", "dss.dashboard"
-        ],
-        "ANALYST": ["data.read", "analytics.view"],
-        "CUSTOMER": ["data.read"]
-    }
-
-    role = user_data['role']
-    token_payload = {
-        "user_id": user_data['user_id'],
-        "email": email.lower(),
-        "full_name": user_data.get('full_name', 'User'),  # Add full_name to token
-        "role": role,                          # keep string for backward compat
-        "roles": [role],                       # <-- NEW: array for Node middleware
-        "permissions": DEFAULT_PERMS.get(role, []),  # <-- NEW: basic perms
-        "exp": exp_time,
-        "iat": datetime.utcnow()
-    }
-    return jwt.encode(token_payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-# ---------- END REPLACE ----------
-
-def decode_access_token(token: str) -> Optional[dict]:
-    """Decode JWT token and return payload or None"""
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        return payload
-    except Exception as e:
-        logger.debug(f"Token decode failed: {e}")
-        return None
+        expire_hours = jwt_exp_hours
+    
+    return create_jwt_token(user_data, email, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM, expire_hours)
 
 # ====================================
 # EMAIL SERVICE
@@ -1062,18 +1108,35 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
         if not user_data:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
+        # Update last login time
+        try:
+            from services.user_management_service import UserManagementService
+            user_service = UserManagementService(db)
+            await user_service.update_last_login(user_data["user_id"])
+        except Exception as e:
+            logger.error(f"Failed to update last login: {e}")
+
         access_token = create_access_token(user_data, request.email)
+
+        # Log signin activity
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user_data["user_id"],
+                email=user_data["email"],
+                action="USER_SIGNIN",
+                resource="/api/v1/auth/signin",
+                details={"role": user_data["role"], "method": "password"},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log signin activity: {e}")
 
         logger.info(f"Successful signin for: {request.email} with role: {user_data['role']}")
 
-        # Role -> menu mapping to return allowed screens/actions for frontend
-        ROLE_MENU = {
-            "ADMIN": {"modules": ["Dashboard", "User Management", "System Settings", "Audit Logs", "Data Management"], "actions": ["view","create","update","delete"]},
-            "ANALYST": {"modules": ["Dashboard", "Customer Analytics", "Sales Analytics", "Reports", "Data Visualization"], "actions": ["view","export","analyze"]},
-            "CUSTOMER": {"modules": ["Dashboard", "Orders", "Profile", "Purchase History"], "actions": ["view","create_order","update_profile"]}
-        }
+        # Use shared role menu definitions
 
-        role_cfg = ROLE_MENU.get(user_data['role'], ROLE_MENU['CUSTOMER'])
+        role_cfg = get_role_menu(user_data['role'])
 
         return SignInResponse(
             success=True,
@@ -1162,8 +1225,8 @@ async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = De
         if not email or not otp or not new_password:
             raise HTTPException(status_code=400, detail="Email, OTP, and new password are required")
 
-        if len(new_password) < 8:
-            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
 
         # Verify OTP
         if email_service_module:
@@ -1222,9 +1285,25 @@ async def signout(request: Request):
         # Expect "Bearer <token>"
         try:
             token = auth_header.split()[1]
-            payload = decode_access_token(token)
+            payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
             if payload:
                 user_email = payload.get("email", "unknown")
+                user_id = payload.get("user_id")
+                
+                # Log signout activity
+                try:
+                    activity_logger = ActivityLogger(db_manager)
+                    await activity_logger.log_activity(
+                        user_id=user_id,
+                        email=user_email,
+                        action="USER_SIGNOUT",
+                        resource="/api/v1/auth/signout",
+                        details={"method": "manual"},
+                        status="success"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to log signout activity: {e}")
+                
                 logger.info(f"User signed out: {user_email}")
         except Exception:
             pass  # Token invalid, but still return success
@@ -1256,7 +1335,7 @@ async def get_auth_profile(request: Request):
         except Exception:
             raise HTTPException(status_code=401, detail="Invalid authorization format")
 
-        payload = decode_access_token(token)
+        payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
         if not payload:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -1290,8 +1369,8 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
         if request.password != request.confirm_password:
             raise HTTPException(status_code=400, detail="Passwords do not match")
 
-        if len(request.password) < 8:
-            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        if len(request.password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
 
         # Check if email already exists
         email_exists = await check_email_exists(db, request.email.lower())
@@ -1307,6 +1386,20 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
 
         # Create user in database (pending status)
         user_id = await create_user_in_db(db, request.name, request.email.lower(), password_hash)
+
+        # Log signup activity
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user_id,
+                email=request.email.lower(),
+                action="USER_SIGNUP",
+                resource="/api/v1/auth/signup",
+                details={"full_name": request.name, "method": "email"},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log signup activity: {e}")
 
         # Store verification token
         # Temporarily disabled: email verification storage requires table iam_email_verification
@@ -1378,7 +1471,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "/", "/health", "/api/v1/status",
             "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
             "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
-            "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+            "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
 
             ]
         }
