@@ -889,6 +889,14 @@ def decode_access_token(token: str) -> Optional[dict]:
 # ====================================
 # EMAIL SERVICE
 # ====================================
+try:
+    import aiosmtplib
+    EMAIL_AVAILABLE = True
+    logger.info("Email service available")
+except ImportError:
+    EMAIL_AVAILABLE = False
+    logger.warning("Email service not available: No module named 'aiosmtplib'")
+
 class EmailService:
     """Simple email service for verification codes"""
 
