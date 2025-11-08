@@ -9,6 +9,7 @@ import UserDetails from "../../components/admin/UserDetails";
 export default function AdminUserManagement() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [view, setView] = useState<"active" | "deleted" | "create" | "details">("active");
+  const [editMode, setEditMode] = useState(false);
 
   return (
     <div className="admin-user-management p-6">
@@ -37,16 +38,16 @@ export default function AdminUserManagement() {
         </Button>
       </div>
       {view === "active" && (
-        <ActiveUsersList onSelectUser={id => { setSelectedUserId(id); setView("details"); }} />
+        <ActiveUsersList onSelectUser={(id, edit) => { setSelectedUserId(id); setEditMode(!!edit); setView("details"); }} />
       )}
       {view === "deleted" && (
-        <DeletedUsersList onSelectUser={id => { setSelectedUserId(id); setView("details"); }} />
+        <DeletedUsersList onSelectUser={id => { setSelectedUserId(id); setEditMode(false); setView("details"); }} />
       )}
       {view === "create" && (
         <CreateUserForm onCreated={() => setView("active")} />
       )}
       {view === "details" && selectedUserId && (
-        <UserDetails userId={selectedUserId} onBack={() => setView("active")} />
+        <UserDetails userId={selectedUserId} onBack={() => setView("active")} editMode={editMode} />
       )}
     </div>
   );
