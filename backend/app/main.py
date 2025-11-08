@@ -889,18 +889,35 @@ def decode_access_token(token: str) -> Optional[dict]:
 # ====================================
 # EMAIL SERVICE
 # ====================================
+try:
+    import aiosmtplib
+    EMAIL_AVAILABLE = True
+    logger.info("Email service available")
+except ImportError:
+    EMAIL_AVAILABLE = False
+    logger.warning("Email service not available: No module named 'aiosmtplib'")
+
 class EmailService:
     """Simple email service for verification codes"""
 
     def __init__(self):
+        self.available = EMAIL_AVAILABLE
+        if not self.available:
+            logger.warning("Email service disabled - aiosmtplib not installed")
+            return
+
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
+        self.smtp_username = os.getenv("SMTP_USERNAME")
+        self.smtp_password = os.getenv("SMTP_PASSWORD")
         self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
         """Send email verification code"""
+        if not self.available:
+            logger.info(f"DEV MODE: Verification code for {to_email}: {verification_code}")
+            return True
+
         try:
             # For development, just log the code
             if not self.smtp_username or not self.smtp_password:
