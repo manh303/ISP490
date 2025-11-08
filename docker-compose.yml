@@ -296,6 +296,9 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/config:/opt/airflow/config
+      - ./data-collection/data:/app/outputs
+      - ./data-collection/crawlers:/app/crawlers
+      - ./data-pipeline/schemas:/app/schemas
       - ./data:/app/data
       - ./data-pipeline/src:/app/src
     entrypoint: /bin/bash
@@ -330,6 +333,9 @@ services:
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/config:/opt/airflow/config
       - ./data:/app/data
+      - ./data-collection/data:/app/outputs
+      - ./data-collection/crawlers:/app/crawlers
+      - ./data-pipeline/schemas:/app/schemas
       - ./data-pipeline/src:/app/src
     depends_on:
       - airflow-init
@@ -353,6 +359,9 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/config:/opt/airflow/config
+      - ./data-collection/data:/app/outputs
+      - ./data-collection/crawlers:/app/crawlers
+      - ./data-pipeline/schemas:/app/schemas
       - ./data:/app/data
       - ./data-pipeline/src:/app/src
     depends_on:
@@ -371,7 +380,10 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      - ./data-collection/data:/app/outputs
+      - ./data-collection/crawlers:/app/crawlers
       - ./airflow/config:/opt/airflow/config
+      - ./data-pipeline/schemas:/app/schemas
       - ./data:/app/data
       - ./data-pipeline/src:/app/src
     depends_on:

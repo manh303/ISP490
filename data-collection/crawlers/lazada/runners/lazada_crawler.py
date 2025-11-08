@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import random
+import os, tempfile, time, random
+import undetected_chromedriver as uc
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -32,21 +34,204 @@ class FixedLazadaCrawler:
         self.setup_driver()
 
     def setup_driver(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option('useAutomationExtension', False)
+        """
+        Cấu hình Chrome anti-bot cho Lazada:
+        - undetected-chromedriver
+        - spoof UA/locale/platform
+        - chặn ảnh/font để nhẹ & giảm dấu vết
+        - stealth JS che dấu automation
+        - hỗ trợ proxy & non-headless qua env
+        Env hỗ trợ:
+        LAZADA_UA            : override UA
+        LAZADA_HTTP_PROXY    : http(s)://user:pass@host:port
+        LAZADA_HEADLESS      : "0" để chạy non-headless (nếu có Xvfb), mặc định headless
+        LAZADA_CHROME_MAJOR  : ép major version (vd "120") nếu cần
+        CHROME_BIN           : path chromium/chrome trong container
+        CHROMEDRIVER_PATH    : path chromedriver (không bắt buộc với uc)
+        """
+        import os, tempfile, random, json
+        import undetected_chromedriver as uc
+        from selenium.webdriver.chrome.options import Options
+        from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
+        # --- Options & flags an toàn trong container ---
+        opts = Options()
+        headless = os.environ.get("LAZADA_HEADLESS", "1") != "0"
+        if headless:
+            # "old-headless" tương thích anti-bot tốt hơn một số site
+            opts.add_argument("--headless=chrome")
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        opts.add_argument("--disable-gpu")
+        opts.add_argument("--disable-software-rasterizer")
+        opts.add_argument("--disable-blink-features=AutomationControlled")
+        opts.add_argument("--disable-features=Translate,OptimizationHints,AutomationControlled")
+        opts.add_argument("--disable-extensions")
+        opts.add_argument("--disable-background-networking")
+        opts.add_argument("--mute-audio")
+        opts.add_argument("--no-zygote")
+        opts.add_argument("--window-size=1280,900")
+        # Ngôn ngữ & UA
+        ua = os.environ.get(
+            "LAZADA_UA",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        )
+        opts.add_argument("--lang=vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7")
+        opts.add_argument(f"--user-agent={ua}")
+
+        # Hồ sơ/Cache tạm để tránh bị "dính" fingerprint giữa các lần
+        tmp = tempfile.mkdtemp(prefix="uc-profile-")
+        opts.add_argument(f"--user-data-dir={tmp}/profile")
+        opts.add_argument(f"--disk-cache-dir={tmp}/cache")
+
+        # Proxy (nếu có)
+        proxy = os.environ.get("LAZADA_HTTP_PROXY")
+        if proxy:
+            opts.add_argument(f"--proxy-server={proxy}")
+
+        # Trỏ tới binary Chromium trong container (nếu có)
+        chrome_bin = os.environ.get("CHROME_BIN", "/usr/bin/chromium-browser")
+        if os.path.exists(chrome_bin):
+            # uc v3: dùng browser_executable_path
+            browser_executable_path = chrome_bin
+        else:
+            browser_executable_path = None
+
+        # Khai báo capabilities: giảm đợi page-load
+        caps = DesiredCapabilities.CHROME.copy()
+        caps["pageLoadStrategy"] = "eager"
+
+        # Tham số uc
+        version_main = os.environ.get("LAZADA_CHROME_MAJOR")
+        uc_kwargs = dict(
+            options=opts,
+            desired_capabilities=caps,
+            headless=headless,
+            suppress_welcome=True,
+            use_subprocess=True,
+        )
+        if browser_executable_path:
+            uc_kwargs["browser_executable_path"] = browser_executable_path
+        if version_main:
+            uc_kwargs["version_main"] = int(version_main)
+
+        # Khởi tạo driver (uc sẽ tự quản driver nếu không chỉ định)
+        self.driver = uc.Chrome(**uc_kwargs)
+
+        # Random viewport một chút
+        self.driver.set_window_size(
+            random.randint(1200, 1420), random.randint(800, 1020)
+        )
+
+        # --- CDP tweaks: spoof UA/lang/platform + chặn tài nguyên nặng ---
         try:
-            self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            print("Chrome driver khoi tao thanh cong")
-        except Exception as e:
-            print(f"Loi khoi tao Chrome driver: {e}")
-            raise
+            self.driver.execute_cdp_cmd("Network.enable", {})
+            # chặn ảnh/font/icon để nhẹ & bớt footprint
+            self.driver.execute_cdp_cmd("Network.setBlockedURLs", {"urls": [
+                "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.svg",
+                "*.woff", "*.woff2", "*.ttf", "*.otf", "*.ico"
+            ]})
+            # override UA + ngôn ngữ + platform Win32
+            self.driver.execute_cdp_cmd("Network.setUserAgentOverride", {
+                "userAgent": ua,
+                "platform": "Win32",
+                "acceptLanguage": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
+            })
+        except Exception:
+            pass
+
+        # --- Stealth JS: che dấu webdriver, plugins, languages, WebGL vendor ---
+        stealth_js = r"""
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        Object.defineProperty(navigator, 'language',  { get: () => 'vi-VN' });
+        Object.defineProperty(navigator, 'languages', { get: () => ['vi-VN','vi','en-US','en'] });
+        Object.defineProperty(navigator, 'platform',  { get: () => 'Win32' });
+        Object.defineProperty(navigator, 'vendor',    { get: () => 'Google Inc.' });
+        // plugins length > 0
+        Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3] });
+
+        // WebGL vendor/renderer
+        const getParameter = WebGLRenderingContext.prototype.getParameter;
+        WebGLRenderingContext.prototype.getParameter = function (param) {
+        if (param === 37445) { return 'Google Inc. (Intel)'; } // UNMASKED_VENDOR_WEBGL
+        if (param === 37446) { return 'ANGLE (Intel, Intel(R) UHD Graphics, D3D11)'; } // UNMASKED_RENDERER_WEBGL
+        return getParameter.call(this, param);
+        };
+
+        // permissions
+        const originalQuery = window.navigator.permissions.query;
+        window.navigator.permissions.query = (parameters) => (
+        parameters.name === 'notifications'
+            ? Promise.resolve({ state: Notification.permission })
+            : originalQuery(parameters)
+        );
+        """
+        try:
+            self.driver.execute_cdp_cmd(
+                "Page.addScriptToEvaluateOnNewDocument",
+                {"source": stealth_js}
+            )
+        except Exception:
+            pass
+
+        print("[AntiBot] Driver ready - headless=%s, UA=%s" % (headless, ua))
+
+
+    # ====== THÊM các helper này vào trong class (ngay dưới setup_driver) ======
+    def is_blocked(self, html: str) -> bool:
+        if not html:
+            return True
+        low = html.lower()
+        patterns = [
+            "are you human", "security verification", "captcha",
+            "access denied", "forbidden",
+            "tạm thời không thể truy cập", "xác minh bảo mật"
+        ]
+        return any(p in low for p in patterns)
+
+    def humanize(self):
+        """Giả lập thao tác nhẹ để giảm dấu hiệu bot."""
+        try:
+            import random, time
+            from selenium.webdriver.common.action_chains import ActionChains
+            ActionChains(self.driver).move_by_offset(
+                random.randint(1, 7), random.randint(1, 5)
+            ).perform()
+            self.driver.execute_script(
+                "window.scrollTo(0, Math.floor(Math.random()*300)+100);"
+            )
+            time.sleep(random.uniform(0.6, 1.6))
+        except Exception:
+            pass
+
+    def get_with_retry(self, url: str, max_tries: int = 5, sleep_min=1.5, sleep_max=3.5) -> str:
+        """Đi tới URL với backoff; nếu bị chặn thử lại sau khi reset dấu vết nhẹ."""
+        import time, random
+        for i in range(1, max_tries + 1):
+            self.driver.get(url)
+            time.sleep(random.uniform(sleep_min, sleep_max))
+            self.humanize()
+            html = ""
+            try:
+                html = self.driver.page_source
+            except Exception:
+                pass
+            if not self.is_blocked(html):
+                return html
+
+            # Bị chặn → dọn cookie & đổi một chút rồi thử lại
+            try:
+                self.driver.delete_all_cookies()
+            except Exception:
+                pass
+            self.driver.set_window_size(
+                random.randint(1200, 1420), random.randint(800, 1020)
+            )
+            # backoff tăng dần
+            time.sleep(random.uniform(3.0, 6.0) + i * random.uniform(0.8, 1.6))
+        raise RuntimeError("Bị anti-bot chặn liên tục khi GET: %s" % url)
 
     def random_delay(self, min_delay=1, max_delay=3):
         delay = random.uniform(min_delay, max_delay)
