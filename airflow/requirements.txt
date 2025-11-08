@@ -2,6 +2,14 @@
 # AIRFLOW REQUIREMENTS - COMPATIBLE VERSIONS
 # ====================================
 
+undetected-chromedriver==3.5.5
+selenium==4.10.0
+webdriver-manager==3.8.6
+beautifulsoup4==4.12.2
+requests==2.31.0
+lxml==4.9.3
+playwright==1.47.0
+
 # Airflow providers (đã ok với 2.8.1)
 apache-airflow-providers-postgres==5.7.1
 apache-airflow-providers-docker==3.8.0
