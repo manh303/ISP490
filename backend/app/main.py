@@ -908,8 +908,8 @@ class EmailService:
 
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("SMTP_USERNAME")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
+        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
         self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
