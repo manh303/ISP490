@@ -16,6 +16,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+from middleware.activity_middleware import ActivityLoggingMiddleware
+from services.activity_logger import ActivityLogger
 
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
@@ -279,6 +281,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add activity logging middleware
+app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
 
 # Update security headers middleware
 @app.middleware("http")
@@ -683,6 +688,58 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
         logger.error(f"DSS dashboard error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post(f"{settings.API_V1_PREFIX}/admin/setup-activity-logs")
+async def setup_activity_logs(db: DatabaseManager = Depends(get_database)):
+    """Create activity logs table and insert test data"""
+    try:
+        # Create table
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS user_activity_logs (
+            log_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            email VARCHAR(255),
+            action VARCHAR(100) NOT NULL,
+            resource VARCHAR(100),
+            details JSONB,
+            ip_address INET,
+            user_agent TEXT,
+            status VARCHAR(20) DEFAULT 'success',
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """
+        await db.execute_query(create_table_query)
+        
+        # Create indexes
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON user_activity_logs(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON user_activity_logs(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON user_activity_logs(action)"
+        ]
+        
+        for index_query in indexes:
+            await db.execute_query(index_query)
+        
+        # Insert test data
+        test_data_query = """
+        INSERT INTO user_activity_logs (user_id, email, action, resource, details, ip_address, status)
+        VALUES 
+            (1, 'admin@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
+            (3, 'customer@dss.com', 'GET /api/v1/dss/dashboard', '/api/v1/dss/dashboard', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (1, 'admin@dss.com', 'GET /api/v1/admin/users', '/api/v1/admin/users', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNOUT', '/api/v1/auth/signout', '{"method": "manual"}', '127.0.0.1', 'success')
+        """
+        await db.execute_query(test_data_query)
+        
+        return {
+            "success": True,
+            "message": "Activity logs table created and test data inserted"
+        }
+        
+    except Exception as e:
+        logger.error(f"Setup activity logs error: {e}")
+        raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
+
 @app.get(f"{settings.API_V1_PREFIX}/dss/overview")
 async def dss_overview():
     """DSS system overview"""
@@ -728,6 +785,64 @@ async def get_dss_modules():
         "total_modules": len(modules),
         "timestamp": datetime.now().isoformat()
     }
+
+@app.post("/setup-activity-logs")
+async def setup_activity_logs_direct(db: DatabaseManager = Depends(get_database)):
+    """Create activity logs table and insert test data - Direct endpoint"""
+    try:
+        # Create table
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS user_activity_logs (
+            log_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            email VARCHAR(255),
+            action VARCHAR(100) NOT NULL,
+            resource VARCHAR(100),
+            details JSONB,
+            ip_address INET,
+            user_agent TEXT,
+            status VARCHAR(20) DEFAULT 'success',
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """
+        await db.execute_query(create_table_query)
+        
+        # Create indexes
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON user_activity_logs(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON user_activity_logs(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON user_activity_logs(action)"
+        ]
+        
+        for index_query in indexes:
+            await db.execute_query(index_query)
+        
+        # Insert test data
+        test_data_query = """
+        INSERT INTO user_activity_logs (user_id, email, action, resource, details, ip_address, status)
+        VALUES 
+            (1, 'admin@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
+            (3, 'customer@dss.com', 'GET /api/v1/dss/dashboard', '/api/v1/dss/dashboard', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (1, 'admin@dss.com', 'GET /api/v1/admin/users', '/api/v1/admin/users', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNOUT', '/api/v1/auth/signout', '{"method": "manual"}', '127.0.0.1', 'success')
+        """
+        await db.execute_query(test_data_query)
+        
+        return {
+            "success": True,
+            "message": "Activity logs table created and test data inserted successfully!",
+            "table_created": True,
+            "test_data_inserted": 5
+        }
+        
+    except Exception as e:
+        logger.error(f"Setup activity logs error: {e}")
+        return {
+            "success": False,
+            "message": f"Setup failed: {str(e)}",
+            "error": str(e)
+        }
 
 # ====================================
 # SIMPLE AUTHENTICATION (Temporary Fix)
@@ -1055,6 +1170,20 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         access_token = create_access_token(user_data, request.email)
 
+        # Log signin activity
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user_data["user_id"],
+                email=user_data["email"],
+                action="USER_SIGNIN",
+                resource="/api/v1/auth/signin",
+                details={"role": user_data["role"], "method": "password"},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log signin activity: {e}")
+
         logger.info(f"Successful signin for: {request.email} with role: {user_data['role']}")
 
         # Role -> menu mapping to return allowed screens/actions for frontend
@@ -1216,6 +1345,22 @@ async def signout(request: Request):
             payload = decode_access_token(token)
             if payload:
                 user_email = payload.get("email", "unknown")
+                user_id = payload.get("user_id")
+                
+                # Log signout activity
+                try:
+                    activity_logger = ActivityLogger(db_manager)
+                    await activity_logger.log_activity(
+                        user_id=user_id,
+                        email=user_email,
+                        action="USER_SIGNOUT",
+                        resource="/api/v1/auth/signout",
+                        details={"method": "manual"},
+                        status="success"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to log signout activity: {e}")
+                
                 logger.info(f"User signed out: {user_email}")
         except Exception:
             pass  # Token invalid, but still return success
@@ -1299,6 +1444,20 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
         # Create user in database (pending status)
         user_id = await create_user_in_db(db, request.name, request.email.lower(), password_hash)
 
+        # Log signup activity
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user_id,
+                email=request.email.lower(),
+                action="USER_SIGNUP",
+                resource="/api/v1/auth/signup",
+                details={"full_name": request.name, "method": "email"},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log signup activity: {e}")
+
         # Store verification token
         # Temporarily disabled: email verification storage requires table iam_email_verification
         # await store_verification_token(db, request.email.lower(), token_hash)
@@ -1369,7 +1528,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "/", "/health", "/api/v1/status",
             "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
             "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
-            "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+            "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
 
             ]
         }

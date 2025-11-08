@@ -4,6 +4,7 @@ Admin User Management API Endpoints
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from typing import List, Dict, Any, Optional
 import logging
+from services.activity_logger import ActivityLogger
 
 # Import models and services
 import sys
@@ -384,4 +385,98 @@ async def permanent_delete_user(
     except Exception as e:
         logger.error(f"Permanent delete user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to permanently delete user")
+
+@router.get("/activity-logs")
+async def get_activity_logs(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(50, ge=1, le=100, description="Items per page"),
+    user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    action: Optional[str] = Query(None, description="Filter by action"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db = Depends(get_database)
+):
+    """Get user activity logs with filters"""
+    try:
+        activity_logger = ActivityLogger(db)
+        result = await activity_logger.get_activity_logs(
+            page=page,
+            limit=limit,
+            user_id=user_id,
+            action=action,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        logger.error(f"Get activity logs error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get activity logs: {str(e)}")
+
+@router.get("/activity-stats")
+async def get_activity_stats(
+    days: int = Query(7, ge=1, le=365, description="Number of days to analyze"),
+    db = Depends(get_database)
+):
+    """Get activity statistics"""
+    try:
+        activity_logger = ActivityLogger(db)
+        stats = await activity_logger.get_activity_stats(days)
+        
+        return {
+            "success": True,
+            "data": stats
+        }
+    except Exception as e:
+        logger.error(f"Get activity stats error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get activity stats: {str(e)}")
+
+@router.get("/user-activity/{user_id}")
+async def get_user_activity(
+    user_id: int,
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    db = Depends(get_database)
+):
+    """Get activity logs for specific user"""
+    try:
+        activity_logger = ActivityLogger(db)
+        result = await activity_logger.get_activity_logs(
+            page=page,
+            limit=limit,
+            user_id=user_id
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
+        logger.error(f"Get user activity error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get user activity: {str(e)}")
+
+@router.post("/clear-activity-logs")
+async def clear_activity_logs(
+    days_older_than: int = Query(30, ge=1, description="Clear logs older than X days"),
+    db = Depends(get_database)
+):
+    """Clear activity logs older than specified days"""
+    try:
+        query = """
+        DELETE FROM user_activity_logs 
+        WHERE created_at < NOW() - INTERVAL '%s days'
+        """
+        
+        await db.execute_query(query, (days_older_than,))
+        
+        return {
+            "success": True,
+            "message": f"Cleared activity logs older than {days_older_than} days"
+        }
+    except Exception as e:
+        logger.error(f"Clear activity logs error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear activity logs: {str(e)}")
 
