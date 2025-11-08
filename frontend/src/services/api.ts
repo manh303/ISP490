@@ -121,6 +121,40 @@ export interface ResetPasswordResponse { success: boolean; message: string; }
 
 /* ----------------------------- API ------------------------------ */
 
+export const adminAPI = {
+  getActivityLogs: async (params: {
+    page?: number;
+    limit?: number;
+    user_id?: number;
+    action?: string;
+    start_date?: string;
+    end_date?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) queryParams.append(key, value.toString());
+    });
+    
+    const response = await api.get(`/v1/admin/activity-logs?${queryParams}`);
+    return response.data;
+  },
+
+  getActivityStats: async (days: number = 7) => {
+    const response = await api.get(`/v1/admin/activity-stats?days=${days}`);
+    return response.data;
+  },
+
+  getUserActivity: async (userId: number, page: number = 1, limit: number = 20) => {
+    const response = await api.get(`/v1/admin/user-activity/${userId}?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+
+  clearActivityLogs: async (daysOlderThan: number = 30) => {
+    const response = await api.post(`/v1/admin/clear-activity-logs?days_older_than=${daysOlderThan}`);
+    return response.data;
+  }
+};
+
 export const authAPI = {
   /** Đăng nhập DB (FastAPI) */
   loginDatabase: async (data: SignInRequest): Promise<ApiResponse<SignInResponse>> => {
