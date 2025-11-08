@@ -23,6 +23,7 @@ interface User {
 interface UserDetailsProps {
   userId: number;
   onBack: () => void;
+  editMode?: boolean;
 }
 
 const ROLE_OPTIONS = [
@@ -32,13 +33,15 @@ const ROLE_OPTIONS = [
   { code: "MANAGER", name: "Manager" },
 ];
 
-export default function UserDetails({ userId, onBack }: UserDetailsProps) {
+export default function UserDetails(props: UserDetailsProps) {
+  const { userId, onBack, editMode } = props;
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editMode, setEditMode] = useState(false);
+  const [editModeState, setEditModeState] = useState<boolean>(!!editMode);
   const [form, setForm] = useState({ full_name: "", phone: "", role_code: "CUSTOMER" });
   const [password, setPassword] = useState("");
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -64,7 +67,7 @@ export default function UserDetails({ userId, onBack }: UserDetailsProps) {
         phone: form.phone,
         role_code: form.role_code
       });
-      setEditMode(false);
+  setEditModeState(false);
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Cập nhật thất bại");
     } finally {
@@ -108,84 +111,134 @@ export default function UserDetails({ userId, onBack }: UserDetailsProps) {
     }
   };
 
-  const handlePermanentDelete = async () => {
-    setLoading(true);
-    try {
-      await userApi.permanentDeleteUser(userId);
-      onBack();
-    } catch (err) {
-      setError("Xóa vĩnh viễn thất bại");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handlePermanentDelete = async () => {
+  //   setLoading(true);
+  //   try {
+  //     await userApi.permanentDeleteUser(userId);
+  //     onBack();
+  //   } catch (err) {
+  //     setError("Xóa vĩnh viễn thất bại");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  if (loading) return <div className="text-gray-500">Đang tải...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (loading) return <div className="text-gray-500 text-center py-8">Đang tải dữ liệu người dùng...</div>;
+  if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
   if (!user) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-200 max-w-md mx-auto p-6">
-      <Button variant="outline" className="mb-4" onClick={onBack}>Quay lại</Button>
-      <h2 className="text-xl font-semibold mb-4">Chi tiết người dùng</h2>
-      {editMode ? (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-1">Họ tên</label>
-            <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 max-w-lg mx-auto p-8">
+      <Button variant="outline" className="mb-6" onClick={onBack}>
+        ← Quay lại danh sách
+      </Button>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Chi tiết người dùng</h2>
+
+      {/* Thông tin người dùng */}
+      <div className="mb-8">
+        {editModeState ? (
+          <div className="space-y-5">
+            <div>
+              <label className="block text-base font-medium text-gray-700 mb-2">Họ tên</label>
+              <input className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:border-brand-500 text-gray-900 text-base" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Nhập họ tên" />
+            </div>
+            <div>
+              <label className="block text-base font-medium text-gray-700 mb-2">Số điện thoại</label>
+              <input className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:border-brand-500 text-gray-900 text-base" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="Nhập số điện thoại" />
+            </div>
+            <div>
+              <label className="block text-base font-medium text-gray-700 mb-2">Vai trò</label>
+              <Select value={form.role_code} onValueChange={val => setForm(f => ({ ...f, role_code: val }))}>
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    className="w-full border border-gray-300 bg-white rounded-lg px-4 py-2 text-left flex justify-between items-center focus:outline-none"
+                    onClick={() => setShowRoleDropdown(v => !v)}
+                  >
+                    {ROLE_OPTIONS.find(opt => opt.code === form.role_code)?.name || "Chọn vai trò"}
+                    <span className="ml-2 text-gray-400">▼</span>
+                  </button>
+                  {showRoleDropdown && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-60 overflow-auto">
+                      {ROLE_OPTIONS.map(opt => (
+                        <li
+                          key={opt.code}
+                          className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 ${form.role_code === opt.code ? 'bg-blue-100 font-semibold' : ''}`}
+                          onClick={() => { setForm(f => ({ ...f, role_code: opt.code })); setShowRoleDropdown(false); }}
+                        >
+                          {opt.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </Select>
+            </div>
+            <div className="flex gap-3 mt-2">
+              <Button className="flex-1" onClick={handleUpdate} disabled={loading} variant="default">Lưu thay đổi</Button>
+              <Button className="flex-1" variant="outline" onClick={() => setEditModeState(false)}>Hủy</Button>
+            </div>
           </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Số điện thoại</label>
-            <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-base">
+              <span className="font-semibold text-gray-700">Họ tên:</span> <span className="text-gray-900">{user.full_name}</span>
+            </div>
+            <div className="flex items-center gap-2 text-base">
+              <span className="font-semibold text-gray-700">Email:</span> <span className="text-gray-900">{user.email}</span>
+            </div>
+            <div className="flex items-center gap-2 text-base">
+              <span className="font-semibold text-gray-700">Số điện thoại:</span> <span className="text-gray-900">{user.phone}</span>
+            </div>
+            <div className="flex items-center gap-2 text-base">
+              <span className="font-semibold text-gray-700">Vai trò:</span>
+              <Badge variant={user.role_name === 'Admin' ? 'default' : 'secondary'}>{user.role_name}</Badge>
+            </div>
+            <div className="flex items-center gap-2 text-base">
+              <span className="font-semibold text-gray-700">Trạng thái:</span>
+              {user.status === 'Active' ? (
+                <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
+              ) : (
+                <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
+              )}
+            </div>
+            <Button className="w-full mt-4" variant="outline" onClick={() => setEditModeState(true)}>
+              <span className="font-semibold">Chỉnh sửa thông tin</span>
+            </Button>
           </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Vai trò</label>
-            <Select value={form.role_code} onValueChange={val => setForm(f => ({ ...f, role_code: val }))}>
-              <SelectTrigger className="w-full border border-gray-300 bg-white">
-                <SelectValue placeholder="Chọn vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLE_OPTIONS.map(opt => (
-                  <SelectItem key={opt.code} value={opt.code}>{opt.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button className="w-full" onClick={handleUpdate} disabled={loading}>Lưu thay đổi</Button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Họ tên:</span> <span>{user.full_name}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Email:</span> <span>{user.email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Số điện thoại:</span> <span>{user.phone}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Vai trò:</span>
-            <Badge variant={user.role_name === 'Admin' ? 'default' : 'secondary'}>{user.role_name}</Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Trạng thái:</span>
-            <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>{user.status}</Badge>
-          </div>
-          <Button className="w-full mt-2" variant="outline" onClick={() => setEditMode(true)}>Chỉnh sửa</Button>
-        </div>
-      )}
-      <div className="mt-6">
-        <h3 className="font-semibold mb-2">Đổi mật khẩu</h3>
-        <div className="flex gap-2">
-          <input className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mật khẩu mới" />
-          <Button variant="outline" onClick={handleUpdatePassword} disabled={loading}>Cập nhật</Button>
+        )}
+      </div>
+
+      {/* Đổi mật khẩu */}
+      <div className="mb-8">
+        <h3 className="font-semibold text-lg mb-3 text-gray-800">Đổi mật khẩu</h3>
+        <div className="flex gap-3">
+          <input className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring text-base" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nhập mật khẩu mới" />
+          <Button variant="default" onClick={handleUpdatePassword} disabled={loading}>Cập nhật</Button>
         </div>
       </div>
-      <div className="mt-6 flex flex-col gap-2">
-        <Button variant="destructive" onClick={handleDisable} disabled={loading}>Vô hiệu hóa</Button>
-        <Button variant="outline" onClick={handleRestore} disabled={loading}>Khôi phục</Button>
-        <Button variant="destructive" className="bg-red-700 hover:bg-red-800" onClick={handlePermanentDelete} disabled={loading}>Xóa vĩnh viễn</Button>
+
+      {/* Các thao tác quản trị */}
+      <div className="flex flex-col gap-3">
+        {user.status === 'Active' ? (
+          <Button
+            variant="destructive"
+            onClick={handleDisable}
+            disabled={loading}
+            className={`font-semibold py-2 bg-red-600 hover:bg-red-700 text-white border-none ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            Vô hiệu hóa tài khoản
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            onClick={handleRestore}
+            disabled={loading}
+            className={`font-semibold py-2 ${loading ? 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed' : ''}`}
+          >
+            Khôi phục tài khoản
+          </Button>
+        )}
       </div>
     </div>
   );
