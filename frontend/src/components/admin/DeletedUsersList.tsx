@@ -114,16 +114,25 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
-                    {user.status}
-                  </Badge>
+                  {user.status === 'active' ? (
+                    <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
+                  ) : (
+                    <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     <Button size="sm" variant="outline" onClick={() => handleRestore(user.user_id)} title="Khôi phục">
                       <RotateCcw className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handlePermanentDelete(user.user_id)} title="Xóa vĩnh viễn">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handlePermanentDelete(user.user_id)}
+                      title="Xóa vĩnh viễn"
+                      className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1 rounded"
+                      disabled={loading}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id)} title="Xem chi tiết">
