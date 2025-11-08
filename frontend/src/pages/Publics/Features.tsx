@@ -65,14 +65,14 @@ export function Features({ navigateTo }: FeaturesProps) {
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6">
         {/* Section Title */}
-        <div className="text-center mb-16">
+        {/* <div className="text-center mb-16">
           <h2 className="text-gray-900 mb-4">
             Các Tính Năng Nổi Bật
           </h2>
           <p className="text-gray-600 text-xl max-w-3xl mx-auto">
             Giải pháp toàn diện giúp doanh nghiệp đưa ra quyết định thông minh dựa trên dữ liệu
           </p>
-        </div>
+        </div> */}
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
