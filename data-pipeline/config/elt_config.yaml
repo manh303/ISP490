@@ -1,0 +1,203 @@
+# ELT Pipeline Configuration
+# =========================
+
+# Database Configuration
+database:
+  host: localhost
+  port: 5433
+  name: ecommerce_dss
+  user: dss_user
+  password: dss_password_123
+  schema:
+    staging: staging
+    ods: ods
+    dwh: dwh
+    marts: marts
+    control: control
+
+# Data Sources
+data_sources:
+  crawler_outputs:
+    path: ${CRAWLER_DATA_PATH:-/app/crawlers/outputs}
+    file_patterns:
+      - "*.json"
+      - "*.csv"
+    platforms:
+      - tiki
+      - lazada
+
+# ELT Processing
+elt:
+  batch_size: 1000
+  max_retries: 3
+  timeout_seconds: 3600
+
+  # Data retention
+  retention:
+    staging_days: 30
+    raw_files_days: 7
+    quality_results_days: 90
+
+# Data Quality
+quality:
+  # Quality thresholds
+  thresholds:
+    overall_score_min: 80
+    critical_failures_max: 0
+    warning_failures_max: 3
+
+  # Validation rules
+  rules:
+    staging:
+      - not_null: [source_platform, raw_data]
+      - format:
+          source_platform: [tiki, lazada]
+      - unique: [data_hash]
+
+    ods:
+      - not_null: [title, current_price]
+      - range:
+          current_price: [1000, 1000000000]
+          rating: [0, 5]
+          review_count: [0, 1000000]
+      - format:
+          product_url: "^https?://"
+
+    business:
+      - price_consistency: true
+      - platform_url_match: true
+      - data_freshness:
+          max_age_hours: 25
+          min_records_per_day: 10
+
+# Notifications
+notifications:
+  email:
+    enabled: true
+    smtp_host: localhost
+    smtp_port: 587
+    username: manhndhe173383@fpt.edu.vn
+    password: cvin xncb nmfi ogsa
+
+    recipients:
+      success: ["manh07051@gmail.com"]
+      failure: ["manh07051@gmail.com", "admin@company.com"]
+      quality_alerts: ["data-team@company.com"]
+
+  slack:
+    enabled: false
+    webhook_url: ${SLACK_WEBHOOK:-}
+    channels:
+      general: "#elt-pipeline"
+      alerts: "#alerts"
+
+# Logging
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  handlers:
+    console:
+      enabled: true
+      level: INFO
+
+    file:
+      enabled: true
+      level: DEBUG
+      path: "/opt/airflow/logs/elt/"
+      max_size_mb: 100
+      backup_count: 5
+
+    database:
+      enabled: true
+      table: "control.pipeline_logs"
+
+# Performance
+performance:
+  parallel_processing:
+    enabled: true
+    max_workers: 4
+
+  memory_optimization:
+    chunk_size: 10000
+    low_memory_mode: false
+
+  database:
+    connection_pool_size: 10
+    connection_pool_overflow: 20
+    connection_pool_timeout: 30
+
+# Monitoring
+monitoring:
+  metrics:
+    enabled: true
+    collection_interval: 60
+
+    track:
+      - pipeline_duration
+      - records_processed
+      - error_rate
+      - quality_score
+      - database_performance
+
+  alerts:
+    pipeline_timeout: 7200  # 2 hours
+    memory_threshold_mb: 4096
+    disk_space_threshold_gb: 10
+    quality_score_threshold: 80
+
+# Development & Testing
+development:
+  debug_mode: false
+  sample_data_size: 1000
+  skip_quality_checks: false
+
+  test_data:
+    enabled: true
+    path: "/opt/airflow/test_data/"
+
+# Platform Specific Configurations
+platforms:
+  tiki:
+    url_pattern: "tiki.vn"
+    price_currency: "VND"
+    rating_scale: 5
+
+    field_mapping:
+      external_id_pattern: "p(\\d+)\\.html"
+      title_fields: ["name", "title"]
+      price_fields: ["price", "current_price"]
+      original_price_fields: ["original_price", "list_price"]
+
+  lazada:
+    url_pattern: "lazada.vn"
+    price_currency: "VND"
+    rating_scale: 5
+
+    field_mapping:
+      external_id_pattern: "i(\\d+)\\.html|pdp-i(\\d+)"
+      title_fields: ["title", "name"]
+      price_fields: ["price", "price_text"]
+      original_price_fields: ["original_price", "original_price_text"]
+
+# Schema Evolution
+schema:
+  version: "1.0.0"
+  auto_migration: true
+  backup_before_migration: true
+
+  migrations:
+    enabled: true
+    path: "/opt/airflow/data-pipeline/migrations/"
+
+# Data Lineage
+lineage:
+  tracking:
+    enabled: true
+    table: "control.data_lineage"
+
+  track:
+    - source_files
+    - transformation_steps
+    - quality_checks
+    - output_tables

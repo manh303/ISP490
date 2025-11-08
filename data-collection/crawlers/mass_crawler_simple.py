@@ -49,6 +49,9 @@ class MassCrawler:
             'tai-nghe': 'headphone'
         }
 
+        # Combined categories for mass crawling (use tiki_categories as main)
+        self.categories = self.tiki_categories
+
         self.stats = {
             'total_products': 0,
             'tiki_products': 0,
