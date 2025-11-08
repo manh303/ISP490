@@ -24,7 +24,7 @@ class FixedLazadaCrawler:
             "laptops": "https://www.lazada.vn/tag/laptops/?q=laptops",
             "tablets": "https://www.lazada.vn/tag/tablets/?q=tablets",
             "smartwatches": "https://www.lazada.vn/tag/smartwatch/?q=smartwatch",
-            "tvs": "https://www.lazada.vn/tag/tv/?q=tv",                                                                                                                                                                                            
+            "tvs": "https://www.lazada.vn/tag/tv/?q=tv",
             "headphones": "https://www.lazada.vn/tag/headphones/?q=headphones",
             "cameras": "https://www.lazada.vn/tag/cameras/?q=cameras",
             "monitors": "https://www.lazada.vn/tag/monitors/?q=monitors",
@@ -642,7 +642,8 @@ class FixedLazadaCrawler:
         print(f"Dang crawl {category_name} - trang {page_num}: {url}")
 
         try:
-            self.driver.get(url)
+            # dùng retry có humanize để giảm block
+            html = self.get_with_retry(url, max_tries=5)
             self.random_delay(2, 4)
 
             try:
