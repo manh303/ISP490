@@ -22,12 +22,12 @@ export default function UserDropdown() {
       await logout();
       closeDropdown();
       showToast("✅ Successfully signed out. See you soon!", "success", 3000);
-      setTimeout(() => navigate("/auth/signin"), 500); // đồng bộ với các route khác
+      setTimeout(() => navigate("/signin"), 500); // đồng bộ với các route khác
     } catch (error) {
       console.error("Logout failed:", error);
       showToast("❌ Logout failed, but redirecting to sign in...", "warning", 3000);
       closeDropdown();
-      setTimeout(() => navigate("/auth/signin"), 1000);
+      setTimeout(() => navigate("/signin"), 1000);
     }
   };
 

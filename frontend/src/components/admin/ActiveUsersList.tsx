@@ -27,7 +27,7 @@ interface User {
 }
 
 interface ActiveUsersListProps {
-    onSelectUser: (id: number) => void;
+    onSelectUser: (id: number, editMode?: boolean) => void;
 }
 
 export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) {
@@ -93,17 +93,20 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
-                                        {user.status}
-                                    </Badge>
+                                    {user.status === 'active' ? (
+                                        <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
+                                    ) : (
+                                        <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell>{user.last_login_at ? new Date(user.last_login_at).toLocaleString() : '-'}</TableCell>
                                 <TableCell>
                                     <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id)} title="Xem chi tiết">
+                                        <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id, false)} title="Xem chi tiết">
                                             <Eye className="h-4 w-4" />
                                         </Button>
-                                        <Button size="sm" variant="outline" title="Sửa">
+
+                                        <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id, true)} title="Sửa">
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <Button size="sm" variant="destructive" title="Xóa">
