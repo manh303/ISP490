@@ -274,23 +274,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Custom OpenAPI schema without security schemes
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-    # Remove any security schemes to hide Authorize button
-    if "components" in openapi_schema:
-        openapi_schema["components"].pop("securitySchemes", None)
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
+# Remove custom OpenAPI to avoid duplicate security schemes
+# FastAPI will auto-generate based on dependencies
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
@@ -323,6 +308,14 @@ try:
     logger.info("Test Admin routes included")
 except ImportError as e:
     logger.warning(f"Test Admin routes not available: {e}")
+
+# Include Role Management router
+try:
+    from api.v1.roles import router as roles_router
+    app.include_router(roles_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Role Management routes included")
+except ImportError as e:
+    logger.warning(f"Role Management routes not available: {e}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -408,6 +401,14 @@ async def api_status():
             "database": DATABASE_AVAILABLE,
             "authentication": IAM_AVAILABLE
         },
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get(f"{settings.API_V1_PREFIX}/test-roles")
+async def test_roles():
+    """Test endpoint to check if roles router is working"""
+    return {
+        "message": "Roles router is working!",
         "timestamp": datetime.now().isoformat()
     }
 

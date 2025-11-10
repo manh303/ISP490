@@ -2,6 +2,7 @@
 Admin User Management API Endpoints
 """
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
 import logging
 from services.activity_logger import ActivityLogger
@@ -32,10 +33,38 @@ router = APIRouter(
     }
 )
 
+security = HTTPBearer()
+
 # Admin access dependency
-async def require_admin_access(request: Request) -> Dict[str, Any]:
+async def require_admin_access(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     """Dependency to require admin access for endpoints"""
-    return get_current_admin_user(request)
+    from utils.auth_helpers import decode_access_token
+    from main import settings
+    
+    token = credentials.credentials
+    logger.info(f"Admin access check - Token: {token[:20]}...")
+    
+    # Decode token
+    payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    if not payload:
+        logger.error("Token decode failed")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    logger.info(f"Token payload: {payload}")
+    
+    # Check admin role
+    user_role = payload.get("role")
+    if user_role not in ["ADMIN", "SUPER_ADMIN"]:
+        logger.error(f"Access denied - Role: {user_role}, Required: ADMIN or SUPER_ADMIN")
+        raise HTTPException(status_code=403, detail=f"Admin access required. Current role: {user_role}")
+    
+    logger.info(f"Admin access granted for user: {payload.get('email')}")
+    return {
+        "user_id": payload.get("user_id"),
+        "email": payload.get("email"),
+        "role": user_role,
+        "full_name": payload.get("full_name", "Admin User")
+    }
 
 # Dependency to get database manager
 async def get_database():
@@ -65,8 +94,8 @@ async def get_user_service(db = Depends(get_database)) -> UserManagementService:
 async def get_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
-    admin_user: Dict[str, Any] = Depends(require_admin_access),
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """
     Get list of active users
@@ -103,7 +132,8 @@ async def get_users(
 async def get_deleted_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Get list of deleted users (status = disabled)"""
     try:
@@ -129,7 +159,8 @@ async def get_deleted_users(
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Get user by ID"""
     try:
@@ -149,8 +180,8 @@ async def get_user(
 @router.post("/users", response_model=UserActionResponse)
 async def create_user(
     user_data: UserCreateRequest,
-    admin_user: Dict[str, Any] = Depends(require_admin_access),
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """
     Create new user
@@ -202,8 +233,8 @@ async def create_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdateRequest,
-    admin_user: Dict[str, Any] = Depends(require_admin_access),
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Update user information"""
     try:
@@ -240,7 +271,8 @@ async def update_user(
 async def update_user_password(
     user_id: int,
     password_data: UserPasswordUpdateRequest,
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Update user password"""
     try:
@@ -267,7 +299,8 @@ async def update_user_password(
 @router.put("/users/{user_id}/disable", response_model=UserActionResponse)
 async def disable_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """
     Soft delete user (move to deleted list)
@@ -303,8 +336,8 @@ async def disable_user(
 @router.put("/users/{user_id}/restore", response_model=UserActionResponse)
 async def restore_user(
     user_id: int,
-    request: Request,
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: UserManagementService = Depends(get_user_service),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Restore user from deleted list"""
     try:
@@ -391,7 +424,8 @@ async def get_activity_logs(
     action: Optional[str] = Query(None, description="Filter by action"),
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
-    db = Depends(get_database)
+    db = Depends(get_database),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Get user activity logs with filters"""
     try:
@@ -416,7 +450,8 @@ async def get_activity_logs(
 @router.get("/activity-stats")
 async def get_activity_stats(
     days: int = Query(7, ge=1, le=365, description="Number of days to analyze"),
-    db = Depends(get_database)
+    db = Depends(get_database),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Get activity statistics"""
     try:
@@ -436,7 +471,8 @@ async def get_user_activity(
     user_id: int,
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    db = Depends(get_database)
+    db = Depends(get_database),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Get activity logs for specific user"""
     try:
@@ -458,7 +494,8 @@ async def get_user_activity(
 @router.post("/clear-activity-logs")
 async def clear_activity_logs(
     days_older_than: int = Query(30, ge=1, description="Clear logs older than X days"),
-    db = Depends(get_database)
+    db = Depends(get_database),
+    admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Clear activity logs older than specified days"""
     try:
