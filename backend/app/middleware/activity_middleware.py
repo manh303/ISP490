@@ -29,8 +29,9 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
             if auth_header and auth_header.startswith("Bearer "):
                 token = auth_header.split(" ")[1]
                 # Decode token to get user info
-                from utils.jwt_utils import decode_access_token
-                payload = decode_access_token(token)
+                from utils.auth_helpers import decode_access_token
+                from main import settings
+                payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
                 if payload:
                     user_id = payload.get("user_id")
                     email = payload.get("email")
