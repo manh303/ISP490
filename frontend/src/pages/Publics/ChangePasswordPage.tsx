@@ -1,5 +1,5 @@
 import { ArrowLeft, Shield } from "lucide-react";
-import type { Page } from "../App";
+import type { Page } from "../../App";
 
 interface ChangePasswordPageProps {
   navigateTo: (page: Page) => void;

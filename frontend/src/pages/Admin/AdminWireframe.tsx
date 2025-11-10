@@ -26,7 +26,7 @@ export function AdminWireframe() {
     name: `Người dùng ${i + 1}`,
     email: `user${i + 1}@example.com`,
     role: i % 3 === 0 ? 'Admin' : i % 3 === 1 ? 'Analyst' : 'Data Engineer',
-    status: i % 4 === 0 ? 'Inactive' : 'Active',
+    status: i % 4 === 0 ? 'Inactive' : 'active',
   }));
 
   const displayedUsers = mockUsers.slice(0, parseInt(itemsPerPage));
@@ -121,7 +121,7 @@ export function AdminWireframe() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
+                      <Badge variant={user.status === 'active' ? 'default' : 'destructive'}>
                         {user.status}
                       </Badge>
                     </TableCell>
