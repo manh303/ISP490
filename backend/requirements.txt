@@ -3,6 +3,8 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 gunicorn==21.2.0
 python-multipart==0.0.6
+middleware==1.2.1
+logger==1.4
 
 # Async Database Support
 asyncpg==0.29.0

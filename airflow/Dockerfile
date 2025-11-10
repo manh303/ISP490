@@ -1,5 +1,5 @@
 # ====================================
-# AIRFLOW CONTAINER - FIXED VERSION
+# AIRFLOW CONTAINER - FIXED VERSION (giữ 2.8.1 như bạn)
 # ====================================
 FROM apache/airflow:2.8.1-python3.9
 
@@ -8,7 +8,6 @@ FROM apache/airflow:2.8.1-python3.9
 # -------------------------------
 USER root
 
-# System libs cần cho Chromium/Headless + tiện ích
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -35,75 +34,73 @@ RUN set -eux; \
         libdrm2 \
         libgbm1 \
     ; \
-    # Cài Chromium & Chromedriver (tên gói có thể khác tùy base)
+    # Cài Chromium & Chromedriver (tên gói tùy base)
     if apt-cache show chromium >/dev/null 2>&1; then \
         apt-get install -y --no-install-recommends chromium chromium-driver; \
-        ln -sf /usr/bin/chromium /usr/bin/chromium-browser || true; \
     else \
         apt-get install -y --no-install-recommends chromium-browser chromium-chromedriver || true; \
     fi; \
+    # Đồng bộ symlink để đường dẫn chuẩn đoán chắc chắn
+    if [ -x /usr/bin/chromium ]; then ln -sf /usr/bin/chromium /usr/bin/chromium-browser; fi; \
+    if [ -x /usr/lib/chromium/chromedriver ]; then ln -sf /usr/lib/chromium/chromedriver /usr/bin/chromedriver; fi; \
     rm -rf /var/lib/apt/lists/*
 
 # Env cho Selenium/Chrome
 ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 ENV DISPLAY=:99
+ENV TZ=Asia/Bangkok
 
 # -------------------------------
 # 2) AIRFLOW: Python deps
 # -------------------------------
 USER airflow
 
-# Copy trước requirements để cache tốt hơn
+# Nếu bạn có requirements riêng, giữ nguyên để cache tốt
 COPY requirements.txt /opt/airflow/requirements.txt
 
-# Cài deps của project + các gói cần thiết cho crawler
-# (Nếu requirements.txt của bạn đã có những gói này, pip sẽ skip)
 RUN pip install --no-cache-dir --upgrade pip && \
+    # Cài gói dự án của bạn
     pip install --no-cache-dir -r /opt/airflow/requirements.txt && \
+    # Gói crawler/phổ biến (nếu đã có trong requirements.txt thì pip sẽ skip)
     pip install --no-cache-dir \
-        playwright==1.47.0 \
         undetected-chromedriver \
         selenium \
         beautifulsoup4==4.12.2 \
-        lxml==4.9.3
+        lxml==4.9.3 && \
+    # Providers cần cho Celery/DB
+    pip install --no-cache-dir \
+        apache-airflow-providers-postgres \
+        apache-airflow-providers-redis
 
-# Cache browsers cho Playwright ở nơi dễ quản lý/ghi
+# (Tuỳ chọn) Nếu bạn dùng Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/airflow/.cache/ms-playwright
 RUN mkdir -p "${PLAYWRIGHT_BROWSERS_PATH}"
 
-# -------------------------------
-# 3) ROOT: Cài OS deps cho Playwright Chromium
-#    (cần quyền root để apt install-deps)
-# -------------------------------
 USER root
+# Cài OS deps cho Playwright Chromium (không lỗi nếu không dùng)
 RUN python -m playwright install-deps chromium || true
-
-# -------------------------------
-# 4) AIRFLOW: Tải Chromium cho Playwright vào cache của user airflow
-# -------------------------------
 USER airflow
-RUN python -m playwright install chromium
+RUN python -m playwright install chromium || true
 
 # -------------------------------
-# 5) Thư mục DAGS/PLUGINS/CONFIG
+# 3) Thư mục DAGS/PLUGINS/CONFIG
 # -------------------------------
 RUN mkdir -p /opt/airflow/dags /opt/airflow/plugins /opt/airflow/config
 
-# (Tuỳ chọn) Nếu muốn bake sẵn:
 # COPY dags/ /opt/airflow/dags/
 # COPY plugins/ /opt/airflow/plugins/
 # COPY config/ /opt/airflow/config/
 
 # -------------------------------
-# 6) Airflow ENV
+# 4) Airflow ENV
 # -------------------------------
 ENV PYTHONPATH="/opt/airflow/dags:/app/src:${PYTHONPATH}"
 ENV AIRFLOW__CORE__LOAD_EXAMPLES=False
 ENV AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=True
 
 # -------------------------------
-# 7) Healthcheck
+# 5) Healthcheck
 # -------------------------------
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD airflow jobs check --job-type SchedulerJob --hostname "$(hostname)" || exit 1
