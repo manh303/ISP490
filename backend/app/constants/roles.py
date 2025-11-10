@@ -3,10 +3,11 @@ Role and permission constants
 """
 
 # Valid role codes
-VALID_ROLES = ["ADMIN", "ANALYST", "CUSTOMER"]
+VALID_ROLES = ["SUPER_ADMIN", "ADMIN", "ANALYST", "CUSTOMER"]
 
 # Role hierarchy (higher number = more permissions)
 ROLE_HIERARCHY = {
+    "SUPER_ADMIN": 3,
     "ADMIN": 3,
     "ANALYST": 2, 
     "CUSTOMER": 1
@@ -14,6 +15,19 @@ ROLE_HIERARCHY = {
 
 # Role-based menu definitions
 ROLE_MENUS = {
+    "SUPER_ADMIN": {
+        "modules": ["Dashboard", "User Management", "Activity Logs", "System Settings", "Data Management"],
+        "actions": ["view", "create", "update", "delete", "manage_users", "view_logs"],
+        "permissions": ["system.admin", "user.manage", "data.write", "analytics.view", "dss.dashboard"],
+        "admin_features": {
+            "user_management": True,
+            "activity_logs": True,
+            "system_settings": True,
+            "user_creation": True,
+            "user_deletion": True,
+            "can_access_admin_panel": True
+        }
+    },
     "ADMIN": {
         "modules": ["Dashboard", "User Management", "Activity Logs", "System Settings", "Data Management"],
         "actions": ["view", "create", "update", "delete", "manage_users", "view_logs"],
