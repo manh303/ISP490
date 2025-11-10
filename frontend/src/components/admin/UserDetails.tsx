@@ -196,7 +196,7 @@ export default function UserDetails(props: UserDetailsProps) {
             </div>
             <div className="flex items-center gap-2 text-base">
               <span className="font-semibold text-gray-700">Trạng thái:</span>
-              {user.status === 'Active' ? (
+              {user.status === 'active' ? (
                 <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
               ) : (
                 <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
@@ -220,7 +220,7 @@ export default function UserDetails(props: UserDetailsProps) {
 
       {/* Các thao tác quản trị */}
       <div className="flex flex-col gap-3">
-        {user.status === 'Active' ? (
+        {user.status === 'active' ? (
           <Button
             variant="destructive"
             onClick={handleDisable}
