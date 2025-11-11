@@ -3,6 +3,8 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 gunicorn==21.2.0
 python-multipart==0.0.6
+middleware==1.2.1
+logger==1.4
 
 # Async Database Support
 asyncpg==0.29.0
@@ -100,6 +102,7 @@ rich==13.7.0
 typer==0.9.0
 
 # Production WSGI/ASGI
+# uvloop==0.19.0
 httptools==0.6.1
 
 # Serialization Performance

@@ -1,33 +1,20 @@
 """
-Role and permission constants
+Role and permission constants - Updated to match actual database
 """
 
-# Valid role codes
-VALID_ROLES = ["SUPER_ADMIN", "ADMIN", "ANALYST", "CUSTOMER"]
+# Valid role codes (matching actual database)
+VALID_ROLES = ["ADMIN", "ANALYST", "DATA_ENGINEER", "ML"]
 
 # Role hierarchy (higher number = more permissions)
 ROLE_HIERARCHY = {
-    "SUPER_ADMIN": 3,
-    "ADMIN": 3,
-    "ANALYST": 2, 
-    "CUSTOMER": 1
+    "ADMIN": 10,
+    "DATA_ENGINEER": 5,
+    "ML": 5,
+    "ANALYST": 3
 }
 
 # Role-based menu definitions
 ROLE_MENUS = {
-    "SUPER_ADMIN": {
-        "modules": ["Dashboard", "User Management", "Activity Logs", "System Settings", "Data Management"],
-        "actions": ["view", "create", "update", "delete", "manage_users", "view_logs"],
-        "permissions": ["system.admin", "user.manage", "data.write", "analytics.view", "dss.dashboard"],
-        "admin_features": {
-            "user_management": True,
-            "activity_logs": True,
-            "system_settings": True,
-            "user_creation": True,
-            "user_deletion": True,
-            "can_access_admin_panel": True
-        }
-    },
     "ADMIN": {
         "modules": ["Dashboard", "User Management", "Activity Logs", "System Settings", "Data Management"],
         "actions": ["view", "create", "update", "delete", "manage_users", "view_logs"],
@@ -41,10 +28,23 @@ ROLE_MENUS = {
             "can_access_admin_panel": True
         }
     },
-    "ANALYST": {
-        "modules": ["Dashboard", "Customer Analytics", "Sales Analytics", "Reports", "Data Visualization"],
-        "actions": ["view", "export", "analyze"],
-        "permissions": ["data.read", "analytics.view", "reports.generate", "dss.dashboard"],
+    "DATA_ENGINEER": {
+        "modules": ["Dashboard", "Data Pipeline", "ETL Management", "Data Quality", "System Monitoring"],
+        "actions": ["view", "create", "update", "manage_pipeline", "monitor"],
+        "permissions": ["data.read", "data.write", "pipeline.manage", "analytics.view", "dss.dashboard"],
+        "admin_features": {
+            "user_management": False,
+            "activity_logs": True,
+            "system_settings": False,
+            "user_creation": False,
+            "user_deletion": False,
+            "can_access_admin_panel": False
+        }
+    },
+    "ML": {
+        "modules": ["Dashboard", "ML Models", "Model Training", "Predictions", "Model Analytics"],
+        "actions": ["view", "train", "predict", "deploy", "analyze"],
+        "permissions": ["data.read", "ml.train", "ml.deploy", "analytics.view", "dss.dashboard"],
         "admin_features": {
             "user_management": False,
             "activity_logs": False,
@@ -54,10 +54,10 @@ ROLE_MENUS = {
             "can_access_admin_panel": False
         }
     },
-    "CUSTOMER": {
-        "modules": ["Dashboard", "Orders", "Profile", "Purchase History"],
-        "actions": ["view", "create_order", "update_profile"],
-        "permissions": ["profile.view", "orders.create", "data.read_own"],
+    "ANALYST": {
+        "modules": ["Dashboard", "Customer Analytics", "Sales Analytics", "Reports", "Data Visualization"],
+        "actions": ["view", "export", "analyze"],
+        "permissions": ["data.read", "analytics.view", "reports.generate", "dss.dashboard"],
         "admin_features": {
             "user_management": False,
             "activity_logs": False,
@@ -75,7 +75,7 @@ def validate_role_code(role_code: str) -> bool:
 
 def get_role_menu(role_code: str) -> dict:
     """Get menu configuration for role"""
-    return ROLE_MENUS.get(role_code, ROLE_MENUS["CUSTOMER"])
+    return ROLE_MENUS.get(role_code, ROLE_MENUS["ANALYST"])
 
 def has_permission(user_role: str, required_role: str) -> bool:
     """Check if user role has permission for required role"""

@@ -881,16 +881,22 @@ VALID_USERS = {
         "role": "ADMIN"
     },
     "analyst@dss.com": {
-        "user_id": 3,  # Fixed: was 2, should be 3
+        "user_id": 3,
         "password": "analyst123",
         "full_name": "Data Analyst",
         "role": "ANALYST"
     },
-    "customer@dss.com": {
-        "user_id": 4,  # Fixed: was 3, should be 4
-        "password": "customer123",
-        "full_name": "Customer User",
-        "role": "CUSTOMER"
+    "ml@dss.com": {
+        "user_id": 4,
+        "password": "mleng123",
+        "full_name": "ML Engineer",
+        "role": "ML"
+    },
+    "dataeng@dss.com": {
+        "user_id": 2,
+        "password": "dataeng123",
+        "full_name": "Data Engineer",
+        "role": "DATA_ENGINEER"
     }
 }
 
