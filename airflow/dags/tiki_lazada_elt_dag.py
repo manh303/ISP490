@@ -56,6 +56,18 @@ python -u "$SCRIPT"
 """
     )
 
+    crawl_lazada_reviews = BashOperator(
+        task_id="crawl_lazada_reviews",
+        bash_command=PREAMBLE + r"""
+SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_crawler_airflow.py"
+pip install -q playwright 2>/dev/null || true
+playwright install chromium 2>/dev/null || true
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
+python -u "$SCRIPT"
+"""
+    )
+
     crawl_tiki = BashOperator(
         task_id="crawl_tiki",
         bash_command=PREAMBLE + r"""
@@ -66,8 +78,20 @@ python -u "$SCRIPT"
 """
     )
 
+    crawl_tiki_reviews = BashOperator(
+        task_id="crawl_tiki_reviews",
+        bash_command=PREAMBLE + r"""
+SCRIPT="/app/crawlers/tiki/tiki_review_crawler.py"
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
+python -u "$SCRIPT"
+"""
+    )
+
     def _raw_ready(**context):
-        run_date = context["ds"]
+        # Use today's date instead of execution_date for manual runs
+        from datetime import datetime as dt
+        run_date = dt.now().strftime("%Y-%m-%d")
         need = [
             Path(CRAWLER_OUTPUT_DIR) / "lazada" / f"date={run_date}",
             Path(CRAWLER_OUTPUT_DIR) / "tiki" / f"date={run_date}",
@@ -79,6 +103,19 @@ python -u "$SCRIPT"
                 return False
         return True
 
+    def _reviews_ready(**context):
+        # Check if reviews data is ready
+        from datetime import datetime as dt
+        run_date = dt.now().strftime("%Y-%m-%d")
+        lazada_reviews = Path(CRAWLER_OUTPUT_DIR) / "lazada_reviews" / f"date={run_date}"
+        tiki_reviews = Path(CRAWLER_OUTPUT_DIR) / "tiki_reviews" / f"date={run_date}"
+        
+        # Check if at least one reviews directory exists with data
+        has_lazada = lazada_reviews.exists() and any(p.suffix == ".jsonl" for p in lazada_reviews.rglob("*.jsonl"))
+        has_tiki = tiki_reviews.exists() and any(p.suffix == ".jsonl" for p in tiki_reviews.rglob("*.jsonl"))
+        
+        return has_lazada or has_tiki
+
     wait_raw_ready = PythonSensor(
         task_id="wait_raw_ready",
         python_callable=_raw_ready,
@@ -87,156 +124,76 @@ python -u "$SCRIPT"
         mode="reschedule",
     )
 
-    spark_etl = BashOperator(
-        task_id="spark_etl",
+    wait_reviews_ready = PythonSensor(
+        task_id="wait_reviews_ready",
+        python_callable=_reviews_ready,
+        poke_interval=30,
+        timeout=1800,
+        mode="reschedule",
+    )
+
+    load_to_stg = BashOperator(
+        task_id="load_to_stg",
         bash_command=rf"""
-{SPARK_SUBMIT} --master {SPARK_MASTER} \
-  --packages org.postgresql:postgresql:42.7.3 \
-  {SPARK_JOB_PATH} \
-  --date "{{{{ ds }}}}" \
-  --input "{CRAWLER_OUTPUT_DIR}" \
-  --bronze "/app/data/bronze" \
-  --silver "/app/data/silver" \
-  --pg-url "jdbc:postgresql://postgres:5432/ecommerce_dss" \
-  --pg-user "dss_user" \
-  --pg-pass "dss_password_123"
+pip install -q psycopg2-binary 2>/dev/null || true
+python /app/src/staging/load_raw_data.py
 """
     )
 
-    dwh_ddl = PostgresOperator(
-        task_id="dwh_ddl",
-        postgres_conn_id="postgres_default",
-        sql=r"""
-CREATE SCHEMA IF NOT EXISTS ods;
-CREATE SCHEMA IF NOT EXISTS dwh;
-CREATE SCHEMA IF NOT EXISTS mart;
-
-CREATE TABLE IF NOT EXISTS ods.stg_products (
-    snapshot_date date,
-    source text,
-    product_key text,
-    title text,
-    brand text,
-    model text,
-    canonical_category text,
-    price bigint,
-    currency text,
-    rating double precision,
-    review_count bigint,
-    seller text,
-    url text,
-    image_url text,
-    collected_at timestamptz
-);
-
-CREATE TABLE IF NOT EXISTS dwh.dim_product (
-    product_key text PRIMARY KEY,
-    brand text,
-    model text,
-    canonical_category text,
-    first_seen date,
-    last_seen date,
-    is_active boolean default true
-);
-
-CREATE TABLE IF NOT EXISTS dwh.fct_product_snapshot (
-    snapshot_date date,
-    product_key text,
-    source text,
-    price bigint,
-    rating double precision,
-    review_count bigint,
-    seller text,
-    PRIMARY KEY (snapshot_date, product_key, source)
-);
-
-CREATE TABLE IF NOT EXISTS mart.mart_price_daily (
-    snapshot_date date,
-    product_key text,
-    min_price bigint,
-    max_price bigint,
-    avg_price numeric,
-    price_volatility numeric,
-    PRIMARY KEY (snapshot_date, product_key)
-);
-
-CREATE TABLE IF NOT EXISTS mart.mart_popularity_daily (
-    snapshot_date date,
-    product_key text,
-    rating double precision,
-    review_count bigint,
-    rank_popularity bigint,
-    PRIMARY KEY (snapshot_date, product_key)
-);
-""",
+    transform_to_ods = BashOperator(
+        task_id="transform_to_ods",
+        bash_command=rf"""
+python /app/src/standardization/data_cleaning.py
+"""
     )
 
-    dwh_merge = PostgresOperator(
-        task_id="dwh_merge",
-        postgres_conn_id="postgres_default",
-        sql=r"""
-INSERT INTO dwh.dim_product(product_key, brand, model, canonical_category, first_seen, last_seen, is_active)
-SELECT
-    s.product_key,
-    NULLIF(TRIM(s.brand),'') AS brand,
-    NULLIF(TRIM(s.model),'') AS model,
-    NULLIF(TRIM(s.canonical_category),'') AS canonical_category,
-    MIN(s.snapshot_date) AS first_seen,
-    MAX(s.snapshot_date) AS last_seen,
-    true
-FROM ods.stg_products s
-GROUP BY s.product_key, NULLIF(TRIM(s.brand),''), NULLIF(TRIM(s.model),''), NULLIF(TRIM(s.canonical_category),'')
-ON CONFLICT (product_key) DO UPDATE
-SET
-    brand = COALESCE(EXCLUDED.brand, dwh.dim_product.brand),
-    model = COALESCE(EXCLUDED.model, dwh.dim_product.model),
-    canonical_category = COALESCE(EXCLUDED.canonical_category, dwh.dim_product.canonical_category),
-    last_seen = GREATEST(dwh.dim_product.last_seen, EXCLUDED.last_seen),
-    is_active = true;
-
-INSERT INTO dwh.fct_product_snapshot(snapshot_date, product_key, source, price, rating, review_count, seller)
-SELECT DISTINCT s.snapshot_date, s.product_key, s.source, s.price, s.rating, s.review_count, s.seller
-FROM ods.stg_products s
-WHERE s.snapshot_date = '{{ ds }}';
-""",
+    data_quality_check = BashOperator(
+        task_id="data_quality_check",
+        bash_command=rf"""
+python /app/src/standardization/data_quality.py
+"""
     )
 
-    build_mart_price = PostgresOperator(
-        task_id="build_mart_price",
-        postgres_conn_id="postgres_default",
-        sql=r"""
-DELETE FROM mart.mart_price_daily WHERE snapshot_date = '{{ ds }}';
-INSERT INTO mart.mart_price_daily(snapshot_date, product_key, min_price, max_price, avg_price, price_volatility)
-SELECT '{{ ds }}'::date, product_key,
-       MIN(price) AS min_price,
-       MAX(price) AS max_price,
-       AVG(price)::numeric(18,2) AS avg_price,
-       (STDDEV_POP(price)/NULLIF(AVG(price),0))::numeric(18,4) AS price_volatility
-FROM dwh.fct_product_snapshot
-WHERE snapshot_date = '{{ ds }}'
-GROUP BY product_key;
-""",
+    identifier_sync = BashOperator(
+        task_id="identifier_sync",
+        bash_command=rf"""
+python /app/src/standardization/identifier_sync.py
+"""
     )
 
-    build_mart_popularity = PostgresOperator(
-        task_id="build_mart_popularity",
-        postgres_conn_id="postgres_default",
-        sql=r"""
-DELETE FROM mart.mart_popularity_daily WHERE snapshot_date = '{{ ds }}';
-WITH base AS (
-  SELECT product_key, MAX(rating) AS rating, MAX(review_count) AS review_count
-  FROM dwh.fct_product_snapshot
-  WHERE snapshot_date = '{{ ds }}'
-  GROUP BY product_key
-)
-INSERT INTO mart.mart_popularity_daily(snapshot_date, product_key, rating, review_count, rank_popularity)
-SELECT '{{ ds }}'::date, product_key, rating, review_count,
-       DENSE_RANK() OVER (ORDER BY review_count DESC NULLS LAST, rating DESC NULLS LAST)
-FROM base;
-""",
+    category_mapping = BashOperator(
+        task_id="category_mapping",
+        bash_command=rf"""
+python /app/src/standardization/category_mapping.py
+"""
+    )
+
+    technical_metadata = BashOperator(
+        task_id="technical_metadata",
+        bash_command=rf"""
+python /app/src/standardization/technical_metadata.py
+"""
+    )
+
+    build_dwh = BashOperator(
+        task_id="build_dwh",
+        bash_command=rf"""
+python /app/src/warehouse_build.py
+"""
+    )
+
+    build_datamart = BashOperator(
+        task_id="build_datamart",
+        bash_command=rf"""
+python /app/src/datamart_build.py
+"""
     )
 
     end = EmptyOperator(task_id="end")
 
     start >> [crawl_lazada, crawl_tiki] >> wait_raw_ready
-    wait_raw_ready >> spark_etl >> dwh_ddl >> dwh_merge >> [build_mart_price, build_mart_popularity] >> end
+    crawl_lazada >> crawl_lazada_reviews >> wait_reviews_ready
+    crawl_tiki >> crawl_tiki_reviews >> wait_reviews_ready
+    [wait_raw_ready, wait_reviews_ready] >> load_to_stg >> transform_to_ods >> data_quality_check
+    data_quality_check >> [identifier_sync, category_mapping, technical_metadata]
+    [identifier_sync, category_mapping, technical_metadata] >> build_dwh >> build_datamart >> end
