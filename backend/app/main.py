@@ -16,6 +16,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+
+# Setup logging FIRST
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 try:
     from middleware.activity_middleware import ActivityLoggingMiddleware
     from services.activity_logger import ActivityLogger
@@ -90,10 +96,6 @@ except ImportError:
     except ImportError as e2:
         email_service_module = False
         print(f"WARNING: Email service not available: {e2}")
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # ====================================
 # CONFIGURATION

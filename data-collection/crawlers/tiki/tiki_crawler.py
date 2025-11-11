@@ -102,23 +102,26 @@ class TikiCrawler:
         return all_products
 
     def save_jsonl(self, products, category: str):
-        """Save to JSONL"""
+        """Save to JSONL with date partition"""
         output_dir = OUTPUT_DIR
         try:
             Path(output_dir).mkdir(parents=True, exist_ok=True)
         except:
             output_dir = "/tmp"
-            Path(output_dir).mkdir(parents=True, exist_ok=True)
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        date_dir = Path(output_dir) / "tiki" / f"date={today}"
+        date_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"tiki_{category.replace(' ', '_')}_{timestamp}.jsonl"
-        filepath = os.path.join(output_dir, filename)
+        filepath = date_dir / filename
         
         with open(filepath, 'w', encoding='utf-8') as f:
             for product in products:
                 f.write(json.dumps(product, ensure_ascii=False) + '\n')
         
-        print(f"{LOG_PREFIX} Saved {len(products)} products to {filepath}")
+        print(f"{LOG_PREFIX} Saved {len(products)} to {filepath}")
 
     def run(self, max_pages=60):
         """Run crawler"""

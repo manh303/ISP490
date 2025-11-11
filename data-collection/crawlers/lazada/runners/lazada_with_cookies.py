@@ -89,6 +89,8 @@ class LazadaCookieCrawler:
                         review_text = review_elem.inner_text()
                         match = re.search(r'\((\d+)\)', review_text)
                         product['review'] = match.group(1) if match else '0'
+                    else:
+                        product['review'] = '0'
                     
                     img = elem.query_selector('img[src]')
                     if img:
@@ -179,7 +181,12 @@ class LazadaCookieCrawler:
                     page_url = f"{url}?page={page_num}"
                 print(f"{LOG_PREFIX} Page {page_num}")
                 
-                page.goto(page_url, wait_until='networkidle', timeout=60000)
+                try:
+                    page.goto(page_url, wait_until='domcontentloaded', timeout=90000)
+                    page.wait_for_timeout(3000)
+                except Exception as e:
+                    print(f"{LOG_PREFIX} Page load timeout, retrying...")
+                    page.goto(page_url, wait_until='load', timeout=120000)
                 items = self.extract_products(page)
                 
                 if not items:
