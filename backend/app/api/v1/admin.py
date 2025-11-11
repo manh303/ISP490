@@ -133,20 +133,20 @@ async def get_users(
 async def get_deleted_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    user_service: UserManagementService = Depends(get_user_service),
+    admin_service: AdminService = Depends(get_admin_service),
     admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Get list of deleted users (status = disabled)"""
     try:
         # Get deleted users
-        result = await user_service.get_users(status='disabled', page=page, limit=limit)
+        users, total = await admin_service.get_users(page, limit, 'disabled')
         
-        users = [format_user_response(user) for user in result['users']]
+        user_responses = [UserResponse(**user) for user in users]
         
         return UserListResponse(
             success=True,
-            data=users,
-            total=result['total'],
+            data=user_responses,
+            total=total,
             page=page,
             limit=limit
         )
@@ -278,7 +278,7 @@ async def update_user_password(
 @router.put("/users/{user_id}/disable", response_model=UserActionResponse)
 async def disable_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service),
+    admin_service: AdminService = Depends(get_admin_service),
     admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """
@@ -290,7 +290,7 @@ async def disable_user(
     """
     try:
         # Check if user exists and is active
-        existing_user = await user_service.get_user_by_id(user_id)
+        existing_user = await admin_service.get_user_by_id(user_id)
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -298,7 +298,7 @@ async def disable_user(
             raise HTTPException(status_code=400, detail="User is not active")
         
         # Soft delete
-        await user_service.soft_delete_user(user_id)
+        await admin_service.disable_user(user_id)
         
         return UserActionResponse(
             success=True,
@@ -315,13 +315,13 @@ async def disable_user(
 @router.put("/users/{user_id}/restore", response_model=UserActionResponse)
 async def restore_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service),
+    admin_service: AdminService = Depends(get_admin_service),
     admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
     """Restore user from deleted list"""
     try:
         # Check if user exists and is disabled
-        existing_user = await user_service.get_user_by_id(user_id)
+        existing_user = await admin_service.get_user_by_id(user_id)
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -329,7 +329,7 @@ async def restore_user(
             raise HTTPException(status_code=400, detail="User is not in deleted list")
         
         # Restore user
-        await user_service.restore_user(user_id)
+        await admin_service.restore_user(user_id)
         
         return UserActionResponse(
             success=True,
