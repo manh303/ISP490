@@ -295,11 +295,14 @@ except ImportError as e:
 
 # Include Profile router
 try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
     from api.v1.profile import router as profile_router
     app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Profile routes included")
-except ImportError as e:
-    logger.warning(f"Profile routes not available: {e}")
+    logger.info("✅ Profile routes included successfully")
+except Exception as e:
+    logger.error(f"❌ Profile routes failed: {e}")
 
 # Include Test Admin router
 try:
@@ -403,6 +406,33 @@ async def api_status():
         },
         "timestamp": datetime.now().isoformat()
     }
+
+@app.get(f"{settings.API_V1_PREFIX}/check-roles")
+async def check_database_roles():
+    """Check roles in database"""
+    try:
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get all roles from database
+        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        roles = await db_manager.execute_query(query)
+        
+        return {
+            "success": True,
+            "total_roles": len(roles),
+            "roles": roles,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
 
 @app.get(f"{settings.API_V1_PREFIX}/test-roles")
 async def test_roles():
@@ -1472,7 +1502,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
             "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
             "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
-            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token",
+            "/api/v1/roles", "/api/v1/roles/{role_id}", "/docs"
 
             ]
         }

@@ -32,9 +32,7 @@ class RoleResponse(BaseModel):
     role_code: str
     role_name: str
     description: Optional[str]
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    is_active: bool = True
 
 class RoleDetailResponse(BaseModel):
     """Detailed role response with permissions"""
@@ -42,14 +40,12 @@ class RoleDetailResponse(BaseModel):
     role_code: str
     role_name: str
     description: Optional[str]
-    is_active: bool
+    is_active: bool = True
     permissions: List[str]
     modules: List[str]
     actions: List[str]
     admin_features: Dict[str, bool]
     user_count: int
-    created_at: datetime
-    updated_at: datetime
 
 class RoleCreateRequest(BaseModel):
     """Create role request"""
@@ -61,7 +57,6 @@ class RoleUpdateRequest(BaseModel):
     """Update role request"""
     role_name: Optional[str] = Field(None, max_length=100, description="Role display name")
     description: Optional[str] = Field(None, max_length=255, description="Role description")
-    is_active: Optional[bool] = Field(None, description="Role active status")
 
 class RoleListResponse(BaseModel):
     """Role list response"""
@@ -115,22 +110,17 @@ async def get_roles(
     try:
         offset = (page - 1) * limit
         
-        # Simple query without parameters first
-        if active_only:
-            query = """
-            SELECT role_id, role_code, role_name, description, is_active, created_at, updated_at
-            FROM iam_role
-            WHERE is_active = true
-            ORDER BY role_code
-            """
-            count_query = "SELECT COUNT(*) as total FROM iam_role WHERE is_active = true"
-        else:
-            query = """
-            SELECT role_id, role_code, role_name, description, is_active, created_at, updated_at
-            FROM iam_role
-            ORDER BY role_code
-            """
-            count_query = "SELECT COUNT(*) as total FROM iam_role"
+        # Simple query for new database structure
+        where_clause = "WHERE is_active = true" if active_only else ""
+        query = f"""
+        SELECT role_id, role_code, role_name, description, 
+               COALESCE(is_active, true) as is_active
+        FROM iam_role
+        {where_clause}
+        ORDER BY role_code
+        """
+        count_where = "WHERE is_active = true" if active_only else ""
+        count_query = f"SELECT COUNT(*) as total FROM iam_role {count_where}"
         
         logger.info(f"Executing query: {query}")
         all_roles = await db.execute_query(query)
@@ -181,7 +171,8 @@ async def get_role_detail(
     try:
         # Get role basic info
         role_query = """
-        SELECT role_id, role_code, role_name, description, is_active, created_at, updated_at
+        SELECT role_id, role_code, role_name, description,
+               COALESCE(is_active, true) as is_active
         FROM iam_role
         WHERE role_id = $1
         """
@@ -216,9 +207,7 @@ async def get_role_detail(
             modules=role_config.get('modules', []),
             actions=role_config.get('actions', []),
             admin_features=role_config.get('admin_features', {}),
-            user_count=user_count,
-            created_at=role['created_at'],
-            updated_at=role['updated_at']
+            user_count=user_count
         )
         
     except HTTPException:
@@ -227,71 +216,7 @@ async def get_role_detail(
         logger.error(f"Get role detail error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get role details")
 
-@router.get("/check/database", 
-           summary="🔍 Check Database Roles",
-           description="Check what roles exist in the database")
-async def check_database_roles(
-    db = Depends(get_database)
-):
-    """Check roles in database"""
-    try:
-        # First check if table exists
-        table_check = """
-        SELECT table_name FROM information_schema.tables 
-        WHERE table_schema = 'public' AND table_name = 'iam_role'
-        """
-        table_result = await db.execute_query(table_check)
-        
-        if not table_result:
-            return {
-                "success": False,
-                "message": "Table 'iam_role' does not exist",
-                "data": {"table_exists": False}
-            }
-        
-        # Get all roles from database
-        query = """
-        SELECT role_id, role_code, role_name, description, is_active, created_at, updated_at
-        FROM iam_role
-        ORDER BY role_code
-        """
-        
-        logger.info(f"Executing check query: {query}")
-        roles = await db.execute_query(query)
-        logger.info(f"Check query returned: {roles}")
-        
-        # Get user counts per role
-        user_count_query = """
-        SELECT r.role_code, COUNT(ur.user_id) as user_count
-        FROM iam_role r
-        LEFT JOIN iam_user_role ur ON r.role_id = ur.role_id
-        LEFT JOIN iam_user u ON ur.user_id = u.user_id AND u.status = 'active'
-        GROUP BY r.role_id, r.role_code
-        ORDER BY r.role_code
-        """
-        
-        user_counts = await db.execute_query(user_count_query)
-        user_count_map = {row['role_code']: row['user_count'] for row in user_counts}
-        
-        # Add user counts to roles
-        for role in roles:
-            role['user_count'] = user_count_map.get(role['role_code'], 0)
-        
-        return {
-            "success": True,
-            "message": f"Found {len(roles)} roles in database",
-            "data": {
-                "table_exists": True,
-                "roles": roles,
-                "total_roles": len(roles),
-                "active_roles": len([r for r in roles if r.get('is_active', False)]),
-                "inactive_roles": len([r for r in roles if not r.get('is_active', True)])
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"Check database roles error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to check database roles")
+
 
 @router.post("/", response_model=RoleActionResponse,
            summary="➕ Create New Role",
@@ -311,8 +236,8 @@ async def create_role(
         
         # Create role
         insert_query = """
-        INSERT INTO iam_role (role_code, role_name, description, is_active, created_at, updated_at)
-        VALUES ($1, $2, $3, true, NOW(), NOW())
+        INSERT INTO iam_role (role_code, role_name, description)
+        VALUES ($1, $2, $3)
         RETURNING role_id
         """
         
@@ -370,16 +295,10 @@ async def update_role(
             update_fields.append(f"description = ${param_count}")
             values.append(role_data.description)
             param_count += 1
-            
-        if role_data.is_active is not None:
-            update_fields.append(f"is_active = ${param_count}")
-            values.append(role_data.is_active)
-            param_count += 1
         
         if not update_fields:
             raise HTTPException(status_code=400, detail="No fields to update")
         
-        update_fields.append(f"updated_at = NOW()")
         values.append(role_id)
         
         update_query = f"""
@@ -402,69 +321,134 @@ async def update_role(
         logger.error(f"Update role error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update role")
 
-@router.post("/setup",
-           summary="🔧 Setup Default Roles",
-           description="Create default roles in database")
-async def setup_default_roles(
+
+
+@router.patch("/{role_id}/deactivate", response_model=RoleActionResponse,
+            summary="🚫 Deactivate Role",
+            description="Deactivate a role (users keep role but it becomes inactive)")
+async def deactivate_role(
+    role_id: int,
     db = Depends(get_database)
 ):
-    """Setup default roles in database"""
+    """Deactivate role"""
     try:
-        # Default roles to create
-        default_roles = [
-            {"role_code": "SUPER_ADMIN", "role_name": "Super Administrator", "description": "Full system access"},
-            {"role_code": "ADMIN", "role_name": "Administrator", "description": "System administration"},
-            {"role_code": "MANAGER", "role_name": "Business Manager", "description": "Business operations"},
-            {"role_code": "ANALYST", "role_name": "Data Analyst", "description": "Data analysis and reporting"},
-            {"role_code": "CUSTOMER", "role_name": "Customer", "description": "Basic customer access"},
-            {"role_code": "VIEWER", "role_name": "Viewer", "description": "Read-only access"}
-        ]
+        # Check if role exists
+        check_query = "SELECT role_id, role_code FROM iam_role WHERE role_id = $1"
+        existing = await db.execute_query(check_query, (role_id,))
         
-        created_roles = []
+        if not existing:
+            raise HTTPException(status_code=404, detail="Role not found")
         
-        for role in default_roles:
-            # Check if role exists
-            check_query = "SELECT role_id FROM iam_role WHERE role_code = $1"
-            existing = await db.execute_query(check_query, (role["role_code"],))
-            
-            if not existing:
-                # Create role
-                insert_query = """
-                INSERT INTO iam_role (role_code, role_name, description, is_active, created_at, updated_at)
-                VALUES ($1, $2, $3, true, NOW(), NOW())
-                RETURNING role_id
-                """
-                result = await db.execute_query(insert_query, (
-                    role["role_code"],
-                    role["role_name"],
-                    role["description"]
-                ))
-                
-                if result:
-                    created_roles.append({
-                        "role_id": result[0]["role_id"],
-                        "role_code": role["role_code"],
-                        "status": "created"
-                    })
-            else:
-                created_roles.append({
-                    "role_id": existing[0]["role_id"],
-                    "role_code": role["role_code"],
-                    "status": "already_exists"
-                })
+        role_code = existing[0]['role_code']
         
-        return {
-            "success": True,
-            "message": f"Setup completed. {len([r for r in created_roles if r['status'] == 'created'])} roles created.",
-            "data": {
-                "roles": created_roles,
-                "total_processed": len(created_roles)
-            }
-        }
+        # Update role to inactive
+        update_query = """
+        UPDATE iam_role 
+        SET is_active = false
+        WHERE role_id = $1
+        """
         
+        await db.execute_query(update_query, (role_id,))
+        
+        return RoleActionResponse(
+            success=True,
+            message=f"Role '{role_code}' deactivated successfully",
+            role_id=role_id
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Setup roles error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to setup roles")
+        logger.error(f"Deactivate role error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to deactivate role")
+
+@router.patch("/{role_id}/activate", response_model=RoleActionResponse,
+            summary="✅ Activate Role",
+            description="Activate a deactivated role")
+async def activate_role(
+    role_id: int,
+    db = Depends(get_database)
+):
+    """Activate role"""
+    try:
+        # Check if role exists
+        check_query = "SELECT role_id, role_code FROM iam_role WHERE role_id = $1"
+        existing = await db.execute_query(check_query, (role_id,))
+        
+        if not existing:
+            raise HTTPException(status_code=404, detail="Role not found")
+        
+        role_code = existing[0]['role_code']
+        
+        # Update role to active
+        update_query = """
+        UPDATE iam_role 
+        SET is_active = true
+        WHERE role_id = $1
+        """
+        
+        await db.execute_query(update_query, (role_id,))
+        
+        return RoleActionResponse(
+            success=True,
+            message=f"Role '{role_code}' activated successfully",
+            role_id=role_id
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Activate role error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to activate role")
+
+@router.delete("/{role_id}", response_model=RoleActionResponse,
+             summary="🗑️ Delete Role",
+             description="Delete role if no users are assigned to it")
+async def delete_role(
+    role_id: int,
+    db = Depends(get_database)
+):
+    """Delete role if no users assigned"""
+    try:
+        # Check if role exists
+        check_query = "SELECT role_id, role_code FROM iam_role WHERE role_id = $1"
+        existing = await db.execute_query(check_query, (role_id,))
+        
+        if not existing:
+            raise HTTPException(status_code=404, detail="Role not found")
+        
+        role_code = existing[0]['role_code']
+        
+        # Check if any users have this role
+        user_check_query = """
+        SELECT COUNT(*) as user_count
+        FROM iam_user_role
+        WHERE role_id = $1
+        """
+        user_count_result = await db.execute_query(user_check_query, (role_id,))
+        user_count = user_count_result[0]['user_count'] if user_count_result else 0
+        
+        if user_count > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Cannot delete role '{role_code}'. {user_count} users are assigned to this role. Deactivate the role instead."
+            )
+        
+        # Delete role
+        delete_query = "DELETE FROM iam_role WHERE role_id = $1"
+        await db.execute_query(delete_query, (role_id,))
+        
+        return RoleActionResponse(
+            success=True,
+            message=f"Role '{role_code}' deleted successfully",
+            role_id=role_id
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete role error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete role")
 
 @router.get("/users/{role_id}",
            summary="👥 Get Role Users",
