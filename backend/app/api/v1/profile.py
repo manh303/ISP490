@@ -1,11 +1,14 @@
 """
-Profile Management API - Clean Version
+Profile Management API
 """
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import logging
+
+# Import models and services
+from models.user import ProfileResponse, ProfileUpdateRequest, ProfileActionResponse
+from services.profile_service import ProfileService
 
 logger = logging.getLogger(__name__)
 
@@ -17,25 +20,21 @@ router = APIRouter(
 
 security = HTTPBearer()
 
-# Models
-class ProfileResponse(BaseModel):
-    user_id: int
-    email: str
-    full_name: str
-    phone: Optional[str] = None
-    role: str
-
-class ProfileUpdateRequest(BaseModel):
-    full_name: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-
-class ActionResponse(BaseModel):
-    success: bool
-    message: str
-    user_id: Optional[int] = None
-
 # Dependencies
+async def get_database():
+    """Get database connection"""
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+    from main import db_manager
+    if not db_manager.is_connected:
+        await db_manager.connect()
+    return db_manager
+
+async def get_profile_service(db = Depends(get_database)) -> ProfileService:
+    """Get profile service"""
+    return ProfileService(db)
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     """Get current user from JWT token"""
     try:
@@ -58,15 +57,27 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 # Endpoints
 @router.get("", response_model=ProfileResponse, summary="👤 View My Profile")
-async def get_my_profile(current_user: Dict[str, Any] = Depends(get_current_user)):
+async def get_my_profile(
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    profile_service: ProfileService = Depends(get_profile_service)
+):
     """Get current user's profile"""
-    return ProfileResponse(
-        user_id=current_user.get('user_id'),
-        email=current_user.get('email'),
-        full_name=current_user.get('full_name', 'User'),
-        phone=current_user.get('phone'),
-        role=current_user.get('role')
-    )
+    try:
+        user_id = current_user.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token - user ID not found")
+        
+        profile = await profile_service.get_profile(user_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        return ProfileResponse(**profile)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get profile error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get profile")
 
 @router.get("/debug-token", summary="🔍 Debug Token")
 async def debug_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -97,14 +108,30 @@ async def debug_token(credentials: HTTPAuthorizationCredentials = Depends(securi
             "token_valid": False
         }
 
-@router.put("", response_model=ActionResponse, summary="✏️ Update My Profile")
+@router.put("", response_model=ProfileActionResponse, summary="✏️ Update My Profile")
 async def update_my_profile(
     profile_data: ProfileUpdateRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    profile_service: ProfileService = Depends(get_profile_service)
 ):
     """Update current user's profile"""
-    return ActionResponse(
-        success=True,
-        message="Profile updated successfully",
-        user_id=current_user.get('user_id')
-    )
+    try:
+        user_id = current_user.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token - user ID not found")
+        
+        await profile_service.update_profile(user_id, profile_data)
+        
+        return ProfileActionResponse(
+            success=True,
+            message="Profile updated successfully",
+            user_id=user_id
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update profile error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
