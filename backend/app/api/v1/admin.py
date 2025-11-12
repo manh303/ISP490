@@ -2,7 +2,6 @@
 Admin User Management API Endpoints
 """
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
 import logging
 from services.activity_logger import ActivityLogger
@@ -12,11 +11,13 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from models.admin import (
-    UserResponse, UserCreateRequest, UserUpdateRequest, PasswordChangeRequest,
-    UserListResponse, UserActionResponse, ActivityLogResponse, ActivityStatsResponse
+from services.admin_service import (
+    UserCreateRequest, UserUpdateRequest, UserPasswordUpdateRequest,
+    UserListResponse, UserActionResponse
 )
-from services.admin_service import AdminService
+from models.shared import UserResponse
+from services.user_management_service import UserManagementService
+from utils.admin_helpers import get_current_admin_user, format_user_response
 from constants.roles import validate_role_code
 
 logger = logging.getLogger(__name__)
@@ -31,38 +32,10 @@ router = APIRouter(
     }
 )
 
-security = HTTPBearer()
-
 # Admin access dependency
-async def require_admin_access(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
+async def require_admin_access(request: Request) -> Dict[str, Any]:
     """Dependency to require admin access for endpoints"""
-    from utils.auth_helpers import decode_access_token
-    from main import settings
-    
-    token = credentials.credentials
-    logger.info(f"Admin access check - Token: {token[:20]}...")
-    
-    # Decode token
-    payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
-    if not payload:
-        logger.error("Token decode failed")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    logger.info(f"Token payload: {payload}")
-    
-    # Check admin role
-    user_role = payload.get("role")
-    if user_role not in ["ADMIN", "SUPER_ADMIN"]:
-        logger.error(f"Access denied - Role: {user_role}, Required: ADMIN or SUPER_ADMIN")
-        raise HTTPException(status_code=403, detail=f"Admin access required. Current role: {user_role}")
-    
-    logger.info(f"Admin access granted for user: {payload.get('email')}")
-    return {
-        "user_id": payload.get("user_id"),
-        "email": payload.get("email"),
-        "role": user_role,
-        "full_name": payload.get("full_name", "Admin User")
-    }
+    return get_current_admin_user(request)
 
 # Dependency to get database manager
 async def get_database():
@@ -92,9 +65,8 @@ async def get_admin_service(db = Depends(get_database)) -> AdminService:
 async def get_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     Get list of users
@@ -133,8 +105,7 @@ async def get_users(
 async def get_deleted_users(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Get list of deleted users (status = disabled)"""
     try:
@@ -160,8 +131,7 @@ async def get_deleted_users(
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Get user by ID"""
     try:
@@ -180,8 +150,8 @@ async def get_user(
 @router.post("/users", response_model=UserActionResponse)
 async def create_user(
     user_data: UserCreateRequest,
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     Create new user
@@ -227,8 +197,8 @@ async def create_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdateRequest,
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Update user information"""
     try:
@@ -254,9 +224,8 @@ async def update_user(
 @router.put("/users/{user_id}/password", response_model=UserActionResponse)
 async def update_user_password(
     user_id: int,
-    password_data: PasswordChangeRequest,
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    password_data: UserPasswordUpdateRequest,
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """Update user password"""
     try:
@@ -278,8 +247,7 @@ async def update_user_password(
 @router.put("/users/{user_id}/disable", response_model=UserActionResponse)
 async def disable_user(
     user_id: int,
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     Soft delete user (move to deleted list)
@@ -346,9 +314,9 @@ async def restore_user(
 @router.delete("/users/{user_id}", response_model=UserActionResponse)
 async def delete_user(
     user_id: int,
-    confirm: bool = Query(False, description="⚠️ REQUIRED: Set to true to confirm deletion"),
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    confirm: bool = Query(False, description="⚠️ REQUIRED: Set to true to confirm permanent deletion"),
+    admin_user: Dict[str, Any] = Depends(require_admin_access),
+    user_service: UserManagementService = Depends(get_user_service)
 ):
     """
     ⚠️ Delete user (IRREVERSIBLE)
@@ -444,14 +412,81 @@ async def get_user_activity(
             "data": result
         }
     except Exception as e:
+        logger.error(f"Permanent delete user error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to permanently delete user")
+
+@router.get("/activity-logs")
+async def get_activity_logs(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(50, ge=1, le=100, description="Items per page"),
+    user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    action: Optional[str] = Query(None, description="Filter by action"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db = Depends(get_database)
+):
+    """Get user activity logs with filters"""
+    try:
+        logs, total = await admin_service.get_activity_logs(page, limit, user_id)
+        
+        return {
+            "success": True,
+            "data": {
+                "logs": logs,
+                "total": total,
+                "page": page,
+                "limit": limit
+            }
+        }
+    except Exception as e:
+        logger.error(f"Get activity logs error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get activity logs: {str(e)}")
+
+@router.get("/activity-stats")
+async def get_activity_stats(
+    days: int = Query(7, ge=1, le=365, description="Number of days to analyze"),
+    db = Depends(get_database)
+):
+    """Get activity statistics"""
+    try:
+        stats = await admin_service.get_activity_stats()
+        
+        return {
+            "success": True,
+            "data": stats
+        }
+    except Exception as e:
+        logger.error(f"Get activity stats error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get activity stats: {str(e)}")
+
+@router.get("/user-activity/{user_id}")
+async def get_user_activity(
+    user_id: int,
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    db = Depends(get_database)
+):
+    """Get activity logs for specific user"""
+    try:
+        activity_logger = ActivityLogger(db)
+        result = await activity_logger.get_activity_logs(
+            page=page,
+            limit=limit,
+            user_id=user_id
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+    except Exception as e:
         logger.error(f"Get user activity error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get user activity: {str(e)}")
 
 @router.post("/clear-activity-logs")
 async def clear_activity_logs(
     days_older_than: int = Query(30, ge=1, description="Clear logs older than X days"),
-    db = Depends(get_database),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
+    db = Depends(get_database)
 ):
     """Clear activity logs older than specified days"""
     try:
