@@ -24,9 +24,9 @@ async def get_top_rated_products(
             p.product_name,
             p.rating_avg,
             p.review_count,
-            p.price,
+            p.price_current as price,
             p.category
-        FROM dwh_dim_product p
+        FROM ods_product_clean p
         WHERE p.review_count >= 10
         ORDER BY p.rating_avg DESC, p.review_count DESC
         LIMIT $1
@@ -54,9 +54,9 @@ async def get_rating_distribution(
             SELECT 
                 FLOOR(p.rating_avg) as rating_bucket,
                 COUNT(*) as product_count,
-                AVG(p.price) as avg_price,
+                AVG(p.price_current) as avg_price,
                 SUM(p.review_count) as total_reviews
-            FROM dwh_dim_product p
+            FROM ods_product_clean p
             WHERE p.category = $1
             GROUP BY FLOOR(p.rating_avg)
             ORDER BY rating_bucket
@@ -67,9 +67,9 @@ async def get_rating_distribution(
             SELECT 
                 FLOOR(p.rating_avg) as rating_bucket,
                 COUNT(*) as product_count,
-                AVG(p.price) as avg_price,
+                AVG(p.price_current) as avg_price,
                 SUM(p.review_count) as total_reviews
-            FROM dwh_dim_product p
+            FROM ods_product_clean p
             GROUP BY FLOOR(p.rating_avg)
             ORDER BY rating_bucket
         """
@@ -92,15 +92,14 @@ async def get_review_trends(
     """Review trends over time - Line Chart"""
     query = """
         SELECT 
-            d.date,
-            COUNT(DISTINCT f.product_id) as products_reviewed,
+            DATE(f.captured_at) as date,
+            COUNT(DISTINCT f.product_sk) as products_reviewed,
             AVG(f.rating_avg) as avg_rating,
             SUM(f.review_count) as total_reviews
         FROM dwh_fact_product_daily f
-        JOIN dwh_dim_date d ON f.date_id = d.date_id
-        WHERE d.date >= CURRENT_DATE - $1 * INTERVAL '1 day'
-        GROUP BY d.date
-        ORDER BY d.date
+        WHERE f.captured_at >= CURRENT_DATE - $1 * INTERVAL '1 day'
+        GROUP BY DATE(f.captured_at)
+        ORDER BY date
     """
     
     result = await db.execute_query(query, (days,))
@@ -124,11 +123,11 @@ async def get_price_vs_rating(
         query = """
             SELECT 
                 p.product_name,
-                p.price,
+                p.price_current as price,
                 p.rating_avg,
                 p.review_count,
                 p.category
-            FROM dwh_dim_product p
+            FROM ods_product_clean p
             WHERE p.category = $1
             ORDER BY p.review_count DESC
             LIMIT 500
@@ -138,11 +137,11 @@ async def get_price_vs_rating(
         query = """
             SELECT 
                 p.product_name,
-                p.price,
+                p.price_current as price,
                 p.rating_avg,
                 p.review_count,
                 p.category
-            FROM dwh_dim_product p
+            FROM ods_product_clean p
             ORDER BY p.review_count DESC
             LIMIT 500
         """
@@ -168,10 +167,10 @@ async def get_category_performance(
             p.category,
             COUNT(*) as product_count,
             AVG(p.rating_avg) as avg_rating,
-            AVG(p.price) as avg_price,
+            AVG(p.price_current) as avg_price,
             SUM(p.review_count) as total_reviews,
             COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated_count
-        FROM dwh_dim_product p
+        FROM ods_product_clean p
         WHERE p.category IS NOT NULL
         GROUP BY p.category
         ORDER BY total_reviews DESC
@@ -205,7 +204,7 @@ async def get_sentiment_distribution(
             END as sentiment,
             COUNT(*) as product_count,
             SUM(p.review_count) as review_count
-        FROM dwh_dim_product p
+        FROM ods_product_clean p
         GROUP BY sentiment
         ORDER BY 
             CASE sentiment
@@ -236,16 +235,16 @@ async def get_price_segments(
     query = """
         SELECT 
             CASE 
-                WHEN p.price < 100000 THEN 'Budget (<100K)'
-                WHEN p.price < 500000 THEN 'Mid-range (100K-500K)'
-                WHEN p.price < 1000000 THEN 'Premium (500K-1M)'
+                WHEN p.price_current < 100000 THEN 'Budget (<100K)'
+                WHEN p.price_current < 500000 THEN 'Mid-range (100K-500K)'
+                WHEN p.price_current < 1000000 THEN 'Premium (500K-1M)'
                 ELSE 'Luxury (>1M)'
             END as price_segment,
             COUNT(*) as product_count,
             AVG(p.rating_avg) as avg_rating,
             SUM(p.review_count) as total_reviews,
             COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated
-        FROM dwh_dim_product p
+        FROM ods_product_clean p
         GROUP BY price_segment
         ORDER BY 
             CASE price_segment
@@ -277,11 +276,11 @@ async def get_dashboard_summary(
             COUNT(*) as total_products,
             AVG(rating_avg) as overall_avg_rating,
             SUM(review_count) as total_reviews,
-            AVG(price) as avg_price,
+            AVG(price_current) as avg_price,
             COUNT(DISTINCT category) as total_categories,
             COUNT(CASE WHEN rating_avg >= 4.0 THEN 1 END) as high_rated_products,
             COUNT(CASE WHEN review_count >= 100 THEN 1 END) as popular_products
-        FROM dwh_dim_product
+        FROM ods_product_clean
     """
     
     result = await db.execute_query(query)
