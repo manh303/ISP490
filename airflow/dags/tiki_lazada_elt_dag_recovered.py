@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# airflow/dags/tiki_lazada_pipeline.py
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -6,8 +7,12 @@ from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.bash import BashOperator
 from airflow.sensors.python import PythonSensor
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
+SPARK_SUBMIT = os.getenv("SPARK_SUBMIT", "/opt/spark/bin/spark-submit")
+SPARK_MASTER = os.getenv("SPARK_MASTER", "local[*]")
+SPARK_JOB_PATH = "/app/src/spark_jobs/retail_etl.py"
 
 default_args = {"owner": "data_eng", "retries": 2, "retry_delay": timedelta(minutes=10)}
 
@@ -18,7 +23,7 @@ with DAG(
     catchup=False,
     max_active_runs=1,
     default_args=default_args,
-    tags=["elt", "spark", "retail", "ml"],
+    tags=["elt", "spark", "retail"],
 ) as dag:
 
     start = EmptyOperator(task_id="start")
@@ -84,6 +89,7 @@ python -u "$SCRIPT"
     )
 
     def _raw_ready(**context):
+        # Use today's date instead of execution_date for manual runs
         from datetime import datetime as dt
         run_date = dt.now().strftime("%Y-%m-%d")
         need = [
@@ -98,11 +104,13 @@ python -u "$SCRIPT"
         return True
 
     def _reviews_ready(**context):
+        # Check if reviews data is ready
         from datetime import datetime as dt
         run_date = dt.now().strftime("%Y-%m-%d")
         lazada_reviews = Path(CRAWLER_OUTPUT_DIR) / "lazada_reviews" / f"date={run_date}"
         tiki_reviews = Path(CRAWLER_OUTPUT_DIR) / "tiki_reviews" / f"date={run_date}"
         
+        # Check if at least one reviews directory exists with data
         has_lazada = lazada_reviews.exists() and any(p.suffix == ".jsonl" for p in lazada_reviews.rglob("*.jsonl"))
         has_tiki = tiki_reviews.exists() and any(p.suffix == ".jsonl" for p in tiki_reviews.rglob("*.jsonl"))
         
@@ -132,35 +140,10 @@ python /app/src/staging/load_raw_data.py
 """
     )
 
-    create_ods_tables = BashOperator(
-        task_id="create_ods_tables",
-        bash_command=rf"""
-pip install -q psycopg2-binary 2>/dev/null || true
-psql postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss -f /app/src/spark_jobs/create_ods_tables.sql 2>/dev/null || \
-python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); cur=conn.cursor(); cur.execute(open('/app/src/spark_jobs/create_ods_tables.sql').read()); conn.commit(); conn.close(); print('✅ ODS tables created')"
-"""
-    )
-
-    truncate_ods = BashOperator(
-        task_id="truncate_ods",
-        bash_command=r"""
-pip install -q psycopg2-binary 2>/dev/null || true
-python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); cur=conn.cursor(); cur.execute('TRUNCATE TABLE ods_product_clean, ods_review_clean CASCADE'); conn.commit(); conn.close(); print('✅ ODS tables truncated')"
-"""
-    )
-
     transform_to_ods = BashOperator(
         task_id="transform_to_ods",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/spark_jobs/ods_transformation.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+        bash_command=rf"""
+python /app/src/standardization/data_cleaning.py
 """
     )
 
@@ -194,91 +177,15 @@ python /app/src/standardization/technical_metadata.py
 
     build_dwh = BashOperator(
         task_id="build_dwh",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/spark_jobs/dwh_build.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+        bash_command=rf"""
+python /app/src/warehouse_build.py
 """
     )
 
     build_datamart = BashOperator(
         task_id="build_datamart",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/spark_jobs/datamart_build.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
-"""
-    )
-
-    ml_product_recommendation = BashOperator(
-        task_id="ml_product_recommendation",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/ml_models/product_recommendation.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
-"""
-    )
-
-    ml_price_optimization = BashOperator(
-        task_id="ml_price_optimization",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/ml_models/price_optimization.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
-"""
-    )
-
-    ml_demand_forecasting = BashOperator(
-        task_id="ml_demand_forecasting",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/ml_models/demand_forecasting.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
-"""
-    )
-
-    ml_sales_forecasting = BashOperator(
-        task_id="ml_sales_forecasting",
-        bash_command=r"""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --conf spark.sql.session.timeZone=UTC \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/ml_models/sales_forecasting.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
-  --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+        bash_command=rf"""
+python /app/src/datamart_build.py
 """
     )
 
@@ -287,6 +194,6 @@ docker exec spark-master spark-submit \
     start >> [crawl_lazada, crawl_tiki] >> wait_raw_ready
     crawl_lazada >> crawl_lazada_reviews >> wait_reviews_ready
     crawl_tiki >> crawl_tiki_reviews >> wait_reviews_ready
-    [wait_raw_ready, wait_reviews_ready] >> load_to_stg >> create_ods_tables >> truncate_ods >> transform_to_ods >> data_quality_check
-    data_quality_check >> category_mapping >> identifier_sync >> technical_metadata >> build_dwh >> build_datamart
-    build_datamart >> [ml_product_recommendation, ml_price_optimization, ml_demand_forecasting, ml_sales_forecasting] >> end
+    [wait_raw_ready, wait_reviews_ready] >> load_to_stg >> transform_to_ods >> data_quality_check
+    data_quality_check >> [identifier_sync, category_mapping, technical_metadata]
+    [identifier_sync, category_mapping, technical_metadata] >> build_dwh >> build_datamart >> end
