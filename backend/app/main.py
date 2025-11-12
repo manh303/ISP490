@@ -296,6 +296,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Remove custom OpenAPI to avoid duplicate security schemes
+# FastAPI will auto-generate based on dependencies
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
@@ -350,6 +352,7 @@ app.add_middleware(
 )
 
 # Add activity logging middleware
+app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
 
 # Update security headers middleware
 @app.middleware("http")
