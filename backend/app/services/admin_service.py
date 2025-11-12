@@ -4,7 +4,7 @@ Admin Service - Business Logic
 import logging
 import bcrypt
 from typing import List, Dict, Any, Optional, Tuple
-from models.admin import UserCreateRequest, UserUpdateRequest, PasswordChangeRequest
+from models.admin import UserCreateRequest, UserUpdateRequest, PasswordChangeRequest, UserPasswordUpdateRequest, UserActionResponse
 
 logger = logging.getLogger(__name__)
 
