@@ -307,6 +307,84 @@ async def get_price_segments(
     }
 
 
+@router.get("/platforms/comparison")
+async def get_platform_comparison(
+    db = Depends(get_db)
+):
+    """Platform comparison - Tiki vs Lazada - Grouped Bar Chart"""
+    query = """
+        SELECT 
+            p.source_platform as platform,
+            COUNT(*) as product_count,
+            AVG(p.rating_avg) as avg_rating,
+            AVG(p.price_current) as avg_price,
+            SUM(p.review_count) as total_reviews,
+            COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated_count
+        FROM ods_product_clean p
+        WHERE p.source_platform IN ('tiki', 'lazada')
+        GROUP BY p.source_platform
+        ORDER BY product_count DESC
+    """
+    
+    result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "grouped_bar",
+        "title": "Platform Comparison: Tiki vs Lazada",
+        "x_axis": "platform",
+        "y_axes": ["product_count", "avg_rating", "total_reviews"],
+        "data": result
+    }
+
+
+@router.get("/platforms/price-comparison")
+async def get_platform_price_comparison(
+    category: Optional[str] = None,
+    db = Depends(get_db)
+):
+    """Platform price comparison by category - Box Plot data"""
+    if category:
+        query = f"""
+            SELECT 
+                p.source_platform as platform,
+                p.category,
+                AVG(p.price_current) as avg_price,
+                MIN(p.price_current) as min_price,
+                MAX(p.price_current) as max_price,
+                COUNT(*) as product_count
+            FROM ods_product_clean p
+            WHERE p.source_platform IN ('tiki', 'lazada')
+            AND p.category = '{category}'
+            GROUP BY p.source_platform, p.category
+        """
+    else:
+        query = """
+            SELECT 
+                p.source_platform as platform,
+                p.category,
+                AVG(p.price_current) as avg_price,
+                MIN(p.price_current) as min_price,
+                MAX(p.price_current) as max_price,
+                COUNT(*) as product_count
+            FROM ods_product_clean p
+            WHERE p.source_platform IN ('tiki', 'lazada')
+            GROUP BY p.source_platform, p.category
+            ORDER BY product_count DESC
+            LIMIT 20
+        """
+    
+    result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "grouped_bar",
+        "title": f"Platform Price Comparison{' - ' + category if category else ''}",
+        "x_axis": "category",
+        "y_axis": "avg_price",
+        "group_by": "platform",
+        "data": result
+    }
+
+
 @router.get("/dashboard/summary")
 async def get_dashboard_summary(
     db = Depends(get_db)
@@ -320,7 +398,8 @@ async def get_dashboard_summary(
             AVG(price_current) as avg_price,
             COUNT(DISTINCT category) as total_categories,
             COUNT(CASE WHEN rating_avg >= 4.0 THEN 1 END) as high_rated_products,
-            COUNT(CASE WHEN review_count >= 100 THEN 1 END) as popular_products
+            COUNT(CASE WHEN review_count >= 100 THEN 1 END) as popular_products,
+            COUNT(DISTINCT source_platform) as total_platforms
         FROM ods_product_clean
     """
     
