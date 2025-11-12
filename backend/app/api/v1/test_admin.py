@@ -216,7 +216,7 @@ async def test_get_profile(user_id: int):
     """👤 Test get user profile"""
     try:
         from main import db_manager
-        from services.user_management_service import UserManagementService
+        from app.services.user_management_service import UserManagementService
         
         if not db_manager.is_connected:
             await db_manager.connect()
@@ -249,7 +249,7 @@ async def test_update_profile(user_id: int, full_name: str = None, phone: str = 
     """✏️ Test update user profile"""
     try:
         from main import db_manager
-        from services.user_management_service import UserManagementService
+        from app.services.user_management_service import UserManagementService
         
         if not db_manager.is_connected:
             await db_manager.connect()

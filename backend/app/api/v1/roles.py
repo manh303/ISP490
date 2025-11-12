@@ -11,7 +11,7 @@ from models.role import (
     RoleResponse, RoleDetailResponse, RoleCreateRequest, 
     RoleUpdateRequest, RoleListResponse, RoleActionResponse
 )
-from services.role_service import RoleService
+from app.services.role_service import RoleService
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ async def get_role_detail(
         user_count = await role_service.get_role_user_count(role_id)
         
         # Get role configuration from constants
-        from constants.roles import get_role_menu
+        from app.constants.roles import get_role_menu
         role_config = get_role_menu(role['role_code'])
         
         return RoleDetailResponse(
