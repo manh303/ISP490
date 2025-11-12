@@ -56,6 +56,15 @@ class PasswordChangeRequest(BaseModel):
     def validate_password_field(cls, v):
         return validate_password(v, min_length=8)
 
+class UserPasswordUpdateRequest(BaseModel):
+    """Update user password request"""
+    new_password: str = Field(..., min_length=8, description="New password")
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_field(cls, v):
+        return validate_password(v, min_length=8)
+
 class UserListResponse(BaseModel):
     """User list response"""
     success: bool

@@ -11,6 +11,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from models.user import ProfileResponse, ProfileUpdateRequest
 from services.admin_service import UserActionResponse
+
+class ProfileActionResponse(UserActionResponse):
+    pass
 from services.user_management_service import UserManagementService
 
 logger = logging.getLogger(__name__)
@@ -28,7 +31,9 @@ router = APIRouter(
 
 
 
-# Dependency to get database manager
+# Dependencies
+security = HTTPBearer()
+
 async def get_database():
     """Get database connection"""
     try:
@@ -39,6 +44,14 @@ async def get_database():
     except Exception as e:
         logger.error(f"Database connection error: {e}")
         raise HTTPException(status_code=500, detail="Database connection failed")
+
+async def get_user_service(db=Depends(get_database)):
+    """Get user management service"""
+    return UserManagementService(db)
+
+def get_current_user_from_token(credentials: HTTPAuthorizationCredentials):
+    """Mock function to get current user from token"""
+    return {"user_id": 1, "username": "test_user"}
 
 # Endpoints
 @router.get("", response_model=ProfileResponse, summary="👤 View My Profile")
