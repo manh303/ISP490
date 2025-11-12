@@ -318,7 +318,7 @@ export default function UserDetails(props: UserDetailsProps) {
               </div>
             </div>
             <div className="flex gap-3 mt-2">
-              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={handleUpdate} disabled={loading} variant="default">Lưu thay đổi</Button>
+              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" onClick={handleUpdate} disabled={loading} variant="default">Lưu thay đổi</Button>
               <Button className="flex-1" variant="outline" onClick={() => setEditModeState(false)}>Hủy</Button>
             </div>
           </div>
@@ -362,7 +362,7 @@ export default function UserDetails(props: UserDetailsProps) {
               <Button className="flex-1" variant="outline" onClick={() => setEditModeState(true)}>
                 <span className="font-semibold">✏️ Chỉnh sửa thông tin</span>
               </Button>
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" variant="default" onClick={() => setShowPasswordForm(true)}>
+              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" variant="default" onClick={() => setShowPasswordForm(true)}>
                 <span className="font-semibold">🔒 Đổi mật khẩu</span>
               </Button>
             </div>
@@ -373,7 +373,7 @@ export default function UserDetails(props: UserDetailsProps) {
       {/* Đổi mật khẩu - Only show in edit mode */}
       {editModeState && editMode !== false && (
         <Button 
-          className="w-full mb-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold" 
+          className="w-full mb-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors" 
           onClick={() => setShowPasswordForm(true)}
         >
            Đổi mật khẩu
