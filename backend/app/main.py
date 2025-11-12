@@ -16,37 +16,41 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from app.middleware.activity_middleware import ActivityLoggingMiddleware
-from services.activity_logger import ActivityLogger
-from pydantic import field_validator
-from utils.validators import validate_phone, validate_password
-from constants.roles import ROLE_MENUS, get_role_menu
-
 # Setup logging FIRST
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 try:
-    from middleware.activity_middleware import ActivityLoggingMiddleware
-    from services.activity_logger import ActivityLogger
+    from app.middleware.activity_middleware import ActivityLoggingMiddleware
+    from app.services.activity_logger import ActivityLogger
     ACTIVITY_AVAILABLE = True
 except ImportError:
-    ACTIVITY_AVAILABLE = False
-    logger.warning("Activity logging not available")
+    try:
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
+    except ImportError:
+        ACTIVITY_AVAILABLE = False
+        logger.warning("Activity logging not available")
 
 try:
     from pydantic import field_validator
-    from utils.validators import validate_phone, validate_password
-    from constants.roles import ROLE_MENUS, get_role_menu
+    from app.utils.validators import validate_phone, validate_password
+    from app.constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
-    VALIDATORS_AVAILABLE = False
-    field_validator = lambda x: lambda f: f
-    validate_phone = lambda x: x
-    validate_password = lambda x, **kwargs: x
-    ROLE_MENUS = {}
-    get_role_menu = lambda x: {}
+    try:
+        from utils.validators import validate_phone, validate_password
+        from constants.roles import ROLE_MENUS, get_role_menu
+        VALIDATORS_AVAILABLE = True
+    except ImportError:
+        VALIDATORS_AVAILABLE = False
+        field_validator = lambda x: lambda f: f
+        validate_phone = lambda x: x
+        validate_password = lambda x, **kwargs: x
+        ROLE_MENUS = {}
+        get_role_menu = lambda x: {}
 
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
@@ -974,7 +978,10 @@ def authenticate_user(email: str, password: str):
     return user_data
 
 # Use shared auth helpers
-from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+try:
+    from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+except ImportError:
+    from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
 def create_access_token(user_data: dict, email: str):
     """Create JWT access token using shared helper"""
@@ -1169,7 +1176,10 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         # Update last login time
         try:
-            from services.user_management_service import UserManagementService
+            try:
+                from app.services.user_management_service import UserManagementService
+            except ImportError:
+                from services.user_management_service import UserManagementService
             user_service = UserManagementService(db)
             await user_service.update_last_login(user_data["user_id"])
         except Exception as e:
