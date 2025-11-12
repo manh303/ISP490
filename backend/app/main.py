@@ -17,19 +17,24 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from app.middleware.activity_middleware import ActivityLoggingMiddleware
-from services.activity_logger import ActivityLogger
+from app.services.activity_logger import ActivityLogger
+# Ensure parent directory of `app` is on sys.path so absolute imports like
+# `app.services.*` work when running the script directly.
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 from pydantic import field_validator
-from utils.validators import validate_phone, validate_password
-from constants.roles import ROLE_MENUS, get_role_menu
+from app.utils.validators import validate_phone, validate_password
+from app.constants.roles import ROLE_MENUS, get_role_menu
 
-# Setup logging FIRST
+# Setup logging FIRSTT
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 try:
     from middleware.activity_middleware import ActivityLoggingMiddleware
-    from services.activity_logger import ActivityLogger
+    from app.services.activity_logger import ActivityLogger
     ACTIVITY_AVAILABLE = True
 except ImportError:
     ACTIVITY_AVAILABLE = False
@@ -37,8 +42,8 @@ except ImportError:
 
 try:
     from pydantic import field_validator
-    from utils.validators import validate_phone, validate_password
-    from constants.roles import ROLE_MENUS, get_role_menu
+    from app.utils.validators import validate_phone, validate_password
+    from app.constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
     VALIDATORS_AVAILABLE = False
@@ -974,7 +979,7 @@ def authenticate_user(email: str, password: str):
     return user_data
 
 # Use shared auth helpers
-from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
 def create_access_token(user_data: dict, email: str):
     """Create JWT access token using shared helper"""
@@ -1169,7 +1174,7 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         # Update last login time
         try:
-            from services.user_management_service import UserManagementService
+            from app.services.user_management_service import UserManagementService
             user_service = UserManagementService(db)
             await user_service.update_last_login(user_data["user_id"])
         except Exception as e:
