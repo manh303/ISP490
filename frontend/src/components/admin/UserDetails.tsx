@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { userApi } from "../../services/userApi";
 import { Button } from '../../components/ui/figma/button';
 import { Badge } from '../../components/ui/figma/badge';
+import { useToast } from "../../contexts/ToastContext";
 
 interface User {
   user_id: number;
@@ -28,6 +29,7 @@ const ROLE_OPTIONS = [
 
 export default function UserDetails(props: UserDetailsProps) {
   const { userId, onBack, editMode } = props;
+  const { showToast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +65,12 @@ export default function UserDetails(props: UserDetailsProps) {
         phone: form.phone,
         role_code: form.role_code
       });
-  setEditModeState(false);
+      setEditModeState(false);
+      showToast('✓ Cập nhật thông tin người dùng thành công!', 'success');
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Cập nhật thất bại");
+      const errorMsg = err?.response?.data?.detail || "Cập nhật thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -98,9 +103,11 @@ export default function UserDetails(props: UserDetailsProps) {
       setConfirmPassword("");
       setPasswordError("");
       setShowPasswordForm(false);
-      alert("✓ Cập nhật mật khẩu thành công!");
+      showToast('✓ Cập nhật mật khẩu thành công!', 'success');
     } catch (err: any) {
-      setPasswordError(err?.response?.data?.detail || "Cập nhật mật khẩu thất bại");
+      const errorMsg = err?.response?.data?.detail || "Cập nhật mật khẩu thất bại";
+      setPasswordError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -117,9 +124,12 @@ export default function UserDetails(props: UserDetailsProps) {
     setLoading(true);
     try {
       await userApi.disableUser(userId);
+      showToast('✓ Vô hiệu hóa tài khoản thành công!', 'success');
       onBack();
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Vô hiệu hóa thất bại");
+      const errorMsg = err?.response?.data?.detail || "Vô hiệu hóa thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -129,9 +139,12 @@ export default function UserDetails(props: UserDetailsProps) {
     setLoading(true);
     try {
       await userApi.restoreUser(userId);
+      showToast('✓ Khôi phục tài khoản thành công!', 'success');
       onBack();
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Khôi phục thất bại");
+      const errorMsg = err?.response?.data?.detail || "Khôi phục thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }

@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '../../components/ui/figma/table';
 import { Eye, RotateCcw, Trash2 } from 'lucide-react';
-
+import { useToast } from "../../contexts/ToastContext";
 interface User {
   user_id: number;
   full_name: string;
@@ -31,7 +31,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [total, setTotal] = useState(0);
-
+  const { showToast } = useToast();
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -57,11 +57,15 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
       const res = await userApi.restoreUser(id);
       if (res && res.detail) {
         setError(res.detail);
+        showToast(res.detail, 'error');
       } else {
         setUsers(users.filter(u => u.user_id !== id));
+        showToast('✓ Khôi phục tài khoản thành công!', 'success');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Khôi phục thất bại");
+      const errorMsg = err?.response?.data?.detail || "Khôi phục thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -72,11 +76,15 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
       const res = await userApi.permanentDeleteUser(id);
       if (res && res.detail) {
         setError(res.detail);
+        showToast(res.detail, 'error');
       } else {
         setUsers(users.filter(u => u.user_id !== id));
+        showToast('✓ Xóa vĩnh viễn tài khoản thành công!', 'success');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Xóa vĩnh viễn thất bại");
+      const errorMsg = err?.response?.data?.detail || "Xóa vĩnh viễn thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
