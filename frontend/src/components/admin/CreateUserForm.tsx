@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { userApi } from "../../services/userApi";
 import { Button } from '../../components/ui/figma/button';
-
+import { useToast } from "../../contexts/ToastContext";
 interface CreateUserFormProps {
   onCreated: () => void;
 }
@@ -24,6 +24,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +41,12 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
       });
       if (!data.success) throw new Error(data.message || "Không thể tạo người dùng mới");
       setSuccess("Tạo người dùng thành công!");
+      showToast("Tạo người dùng thành công!", 'success');
       setFullName(""); setEmail(""); setRoleCode(ROLE_OPTIONS[0].code); setPassword(""); setPhone("");
       onCreated();
     } catch (err: any) {
       setError(err.message);
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -103,7 +106,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
         <label className="block text-gray-700 mb-1">Mật khẩu</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
       </div>
-      <Button className="w-full" type="submit" disabled={loading}>
+      <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold" type="submit" disabled={loading}>
         {loading ? "Đang tạo..." : "Tạo người dùng"}
       </Button>
     </form>
