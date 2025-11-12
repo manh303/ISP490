@@ -16,6 +16,11 @@ async def get_db():
         import os
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from main import db_manager
+    
+    # Ensure database is connected
+    if not db_manager.is_connected:
+        await db_manager.connect()
+    
     return db_manager
 
 
@@ -25,6 +30,9 @@ async def get_top_rated_products(
     db = Depends(get_db)
 ):
     """Top products by rating - Bar Chart"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     # Use f-string instead of parameter to avoid conversion issues
     query = f"""
         SELECT 
@@ -39,7 +47,14 @@ async def get_top_rated_products(
         LIMIT {limit}
     """
     
+    logger.info(f"Executing query with limit={limit}")
+    logger.info(f"DB connected: {db.is_connected}")
+    
     result = await db.execute_query(query)
+    
+    logger.info(f"Query returned {len(result)} rows")
+    if result:
+        logger.info(f"First row: {result[0]}")
     
     return {
         "chart_type": "bar",
