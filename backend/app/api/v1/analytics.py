@@ -72,18 +72,18 @@ async def get_rating_distribution(
 ):
     """Rating distribution histogram"""
     if category:
-        query = """
+        query = f"""
             SELECT 
                 FLOOR(p.rating_avg) as rating_bucket,
                 COUNT(*) as product_count,
                 AVG(p.price_current) as avg_price,
                 SUM(p.review_count) as total_reviews
             FROM ods_product_clean p
-            WHERE p.category = $1
+            WHERE p.category = '{category}'
             GROUP BY FLOOR(p.rating_avg)
             ORDER BY rating_bucket
         """
-        result = await db.execute_query(query, (category,))
+        result = await db.execute_query(query)
     else:
         query = """
             SELECT 
@@ -112,19 +112,19 @@ async def get_review_trends(
     db = Depends(get_db)
 ):
     """Review trends over time - Line Chart"""
-    query = """
+    query = f"""
         SELECT 
             DATE(f.captured_at) as date,
             COUNT(DISTINCT f.product_sk) as products_reviewed,
             AVG(f.rating_avg) as avg_rating,
             SUM(f.review_count) as total_reviews
         FROM dwh_fact_product_daily f
-        WHERE f.captured_at >= CURRENT_DATE - $1 * INTERVAL '1 day'
+        WHERE f.captured_at >= CURRENT_DATE - {days} * INTERVAL '1 day'
         GROUP BY DATE(f.captured_at)
         ORDER BY date
     """
     
-    result = await db.execute_query(query, (days,))
+    result = await db.execute_query(query)
     
     return {
         "chart_type": "line",
@@ -142,7 +142,7 @@ async def get_price_vs_rating(
 ):
     """Price vs Rating correlation - Scatter Plot"""
     if category:
-        query = """
+        query = f"""
             SELECT 
                 p.product_name,
                 p.price_current as price,
@@ -150,11 +150,11 @@ async def get_price_vs_rating(
                 p.review_count,
                 p.category
             FROM ods_product_clean p
-            WHERE p.category = $1
+            WHERE p.category = '{category}'
             ORDER BY p.review_count DESC
             LIMIT 500
         """
-        result = await db.execute_query(query, (category,))
+        result = await db.execute_query(query)
     else:
         query = """
             SELECT 
