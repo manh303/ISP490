@@ -71,6 +71,9 @@ async def get_rating_distribution(
     db = Depends(get_db)
 ):
     """Rating distribution histogram"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     if category:
         query = f"""
             SELECT 
@@ -83,6 +86,9 @@ async def get_rating_distribution(
             GROUP BY FLOOR(p.rating_avg)
             ORDER BY rating_bucket
         """
+        logger.info(f"Executing query with limit={category}")
+        logger.info(f"DB connected: {db.is_connected}")
+
         result = await db.execute_query(query)
     else:
         query = """
@@ -227,13 +233,20 @@ async def get_sentiment_distribution(
             COUNT(*) as product_count,
             SUM(p.review_count) as review_count
         FROM ods_product_clean p
-        GROUP BY sentiment
+        GROUP BY 
+            CASE 
+                WHEN p.rating_avg >= 4.5 THEN 'Excellent'
+                WHEN p.rating_avg >= 4.0 THEN 'Good'
+                WHEN p.rating_avg >= 3.0 THEN 'Average'
+                WHEN p.rating_avg >= 2.0 THEN 'Poor'
+                ELSE 'Very Poor'
+            END
         ORDER BY 
-            CASE sentiment
-                WHEN 'Excellent' THEN 1
-                WHEN 'Good' THEN 2
-                WHEN 'Average' THEN 3
-                WHEN 'Poor' THEN 4
+            CASE 
+                WHEN p.rating_avg >= 4.5 THEN 1
+                WHEN p.rating_avg >= 4.0 THEN 2
+                WHEN p.rating_avg >= 3.0 THEN 3
+                WHEN p.rating_avg >= 2.0 THEN 4
                 ELSE 5
             END
     """
@@ -267,12 +280,18 @@ async def get_price_segments(
             SUM(p.review_count) as total_reviews,
             COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated
         FROM ods_product_clean p
-        GROUP BY price_segment
+        GROUP BY 
+            CASE 
+                WHEN p.price_current < 100000 THEN 'Budget (<100K)'
+                WHEN p.price_current < 500000 THEN 'Mid-range (100K-500K)'
+                WHEN p.price_current < 1000000 THEN 'Premium (500K-1M)'
+                ELSE 'Luxury (>1M)'
+            END
         ORDER BY 
-            CASE price_segment
-                WHEN 'Budget (<100K)' THEN 1
-                WHEN 'Mid-range (100K-500K)' THEN 2
-                WHEN 'Premium (500K-1M)' THEN 3
+            CASE 
+                WHEN p.price_current < 100000 THEN 1
+                WHEN p.price_current < 500000 THEN 2
+                WHEN p.price_current < 1000000 THEN 3
                 ELSE 4
             END
     """
