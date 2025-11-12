@@ -4,22 +4,22 @@ Admin User Management API Endpoints
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from typing import List, Dict, Any, Optional
 import logging
-from services.activity_logger import ActivityLogger
+from app.services.activity_logger import ActivityLogger
 
 # Import models and services
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from services.admin_service import AdminService
+from app.services.admin_service import AdminService
 from models.admin import (
     UserCreateRequest, UserUpdateRequest, UserPasswordUpdateRequest,
     UserListResponse, UserActionResponse
 )
 from models.shared import UserResponse
-from services.user_management_service import UserManagementService
-from utils.admin_helpers import get_current_admin_user, format_user_response
-from constants.roles import validate_role_code
+from app.services.user_management_service import UserManagementService
+from app.utils.admin_helpers import get_current_admin_user, format_user_response
+from app.constants.roles import validate_role_code
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ router = APIRouter(
 # Admin access dependency
 async def require_admin_access(request: Request) -> Dict[str, Any]:
     """Dependency to require admin access for endpoints"""
-    from utils.auth_helpers import decode_access_token
+    from app.utils.auth_helpers import decode_access_token
     from main import settings
     
     token = credentials.credentials
