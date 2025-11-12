@@ -5,7 +5,7 @@ export default function Blank() {
   return (
     <div>
       <PageMeta
-        title="E-commerce DSS Dashboard | TailAdmin"
+        title="E-commerce DSS Dashboard | DSS"
         description="E-commerce DSS Dashboard"
       />
       <PageBreadcrumb pageTitle="Dashboard" />

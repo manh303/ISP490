@@ -27,6 +27,7 @@ import DashboardLayout from "././layout/DashboardLayout";
 import AdminLayout from "././layout/AdminLayout";
 import AnalystLayout from "././layout/AnalystLayout";
 import CustomerLayout from "././layout/CustomerLayout";
+import DataEngineerLayout from "././layout/DataEngineerLayout";
 import VietnamElectronicsDashboard from "./pages/Dashboard/VietnamElectronicsDashboard";
 import RoleBasedDashboard from "./components/dashboard/RoleBasedDashboard";
 import AppLayout from "././layout/AppLayout";
@@ -148,7 +149,7 @@ export default function App() {
           >
             <Route path="/admin/dashboard" element={<VietnamElectronicsDashboard />} />
             <Route path="/admin/users" element={<AdminUserManagement />} />
-            <Route path="/admin/users/details" element={<UserProfiles />} />
+            {/* <Route path="/admin/users/details" element={<UserProfiles />} /> */}
             <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => {}} />} />
             <Route path="/admin/analytics" element={<DSSPage />} />
             <Route path="/admin/tables" element={<BasicTables />} />
@@ -160,6 +161,8 @@ export default function App() {
             <Route path="/admin/logs" element={<Blank />} />
             <Route path="/admin/performance" element={<Blank />} />
             <Route path="/admin/errors" element={<Blank />} />
+            <Route path="/admin/notifications" element={<Blank />} />
+            <Route path="/profile" element={<UserProfiles />} />
           </Route>
 
           {/* Analyst Layout - Protected Routes */}
@@ -187,8 +190,25 @@ export default function App() {
             <Route path="/analyst/schedule" element={<Calendar />} />
             <Route path="/analyst/refresh" element={<Blank />} />
             <Route path="/analyst/alerts" element={<Alerts />} />
+            <Route path="/profile" element={<UserProfiles />} />
           </Route>
-
+          {/* DataEngineerSidebar Layout - Protected Routes */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <DataEngineerLayout/>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dataengineer/dashboard" element={<DataEngineerWireframe />} />
+            <Route path="/dataengineer/pipelines" element={<Blank />} />
+            <Route path="/dataengineer/jobs" element={<Blank />} />
+            <Route path="/dataengineer/schedules" element={<Calendar />} />
+            <Route path="/dataengineer/monitoring" element={<Alerts />} />
+            <Route path="/dataengineer/logs" element={<Blank />} />
+            <Route path="/dataengineer/settings" element={<Blank />} />
+            <Route path="/profile" element={<UserProfiles />} />
+          </Route>  
           {/* Customer Layout - Protected Routes */}
           <Route
             element={
