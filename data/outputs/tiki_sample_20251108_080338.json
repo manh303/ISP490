@@ -1,0 +1,34 @@
+[
+  {
+    "source": "tiki",
+    "url": "https://tiki.vn/sample-product-1-p123456.html",
+    "title": "iPhone 15 Pro Max 256GB - Sample Data",
+    "price": 29990000,
+    "original_price": 34990000,
+    "discount": "14%",
+    "rating": 4.8,
+    "review_count": "245",
+    "sold_count": "89",
+    "shop_name": "Tiki Trading",
+    "category": "smartphones",
+    "brand": "Apple",
+    "image_url": "https://salt.tikicdn.com/cache/750x750/ts/product/sample.jpg",
+    "crawled_at": "2025-11-08T08:03:38.368239"
+  },
+  {
+    "source": "tiki",
+    "url": "https://tiki.vn/sample-laptop-p789012.html",
+    "title": "MacBook Air M2 2024 - Sample Data",
+    "price": 28990000,
+    "original_price": 32990000,
+    "discount": "12%",
+    "rating": 4.9,
+    "review_count": "156",
+    "sold_count": "34",
+    "shop_name": "Tiki Trading",
+    "category": "laptops",
+    "brand": "Apple",
+    "image_url": "https://salt.tikicdn.com/cache/750x750/ts/product/sample2.jpg",
+    "crawled_at": "2025-11-08T08:03:38.368284"
+  }
+]

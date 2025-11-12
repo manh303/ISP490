@@ -41,7 +41,7 @@ backend/requirements.txt
 
 data-collection/data/fixed_lazada_multi_category_full.csv
 data-collection/data/fixed_lazada_multi_category_full.json
-data-collection/outputs/fixed_lazada_multi_category_full.csv 
-data-collection/outputs/fixed_lazada_multi_category_full.json
 data-collection/crawlers/lazada/runners/output/fixed_lazada_multi_category_full.json
 data-collection/crawlers/lazada/runners/output/fixed_lazada_multi_category_full.csv
+data-collection/outputs/fixed_lazada_multi_category_full.csv 
+data-collection/outputs/fixed_lazada_multi_category_full.json 
