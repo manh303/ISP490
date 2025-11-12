@@ -25,7 +25,8 @@ async def get_top_rated_products(
     db = Depends(get_db)
 ):
     """Top products by rating - Bar Chart"""
-    query = """
+    # Use f-string instead of parameter to avoid conversion issues
+    query = f"""
         SELECT 
             p.product_name,
             p.rating_avg,
@@ -35,10 +36,10 @@ async def get_top_rated_products(
         FROM ods_product_clean p
         WHERE p.review_count >= 10
         ORDER BY p.rating_avg DESC, p.review_count DESC
-        LIMIT $1
+        LIMIT {limit}
     """
     
-    result = await db.execute_query(query, (limit,))
+    result = await db.execute_query(query)
     
     return {
         "chart_type": "bar",
