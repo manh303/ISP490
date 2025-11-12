@@ -222,31 +222,30 @@ async def get_sentiment_distribution(
 ):
     """Review sentiment distribution - Pie Chart"""
     query = """
+        WITH sentiment_data AS (
+            SELECT 
+                CASE 
+                    WHEN rating_avg >= 4.5 THEN 'Excellent'
+                    WHEN rating_avg >= 4.0 THEN 'Good'
+                    WHEN rating_avg >= 3.0 THEN 'Average'
+                    WHEN rating_avg >= 2.0 THEN 'Poor'
+                    ELSE 'Very Poor'
+                END as sentiment,
+                review_count
+            FROM ods_product_clean
+        )
         SELECT 
-            CASE 
-                WHEN p.rating_avg >= 4.5 THEN 'Excellent'
-                WHEN p.rating_avg >= 4.0 THEN 'Good'
-                WHEN p.rating_avg >= 3.0 THEN 'Average'
-                WHEN p.rating_avg >= 2.0 THEN 'Poor'
-                ELSE 'Very Poor'
-            END as sentiment,
+            sentiment,
             COUNT(*) as product_count,
-            SUM(p.review_count) as review_count
-        FROM ods_product_clean p
-        GROUP BY 
-            CASE 
-                WHEN p.rating_avg >= 4.5 THEN 'Excellent'
-                WHEN p.rating_avg >= 4.0 THEN 'Good'
-                WHEN p.rating_avg >= 3.0 THEN 'Average'
-                WHEN p.rating_avg >= 2.0 THEN 'Poor'
-                ELSE 'Very Poor'
-            END
+            SUM(review_count) as review_count
+        FROM sentiment_data
+        GROUP BY sentiment
         ORDER BY 
-            CASE 
-                WHEN p.rating_avg >= 4.5 THEN 1
-                WHEN p.rating_avg >= 4.0 THEN 2
-                WHEN p.rating_avg >= 3.0 THEN 3
-                WHEN p.rating_avg >= 2.0 THEN 4
+            CASE sentiment
+                WHEN 'Excellent' THEN 1
+                WHEN 'Good' THEN 2
+                WHEN 'Average' THEN 3
+                WHEN 'Poor' THEN 4
                 ELSE 5
             END
     """
@@ -268,30 +267,31 @@ async def get_price_segments(
 ):
     """Price segment analysis - Stacked Bar Chart"""
     query = """
+        WITH price_data AS (
+            SELECT 
+                CASE 
+                    WHEN price_current < 100000 THEN 'Budget (<100K)'
+                    WHEN price_current < 500000 THEN 'Mid-range (100K-500K)'
+                    WHEN price_current < 1000000 THEN 'Premium (500K-1M)'
+                    ELSE 'Luxury (>1M)'
+                END as price_segment,
+                rating_avg,
+                review_count
+            FROM ods_product_clean
+        )
         SELECT 
-            CASE 
-                WHEN p.price_current < 100000 THEN 'Budget (<100K)'
-                WHEN p.price_current < 500000 THEN 'Mid-range (100K-500K)'
-                WHEN p.price_current < 1000000 THEN 'Premium (500K-1M)'
-                ELSE 'Luxury (>1M)'
-            END as price_segment,
+            price_segment,
             COUNT(*) as product_count,
-            AVG(p.rating_avg) as avg_rating,
-            SUM(p.review_count) as total_reviews,
-            COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated
-        FROM ods_product_clean p
-        GROUP BY 
-            CASE 
-                WHEN p.price_current < 100000 THEN 'Budget (<100K)'
-                WHEN p.price_current < 500000 THEN 'Mid-range (100K-500K)'
-                WHEN p.price_current < 1000000 THEN 'Premium (500K-1M)'
-                ELSE 'Luxury (>1M)'
-            END
+            AVG(rating_avg) as avg_rating,
+            SUM(review_count) as total_reviews,
+            COUNT(CASE WHEN rating_avg >= 4.0 THEN 1 END) as high_rated
+        FROM price_data
+        GROUP BY price_segment
         ORDER BY 
-            CASE 
-                WHEN p.price_current < 100000 THEN 1
-                WHEN p.price_current < 500000 THEN 2
-                WHEN p.price_current < 1000000 THEN 3
+            CASE price_segment
+                WHEN 'Budget (<100K)' THEN 1
+                WHEN 'Mid-range (100K-500K)' THEN 2
+                WHEN 'Premium (500K-1M)' THEN 3
                 ELSE 4
             END
     """
