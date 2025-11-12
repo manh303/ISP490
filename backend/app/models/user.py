@@ -10,3 +10,14 @@ ProfileResponse = UserResponse
 
 class ProfileUpdateRequest(BaseUserRequest):
     email: Optional[EmailStr] = Field(None, description="Email address")
+    
+    @field_validator('phone')
+    @classmethod
+    def validate_phone_field(cls, v):
+        return validate_phone(v)
+
+class ProfileActionResponse(BaseModel):
+    """Profile action response"""
+    success: bool
+    message: str
+    user_id: Optional[int] = None

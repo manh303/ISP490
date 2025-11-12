@@ -35,17 +35,38 @@ router = APIRouter(
 # Admin access dependency
 async def require_admin_access(request: Request) -> Dict[str, Any]:
     """Dependency to require admin access for endpoints"""
-    return get_current_admin_user(request)
+    from utils.auth_helpers import decode_access_token
+    from main import settings
+    
+    token = credentials.credentials
+    logger.info(f"Admin access check - Token: {token[:20]}...")
+    
+    # Decode token
+    payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    if not payload:
+        logger.error("Token decode failed")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    logger.info(f"Token payload: {payload}")
+    
+    # Check admin role
+    user_role = payload.get("role")
+    if user_role not in ["ADMIN"]:
+        logger.error(f"Access denied - Role: {user_role}, Required: ADMIN")
+        raise HTTPException(status_code=403, detail=f"Admin access required. Current role: {user_role}")
+    
+    logger.info(f"Admin access granted for user: {payload.get('email')}")
+    return {
+        "user_id": payload.get("user_id"),
+        "email": payload.get("email"),
+        "role": user_role,
+        "full_name": payload.get("full_name", "Admin User")
+    }
 
 # Dependency to get database manager
 async def get_database():
     """Get database connection - will be injected from main app"""
-    from fastapi import Request
-    # Get db_manager from app state or import directly
     try:
-        import sys
-        import os
-        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
         from main import db_manager
         if not db_manager.is_connected:
             await db_manager.connect()
@@ -68,17 +89,10 @@ async def get_users(
     admin_user: Dict[str, Any] = Depends(require_admin_access),
     user_service: UserManagementService = Depends(get_user_service)
 ):
-    """
-    Get list of users
-    
-    **Required**: Admin role and valid JWT token in Authorization header
-    
-    **Example**: `Authorization: Bearer your_admin_token_here`
-    """
+    """Get list of users"""
     try:
         users, total = await admin_service.get_users(page, limit, status_filter or 'active')
         
-        # Convert to UserResponse objects
         user_responses = []
         for user in users:
             try:
@@ -153,30 +167,11 @@ async def create_user(
     admin_user: Dict[str, Any] = Depends(require_admin_access),
     user_service: UserManagementService = Depends(get_user_service)
 ):
-    """
-    Create new user
-    
-    **Required**: Admin role and valid JWT token
-    
-    **Valid roles**: ADMIN, ANALYST, CUSTOMER
-    
-    **Example request body**:
-    ```json
-    {
-        "email": "user@example.com",
-        "password": "password123",
-        "full_name": "John Doe",
-        "phone": "0123456789",
-        "role": "CUSTOMER"
-    }
-    ```
-    """
+    """Create new user"""
     try:
-        # Validate role code
         if not validate_role_code(user_data.role):
             raise HTTPException(status_code=400, detail="Invalid role code")
         
-        # Create user
         user_id = await admin_service.create_user(user_data)
         
         return UserActionResponse(
@@ -353,58 +348,22 @@ async def get_activity_logs(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(50, ge=1, le=100, description="Items per page"),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
-):
-    """Get user activity logs with filters"""
-    try:
-        logs, total = await admin_service.get_activity_logs(page, limit, user_id)
-        
-        return {
-            "success": True,
-            "data": {
-                "logs": logs,
-                "total": total,
-                "page": page,
-                "limit": limit
-            }
-        }
-    except Exception as e:
-        logger.error(f"Get activity logs error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get activity logs: {str(e)}")
-
-@router.get("/activity-stats")
-async def get_activity_stats(
-    admin_service: AdminService = Depends(get_admin_service),
-    admin_user: Dict[str, Any] = Depends(require_admin_access)
-):
-    """Get activity statistics"""
-    try:
-        stats = await admin_service.get_activity_stats()
-        
-        return {
-            "success": True,
-            "data": stats
-        }
-    except Exception as e:
-        logger.error(f"Get activity stats error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get activity stats: {str(e)}")
-
-@router.get("/user-activity/{user_id}")
-async def get_user_activity(
-    user_id: int,
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    action: Optional[str] = Query(None, description="Filter by action"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     db = Depends(get_database),
     admin_user: Dict[str, Any] = Depends(require_admin_access)
 ):
-    """Get activity logs for specific user"""
+    """Get user activity logs with filters"""
     try:
         activity_logger = ActivityLogger(db)
         result = await activity_logger.get_activity_logs(
             page=page,
             limit=limit,
-            user_id=user_id
+            user_id=user_id,
+            action=action,
+            start_date=start_date,
+            end_date=end_date
         )
         
         return {
@@ -488,20 +447,15 @@ async def clear_activity_logs(
     days_older_than: int = Query(30, ge=1, description="Clear logs older than X days"),
     db = Depends(get_database)
 ):
-    """Clear activity logs older than specified days"""
+    """Get activity statistics"""
     try:
-        query = """
-        DELETE FROM user_activity_logs 
-        WHERE created_at < NOW() - INTERVAL '%s days'
-        """
-        
-        await db.execute_query(query, (days_older_than,))
+        activity_logger = ActivityLogger(db)
+        stats = await activity_logger.get_activity_stats(days)
         
         return {
             "success": True,
-            "message": f"Cleared activity logs older than {days_older_than} days"
+            "data": stats
         }
     except Exception as e:
-        logger.error(f"Clear activity logs error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to clear activity logs: {str(e)}")
-
+        logger.error(f"Get activity stats error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get activity stats: {str(e)}")
