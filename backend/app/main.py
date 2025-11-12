@@ -331,14 +331,6 @@ try:
 except Exception as e:
     logger.error(f"❌ Profile routes failed: {e}")
 
-# Include Test Admin router
-try:
-    from api.v1.test_admin import router as test_admin_router
-    app.include_router(test_admin_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Test Admin routes included")
-except ImportError as e:
-    logger.warning(f"Test Admin routes not available: {e}")
-
 # Include Role Management router
 try:
     from api.v1.roles import router as roles_router
