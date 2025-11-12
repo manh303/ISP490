@@ -1,141 +1,293 @@
-#!/usr/bin/env python3
 """
-Analytics API Endpoints
-=======================
-Provide analytics data from both PostgreSQL and MongoDB
+Analytics API for chart data
 """
-
-from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import JSONResponse
-from typing import Dict, List, Any, Optional
-import logging
+from fastapi import APIRouter, Depends, Query
+from typing import Optional
 from datetime import datetime, timedelta
-import pandas as pd
-from sqlalchemy import create_engine, text
-import pymongo
-import os
 
-router = APIRouter()
-logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
-# Database configurations
-POSTGRES_URL = os.getenv('DATABASE_URL', 'postgresql://dss_user:dss_password_123@localhost:5432/ecommerce_dss')
-MONGO_URL = os.getenv('MONGO_URL', 'mongodb://admin:admin_password@localhost:27017/')
+# Dependency to get database manager
+async def get_db():
+    from app.main import db_manager
+    return db_manager
 
-class AnalyticsService:
-    """Service for analytics data"""
 
-    def __init__(self):
-        try:
-            self.pg_engine = create_engine(POSTGRES_URL)
-            self.mongo_client = pymongo.MongoClient(MONGO_URL)
-            self.mongo_db = self.mongo_client['ecommerce_dss']
-        except Exception as e:
-            logger.error(f"Failed to initialize analytics service: {e}")
+@router.get("/products/top-rated")
+async def get_top_rated_products(
+    limit: int = Query(20, ge=1, le=100),
+    db = Depends(get_db)
+):
+    """Top products by rating - Bar Chart"""
+    query = """
+        SELECT 
+            p.product_name,
+            p.rating_avg,
+            p.review_count,
+            p.price,
+            p.category
+        FROM dwh_dim_product p
+        WHERE p.review_count >= 10
+        ORDER BY p.rating_avg DESC, p.review_count DESC
+        LIMIT $1
+    """
+    
+    result = await db.execute_query(query, (limit,))
+    
+    return {
+        "chart_type": "bar",
+        "title": f"Top {limit} Products by Rating",
+        "x_axis": "product_name",
+        "y_axis": "rating_avg",
+        "data": result
+    }
 
-    def get_postgres_summary(self) -> Dict[str, Any]:
-        """Get PostgreSQL data summary"""
-        try:
-            # Get table counts
-            tables_query = """
-            SELECT
-                'customers' as table_name, COUNT(*) as count FROM customers
-            UNION ALL
-            SELECT 'products' as table_name, COUNT(*) as count FROM products
-            UNION ALL
-            SELECT 'orders' as table_name, COUNT(*) as count FROM orders
-            """
 
-            df = pd.read_sql(tables_query, self.pg_engine)
-            table_counts = dict(zip(df['table_name'], df['count']))
+@router.get("/products/rating-distribution")
+async def get_rating_distribution(
+    category: Optional[str] = None,
+    db = Depends(get_db)
+):
+    """Rating distribution histogram"""
+    if category:
+        query = """
+            SELECT 
+                FLOOR(p.rating_avg) as rating_bucket,
+                COUNT(*) as product_count,
+                AVG(p.price) as avg_price,
+                SUM(p.review_count) as total_reviews
+            FROM dwh_dim_product p
+            WHERE p.category = $1
+            GROUP BY FLOOR(p.rating_avg)
+            ORDER BY rating_bucket
+        """
+        result = await db.execute_query(query, (category,))
+    else:
+        query = """
+            SELECT 
+                FLOOR(p.rating_avg) as rating_bucket,
+                COUNT(*) as product_count,
+                AVG(p.price) as avg_price,
+                SUM(p.review_count) as total_reviews
+            FROM dwh_dim_product p
+            GROUP BY FLOOR(p.rating_avg)
+            ORDER BY rating_bucket
+        """
+        result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "histogram",
+        "title": f"Rating Distribution{' - ' + category if category else ''}",
+        "x_axis": "rating_bucket",
+        "y_axis": "product_count",
+        "data": result
+    }
 
-            # Get basic stats
-            stats_query = """
-            SELECT
-                COUNT(DISTINCT id) as total_customers,
-                (SELECT COUNT(*) FROM products) as total_products,
-                (SELECT COUNT(*) FROM orders) as total_orders
-            FROM customers
-            """
 
-            stats_df = pd.read_sql(stats_query, self.pg_engine)
-            stats_data = stats_df.iloc[0].to_dict() if len(stats_df) > 0 else {}
+@router.get("/reviews/trends")
+async def get_review_trends(
+    days: int = Query(30, ge=7, le=365),
+    db = Depends(get_db)
+):
+    """Review trends over time - Line Chart"""
+    query = """
+        SELECT 
+            d.date,
+            COUNT(DISTINCT f.product_id) as products_reviewed,
+            AVG(f.rating_avg) as avg_rating,
+            SUM(f.review_count) as total_reviews
+        FROM dwh_fact_product_daily f
+        JOIN dwh_dim_date d ON f.date_id = d.date_id
+        WHERE d.date >= CURRENT_DATE - $1 * INTERVAL '1 day'
+        GROUP BY d.date
+        ORDER BY d.date
+    """
+    
+    result = await db.execute_query(query, (days,))
+    
+    return {
+        "chart_type": "line",
+        "title": f"Review Trends - Last {days} Days",
+        "x_axis": "date",
+        "y_axis": ["avg_rating", "total_reviews"],
+        "data": result
+    }
 
-            return {
-                "table_counts": table_counts,
-                "stats": stats_data,
-                "last_updated": datetime.now().isoformat()
-            }
 
-        except Exception as e:
-            logger.error(f"Error getting PostgreSQL summary: {e}")
-            return {"error": str(e)}
+@router.get("/products/price-vs-rating")
+async def get_price_vs_rating(
+    category: Optional[str] = None,
+    db = Depends(get_db)
+):
+    """Price vs Rating correlation - Scatter Plot"""
+    if category:
+        query = """
+            SELECT 
+                p.product_name,
+                p.price,
+                p.rating_avg,
+                p.review_count,
+                p.category
+            FROM dwh_dim_product p
+            WHERE p.category = $1
+            ORDER BY p.review_count DESC
+            LIMIT 500
+        """
+        result = await db.execute_query(query, (category,))
+    else:
+        query = """
+            SELECT 
+                p.product_name,
+                p.price,
+                p.rating_avg,
+                p.review_count,
+                p.category
+            FROM dwh_dim_product p
+            ORDER BY p.review_count DESC
+            LIMIT 500
+        """
+        result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "scatter",
+        "title": f"Price vs Rating{' - ' + category if category else ''}",
+        "x_axis": "price",
+        "y_axis": "rating_avg",
+        "size": "review_count",
+        "data": result
+    }
 
-    def get_mongodb_summary(self) -> Dict[str, Any]:
-        """Get MongoDB data summary"""
-        try:
-            collections = self.mongo_db.list_collection_names()
-            collection_stats = {}
 
-            for collection_name in collections:
-                collection = self.mongo_db[collection_name]
-                count = collection.count_documents({})
-                collection_stats[collection_name] = count
+@router.get("/products/category-performance")
+async def get_category_performance(
+    db = Depends(get_db)
+):
+    """Category performance comparison - Grouped Bar Chart"""
+    query = """
+        SELECT 
+            p.category,
+            COUNT(*) as product_count,
+            AVG(p.rating_avg) as avg_rating,
+            AVG(p.price) as avg_price,
+            SUM(p.review_count) as total_reviews,
+            COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated_count
+        FROM dwh_dim_product p
+        WHERE p.category IS NOT NULL
+        GROUP BY p.category
+        ORDER BY total_reviews DESC
+        LIMIT 15
+    """
+    
+    result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "grouped_bar",
+        "title": "Category Performance Analysis",
+        "x_axis": "category",
+        "y_axes": ["avg_rating", "product_count", "avg_price"],
+        "data": result
+    }
 
-            return {
-                "collection_counts": collection_stats,
-                "total_documents": sum(collection_stats.values()),
-                "last_updated": datetime.now().isoformat()
-            }
 
-        except Exception as e:
-            logger.error(f"Error getting MongoDB summary: {e}")
-            return {"error": str(e)}
+@router.get("/reviews/sentiment-distribution")
+async def get_sentiment_distribution(
+    db = Depends(get_db)
+):
+    """Review sentiment distribution - Pie Chart"""
+    query = """
+        SELECT 
+            CASE 
+                WHEN p.rating_avg >= 4.5 THEN 'Excellent'
+                WHEN p.rating_avg >= 4.0 THEN 'Good'
+                WHEN p.rating_avg >= 3.0 THEN 'Average'
+                WHEN p.rating_avg >= 2.0 THEN 'Poor'
+                ELSE 'Very Poor'
+            END as sentiment,
+            COUNT(*) as product_count,
+            SUM(p.review_count) as review_count
+        FROM dwh_dim_product p
+        GROUP BY sentiment
+        ORDER BY 
+            CASE sentiment
+                WHEN 'Excellent' THEN 1
+                WHEN 'Good' THEN 2
+                WHEN 'Average' THEN 3
+                WHEN 'Poor' THEN 4
+                ELSE 5
+            END
+    """
+    
+    result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "pie",
+        "title": "Product Sentiment Distribution",
+        "label": "sentiment",
+        "value": "product_count",
+        "data": result
+    }
 
-# Initialize service
-analytics_service = AnalyticsService()
 
-@router.get("/summary")
-async def get_analytics_summary():
-    """Get comprehensive analytics summary"""
-    try:
-        postgres_data = analytics_service.get_postgres_summary()
-        mongodb_data = analytics_service.get_mongodb_summary()
+@router.get("/products/price-segments")
+async def get_price_segments(
+    db = Depends(get_db)
+):
+    """Price segment analysis - Stacked Bar Chart"""
+    query = """
+        SELECT 
+            CASE 
+                WHEN p.price < 100000 THEN 'Budget (<100K)'
+                WHEN p.price < 500000 THEN 'Mid-range (100K-500K)'
+                WHEN p.price < 1000000 THEN 'Premium (500K-1M)'
+                ELSE 'Luxury (>1M)'
+            END as price_segment,
+            COUNT(*) as product_count,
+            AVG(p.rating_avg) as avg_rating,
+            SUM(p.review_count) as total_reviews,
+            COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated
+        FROM dwh_dim_product p
+        GROUP BY price_segment
+        ORDER BY 
+            CASE price_segment
+                WHEN 'Budget (<100K)' THEN 1
+                WHEN 'Mid-range (100K-500K)' THEN 2
+                WHEN 'Premium (500K-1M)' THEN 3
+                ELSE 4
+            END
+    """
+    
+    result = await db.execute_query(query)
+    
+    return {
+        "chart_type": "stacked_bar",
+        "title": "Price Segment Analysis",
+        "x_axis": "price_segment",
+        "y_axes": ["product_count", "high_rated"],
+        "data": result
+    }
 
-        summary = {
-            "timestamp": datetime.now().isoformat(),
-            "postgresql": postgres_data,
-            "mongodb": mongodb_data,
-            "overall_health": {
-                "postgres_tables": len(postgres_data.get("table_counts", {})),
-                "mongo_collections": len(mongodb_data.get("collection_counts", {})),
-                "total_records": sum(postgres_data.get("table_counts", {}).values()),
-                "total_documents": mongodb_data.get("total_documents", 0)
-            }
-        }
 
-        return JSONResponse(content=summary)
-
-    except Exception as e:
-        logger.error(f"Error getting analytics summary: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get analytics summary: {str(e)}"
-        )
-
-@router.get("/kpi")
-def kpi():
-    """Get key performance indicators"""
-    try:
-        postgres_data = analytics_service.get_postgres_summary()
-        mongodb_data = analytics_service.get_mongodb_summary()
-
-        return {
-            "orders": postgres_data.get("table_counts", {}).get("orders", 0),
-            "customers": postgres_data.get("table_counts", {}).get("customers", 0),
-            "products": postgres_data.get("table_counts", {}).get("products", 0),
-            "ml_features": mongodb_data.get("collection_counts", {}).get("ml_features_clv", 0),
-            "recommendations": mongodb_data.get("collection_counts", {}).get("ml_recommendations", 0)
-        }
-    except Exception as e:
-        return {"orders": 0, "customers": 0, "products": 0, "error": str(e)}
+@router.get("/dashboard/summary")
+async def get_dashboard_summary(
+    db = Depends(get_db)
+):
+    """Dashboard summary metrics"""
+    query = """
+        SELECT 
+            COUNT(*) as total_products,
+            AVG(rating_avg) as overall_avg_rating,
+            SUM(review_count) as total_reviews,
+            AVG(price) as avg_price,
+            COUNT(DISTINCT category) as total_categories,
+            COUNT(CASE WHEN rating_avg >= 4.0 THEN 1 END) as high_rated_products,
+            COUNT(CASE WHEN review_count >= 100 THEN 1 END) as popular_products
+        FROM dwh_dim_product
+    """
+    
+    result = await db.execute_query(query)
+    data = result[0] if result else {}
+    
+    return {
+        "summary": data,
+        "timestamp": datetime.now().isoformat()
+    }

@@ -354,6 +354,14 @@ try:
 except ImportError as e:
     logger.warning(f"ML Insights routes not available: {e}")
 
+# Include Analytics router
+try:
+    from api.v1.analytics import router as analytics_router
+    app.include_router(analytics_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Analytics routes included")
+except ImportError as e:
+    logger.warning(f"Analytics routes not available: {e}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
