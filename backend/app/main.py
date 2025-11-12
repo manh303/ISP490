@@ -114,8 +114,12 @@ class Settings:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss")
+    # Database URLs - Use local DB for development, Render for production
+    POSTGRES_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://dss_user:dss_password_123@localhost:5433/ecommerce_dss" if ENVIRONMENT == "development" 
+        else "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+    )
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
