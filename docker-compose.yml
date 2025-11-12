@@ -150,6 +150,7 @@ services:
       - ./streaming/spark-jobs:/app/streaming
       - ./data-collection/data:/app/raw_data
       - ./data-pipeline/scipts/spark_processing:/app/scripts
+      - ./data-pipeline/src/spark_jobs:/app/src/spark_jobs
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
     networks:
@@ -382,6 +383,7 @@ services:
       - ./data-pipeline/schemas:/app/schemas
       - ./data-pipeline/src:/app/src
       - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       airflow-init:
         condition: service_completed_successfully
