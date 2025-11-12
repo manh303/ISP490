@@ -22,6 +22,32 @@ from pydantic import field_validator
 from utils.validators import validate_phone, validate_password
 from constants.roles import ROLE_MENUS, get_role_menu
 
+# Setup logging FIRST
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    from middleware.activity_middleware import ActivityLoggingMiddleware
+    from services.activity_logger import ActivityLogger
+    ACTIVITY_AVAILABLE = True
+except ImportError:
+    ACTIVITY_AVAILABLE = False
+    logger.warning("Activity logging not available")
+
+try:
+    from pydantic import field_validator
+    from utils.validators import validate_phone, validate_password
+    from constants.roles import ROLE_MENUS, get_role_menu
+    VALIDATORS_AVAILABLE = True
+except ImportError:
+    VALIDATORS_AVAILABLE = False
+    field_validator = lambda x: lambda f: f
+    validate_phone = lambda x: x
+    validate_password = lambda x, **kwargs: x
+    ROLE_MENUS = {}
+    get_role_menu = lambda x: {}
+
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
 from contextlib import asynccontextmanager
@@ -75,10 +101,6 @@ except ImportError:
     except ImportError as e2:
         email_service_module = False
         print(f"WARNING: Email service not available: {e2}")
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # ====================================
 # CONFIGURATION
@@ -1033,6 +1055,7 @@ class EmailService:
 
 # Initialize email service
 email_service = EmailService()
+
 
 # ====================================
 # DATABASE HELPERS
