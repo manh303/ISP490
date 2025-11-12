@@ -1,18 +1,20 @@
 # deployment/spark/Dockerfile
-FROM bitnami/spark:3.4
+FROM apache/spark:3.5.0
 
 USER root
 
-# Thêm PostgreSQL dev headers và build tools
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
     procps \
     vim \
+    netcat-openbsd \
     build-essential \
     libpq-dev \
     postgresql-client \
     python3-dev \
+    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,15 +28,18 @@ RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 # Tạo directories
 RUN mkdir -p /app/{data,streaming,logs,checkpoints}
 
-# Copy configs
-COPY spark-defaults.conf /opt/bitnami/spark/conf/
+# Copy configs and scripts
+RUN mkdir -p /opt/spark/conf
+COPY spark-defaults.conf /opt/spark/conf/
 COPY healthcheck.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/healthcheck.sh
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/healthcheck.sh /usr/local/bin/docker-entrypoint.sh
 
 # Set permissions
-RUN chown -R 1001:1001 /app /opt/bitnami/spark/conf/
+RUN chown -R spark:spark /app /opt/spark/conf/
 
-USER 1001
+USER spark
 
 WORKDIR /app
-CMD ["/opt/bitnami/scripts/spark/run.sh"]
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
