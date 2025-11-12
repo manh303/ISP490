@@ -106,7 +106,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
         <label className="block text-gray-700 mb-1">Mật khẩu</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
       </div>
-      <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold" type="submit" disabled={loading}>
+      <Button className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" type="submit" disabled={loading}>
         {loading ? "Đang tạo..." : "Tạo người dùng"}
       </Button>
     </form>
