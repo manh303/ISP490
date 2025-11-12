@@ -11,7 +11,8 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from services.admin_service import (
+from services.admin_service import AdminService
+from models.admin import (
     UserCreateRequest, UserUpdateRequest, UserPasswordUpdateRequest,
     UserListResponse, UserActionResponse
 )
@@ -78,6 +79,11 @@ async def get_database():
 # Dependency to get admin service
 async def get_admin_service(db = Depends(get_database)) -> AdminService:
     """Get admin service"""
+    return AdminService(db)
+
+# Dependency to get user service (alias for admin service)
+async def get_user_service(db = Depends(get_database)) -> AdminService:
+    """Get user service (alias for admin service)"""
     return AdminService(db)
 
 @router.get("/users", response_model=UserListResponse, 
@@ -193,7 +199,7 @@ async def update_user(
     user_id: int,
     user_data: UserUpdateRequest,
     admin_user: Dict[str, Any] = Depends(require_admin_access),
-    user_service: UserManagementService = Depends(get_user_service)
+    admin_service: AdminService = Depends(get_admin_service)
 ):
     """Update user information"""
     try:
@@ -220,7 +226,7 @@ async def update_user(
 async def update_user_password(
     user_id: int,
     password_data: UserPasswordUpdateRequest,
-    user_service: UserManagementService = Depends(get_user_service)
+    admin_service: AdminService = Depends(get_admin_service)
 ):
     """Update user password"""
     try:
@@ -242,7 +248,7 @@ async def update_user_password(
 @router.put("/users/{user_id}/disable", response_model=UserActionResponse)
 async def disable_user(
     user_id: int,
-    user_service: UserManagementService = Depends(get_user_service)
+    admin_service: AdminService = Depends(get_admin_service)
 ):
     """
     Soft delete user (move to deleted list)
@@ -311,7 +317,7 @@ async def delete_user(
     user_id: int,
     confirm: bool = Query(False, description="⚠️ REQUIRED: Set to true to confirm permanent deletion"),
     admin_user: Dict[str, Any] = Depends(require_admin_access),
-    user_service: UserManagementService = Depends(get_user_service)
+    admin_service: AdminService = Depends(get_admin_service)
 ):
     """
     ⚠️ Delete user (IRREVERSIBLE)
@@ -374,32 +380,7 @@ async def get_activity_logs(
         logger.error(f"Permanent delete user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to permanently delete user")
 
-@router.get("/activity-logs")
-async def get_activity_logs(
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(50, ge=1, le=100, description="Items per page"),
-    user_id: Optional[int] = Query(None, description="Filter by user ID"),
-    action: Optional[str] = Query(None, description="Filter by action"),
-    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
-    db = Depends(get_database)
-):
-    """Get user activity logs with filters"""
-    try:
-        logs, total = await admin_service.get_activity_logs(page, limit, user_id)
-        
-        return {
-            "success": True,
-            "data": {
-                "logs": logs,
-                "total": total,
-                "page": page,
-                "limit": limit
-            }
-        }
-    except Exception as e:
-        logger.error(f"Get activity logs error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get activity logs: {str(e)}")
+
 
 @router.get("/activity-stats")
 async def get_activity_stats(
@@ -408,6 +389,7 @@ async def get_activity_stats(
 ):
     """Get activity statistics"""
     try:
+        admin_service = AdminService(db)
         stats = await admin_service.get_activity_stats()
         
         return {
@@ -450,7 +432,7 @@ async def clear_activity_logs(
     """Get activity statistics"""
     try:
         activity_logger = ActivityLogger(db)
-        stats = await activity_logger.get_activity_stats(days)
+        stats = await activity_logger.get_activity_stats()
         
         return {
             "success": True,
