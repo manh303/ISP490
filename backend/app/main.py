@@ -375,8 +375,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add activity logging middleware
-app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+# Add activity logging middleware (only if available)
+if ACTIVITY_AVAILABLE:
+    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+    logger.info("Activity logging middleware enabled")
+else:
+    logger.warning("Activity logging middleware disabled - module not available")
 
 # Update security headers middleware
 @app.middleware("http")
