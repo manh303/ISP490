@@ -346,6 +346,14 @@ try:
 except ImportError as e:
     logger.warning(f"Role Management routes not available: {e}")
 
+# Include ML Insights router
+try:
+    from api.v1.ml_insights import router as ml_insights_router
+    app.include_router(ml_insights_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("ML Insights routes included")
+except ImportError as e:
+    logger.warning(f"ML Insights routes not available: {e}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
