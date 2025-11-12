@@ -1,8 +1,7 @@
 """
 Profile Management API
 """
-from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any
 import logging
 import sys
@@ -23,17 +22,11 @@ router = APIRouter(
     prefix="/profile", 
     tags=["👤 Profile Management"],
     responses={
-        401: {"description": "Unauthorized - Authentication required"},
-        403: {"description": "Forbidden - Invalid token"},
         500: {"description": "Internal server error"}
     }
 )
 
-
-
 # Dependencies
-security = HTTPBearer()
-
 async def get_database():
     """Get database connection"""
     try:
@@ -49,26 +42,20 @@ async def get_user_service(db=Depends(get_database)):
     """Get user management service"""
     return UserManagementService(db)
 
-def get_current_user_from_token(credentials: HTTPAuthorizationCredentials):
-    """Mock function to get current user from token"""
-    return {"user_id": 1, "username": "test_user"}
-
 # Endpoints
 @router.get("", response_model=ProfileResponse, summary="👤 View My Profile")
 async def get_my_profile(
+    user_id: int = 1,
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """
-    Get current user's profile
+    Get user profile by user_id
     
-    **Authentication**: Required - JWT token in Authorization header
+    **No Authentication Required**
     
     **Returns**: Complete user profile information
     """
     try:
-        # Use mock user ID for testing
-        user_id = 1
-        
         # Get profile from database
         profile = await user_service.get_profile(user_id)
         if not profile:
@@ -82,16 +69,16 @@ async def get_my_profile(
         logger.error(f"Get profile error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get profile")
 
-@router.put("", response_model=ProfileActionResponse, summary="✏️ Update My Profile")
+@router.put("", response_model=ProfileActionResponse, summary="✏️ Update Profile")
 async def update_my_profile(
+    user_id: int,
     profile_data: ProfileUpdateRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """
-    Update current user's profile
+    Update user profile
     
-    **Authentication**: Required - JWT token in Authorization header
+    **No Authentication Required**
     
     **Updatable fields**:
     - full_name: User's full name
@@ -108,10 +95,6 @@ async def update_my_profile(
     ```
     """
     try:
-        # Get current user from token
-        current_user = get_current_user_from_token(credentials)
-        user_id = current_user["user_id"]
-        
         # Update profile
         updated_profile = await user_service.update_profile(
             user_id=user_id,
