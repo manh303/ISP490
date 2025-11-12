@@ -16,7 +16,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from middleware.activity_middleware import ActivityLoggingMiddleware
+from app.middleware.activity_middleware import ActivityLoggingMiddleware
 from services.activity_logger import ActivityLogger
 from pydantic import field_validator
 from utils.validators import validate_phone, validate_password
