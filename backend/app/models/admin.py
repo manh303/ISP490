@@ -5,17 +5,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
 from utils.validators import validate_phone, validate_password
-
-class UserResponse(BaseModel):
-    """User response model"""
-    user_id: int
-    email: str
-    full_name: str
-    phone: Optional[str] = None
-    role: str
-    status: str
-    created_at: Optional[datetime] = None
-    last_login_at: Optional[datetime] = None
+from models.shared import UserResponse  # Import from shared models
 
 class UserCreateRequest(BaseModel):
     """Create user request"""
