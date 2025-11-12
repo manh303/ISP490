@@ -209,7 +209,7 @@ export default function UserDetails(props: UserDetailsProps) {
         )}
       </div>
 
-      {/* Đổi mật khẩu */}
+      Đổi mật khẩu
       <div className="mb-8">
         <h3 className="font-semibold text-lg mb-3 text-gray-800">Đổi mật khẩu</h3>
         <div className="flex gap-3">

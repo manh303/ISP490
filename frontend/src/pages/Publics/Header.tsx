@@ -5,10 +5,35 @@ import { useAuth } from "../../contexts/AuthContext";
 
 export function Header() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user, hasRole } = useAuth();
 
   const handleNavigate = (path: string) => {
     navigate(path);
+  };
+
+  const handleDashboardNavigate = () => {
+    if (hasRole('admin')) {
+      navigate('/admin/dashboard');
+    } else if (hasRole('analyst')) {
+      navigate('/analyst/dashboard');
+    } else if (hasRole('dataengineer')) {
+      navigate('/dataengineer/dashboard');
+    } else {
+      // Default fallback dashboard
+      navigate('/dashboard');
+    }
+  };
+
+  const getDashboardLabel = () => {
+    if (hasRole('admin')) {
+      return 'Admin Dashboard';
+    } else if (hasRole('analyst')) {
+      return 'Analyst Dashboard';
+    } else if (hasRole('dataengineer')) {
+      return 'Engineer Dashboard';
+    } else {
+      return 'Dashboard';
+    }
   };
 
   const handleLogout = async () => {
@@ -68,9 +93,9 @@ export function Header() {
             <>
               <Button
                 variant="outline"
-                onClick={() => handleNavigate('/dashboard')}
+                onClick={handleDashboardNavigate}
               >
-                Dashboard
+                {getDashboardLabel()}
               </Button>
               <Button
                 variant="ghost"
