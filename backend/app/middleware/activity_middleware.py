@@ -47,37 +47,37 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
         # Process request
         response = await call_next(request)
         
-        # Log the activity
+        # Log the activity (disabled temporarily - table not created)
         try:
-            process_time = time.time() - start_time
-            
-            # Determine action based on method and path
-            action = f"{request.method} {request.url.path}"
-            
-            # Create activity details
-            details = {
-                "status_code": response.status_code,
-                "process_time": round(process_time, 3),
-                "method": request.method,
-                "path": request.url.path
-            }
-            
-            # Add query params if present
-            if request.query_params:
-                details["query_params"] = dict(request.query_params)
-
-            # Log the activity
-            activity_logger = ActivityLogger(self.db_manager)
-            await activity_logger.log_activity(
-                user_id=user_id,
-                email=email,
-                action=action,
-                resource=request.url.path,
-                details=details,
-                request=request,
-                status="success" if response.status_code < 400 else "error"
-            )
+            # Check if table exists before logging
+            if self.db_manager.is_connected:
+                table_check = await self.db_manager.execute_query(
+                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_activity_logs')"
+                )
+                if table_check and table_check[0].get('exists'):
+                    process_time = time.time() - start_time
+                    action = f"{request.method} {request.url.path}"
+                    details = {
+                        "status_code": response.status_code,
+                        "process_time": round(process_time, 3),
+                        "method": request.method,
+                        "path": request.url.path
+                    }
+                    if request.query_params:
+                        details["query_params"] = dict(request.query_params)
+                    
+                    activity_logger = ActivityLogger(self.db_manager)
+                    await activity_logger.log_activity(
+                        user_id=user_id,
+                        email=email,
+                        action=action,
+                        resource=request.url.path,
+                        details=details,
+                        request=request,
+                        status="success" if response.status_code < 400 else "error"
+                    )
         except Exception as e:
-            logger.error(f"Activity logging middleware error: {e}")
+            # Silently skip logging if table doesn't exist
+            pass
 
         return response
