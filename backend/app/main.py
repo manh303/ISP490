@@ -16,6 +16,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+from app.middleware.activity_middleware import ActivityLoggingMiddleware
+from services.activity_logger import ActivityLogger
+from pydantic import field_validator
+from utils.validators import validate_phone, validate_password
+from constants.roles import ROLE_MENUS, get_role_menu
 
 # Setup logging FIRST
 import logging
@@ -291,23 +296,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Custom OpenAPI schema without security schemes
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-    # Remove any security schemes to hide Authorize button
-    if "components" in openapi_schema:
-        openapi_schema["components"].pop("securitySchemes", None)
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
+# Remove custom OpenAPI to avoid duplicate security schemes
+# FastAPI will auto-generate based on dependencies
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
@@ -327,11 +317,14 @@ except ImportError as e:
 
 # Include Profile router
 try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
     from api.v1.profile import router as profile_router
     app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Profile routes included")
-except ImportError as e:
-    logger.warning(f"Profile routes not available: {e}")
+    logger.info("✅ Profile routes included successfully")
+except Exception as e:
+    logger.error(f"❌ Profile routes failed: {e}")
 
 # Include Test Admin router
 try:
@@ -340,6 +333,14 @@ try:
     logger.info("Test Admin routes included")
 except ImportError as e:
     logger.warning(f"Test Admin routes not available: {e}")
+
+# Include Role Management router
+try:
+    from api.v1.roles import router as roles_router
+    app.include_router(roles_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Role Management routes included")
+except ImportError as e:
+    logger.warning(f"Role Management routes not available: {e}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -351,8 +352,7 @@ app.add_middleware(
 )
 
 # Add activity logging middleware
-if ACTIVITY_AVAILABLE:
-    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
 
 # Update security headers middleware
 @app.middleware("http")
@@ -426,6 +426,41 @@ async def api_status():
             "database": DATABASE_AVAILABLE,
             "authentication": IAM_AVAILABLE
         },
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get(f"{settings.API_V1_PREFIX}/check-roles")
+async def check_database_roles():
+    """Check roles in database"""
+    try:
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get all roles from database
+        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        roles = await db_manager.execute_query(query)
+        
+        return {
+            "success": True,
+            "total_roles": len(roles),
+            "roles": roles,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+
+@app.get(f"{settings.API_V1_PREFIX}/test-roles")
+async def test_roles():
+    """Test endpoint to check if roles router is working"""
+    return {
+        "message": "Roles router is working!",
         "timestamp": datetime.now().isoformat()
     }
 
@@ -868,16 +903,22 @@ VALID_USERS = {
         "role": "ADMIN"
     },
     "analyst@dss.com": {
-        "user_id": 3,  # Fixed: was 2, should be 3
+        "user_id": 3,
         "password": "analyst123",
         "full_name": "Data Analyst",
         "role": "ANALYST"
     },
-    "customer@dss.com": {
-        "user_id": 4,  # Fixed: was 3, should be 4
-        "password": "customer123",
-        "full_name": "Customer User",
-        "role": "CUSTOMER"
+    "ml@dss.com": {
+        "user_id": 4,
+        "password": "mleng123",
+        "full_name": "ML Engineer",
+        "role": "ML"
+    },
+    "dataeng@dss.com": {
+        "user_id": 2,
+        "password": "dataeng123",
+        "full_name": "Data Engineer",
+        "role": "DATA_ENGINEER"
     }
 }
 
@@ -1490,7 +1531,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
             "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
             "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
-            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token",
+            "/api/v1/roles", "/api/v1/roles/{role_id}", "/docs"
 
             ]
         }
