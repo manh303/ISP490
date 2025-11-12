@@ -9,7 +9,13 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 # Dependency to get database manager
 async def get_db():
-    from app.main import db_manager
+    try:
+        from app.main import db_manager
+    except ImportError:
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from main import db_manager
     return db_manager
 
 
