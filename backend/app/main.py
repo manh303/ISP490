@@ -111,14 +111,13 @@ except ImportError:
 # ====================================
 class Settings:
     # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")  # Use production to connect to Render
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # Database URLs - Use local DB for development, Render for production
+    # Database URLs - Always use Render database (has data)
     POSTGRES_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://dss_user:dss_password_123@localhost:5433/ecommerce_dss" if ENVIRONMENT == "development" 
-        else "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+        "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
     )
 
     # API Configuration
