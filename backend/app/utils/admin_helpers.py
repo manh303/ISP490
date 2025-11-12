@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 def get_current_admin_user(request: Request) -> Dict[str, Any]:
     """Validate admin access from JWT token"""
-    from utils.auth_helpers import decode_access_token
+    from app.utils.auth_helpers import decode_access_token
     from main import settings
     
     # Get Authorization header
