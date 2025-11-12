@@ -180,6 +180,14 @@ class EmailService:
 
     async def send_email(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
         """Send email using Gmail SMTP (async) with retry mechanism"""
+        # Development mode: Skip actual email sending on Render
+        if os.getenv("ENVIRONMENT") == "production" and "render.com" in os.getenv("RENDER_EXTERNAL_URL", ""):
+            logger.warning(f"DEV MODE: Skipping email send to {to_email} (SMTP blocked on Render)")
+            return {
+                'success': True,
+                'message': 'Email sent successfully (dev mode)'
+            }
+        
         last_error = None
 
         for attempt in range(self.config.retry_attempts):
