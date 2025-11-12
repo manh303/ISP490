@@ -1,6 +1,7 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from services.activity_logger import ActivityLogger
+from core.config import settings
 import json
 import logging
 import time
@@ -30,8 +31,7 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
                 token = auth_header.split(" ")[1]
                 # Decode token to get user info
                 from utils.auth_helpers import decode_access_token
-                from main import settings
-                payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+                payload = decode_access_token(token, settings.jwt_secret)
                 if payload:
                     user_id = payload.get("user_id")
                     email = payload.get("email")
