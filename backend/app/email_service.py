@@ -28,7 +28,9 @@ class EmailConfig:
     smtp_server: str = "smtp.gmail.com"
     smtp_port: int = 587
     sender_email: str = os.getenv("SMTP_USERNAME", "manhndhe173383@fpt.edu.vn")
-    sender_password: str = os.getenv("SMTP_PASSWORD", "gfwu cmmg zptl ucox")
+    timeout: int = 30  # Increased timeout
+    retry_attempts: int = 3  # Retry mechanism
+    sender_password: str = os.getenv("SMTP_PASSWORD", "cvin xncb nmfi ogsa")
     sender_name: str = "DSS E-commerce"
 
     # OTP settings
@@ -177,40 +179,51 @@ class EmailService:
         self.otp_manager = OTPManager(redis_client)
 
     async def send_email(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
-        """Send email using Gmail SMTP (async)"""
-        try:
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = f"{self.config.sender_name} <{self.config.sender_email}>"
-            msg['To'] = to_email
+        """Send email using Gmail SMTP (async) with retry mechanism"""
+        last_error = None
 
-            # Add HTML content
-            html_part = MIMEText(html_content, 'html')
-            msg.attach(html_part)
+        for attempt in range(self.config.retry_attempts):
+            try:
+                # Create message
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = f"{self.config.sender_name} <{self.config.sender_email}>"
+                msg['To'] = to_email
 
-            # Send email using aiosmtplib
-            await aiosmtplib.send(
-                msg,
-                hostname=self.config.smtp_server,
-                port=self.config.smtp_port,
-                start_tls=True,
-                username=self.config.sender_email,
-                password=self.config.sender_password,
-            )
+                # Add HTML content
+                html_part = MIMEText(html_content, 'html')
+                msg.attach(html_part)
 
-            logger.info(f"Email sent successfully to {to_email}")
-            return {
-                'success': True,
-                'message': 'Email sent successfully'
-            }
+                # Send email using aiosmtplib with increased timeout
+                await aiosmtplib.send(
+                    msg,
+                    hostname=self.config.smtp_server,
+                    port=self.config.smtp_port,
+                    start_tls=True,
+                    username=self.config.sender_email,
+                    password=self.config.sender_password,
+                    timeout=self.config.timeout  # Increased timeout
+                )
 
-        except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+                logger.info(f"Email sent successfully to {to_email} on attempt {attempt + 1}")
+                return {
+                    'success': True,
+                    'message': 'Email sent successfully'
+                }
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Email attempt {attempt + 1} failed for {to_email}: {e}")
+
+                # Wait before retry (except last attempt)
+                if attempt < self.config.retry_attempts - 1:
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+
+        logger.error(f"Failed to send email to {to_email} after {self.config.retry_attempts} attempts: {last_error}")
+        return {
+            'success': False,
+            'error': str(last_error)
+        }
 
     async def send_otp_email(self, email: str, name: str = None) -> Dict[str, Any]:
         """Generate and send OTP to email"""
