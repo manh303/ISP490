@@ -16,6 +16,17 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+from app.middleware.activity_middleware import ActivityLoggingMiddleware
+from app.services.activity_logger import ActivityLogger
+# Ensure parent directory of `app` is on sys.path so absolute imports like
+# `app.services.*` work when running the script directly.
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+from pydantic import field_validator
+from app.utils.validators import validate_phone, validate_password
+from app.constants.roles import ROLE_MENUS, get_role_menu
+
 
 # Setup logging FIRST
 logging.basicConfig(level=logging.INFO)
@@ -27,13 +38,18 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 try:
-    from .middleware.activity_middleware import ActivityLoggingMiddleware
-    from .services.activity_logger import ActivityLogger
+    from app.middleware.activity_middleware import ActivityLoggingMiddleware
+    from app.services.activity_logger import ActivityLogger
     ACTIVITY_AVAILABLE = True
 except ImportError:
-    ACTIVITY_AVAILABLE = False
-    logger.warning("Activity logging not available")
-
+    try:
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
+    except ImportError:
+        ACTIVITY_AVAILABLE = False
+        logger.warning("Activity logging not available")
+        
 try:
     from pydantic import field_validator
     from .utils.validators import validate_phone, validate_password
