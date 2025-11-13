@@ -33,17 +33,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 try:
-    from middleware.activity_middleware import ActivityLoggingMiddleware
+    from app.middleware.activity_middleware import ActivityLoggingMiddleware
     from app.services.activity_logger import ActivityLogger
     ACTIVITY_AVAILABLE = True
 except ImportError:
-    ACTIVITY_AVAILABLE = False
-    logger.warning("Activity logging not available")
+    try:
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
+    except ImportError:
+        ACTIVITY_AVAILABLE = False
+        logger.warning("Activity logging not available")
 
 try:
     from pydantic import field_validator
-    from app.utils.validators import validate_phone, validate_password
-    from app.constants.roles import ROLE_MENUS, get_role_menu
+    from utils.validators import validate_phone, validate_password
+    from constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
     VALIDATORS_AVAILABLE = False
@@ -112,11 +117,14 @@ except ImportError:
 # ====================================
 class Settings:
     # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")  # Use production to connect to Render
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss")
+    # Database URLs - Always use Render database (has data)
+    POSTGRES_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+    )
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
@@ -339,6 +347,22 @@ try:
 except ImportError as e:
     logger.warning(f"Role Management routes not available: {e}")
 
+# Include ML Insights router
+try:
+    from api.v1.ml_insights import router as ml_insights_router
+    app.include_router(ml_insights_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("ML Insights routes included")
+except ImportError as e:
+    logger.warning(f"ML Insights routes not available: {e}")
+
+# Include Analytics router
+try:
+    from api.v1.analytics import router as analytics_router
+    app.include_router(analytics_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Analytics routes included")
+except ImportError as e:
+    logger.warning(f"Analytics routes not available: {e}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -348,8 +372,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add activity logging middleware
-app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+# Add activity logging middleware (only if available)
+if ACTIVITY_AVAILABLE:
+    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+    logger.info("Activity logging middleware enabled")
+else:
+    logger.warning("Activity logging middleware disabled - module not available")
 
 # Update security headers middleware
 @app.middleware("http")
@@ -971,7 +999,10 @@ def authenticate_user(email: str, password: str):
     return user_data
 
 # Use shared auth helpers
-from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+try:
+    from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+except ImportError:
+    from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
 def create_access_token(user_data: dict, email: str):
     """Create JWT access token using shared helper"""
@@ -1166,7 +1197,10 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         # Update last login time
         try:
-            from app.services.user_management_service import UserManagementService
+            try:
+                from app.services.user_management_service import UserManagementService
+            except ImportError:
+                from services.user_management_service import UserManagementService
             user_service = UserManagementService(db)
             await user_service.update_last_login(user_data["user_id"])
         except Exception as e:
