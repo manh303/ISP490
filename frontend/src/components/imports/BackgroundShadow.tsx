@@ -17,7 +17,7 @@ function Heading1() {
   return (
     <div className="content-stretch flex flex-col items-center relative shrink-0 w-full" data-name="Heading 1">
       <div className="flex flex-col font-['Inter:Bold',_sans-serif] font-bold justify-center leading-[0] not-italic relative shrink-0 text-[29.297px] text-center text-gray-900 w-full">
-        <p className="leading-[36px]">Welcome Back</p>
+        <p className="leading-[36px]">Chào mừng quay lại</p>
       </div>
     </div>
   );
@@ -27,7 +27,7 @@ function Container() {
   return (
     <div className="content-stretch flex flex-col items-center relative shrink-0 w-full" data-name="Container">
       <div className="flex flex-col font-['Inter:Regular',_sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[15px] text-center text-gray-600 w-full">
-        <p className="leading-[24px]">Please sign in to your account</p>
+        <p className="leading-[24px]">Đăng nhập tài khoản của bạn</p>
       </div>
     </div>
   );
@@ -98,7 +98,7 @@ function Component1() {
   return (
     <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="Component 1">
       <div className="flex flex-col font-['Inter:Regular',_sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13.234px] text-blue-600 text-center text-nowrap">
-        <p className="leading-[20px] whitespace-pre">Forgot Password?</p>
+        <p className="leading-[20px] whitespace-pre">Quên mật khẩu ?</p>
       </div>
     </div>
   );
@@ -108,7 +108,7 @@ function Component2() {
   return (
     <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="Component 1">
       <div className="flex flex-col font-['Inter:Regular',_sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13.234px] text-blue-600 text-center text-nowrap">
-        <p className="leading-[20px] whitespace-pre">Create Account</p>
+        <p className="leading-[20px] whitespace-pre">Tạo tài khoản</p>
       </div>
     </div>
   );

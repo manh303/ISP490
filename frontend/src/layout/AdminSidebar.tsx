@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
       { name: "Người dùng hoạt động", path: "/admin/users", pro: false },
       { name: "Quản lý vai trò", path: "/admin/roles", pro: false },
       // { name: "User Details", path: "/admin/users/details", pro: false },
-      { name: "Người dùng đã xóa", path: "/admin/deleted-users", pro: false },
+      { name: "Người dùng đã vô hiệu hóa", path: "/admin/deleted-users", pro: false },
     ],
   },
   {

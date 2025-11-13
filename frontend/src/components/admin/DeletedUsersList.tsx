@@ -165,7 +165,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
   return (
     <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Người dùng đã xóa</h2>
+        <h2 className="text-xl font-semibold">Người dùng đã vô hiệu hóa</h2>
         <div className="text-gray-500 text-sm">
           Hiển thị {paginatedUsers.length} / {filteredUsers.length} (Tổng: {total})
         </div>
