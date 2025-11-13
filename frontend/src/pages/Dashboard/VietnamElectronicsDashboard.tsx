@@ -31,10 +31,10 @@ export default function VietnamElectronicsDashboard() {
         setTimeout(() => {
           setPlatformData([
             { platform: 'Tiki', products: 1250, revenue: 2500000, growth: 12.5 },
-            { platform: 'Shopee', products: 980, revenue: 1900000, growth: 8.3 },
+            // { platform: 'Shopee', products: 980, revenue: 1900000, growth: 8.3 },
             { platform: 'Lazada', products: 750, revenue: 1500000, growth: -2.1 },
-            { platform: 'FPT Shop', products: 620, revenue: 1200000, growth: 15.7 },
-            { platform: 'Sendo', products: 450, revenue: 900000, growth: 5.2 },
+            // { platform: 'FPT Shop', products: 620, revenue: 1200000, growth: 15.7 },
+            // { platform: 'Sendo', products: 450, revenue: 900000, growth: 5.2 },
           ]);
 
           setPipelineStatus({
@@ -70,7 +70,7 @@ export default function VietnamElectronicsDashboard() {
     return (
       <div>
         <PageMeta
-          title="Vietnam Electronics Dashboard | E-commerce DSS"
+          title="Intelligent E-commerce Analytics DSS Using Big Data"
           description="Vietnam Electronics E-commerce Data Analytics Dashboard"
         />
         <PageBreadcrumb pageTitle="Vietnam Electronics Dashboard" />
@@ -87,7 +87,7 @@ export default function VietnamElectronicsDashboard() {
   return (
     <div>
       <PageMeta
-        title="Vietnam Electronics Dashboard | E-commerce DSS"
+        title="Intelligent E-commerce Analytics DSS Using Big Data"
         description="Vietnam Electronics E-commerce Data Analytics Dashboard"
       />
       <PageBreadcrumb pageTitle="Vietnam Electronics Dashboard" />
@@ -177,7 +177,7 @@ export default function VietnamElectronicsDashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          {/* <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <div className="flex items-center">
               <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
                 <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,17 +221,17 @@ export default function VietnamElectronicsDashboard() {
                 <div className="text-sm text-gray-600 dark:text-gray-400">Active Platforms</div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4">
-          <button
+          {/* <button
             onClick={() => window.open('http://localhost:8080', '_blank')}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
             📊 View Pipeline in Airflow
-          </button>
+          </button> */}
 
           <button
             onClick={() => window.open('http://localhost:3001', '_blank')}

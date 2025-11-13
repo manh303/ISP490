@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '../../components/ui/figma/table';
 import { Eye, RotateCcw, Trash2 } from 'lucide-react';
-
+import { useToast } from "../../contexts/ToastContext";
 interface User {
   user_id: number;
   full_name: string;
@@ -31,7 +31,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [total, setTotal] = useState(0);
-
+  const { showToast } = useToast();
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -57,11 +57,15 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
       const res = await userApi.restoreUser(id);
       if (res && res.detail) {
         setError(res.detail);
+        showToast(res.detail, 'error');
       } else {
         setUsers(users.filter(u => u.user_id !== id));
+        showToast('✓ Khôi phục tài khoản thành công!', 'success');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Khôi phục thất bại");
+      const errorMsg = err?.response?.data?.detail || "Khôi phục thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -72,11 +76,15 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
       const res = await userApi.permanentDeleteUser(id);
       if (res && res.detail) {
         setError(res.detail);
+        showToast(res.detail, 'error');
       } else {
         setUsers(users.filter(u => u.user_id !== id));
+        showToast('✓ Xóa vĩnh viễn tài khoản thành công!', 'success');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Xóa vĩnh viễn thất bại");
+      const errorMsg = err?.response?.data?.detail || "Xóa vĩnh viễn thất bại";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -114,16 +122,25 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
-                    {user.status}
-                  </Badge>
+                  {user.status === 'active' ? (
+                    <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
+                  ) : (
+                    <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     <Button size="sm" variant="outline" onClick={() => handleRestore(user.user_id)} title="Khôi phục">
                       <RotateCcw className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handlePermanentDelete(user.user_id)} title="Xóa vĩnh viễn">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handlePermanentDelete(user.user_id)}
+                      title="Xóa vĩnh viễn"
+                      className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1 rounded"
+                      disabled={loading}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id)} title="Xem chi tiết">

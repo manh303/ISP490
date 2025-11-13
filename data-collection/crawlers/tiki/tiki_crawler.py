@@ -1,440 +1,286 @@
 #!/usr/bin/env python3
-import time
+"""Mass crawler for multiple categories and pages - Windows console compatible"""
+
+import requests
 import json
+import time
 import random
-from typing import List, Dict, Optional
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from urllib.parse import urljoin, urlparse, parse_qs
+import os
+from datetime import datetime
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
-from base_crawler import BaseCrawler
-
-class TikiCrawler(BaseCrawler):
+class MassCrawler:
     def __init__(self):
-        super().__init__(
-            source_name="tiki",
-            base_url="https://tiki.vn",
-            delay_range=(2, 5)
-        )
+        self.session = requests.Session()
 
-        self.categories = {
-            "dien-thoai": "/dien-thoai-smartphone/c1795",
-            "laptop": "/laptop/c1846",
-            "tai-nghe": "/tai-nghe/c1883",
-            "dong-ho-thong-minh": "/dong-ho-thong-minh/c1862",
-            "phu-kien": "/phu-kien-dien-thoai/c1942"
+        # Browser headers
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        })
+
+        # Multiple categories for Tiki
+        self.tiki_categories = [
+            'dien thoai',
+            'laptop',
+            'may tinh bang',
+            'dong ho thong minh',
+            'tai nghe',
+            'may anh',
+            'loa bluetooth',
+            'man hinh may tinh',
+            'chuot may tinh',
+            'ban phim',
+            'tivi smart',
+            'may in'
+        ]
+
+        # CellphoneS categories
+        self.cellphones_categories = {
+            'dien-thoai': 'smartphone',
+            'laptop': 'laptop',
+            'tablet': 'tablet',
+            'dong-ho-thong-minh': 'smartwatch',
+            'tai-nghe': 'headphone'
         }
 
-    def get_category_url(self, category: str, page: int = 1) -> str:
-        category_path = self.categories.get(category, "/dien-thoai-smartphone/c1795")
-        return f"{self.base_url}{category_path}?page={page}"
+        # Combined categories for mass crawling (use tiki_categories as main)
+        self.categories = self.tiki_categories
 
-    def get_product_urls_from_category(self, category: str, max_pages: int = 5) -> List[str]:
-        product_urls = []
+        self.stats = {
+            'total_products': 0,
+            'tiki_products': 0,
+            'cellphones_products': 0,
+            'categories_processed': 0,
+            'pages_crawled': 0,
+            'start_time': None
+        }
 
-        with self.setup_driver(headless=True) as driver:
-            for page in range(1, max_pages + 1):
-                try:
-                    url = self.get_category_url(category, page)
+    def crawl_tiki_category_paginated(self, category, max_pages=50):
+        """Crawl Tiki category with multiple pages"""
+        print(f"\n>>> Crawling category: {category} (up to {max_pages} pages)")
 
-                    if not self.can_crawl(url):
-                        self.logger.warning(f"Robots.txt disallows crawling: {url}")
-                        continue
+        all_products = []
 
-                    self.logger.info(f"Crawling Tiki category {category}, page {page}: {url}")
-                    driver.get(url)
+        for page in range(1, max_pages + 1):
+            print(f"    Page {page}/{max_pages}...")
 
-                    # Wait for products to load
-                    self.random_delay()
+            try:
+                url = "https://tiki.vn/api/v2/products"
+                params = {
+                    'limit': 40,  # 40 products per page
+                    'include': 'advertisement',
+                    'aggregations': 2,
+                    'q': category,
+                    'page': page
+                }
 
-                    # Find product links
-                    product_elements = self.safe_find_elements(
-                        driver,
-                        By.CSS_SELECTOR,
-                        'a[data-view-id="pdp_main_view"], .product-item a, [data-view-label="product_list_item"] a'
-                    )
+                response = self.session.get(url, params=params, timeout=15)
 
-                    page_urls = []
-                    for element in product_elements:
-                        href = self.extract_attribute_safe(element, 'href')
-                        if href and href != "N/A" and ('.html' in href or '/p' in href):
-                            full_url = urljoin(self.base_url, href)
-                            if full_url not in product_urls:
-                                page_urls.append(full_url)
+                if response.status_code == 200:
+                    data = response.json()
+                    products = data.get('data', [])
 
-                    self.logger.info(f"Found {len(page_urls)} products on page {page}")
-                    product_urls.extend(page_urls)
-
-                    # Check if we should continue
-                    if not page_urls:
-                        self.logger.info(f"No more products found, stopping at page {page}")
+                    if not products:
+                        print(f"      No products on page {page}, stopping")
                         break
 
+                    print(f"      Found {len(products)} products")
+
+                    # Process each product
+                    for product in products:
+                        try:
+                            processed = {
+                                "source": "tiki_mass_crawl",
+                                "category": category,
+                                "product_id": str(product.get('id', '')),
+                                "product_name": product.get('name', ''),
+                                "price_current": product.get('price', 0),
+                                "price_original": product.get('list_price', 0),
+                                "discount_percent": product.get('discount_rate', 0),
+                                "rating_avg": product.get('rating_average', 0),
+                                "review_count": product.get('review_count', 0),
+                                "brand": product.get('brand_name', ''),
+                                "seller_name": product.get('seller_name', ''),
+                                "url": f"https://tiki.vn/{product.get('url_path', '')}",
+                                "image_urls": [product.get('thumbnail_url', '')],
+                                "crawl_date": datetime.now().isoformat(),
+                                "page_number": page
+                            }
+                            all_products.append(processed)
+                        except Exception as e:
+                            print(f"      Error processing product: {e}")
+                            continue
+
+                    self.stats['pages_crawled'] += 1
+
                     # Random delay between pages
-                    self.random_delay()
+                    time.sleep(random.uniform(2, 4))
 
-                except Exception as e:
-                    self.logger.error(f"Error crawling Tiki category {category}, page {page}: {e}")
-                    continue
-
-        self.logger.info(f"Total {len(product_urls)} unique product URLs found for {category}")
-        return product_urls
-
-    def extract_product_data(self, product_url: str) -> Optional[Dict]:
-        if not self.can_crawl(product_url):
-            self.logger.warning(f"Robots.txt disallows crawling: {product_url}")
-            return None
-
-        with self.setup_driver(headless=True) as driver:
-            try:
-                self.logger.info(f"Extracting Tiki product data from: {product_url}")
-                driver.get(product_url)
-
-                # Wait for page to load
-                time.sleep(3)
-
-                # Extract product ID from URL
-                product_id = self._extract_product_id_from_url(product_url)
-
-                # Extract product name
-                product_name = self._extract_product_name(driver)
-
-                # Extract brand
-                brand = self._extract_brand(driver)
-
-                # Extract category
-                category = self._extract_category(driver)
-
-                # Extract description
-                description = self._extract_description(driver)
-
-                # Extract images
-                image_urls = self._extract_images(driver)
-
-                # Extract prices
-                price_current, price_original = self._extract_prices(driver)
-
-                # Calculate discount
-                discount_percent = self._calculate_discount(price_current, price_original)
-
-                # Extract rating info
-                rating_avg, rating_count = self._extract_rating_info(driver)
-
-                # Extract sold count
-                sold_count = self._extract_sold_count(driver)
-
-                # Extract seller info
-                seller_name, seller_type = self._extract_seller_info(driver)
-
-                product_data = self.create_product_data(
-                    product_id=product_id,
-                    url=product_url,
-                    product_name=product_name,
-                    brand=brand,
-                    category=category,
-                    description=description,
-                    image_urls=image_urls,
-                    price_current=price_current,
-                    price_original=price_original,
-                    discount_percent=discount_percent,
-                    rating_avg=rating_avg,
-                    rating_count=rating_count,
-                    sold_count=sold_count,
-                    seller_name=seller_name,
-                    seller_type=seller_type
-                )
-
-                self.logger.info(f"Successfully extracted Tiki data for: {product_name}")
-                return product_data
+                else:
+                    print(f"      HTTP Error {response.status_code}")
+                    break
 
             except Exception as e:
-                self.logger.error(f"Error extracting Tiki product data from {product_url}: {e}")
-                return None
+                print(f"      Exception on page {page}: {e}")
+                break
 
-    def _extract_product_id_from_url(self, url: str) -> str:
-        try:
-            # Tiki product URLs typically have format: /product-name-p{product_id}.html
-            import re
-            match = re.search(r'-p(\d+)\.html', url)
-            if match:
-                return match.group(1)
+        print(f"    Category '{category}' total: {len(all_products)} products")
+        return all_products
 
-            # Alternative format: /p/{product_id}/
-            match = re.search(r'/p/(\d+)', url)
-            if match:
-                return match.group(1)
+    def run_mass_crawl(self):
+        """Run mass crawl across all categories"""
+        print("=" * 60)
+        print("MASS CRAWLER STARTING")
+        print("=" * 60)
+        print(f"Categories to crawl: {len(self.categories)}")
+        print(f"Expected products: {len(self.categories) * 15 * 40}")  # categories * pages * products_per_page
+        print()
 
-            # Fallback: try to get from query params
-            parsed_url = urlparse(url)
-            query_params = parse_qs(parsed_url.query)
-            if 'spid' in query_params:
-                return query_params['spid'][0]
+        self.stats['start_time'] = time.time()
+        all_products = []
 
-            return url.split('/')[-1].split('.')[0]
-        except:
-            return "unknown"
+        # Crawl each category
+        for i, category in enumerate(self.categories, 1):
+            print(f"\n[{i}/{len(self.categories)}] Processing: {category}")
 
-    def _extract_product_name(self, driver) -> str:
-        selectors = [
-            'h1[data-view-id="pdp_details_view_product_title"]',
-            'h1.title',
-            '.header h1',
-            'h1.product-name',
-            'h1'
-        ]
+            try:
+                category_products = self.crawl_tiki_category_paginated(category, max_pages=50)
+                all_products.extend(category_products)
+                self.stats['categories_processed'] += 1
 
-        for selector in selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                text = self.extract_text_safe(element)
-                if text != "N/A" and len(text) > 3:
-                    return text
-        return "N/A"
+                # Save progress after each category
+                if category_products:
+                    self.save_progress(category_products, category.replace(' ', '_'))
 
-    def _extract_brand(self, driver) -> str:
-        selectors = [
-            '.brand-and-author a',
-            '.brand-name',
-            '[data-view-id="pdp_details_view_brand"]',
-            '.product-brand a'
-        ]
+                print(f"    Running total: {len(all_products)} products")
 
-        for selector in selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                text = self.extract_text_safe(element)
-                if text != "N/A" and text.lower() not in ['tiki', 'shop']:
-                    return text
-        return "N/A"
+                # Break between categories
+                print("    Waiting before next category...")
+                time.sleep(random.uniform(5, 8))
 
-    def _extract_category(self, driver) -> str:
-        selectors = [
-            '.breadcrumb a:nth-last-child(2)',
-            '.breadcrumbs a:last-child',
-            '[data-view-id="breadcrumb"] a:last-child'
-        ]
+            except Exception as e:
+                print(f"    ERROR in category {category}: {e}")
+                continue
 
-        for selector in selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                text = self.extract_text_safe(element)
-                if text != "N/A" and text.lower() not in ['tiki', 'trang chủ', 'home']:
-                    return text
-        return "Điện tử"
+        # Save final results
+        self.save_final_results(all_products)
+        self.print_summary(all_products)
 
-    def _extract_description(self, driver) -> str:
-        selectors = [
-            '.product-essential-info',
-            '.sku-prop-content',
-            '.product-content-detail',
-            '.highlight-content'
-        ]
+        return all_products
 
-        descriptions = []
-        for selector in selectors:
-            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-            for element in elements[:2]:  # Limit to first 2 elements
-                text = self.extract_text_safe(element)
-                if text != "N/A" and len(text) > 10:
-                    descriptions.append(text)
+    def save_progress(self, products, category_name):
+        """Save progress for each category"""
+        filename = f"progress_{category_name}_{int(time.time())}.json"
+        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw')
+        os.makedirs(data_dir, exist_ok=True)
 
-        return " | ".join(descriptions[:3]) if descriptions else "N/A"
+        filepath = os.path.join(data_dir, filename)
 
-    def _extract_images(self, driver) -> List[str]:
-        image_urls = []
-        selectors = [
-            '.product-gallery img',
-            '.group-images img',
-            '.thumbnail img',
-            '.product-images img'
-        ]
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(products, f, ensure_ascii=False, indent=2)
 
-        for selector in selectors:
-            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-            for element in elements:
-                src = self.extract_attribute_safe(element, 'src')
-                data_src = self.extract_attribute_safe(element, 'data-src')
+        print(f"      Progress saved: {filename}")
 
-                for url in [src, data_src]:
-                    if url and url != "N/A" and url not in image_urls and 'http' in url:
-                        image_urls.append(url)
+    def save_final_results(self, all_products):
+        """Save comprehensive final results"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'data')
+        os.makedirs(data_dir, exist_ok=True)
 
-        return image_urls[:5]  # Limit to 5 images
+        # Main results file
+        main_filename = f"mass_crawl_results_{timestamp}.json"
+        main_filepath = os.path.join(data_dir, main_filename)
 
-    def _extract_prices(self, driver) -> tuple:
-        # Current price
-        current_price_selectors = [
-            '[data-view-id="pdp_details_view_price"] .product-price__current-price',
-            '.product-price__current-price',
-            '.current-price',
-            '.final-price'
-        ]
+        with open(main_filepath, 'w', encoding='utf-8') as f:
+            json.dump(all_products, f, ensure_ascii=False, indent=2)
 
-        price_current = None
-        for selector in current_price_selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                price_text = self.extract_text_safe(element)
-                price_current = self.clean_price(price_text)
-                if price_current:
-                    break
+        # Summary file
+        duration = time.time() - self.stats['start_time']
+        summary = {
+            'crawl_info': {
+                'crawl_date': datetime.now().isoformat(),
+                'total_products': len(all_products),
+                'categories_processed': self.stats['categories_processed'],
+                'pages_crawled': self.stats['pages_crawled'],
+                'duration_minutes': duration / 60,
+                'products_per_minute': len(all_products) / (duration / 60) if duration > 0 else 0
+            },
+            'category_breakdown': self.get_breakdown(all_products),
+            'sample_products': all_products[:10]
+        }
 
-        # Original price
-        original_price_selectors = [
-            '[data-view-id="pdp_details_view_price"] .product-price__list-price',
-            '.product-price__list-price',
-            '.list-price',
-            '.original-price'
-        ]
+        summary_filename = f"mass_crawl_summary_{timestamp}.json"
+        summary_filepath = os.path.join(data_dir, summary_filename)
 
-        price_original = None
-        for selector in original_price_selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                price_text = self.extract_text_safe(element)
-                price_original = self.clean_price(price_text)
-                if price_original:
-                    break
+        with open(summary_filepath, 'w', encoding='utf-8') as f:
+            json.dump(summary, f, ensure_ascii=False, indent=2)
 
-        return price_current, price_original
+        print(f"\nFiles saved:")
+        print(f"  Main: {main_filename}")
+        print(f"  Summary: {summary_filename}")
 
-    def _calculate_discount(self, current: Optional[int], original: Optional[int]) -> Optional[float]:
-        if current and original and original > current:
-            return round(((original - current) / original) * 100, 2)
-        return None
+    def get_breakdown(self, products):
+        """Get breakdown by category"""
+        breakdown = {}
+        for product in products:
+            category = product.get('category', 'unknown')
+            breakdown[category] = breakdown.get(category, 0) + 1
+        return breakdown
 
-    def _extract_rating_info(self, driver) -> tuple:
-        # Rating average
-        rating_selectors = [
-            '[data-view-id="pdp_details_view_review_score"] .rating-average',
-            '.rating-average',
-            '.review-rating__point',
-            '.stars .rating'
-        ]
+    def print_summary(self, products):
+        """Print final summary"""
+        duration = time.time() - self.stats['start_time']
 
-        rating_avg = None
-        for selector in rating_selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                rating_text = self.extract_text_safe(element)
-                rating_avg = self.extract_rating(rating_text)
-                if rating_avg:
-                    break
+        print("\n" + "=" * 60)
+        print("MASS CRAWL COMPLETED!")
+        print("=" * 60)
+        print(f"Duration: {duration/60:.1f} minutes")
+        print(f"Total products: {len(products):,}")
+        print(f"Categories: {self.stats['categories_processed']}")
+        print(f"Pages: {self.stats['pages_crawled']}")
+        print(f"Speed: {len(products)/(duration/60):.1f} products/minute")
 
-        # Rating count
-        count_selectors = [
-            '[data-view-id="pdp_details_view_review_score"] .review-count',
-            '.review-count',
-            '.review-rating__total',
-            '.rating-count'
-        ]
+        # Category breakdown
+        breakdown = self.get_breakdown(products)
+        print(f"\nBreakdown by category:")
+        for category, count in sorted(breakdown.items(), key=lambda x: x[1], reverse=True):
+            print(f"  {category}: {count:,} products")
 
-        rating_count = None
-        for selector in count_selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                count_text = self.extract_text_safe(element)
-                rating_count = self.extract_count(count_text)
-                if rating_count:
-                    break
-
-        return rating_avg, rating_count
-
-    def _extract_sold_count(self, driver) -> Optional[int]:
-        selectors = [
-            '.quantity-sold',
-            '.sold-qty',
-            '.review-seller__sold',
-            '.quantity'
-        ]
-
-        for selector in selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                sold_text = self.extract_text_safe(element)
-                if 'đã bán' in sold_text.lower() or 'sold' in sold_text.lower():
-                    sold_count = self.extract_count(sold_text)
-                    if sold_count:
-                        return sold_count
-        return None
-
-    def _extract_seller_info(self, driver) -> tuple:
-        # Seller name
-        seller_selectors = [
-            '.seller-info .seller-name',
-            '.current-seller .seller-name',
-            '.store-info .store-name',
-            '.seller-name a'
-        ]
-
-        seller_name = "N/A"
-        for selector in seller_selectors:
-            element = self.safe_find_element(driver, By.CSS_SELECTOR, selector)
-            if element:
-                text = self.extract_text_safe(element)
-                if text != "N/A" and text.lower() != 'tiki':
-                    seller_name = text
-                    break
-
-        # If no seller found, default to Tiki
-        if seller_name == "N/A":
-            seller_name = "Tiki"
-
-        # Determine seller type
-        seller_type = "Marketplace"
-        if seller_name.lower() == "tiki" or "tiki trading" in seller_name.lower():
-            seller_type = "Official Store"
-        elif "official" in seller_name.lower() or "chính hãng" in seller_name.lower():
-            seller_type = "Official Store"
-
-        return seller_name, seller_type
-
-    def crawl_category(self, category: str, max_pages: int = 3, max_products: int = 50) -> List[Dict]:
-        self.logger.info(f"Starting Tiki crawl for category: {category}")
-
-        # Get product URLs
-        product_urls = self.get_product_urls_from_category(category, max_pages)
-
-        # Limit number of products
-        if len(product_urls) > max_products:
-            product_urls = product_urls[:max_products]
-            self.logger.info(f"Limited to {max_products} products")
-
-        # Extract data from each product
-        products_data = []
-        for i, url in enumerate(product_urls, 1):
-            self.logger.info(f"Processing Tiki product {i}/{len(product_urls)}")
-
-            product_data = self.extract_product_data(url)
-            if product_data:
-                products_data.append(product_data)
-
-            # Random delay between products
-            self.random_delay()
-
-        self.logger.info(f"Successfully crawled {len(products_data)} Tiki products from {category}")
-        return products_data
+        # Sample products
+        print(f"\nSample products:")
+        for i, product in enumerate(products[:5], 1):
+            name = product.get('product_name', 'N/A')[:50]
+            price = product.get('price_current', 'N/A')
+            print(f"  {i}. {name}... | {price:,} VND" if isinstance(price, int) else f"  {i}. {name}... | {price}")
 
 def main():
-    crawler = TikiCrawler()
+    """Run the mass crawler"""
+    crawler = MassCrawler()
 
-    # Test with phone category
+    print("MASS MULTI-CATEGORY CRAWLER")
+    print("This will crawl multiple categories with pagination")
+    print("Expected to collect thousands of products")
+    print()
+
+    # Auto-start for demo
     try:
-        products = crawler.crawl_category("dien-thoai", max_pages=2, max_products=10)
+        products = crawler.run_mass_crawl()
 
-        if products:
-            filename = f"tiki_products_{crawler.source_name}_{int(time.time())}.jsonl"
-            crawler.save_data(products, filename)
-            print(f"Crawled {len(products)} Tiki products and saved to {filename}")
-        else:
-            print("No Tiki products were crawled")
+        print(f"\nSUCCESS! Collected {len(products):,} total products")
+        print("Check data/mass_crawl/ folder for results")
 
+    except KeyboardInterrupt:
+        print("\nCrawl interrupted by user")
     except Exception as e:
-        print(f"Error during Tiki crawling: {e}")
-    finally:
-        crawler.cleanup()
+        print(f"\nCrawl error: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

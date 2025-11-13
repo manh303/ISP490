@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Download, 
   FileDown, 
@@ -6,9 +6,8 @@ import {
   AlertCircle,
   CheckCircle,
   FileText,
-  BarChart3,
-  LineChart,
-  PieChart
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '../../components/ui/figma/button';
 import {
@@ -27,46 +26,146 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/figma/table';
+import {
+  getTopRatedProducts,
+  getRatingDistribution,
+  getReviewTrends,
+  getCategoryPerformance,
+  getSentimentDistribution,
+  getPriceSegments,
+  getPriceVsRating,
+  getPlatformComparison,
+  getPlatformPriceComparison,
+  getDashboardSummary,
+  type TopRatedProductsResponse,
+  type RatingDistributionResponse,
+  type ReviewTrendsResponse,
+  type CategoryPerformanceResponse,
+  type SentimentDistributionResponse,
+  type PriceSegmentsResponse,
+  type PriceVsRatingResponse,
+  type PlatformComparisonResponse,
+  type PlatformPriceComparisonResponse,
+  type DashboardSummaryResponse,
+} from '../../services/analyticsApi';
+import { TopRatedProductsChart } from '../../components/analytics/TopRatedProductsChart';
+import { RatingDistributionChart } from '../../components/analytics/RatingDistributionChart';
+import { ReviewTrendsChart } from '../../components/analytics/ReviewTrendsChart';
+import { CategoryPerformanceChart } from '../../components/analytics/CategoryPerformanceChart';
+import { SentimentDistributionChart } from '../../components/analytics/SentimentDistributionChart';
+import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
+import { PriceVsRatingChart } from '../../components/analytics/PriceVsRatingChart';
+import { PlatformComparisonChart } from '../../components/analytics/PlatformComparisonChart';
+import { PlatformPriceComparisonChart } from '../../components/analytics/PlatformPriceComparisonChart';
 
 export function AnalystWireframe() {
   const [itemsPerPage, setItemsPerPage] = useState('5');
-  const [activeView, setActiveView] = useState('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // Mock DSS recommendations
+  // Analytics data state
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummaryResponse | null>(null);
+  const [topRatedProducts, setTopRatedProducts] = useState<TopRatedProductsResponse | null>(null);
+  const [ratingDistribution, setRatingDistribution] = useState<RatingDistributionResponse | null>(null);
+  const [reviewTrends, setReviewTrends] = useState<ReviewTrendsResponse | null>(null);
+  const [categoryPerformance, setCategoryPerformance] = useState<CategoryPerformanceResponse | null>(null);
+  const [sentimentDistribution, setSentimentDistribution] = useState<SentimentDistributionResponse | null>(null);
+  const [priceSegments, setPriceSegments] = useState<PriceSegmentsResponse | null>(null);
+  const [priceVsRating, setPriceVsRating] = useState<PriceVsRatingResponse | null>(null);
+  const [platformComparison, setPlatformComparison] = useState<PlatformComparisonResponse | null>(null);
+  const [platformPriceComparison, setPlatformPriceComparison] = useState<PlatformPriceComparisonResponse | null>(null);
+
+  // Load analytics data
+  useEffect(() => {
+    const loadAnalyticsData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [
+          summaryData,
+          topRatedData,
+          ratingDistData,
+          trendsData,
+          categoryData,
+          sentimentData,
+          priceSegData,
+          priceVsRatingData,
+          platformCompData,
+          platformPriceData,
+        ] = await Promise.all([
+          getDashboardSummary(),
+          getTopRatedProducts({ limit: 10 }),
+          getRatingDistribution(),
+          getReviewTrends({ days: 7 }),
+          getCategoryPerformance(),
+          getSentimentDistribution(),
+          getPriceSegments(),
+          getPriceVsRating(),
+          getPlatformComparison(),
+          getPlatformPriceComparison(),
+        ]);
+
+        setDashboardSummary(summaryData);
+        setTopRatedProducts(topRatedData);
+        setRatingDistribution(ratingDistData);
+        setReviewTrends(trendsData);
+        setCategoryPerformance(categoryData);
+        setSentimentDistribution(sentimentData);
+        setPriceSegments(priceSegData);
+        setPriceVsRating(priceVsRatingData);
+        setPlatformComparison(platformCompData);
+        setPlatformPriceComparison(platformPriceData);
+      } catch (err) {
+        console.error('Error loading analytics data:', err);
+        setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAnalyticsData();
+  }, []);
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  // Mock DSS recommendations (you can integrate real DSS API later)
   const dssRecommendations = [
     {
       id: 1,
-      title: 'Xu hướng tăng trưởng doanh thu',
+      title: 'Xu hướng sản phẩm chất lượng cao',
       type: 'Positive',
-      description: 'Doanh thu Q4 tăng 15% so với Q3. Đề xuất tăng đầu tư vào kênh bán hàng online.',
+      description: `${categoryPerformance?.data[0]?.category || 'Laptops'} có ${categoryPerformance?.data[0]?.high_rated_count || 0} sản phẩm đánh giá cao. Đề xuất tập trung marketing vào danh mục này.`,
       impact: 'High',
     },
     {
       id: 2,
-      title: 'Cảnh báo chi phí vận hành',
+      title: 'Cảnh báo sản phẩm chưa đánh giá',
       type: 'Warning',
-      description: 'Chi phí vận hành tăng 8% trong 2 tháng gần nhất. Cần kiểm tra và tối ưu hóa quy trình.',
+      description: `Có ${ratingDistribution?.data[0]?.product_count || 0} sản phẩm chưa có đánh giá. Cần khuyến khích khách hàng đánh giá sau mua hàng.`,
       impact: 'Medium',
     },
     {
       id: 3,
-      title: 'Cơ hội mở rộng thị trường',
+      title: 'Phân khúc giá tiềm năng',
       type: 'Opportunity',
-      description: 'Phân tích cho thấy tiềm năng tăng 20% doanh thu nếu mở rộng sang khu vực miền Trung.',
+      description: `Phân khúc ${priceSegments?.data[0]?.price_segment || 'Mid-range'} có ${priceSegments?.data[0]?.product_count || 0} sản phẩm với rating trung bình ${priceSegments?.data[0]?.avg_rating.toFixed(2) || 0}. Cơ hội tăng trưởng tốt.`,
       impact: 'High',
     },
     {
       id: 4,
-      title: 'Hiệu suất nhân sự',
+      title: 'Xu hướng đánh giá tích cực',
       type: 'Positive',
-      description: 'Năng suất nhân sự tăng 12% sau khi áp dụng quy trình mới. Đề xuất nhân rộng mô hình.',
+      description: `${sentimentDistribution?.data.find(s => s.sentiment === 'Excellent')?.product_count || 0} sản phẩm có đánh giá xuất sắc. Tiếp tục duy trì chất lượng sản phẩm.`,
       impact: 'Medium',
     },
     {
       id: 5,
-      title: 'Rủi ro về nguồn cung',
-      type: 'Critical',
-      description: 'Phụ thuộc cao vào 1 nhà cung cấp chính. Cần đa dạng hóa nguồn cung để giảm rủi ro.',
+      title: 'Tối ưu hóa giá sản phẩm',
+      type: 'Opportunity',
+      description: `Giá trung bình toàn hệ thống: ${(dashboardSummary?.summary.avg_price || 0).toLocaleString('vi-VN')} ₫. Xem xét điều chỉnh giá theo phân khúc để tăng cạnh tranh.`,
       impact: 'High',
     },
   ];
@@ -103,71 +202,46 @@ export function AnalystWireframe() {
     }
   };
 
-  return (
-    <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm" style={{ height: '800px' }}>
-      <div className="flex h-full">
-        {/* Sidebar */}
-        <div className="w-64 bg-gray-50 border-r border-gray-200 p-4 relative">
-          <div className="mb-8">
-            <h2 className="text-gray-900 mb-6">Tên hệ thống</h2>
-          </div>
-          
-          <nav className="space-y-2">
-            <div 
-              className={`px-4 py-2 rounded cursor-pointer ${activeView === 'dashboard' ? 'text-gray-900 bg-gray-200' : 'text-gray-600 hover:bg-gray-100'}`}
-              onClick={() => setActiveView('dashboard')}
-            >
-              Dashboard
-            </div>
-            <div 
-              className={`px-4 py-2 rounded cursor-pointer ${activeView === 'dss' ? 'text-gray-900 bg-gray-200' : 'text-gray-600 hover:bg-gray-100'}`}
-              onClick={() => setActiveView('dss')}
-            >
-              Đề xuất DSS
-            </div>
-            <div 
-              className={`px-4 py-2 rounded cursor-pointer ${activeView === 'report' ? 'text-gray-900 bg-gray-200' : 'text-gray-600 hover:bg-gray-100'}`}
-              onClick={() => setActiveView('report')}
-            >
-              Báo cáo
-            </div>
-            <div 
-              className={`px-4 py-2 rounded cursor-pointer ${activeView === 'data' ? 'text-gray-900 bg-gray-200' : 'text-gray-600 hover:bg-gray-100'}`}
-              onClick={() => setActiveView('data')}
-            >
-              Dữ liệu
-            </div>
-          </nav>
-          
-          <div className="absolute bottom-4 left-4 w-48 space-y-2">
-            <Button variant="outline" className="w-full">
-              Đổi mật khẩu
-            </Button>
-            <Button variant="outline" className="w-full">
-              Tài khoản
-            </Button>
-          </div>
+  if (loading) {
+    return (
+      <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Đang tải dữ liệu phân tích...</p>
         </div>
+      </div>
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="border border-red-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
+        <div className="text-center p-8">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm" style={{ minHeight: '800px' }}>
+      <div className="flex h-full flex-col">
         {/* Main Content */}
         <div className="flex-1 flex flex-col bg-white overflow-hidden">
-          {/* Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">thông báo</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">Tên người dùng (Analyst)</span>
-              <Button variant="ghost" size="sm" className="text-gray-600">
-                log out
-              </Button>
-            </div>
-          </div>
 
           {/* Export Controls */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center gap-4 justify-between">
               <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={handleRefresh}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Làm mới
+                </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Export Dashboard
@@ -193,30 +267,80 @@ export function AnalystWireframe() {
             </div>
           </div>
 
-          {/* Dashboard Charts - Wireframe */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-white">
-            <h3 className="text-gray-900 mb-3">Dashboard</h3>
+          {/* Dashboard Summary Cards */}
+          {dashboardSummary && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <h3 className="text-gray-900 font-semibold mb-3">Tổng Quan Hệ Thống</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {dashboardSummary.summary.total_products.toLocaleString('vi-VN')}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {dashboardSummary.summary.overall_avg_rating.toFixed(2)} ⭐
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(dashboardSummary.summary.total_reviews / 1000).toFixed(0)}K
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">SP chất lượng cao</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {dashboardSummary.summary.high_rated_products.toLocaleString('vi-VN')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Dashboard Charts */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
+            <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Phân Tích</h3>
+            
+            {/* Row 1: Top Products, Rating Distribution, Review Trends */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {topRatedProducts && (
+                <TopRatedProductsChart data={topRatedProducts.data} />
+              )}
+              {ratingDistribution && (
+                <RatingDistributionChart data={ratingDistribution.data} />
+              )}
+              {reviewTrends && (
+                <ReviewTrendsChart data={reviewTrends.data} />
+              )}
+            </div>
+
+            {/* Row 2: Category Performance, Sentiment, Price Segments */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {categoryPerformance && (
+                <CategoryPerformanceChart data={categoryPerformance.data} />
+              )}
+              {sentimentDistribution && (
+                <SentimentDistributionChart data={sentimentDistribution.data} />
+              )}
+              {priceSegments && (
+                <PriceSegmentsChart data={priceSegments.data} />
+              )}
+            </div>
+
+            {/* Row 3: Price vs Rating, Platform Comparison, Platform Price Comparison */}
             <div className="grid grid-cols-3 gap-4">
-              {/* Chart 1 - Bar Chart */}
-              <div className="border-2 border-dashed border-gray-300 rounded p-4 h-48 flex flex-col items-center justify-center bg-gray-50">
-                <BarChart3 className="h-12 w-12 text-gray-400 mb-2" />
-                <span className="text-gray-600 text-sm">Biểu đồ cột</span>
-                <span className="text-gray-500 text-xs">Doanh thu theo tháng</span>
-              </div>
-              
-              {/* Chart 2 - Line Chart */}
-              <div className="border-2 border-dashed border-gray-300 rounded p-4 h-48 flex flex-col items-center justify-center bg-gray-50">
-                <LineChart className="h-12 w-12 text-gray-400 mb-2" />
-                <span className="text-gray-600 text-sm">Biểu đồ đường</span>
-                <span className="text-gray-500 text-xs">Xu hướng tăng trưởng</span>
-              </div>
-              
-              {/* Chart 3 - Pie Chart */}
-              <div className="border-2 border-dashed border-gray-300 rounded p-4 h-48 flex flex-col items-center justify-center bg-gray-50">
-                <PieChart className="h-12 w-12 text-gray-400 mb-2" />
-                <span className="text-gray-600 text-sm">Biểu đồ tròn</span>
-                <span className="text-gray-500 text-xs">Phân bổ ngân sách</span>
-              </div>
+              {priceVsRating && (
+                <PriceVsRatingChart data={priceVsRating.data} />
+              )}
+              {platformComparison && (
+                <PlatformComparisonChart data={platformComparison.data} />
+              )}
+              {platformPriceComparison && (
+                <PlatformPriceComparisonChart data={platformPriceComparison.data} />
+              )}
             </div>
           </div>
 
@@ -224,7 +348,7 @@ export function AnalystWireframe() {
           <div className="flex-1 overflow-auto px-6 py-4 bg-white">
             <div className="mb-4 flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-blue-500" />
-              <h3 className="text-gray-900">Đề xuất DSS (Decision Support System)</h3>
+              <h3 className="text-gray-900 font-semibold">Đề xuất DSS (Decision Support System)</h3>
             </div>
             
             <Table>

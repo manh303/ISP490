@@ -30,7 +30,7 @@ api.interceptors.request.use(
 export const userApi = {
   // GET /api/v1/admin/users
   getActiveUsers: async (page = 1, limit = 20) => {
-    const res = await api.get(`/v1/admin/users`, { params: { page, limit } });
+    const res = await api.get(`/v1/test-admin/users`, { params: { page, limit } });
     return res.data;
   },
 
