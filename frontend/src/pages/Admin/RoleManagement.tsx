@@ -55,9 +55,12 @@ export default function RoleManagement() {
                     {viewMode === 'list' && (
                         <Button 
                             onClick={() => setViewMode('create')}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 border border-blue-500 text-blue-600 
+             rounded-xl px-4 py-2 font-medium bg-blue-50 
+             hover:bg-blue-500 hover:text-white hover:shadow-md 
+             transition-all duration-300"
                         >
-                            <Plus className="h-5 w-5" />
+                            <Plus className="h-5 w-5 text-blue-500 group-hover:text-white transition-all" />
                             Tạo vai trò mới
                         </Button>
                     )}
