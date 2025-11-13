@@ -253,7 +253,7 @@ export const authAPI = {
   },
 
   logout: async (refreshToken: string): Promise<ApiResponse> => {
-    const res = await api.post('/auth/signout', { refresh_token: refreshToken });
+    const res = await api.post('/v1/auth/signout', { refresh_token: refreshToken });
     Cookies.remove('access_token');
     Cookies.remove('refresh_token');
     return res.data;

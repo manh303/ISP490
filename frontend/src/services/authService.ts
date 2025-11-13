@@ -145,7 +145,7 @@ class AuthService {
     this.token = null;
     Cookies.remove('access_token');
     Cookies.remove('user_data');
-    try { await this.call('/api/v1/auth/logout', { method: 'POST' }); } catch {}
+    try { await this.call('/api/v1/auth/signout', { method: 'POST' }); } catch {}
   }
 
   getToken() { return this.token || Cookies.get('access_token') || null; }
