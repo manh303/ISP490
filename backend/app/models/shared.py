@@ -4,7 +4,7 @@ Shared Pydantic models used across multiple modules
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime
-from utils.validators import validate_phone, validate_password
+from utils.validators import validate_phone, validate_password, validate_full_name
 
 class UserResponse(BaseModel):
     """Standard user response model"""
@@ -23,6 +23,11 @@ class BaseUserRequest(BaseModel):
     """Base user request with common validation"""
     full_name: Optional[str] = Field(None, max_length=100, description="Full name")
     phone: Optional[str] = Field(None, max_length=32, description="Phone number")
+    
+    @field_validator('full_name')
+    @classmethod
+    def validate_full_name_field(cls, v):
+        return validate_full_name(v)
     
     @field_validator('phone')
     @classmethod

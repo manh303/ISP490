@@ -27,7 +27,7 @@ from pydantic import field_validator
 from app.utils.validators import validate_phone, validate_password
 from app.constants.roles import ROLE_MENUS, get_role_menu
 
-# Setup logging FIRSTT
+# Setup logging FIRST
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
