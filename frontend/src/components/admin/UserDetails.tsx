@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { userApi } from "../../services/userApi";
+import { userApi } from "../../services/userApiTest";
 import { Button } from '../../components/ui/figma/button';
 import { Badge } from '../../components/ui/figma/badge';
 import { useToast } from "../../contexts/ToastContext";

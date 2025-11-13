@@ -26,12 +26,12 @@ export function SentimentDistributionChart({
 
   const total = data.reduce((sum, item) => sum + item.product_count, 0);
   
-  const sentimentConfig: { [key: string]: { color: string; bgColor: string; icon: any } } = {
-    'Excellent': { color: 'text-green-700', bgColor: 'bg-green-500', icon: Smile },
-    'Good': { color: 'text-blue-700', bgColor: 'bg-blue-500', icon: Smile },
-    'Average': { color: 'text-yellow-700', bgColor: 'bg-yellow-500', icon: Meh },
-    'Poor': { color: 'text-orange-700', bgColor: 'bg-orange-500', icon: Frown },
-    'Very Poor': { color: 'text-red-700', bgColor: 'bg-red-500', icon: Frown },
+  const sentimentConfig: { [key: string]: { color: string; bgColor: string; fillColor: string; icon: any } } = {
+    'Excellent': { color: 'text-green-700', bgColor: 'bg-green-500', fillColor: '#22c55e', icon: Smile },
+    'Good': { color: 'text-blue-700', bgColor: 'bg-blue-500', fillColor: '#3b82f6', icon: Smile },
+    'Average': { color: 'text-yellow-700', bgColor: 'bg-yellow-500', fillColor: '#eab308', icon: Meh },
+    'Poor': { color: 'text-orange-700', bgColor: 'bg-orange-500', fillColor: '#f97316', icon: Frown },
+    'Very Poor': { color: 'text-red-700', bgColor: 'bg-red-500', fillColor: '#ef4444', icon: Frown },
   };
 
   return (
@@ -73,8 +73,10 @@ export function SentimentDistributionChart({
                   <path
                     key={index}
                     d={pathData}
-                    className={config.bgColor}
+                    fill={config.fillColor}
                     opacity={0.9}
+                    stroke="white"
+                    strokeWidth="0.5"
                   />
                 );
                 
