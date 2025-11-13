@@ -6,8 +6,8 @@ export default function ResetPassword() {
   return (
     <>
       <PageMeta
-        title="Reset Password | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is Reset Password page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Reset Password | DSS - Next.js Admin Dashboard Template"
+        description="This is Reset Password page for DSS - React.js Tailwind CSS Admin Dashboard Template"
       />
       <AuthLayout>
         <ResetPasswordForm />

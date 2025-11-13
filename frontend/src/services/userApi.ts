@@ -28,9 +28,9 @@ api.interceptors.request.use(
 
 
 export const userApi = {
-  // GET /api/v1/admin/users
-  getActiveUsers: async (page = 1, limit = 20) => {
-    const res = await api.get(`/v1/admin/users`, { params: { page, limit } });
+  // GET /api/v1/admin/users (no pagination)
+  getActiveUsers: async () => {
+    const res = await api.get(`/v1/admin/users`);
     return res.data;
   },
 
@@ -40,9 +40,9 @@ export const userApi = {
     return res.data;
   },
 
-  // GET /api/v1/admin/users/deleted
-  getDeletedUsers: async (page = 1, limit = 20) => {
-    const res = await api.get(`/v1/admin/users/deleted`, { params: { page, limit } });
+  // GET /api/v1/admin/users/deleted (no pagination)
+  getDeletedUsers: async () => {
+    const res = await api.get(`/v1/admin/users/deleted`);
     return res.data;
   },
 

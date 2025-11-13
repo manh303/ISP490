@@ -4,7 +4,7 @@ Admin Management Pydantic Models
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
-from utils.validators import validate_phone, validate_password
+from utils.validators import validate_phone, validate_password, validate_full_name
 from models.shared import UserResponse  # Import from shared models
 
 class UserCreateRequest(BaseModel):
@@ -14,6 +14,11 @@ class UserCreateRequest(BaseModel):
     password: str = Field(..., min_length=8, description="Password")
     phone: Optional[str] = Field(None, description="Phone number")
     role: str = Field(..., description="User role")
+    
+    @field_validator('full_name')
+    @classmethod
+    def validate_full_name_field(cls, v):
+        return validate_full_name(v)
     
     @field_validator('password')
     @classmethod
@@ -31,6 +36,11 @@ class UserUpdateRequest(BaseModel):
     phone: Optional[str] = Field(None, description="Phone number")
     role: Optional[str] = Field(None, description="User role")
     status: Optional[str] = Field(None, description="User status")
+    
+    @field_validator('full_name')
+    @classmethod
+    def validate_full_name_field(cls, v):
+        return validate_full_name(v)
     
     @field_validator('phone')
     @classmethod
