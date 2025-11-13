@@ -43,3 +43,12 @@ class ActionResponse(BaseModel):
     success: bool
     message: str
     data: Optional[dict] = None
+
+class RoleInfo(BaseModel):
+    """Role information model"""
+    role_id: int
+    role_code: str
+    role_name: str
+    description: Optional[str]
+    is_active: bool
+    user_count: Optional[int] = 0

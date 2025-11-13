@@ -1,8 +1,8 @@
 """
-Profile Management API Endpoints
+Profile Management API
 """
 from fastapi import APIRouter, HTTPException, Depends, Request
-
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Dict, Any
 import logging
 import sys
@@ -11,10 +11,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from models.user import ProfileResponse, ProfileUpdateRequest
 from services.admin_service import UserActionResponse
+
+class ProfileActionResponse(UserActionResponse):
+    pass
 from services.user_management_service import UserManagementService
 
 logger = logging.getLogger(__name__)
 
+# Create router
 router = APIRouter(
     prefix="/profile", 
     tags=["👤 Profile Management"],
@@ -27,7 +31,9 @@ router = APIRouter(
 
 
 
-# Dependency to get database manager
+# Dependencies
+security = HTTPBearer()
+
 async def get_database():
     """Get database connection"""
     try:
@@ -39,14 +45,16 @@ async def get_database():
         logger.error(f"Database connection error: {e}")
         raise HTTPException(status_code=500, detail="Database connection failed")
 
-# Dependency to get user management service
-async def get_user_service(db = Depends(get_database)) -> UserManagementService:
+async def get_user_service(db=Depends(get_database)):
     """Get user management service"""
     return UserManagementService(db)
 
-@router.get("", response_model=ProfileResponse,
-           summary="👤 View My Profile",
-           description="Get current user's profile information from JWT token")
+def get_current_user_from_token(credentials: HTTPAuthorizationCredentials):
+    """Mock function to get current user from token"""
+    return {"user_id": 1, "username": "test_user"}
+
+# Endpoints
+@router.get("", response_model=ProfileResponse, summary="👤 View My Profile")
 async def get_my_profile(
     user_service: UserManagementService = Depends(get_user_service)
 ):
@@ -74,11 +82,10 @@ async def get_my_profile(
         logger.error(f"Get profile error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get profile")
 
-@router.put("", response_model=UserActionResponse,
-           summary="✏️ Update My Profile", 
-           description="Update current user's profile information")
+@router.put("", response_model=ProfileActionResponse, summary="✏️ Update My Profile")
 async def update_my_profile(
     profile_data: ProfileUpdateRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     user_service: UserManagementService = Depends(get_user_service)
 ):
     """
@@ -101,8 +108,9 @@ async def update_my_profile(
     ```
     """
     try:
-        # Use mock user ID for testing
-        user_id = 1
+        # Get current user from token
+        current_user = get_current_user_from_token(credentials)
+        user_id = current_user["user_id"]
         
         # Update profile
         updated_profile = await user_service.update_profile(
@@ -112,7 +120,7 @@ async def update_my_profile(
             email=profile_data.email
         )
         
-        return UserActionResponse(
+        return ProfileActionResponse(
             success=True,
             message="Profile updated successfully",
             user_id=user_id

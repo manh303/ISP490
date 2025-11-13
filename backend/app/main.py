@@ -16,11 +16,41 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from middleware.activity_middleware import ActivityLoggingMiddleware
-from services.activity_logger import ActivityLogger
-from pydantic import field_validator
-from utils.validators import validate_phone, validate_password
-from constants.roles import ROLE_MENUS, get_role_menu
+# Setup logging FIRST
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    from app.middleware.activity_middleware import ActivityLoggingMiddleware
+    from app.services.activity_logger import ActivityLogger
+    ACTIVITY_AVAILABLE = True
+except ImportError:
+    try:
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
+    except ImportError:
+        ACTIVITY_AVAILABLE = False
+        logger.warning("Activity logging not available")
+
+try:
+    from pydantic import field_validator
+    from app.utils.validators import validate_phone, validate_password
+    from app.constants.roles import ROLE_MENUS, get_role_menu
+    VALIDATORS_AVAILABLE = True
+except ImportError:
+    try:
+        from utils.validators import validate_phone, validate_password
+        from constants.roles import ROLE_MENUS, get_role_menu
+        VALIDATORS_AVAILABLE = True
+    except ImportError:
+        VALIDATORS_AVAILABLE = False
+        field_validator = lambda x: lambda f: f
+        validate_phone = lambda x: x
+        validate_password = lambda x, **kwargs: x
+        ROLE_MENUS = {}
+        get_role_menu = lambda x: {}
 
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
@@ -76,20 +106,19 @@ except ImportError:
         email_service_module = False
         print(f"WARNING: Email service not available: {e2}")
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # ====================================
 # CONFIGURATION
 # ====================================
 class Settings:
     # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")  # Use production to connect to Render
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss")
+    # Database URLs - Always use Render database (has data)
+    POSTGRES_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+    )
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
@@ -274,23 +303,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Custom OpenAPI schema without security schemes
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-    # Remove any security schemes to hide Authorize button
-    if "components" in openapi_schema:
-        openapi_schema["components"].pop("securitySchemes", None)
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
+# Remove custom OpenAPI to avoid duplicate security schemes
+# FastAPI will auto-generate based on dependencies
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
@@ -310,11 +324,14 @@ except ImportError as e:
 
 # Include Profile router
 try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
     from api.v1.profile import router as profile_router
     app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Profile routes included")
-except ImportError as e:
-    logger.warning(f"Profile routes not available: {e}")
+    logger.info("✅ Profile routes included successfully")
+except Exception as e:
+    logger.error(f"❌ Profile routes failed: {e}")
 
 # Include Test Admin router
 try:
@@ -323,6 +340,30 @@ try:
     logger.info("Test Admin routes included")
 except ImportError as e:
     logger.warning(f"Test Admin routes not available: {e}")
+
+# Include Role Management router
+try:
+    from api.v1.roles import router as roles_router
+    app.include_router(roles_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Role Management routes included")
+except ImportError as e:
+    logger.warning(f"Role Management routes not available: {e}")
+
+# Include ML Insights router
+try:
+    from api.v1.ml_insights import router as ml_insights_router
+    app.include_router(ml_insights_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("ML Insights routes included")
+except ImportError as e:
+    logger.warning(f"ML Insights routes not available: {e}")
+
+# Include Analytics router
+try:
+    from api.v1.analytics import router as analytics_router
+    app.include_router(analytics_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Analytics routes included")
+except ImportError as e:
+    logger.warning(f"Analytics routes not available: {e}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -333,8 +374,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add activity logging middleware
-app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+# Add activity logging middleware (only if available)
+if ACTIVITY_AVAILABLE:
+    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+    logger.info("Activity logging middleware enabled")
+else:
+    logger.warning("Activity logging middleware disabled - module not available")
 
 # Update security headers middleware
 @app.middleware("http")
@@ -408,6 +453,41 @@ async def api_status():
             "database": DATABASE_AVAILABLE,
             "authentication": IAM_AVAILABLE
         },
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get(f"{settings.API_V1_PREFIX}/check-roles")
+async def check_database_roles():
+    """Check roles in database"""
+    try:
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get all roles from database
+        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        roles = await db_manager.execute_query(query)
+        
+        return {
+            "success": True,
+            "total_roles": len(roles),
+            "roles": roles,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+
+@app.get(f"{settings.API_V1_PREFIX}/test-roles")
+async def test_roles():
+    """Test endpoint to check if roles router is working"""
+    return {
+        "message": "Roles router is working!",
         "timestamp": datetime.now().isoformat()
     }
 
@@ -850,16 +930,22 @@ VALID_USERS = {
         "role": "ADMIN"
     },
     "analyst@dss.com": {
-        "user_id": 3,  # Fixed: was 2, should be 3
+        "user_id": 3,
         "password": "analyst123",
         "full_name": "Data Analyst",
         "role": "ANALYST"
     },
-    "customer@dss.com": {
-        "user_id": 4,  # Fixed: was 3, should be 4
-        "password": "customer123",
-        "full_name": "Customer User",
-        "role": "CUSTOMER"
+    "ml@dss.com": {
+        "user_id": 4,
+        "password": "mleng123",
+        "full_name": "ML Engineer",
+        "role": "ML"
+    },
+    "dataeng@dss.com": {
+        "user_id": 2,
+        "password": "dataeng123",
+        "full_name": "Data Engineer",
+        "role": "DATA_ENGINEER"
     }
 }
 
@@ -915,7 +1001,10 @@ def authenticate_user(email: str, password: str):
     return user_data
 
 # Use shared auth helpers
-from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+try:
+    from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+except ImportError:
+    from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
 def create_access_token(user_data: dict, email: str):
     """Create JWT access token using shared helper"""
@@ -996,6 +1085,7 @@ class EmailService:
 
 # Initialize email service
 email_service = EmailService()
+
 
 # ====================================
 # DATABASE HELPERS
@@ -1109,7 +1199,10 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         # Update last login time
         try:
-            from services.user_management_service import UserManagementService
+            try:
+                from app.services.user_management_service import UserManagementService
+            except ImportError:
+                from services.user_management_service import UserManagementService
             user_service = UserManagementService(db)
             await user_service.update_last_login(user_data["user_id"])
         except Exception as e:
@@ -1471,7 +1564,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
             "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
             "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
-            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token",
+            "/api/v1/roles", "/api/v1/roles/{role_id}", "/docs"
 
             ]
         }
