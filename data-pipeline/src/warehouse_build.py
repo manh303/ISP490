@@ -83,7 +83,7 @@ def create_dwh_dimensions(conn):
             );
         """)
         conn.commit()
-        print("✅ DWH dimension tables created")
+        print(" DWH dimension tables created")
 
 def create_dwh_facts(conn):
     """Create DWH fact tables"""
@@ -119,7 +119,7 @@ def create_dwh_facts(conn):
             );
         """)
         conn.commit()
-        print("✅ DWH fact tables created")
+        print(" DWH fact tables created")
 
 def populate_dim_date(conn):
     """Populate date dimension"""
@@ -142,7 +142,7 @@ def populate_dim_date(conn):
         """)
         count = cur.rowcount
         conn.commit()
-        print(f"✅ Populated {count} dates")
+        print(f" Populated {count} dates")
         return count
 
 def load_dim_platform(conn):
@@ -156,24 +156,22 @@ def load_dim_platform(conn):
         """)
         count = cur.rowcount
         conn.commit()
-        print(f"✅ Loaded {count} platforms")
+        print(f" Loaded {count} platforms")
         return count
 
 def load_dim_brand(conn):
     """Load brand dimension from ODS"""
     with conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO dwh_dim_brand (brand_code, brand_name)
-            SELECT DISTINCT 
-                LOWER(REGEXP_REPLACE(brand_name, '[^a-zA-Z0-9]', '_', 'g')),
-                brand_name
+            INSERT INTO dwh_dim_brand (brand_name)
+            SELECT DISTINCT brand_name
             FROM ods_product_clean
             WHERE brand_name IS NOT NULL
-            ON CONFLICT (brand_code) DO NOTHING;
+            AND brand_name NOT IN (SELECT brand_name FROM dwh_dim_brand);
         """)
         count = cur.rowcount
         conn.commit()
-        print(f"✅ Loaded {count} brands")
+        print(f" Loaded {count} brands")
         return count
 
 def load_dim_product(conn):
@@ -200,7 +198,7 @@ def load_dim_product(conn):
         """)
         count = cur.rowcount
         conn.commit()
-        print(f"✅ Loaded {count} products")
+        print(f" Loaded {count} products")
         return count
 
 def load_fact_product_daily(conn):
@@ -220,16 +218,11 @@ def load_fact_product_daily(conn):
                 pp.captured_at
             FROM ods_price_point pp
             JOIN dwh_dim_product dp ON pp.global_product_id = dp.global_product_id AND dp.is_current = TRUE
-            ORDER BY date_sk, product_sk, platform_sk, pp.captured_at DESC
-            ON CONFLICT (date_sk, product_sk, platform_sk) DO UPDATE SET
-                price_current = EXCLUDED.price_current,
-                price_original = EXCLUDED.price_original,
-                discount_pct = EXCLUDED.discount_pct,
-                captured_at = EXCLUDED.captured_at;
+            ORDER BY date_sk, product_sk, platform_sk, pp.captured_at DESC;
         """)
         count = cur.rowcount
         conn.commit()
-        print(f"✅ Loaded {count} daily product facts")
+        print(f" Loaded {count} daily product facts")
         return count
 
 def load_fact_review_summary(conn):
@@ -249,17 +242,11 @@ def load_fact_review_summary(conn):
                 SUM(CASE WHEN rc.rating = 3 THEN 1 ELSE 0 END)
             FROM ods_review_clean rc
             JOIN dwh_dim_product dp ON rc.global_product_id = dp.global_product_id AND dp.is_current = TRUE
-            GROUP BY TO_CHAR(rc.review_time, 'YYYYMMDD')::INT, dp.product_sk, rc.platform_sk
-            ON CONFLICT (date_sk, product_sk, platform_sk) DO UPDATE SET
-                total_reviews = EXCLUDED.total_reviews,
-                avg_rating = EXCLUDED.avg_rating,
-                positive_reviews = EXCLUDED.positive_reviews,
-                negative_reviews = EXCLUDED.negative_reviews,
-                neutral_reviews = EXCLUDED.neutral_reviews;
+            GROUP BY TO_CHAR(rc.review_time, 'YYYYMMDD')::INT, dp.product_sk, rc.platform_sk;
         """)
         count = cur.rowcount
         conn.commit()
-        print(f"✅ Loaded {count} review summaries")
+        print(f" Loaded {count} review summaries")
         return count
 
 def log_etl(conn, job_name, stage, status, start_time, records_processed=0, error_msg=None):
@@ -279,33 +266,33 @@ def main():
     print("=" * 60)
     
     conn = psycopg2.connect(**DB_CONFIG)
-    print("✅ Connected to database")
+    print(" Connected to database")
     
     try:
         create_dwh_dimensions(conn)
         create_dwh_facts(conn)
         
-        print("\n📅 Populating Date Dimension...")
+        print("\n Populating Date Dimension...")
         date_count = populate_dim_date(conn)
         
-        print("\n📊 Loading Dimensions...")
+        print("\n Loading Dimensions...")
         plat_count = load_dim_platform(conn)
         brand_count = load_dim_brand(conn)
         prod_count = load_dim_product(conn)
         
-        print("\n📈 Loading Facts...")
+        print("\n Loading Facts...")
         daily_count = load_fact_product_daily(conn)
         review_count = load_fact_review_summary(conn)
         
         total = date_count + plat_count + brand_count + prod_count + daily_count + review_count
         log_etl(conn, 'warehouse_build', 'DWH', 'SUCCESS', start_time, total)
         
-        print(f"\n✅ COMPLETE! Total records: {total}")
-        print(f"📊 Metadata logged to meta_etl_log")
+        print(f"\n COMPLETE! Total records: {total}")
+        print(f" Metadata logged to meta_etl_log")
         
     except Exception as e:
         log_etl(conn, 'warehouse_build', 'DWH', 'FAILED', start_time, 0, str(e))
-        print(f"\n❌ FAILED: {e}")
+        print(f"\n FAILED: {e}")
         raise
     finally:
         conn.close()

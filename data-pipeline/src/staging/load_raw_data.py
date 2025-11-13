@@ -197,12 +197,16 @@ def log_etl(conn, job_name, stage, status, start_time, records_processed=0, erro
 
 def main():
     import uuid
+    import sys
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    
     load_id = str(uuid.uuid4())
     start_time = datetime.now()
     
     print("STAGE 1: Load Raw Data to Staging")
     print("=" * 60)
-    print(f"🆔 Load ID: {load_id}")
+    print(f"Load ID: {load_id}")
     
     today = datetime.now().strftime("%Y-%m-%d")
     print(f"📅 Processing date: {today}")

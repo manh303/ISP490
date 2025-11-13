@@ -2,6 +2,9 @@
 from fastapi import APIRouter, Query
 from sqlalchemy import create_engine, text
 from typing import List, Optional
+from pydantic import BaseModel
+from datetime import date
+import psycopg2
 import os
 
 router = APIRouter(prefix="/ml", tags=["ML Insights"])
