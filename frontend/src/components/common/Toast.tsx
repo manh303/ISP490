@@ -14,7 +14,7 @@ export default function Toast({ message, type, duration = 4000, onClose }: Toast
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [duration, onClose, message]);
 
   const getToastStyles = () => {
     switch (type) {
@@ -63,9 +63,15 @@ export default function Toast({ message, type, duration = 4000, onClose }: Toast
   };
 
   return (
-    <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 border rounded-lg shadow-lg transition-all duration-300 ease-in-out ${getToastStyles()}`}>
+    <div 
+      className={`flex items-center gap-3 px-4 py-3 border-2 rounded-lg shadow-2xl min-w-[300px] max-w-md ${getToastStyles()}`}
+      style={{
+        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+        border: '2px solid currentColor'
+      }}
+    >
       {getIcon()}
-      <span className="font-medium">{message}</span>
+      <span className="font-medium flex-1">{message}</span>
       <button
         onClick={onClose}
         className="ml-2 flex-shrink-0 hover:opacity-70 transition-opacity"
