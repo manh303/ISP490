@@ -28,62 +28,70 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Admin Dashboard",
-    path: "/admin/dashboard",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Quản lý người dùng",
-    subItems: [
-      { name: "Người dùng hoạt động", path: "/admin/users", pro: false },
-      { name: "Quản lý vai trò", path: "/admin/roles", pro: false },
-      // { name: "User Details", path: "/admin/users/details", pro: false },
-      { name: "Người dùng đã xóa", path: "/admin/deleted-users", pro: false },
-    ],
-  },
-  {
-    icon: <PieChartIcon />,
-    name: "System Analytics",
-    path: "/admin/analytics",
+    name: "Data Engineering Dashboard",
+    path: "/dataengineer/dashboard",
   },
   {
     icon: <TableIcon />,
-    name: "Data Management",
+    name: "Data Pipeline",
     subItems: [
-      { name: "Database Tables", path: "/admin/tables", pro: false },
-      { name: "Data Export", path: "/admin/export", pro: false },
-      { name: "Data Import", path: "/admin/import", pro: false },
-    ],
-  },
-];
-
-const settingsItems: NavItem[] = [
-  {
-    icon: <PlugInIcon />,
-    name: "System Settings",
-    subItems: [
-      { name: "General Settings", path: "/admin/settings/general", pro: false },
-      { name: "Security", path: "/admin/settings/security", pro: false },
-      { name: "Permissions", path: "/admin/settings/permissions", pro: false },
+      { name: "ETL Processes", path: "/dataengineer/etl", pro: false },
+      { name: "Data Ingestion", path: "/dataengineer/ingestion", pro: false },
+      { name: "Data Transformation", path: "/dataengineer/transformation", pro: false },
+      { name: "Data Quality", path: "/dataengineer/quality", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Logs & Monitoring",
+    name: "Data Storage",
     subItems: [
-      { name: "System Logs", path: "/admin/logs", pro: false },
-      { name: "Performance", path: "/admin/performance", pro: false },
-      { name: "Error Reports", path: "/admin/errors", pro: false },
+      { name: "Database Management", path: "/dataengineer/database", pro: false },
+      { name: "Data Warehouse", path: "/dataengineer/warehouse", pro: false },
+      { name: "Data Lakes", path: "/dataengineer/lakes", pro: false },
+      { name: "Backup & Recovery", path: "/dataengineer/backup", pro: false },
+    ],
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Data Monitoring",
+    subItems: [
+      { name: "Performance Metrics", path: "/dataengineer/metrics", pro: false },
+      { name: "Data Lineage", path: "/dataengineer/lineage", pro: false },
+      { name: "System Health", path: "/dataengineer/health", pro: false },
+      { name: "Error Logs", path: "/dataengineer/logs", pro: false },
     ],
   },
 ];
 
-const AdminSidebar: React.FC = () => {
+const toolsItems: NavItem[] = [
+  {
+    icon: <PlugInIcon />,
+    name: "Engineering Tools",
+    subItems: [
+      { name: "SQL Editor", path: "/dataengineer/sql-editor", pro: false },
+      { name: "Data Connectors", path: "/dataengineer/connectors", pro: false },
+      { name: "API Management", path: "/dataengineer/api", pro: false },
+      { name: "Schema Designer", path: "/dataengineer/schema", pro: false },
+    ],
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "Job Management",
+    subItems: [
+      { name: "Scheduled Jobs", path: "/dataengineer/jobs", pro: false },
+      { name: "Job Monitoring", path: "/dataengineer/job-monitor", pro: false },
+      { name: "Workflow Automation", path: "/dataengineer/workflow", pro: false },
+      { name: "Task Scheduling", path: "/dataengineer/tasks", pro: false },
+    ],
+  },
+];
+
+const MLISidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "settings";
+    type: "main" | "tools";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -98,14 +106,14 @@ const AdminSidebar: React.FC = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "settings"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : settingsItems;
+    ["main", "tools"].forEach((menuType) => {
+      const items = menuType === "main" ? navItems : toolsItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "settings",
+                type: menuType as "main" | "tools",
                 index,
               });
               submenuMatched = true;
@@ -132,7 +140,7 @@ const AdminSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "settings") => {
+  const handleSubmenuToggle = (index: number, menuType: "main" | "tools") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -145,7 +153,7 @@ const AdminSidebar: React.FC = () => {
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "settings") => (
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "tools") => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
@@ -288,20 +296,20 @@ const AdminSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/admin/dashboard">
+        <Link to="/dataengineer/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
-                alt="Admin Panel"
+                alt="Data Engineering Panel"
                 width={150}
                 height={40}
               />
               <img
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
-                alt="Admin Panel"
+                alt="Data Engineering Panel"
                 width={150}
                 height={40}
               />
@@ -309,7 +317,7 @@ const AdminSidebar: React.FC = () => {
           ) : (
             <img
               src="/images/logo/logo-icon.svg"
-              alt="Admin"
+              alt="Data Engineering"
               width={32}
               height={32}
             />
@@ -328,7 +336,7 @@ const AdminSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Admin Menu"
+                  "Data Engineering"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -344,12 +352,12 @@ const AdminSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "System"
+                  "Engineering Tools"
                 ) : (
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(settingsItems, "settings")}
+              {renderMenuItems(toolsItems, "tools")}
             </div>
           </div>
         </nav>
@@ -359,4 +367,4 @@ const AdminSidebar: React.FC = () => {
   );
 };
 
-export default AdminSidebar;
+export default MLISidebar;
