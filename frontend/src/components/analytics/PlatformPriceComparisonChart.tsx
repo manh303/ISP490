@@ -6,9 +6,9 @@ interface PlatformPriceComparisonChartProps {
   title?: string;
 }
 
-export function PlatformPriceComparisonChart({ 
-  data, 
-  title = 'So Sánh Giá Theo Nền Tảng' 
+export function PlatformPriceComparisonChart({
+  data,
+  title = 'So Sánh Giá Theo Nền Tảng'
 }: PlatformPriceComparisonChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -93,7 +93,10 @@ export function PlatformPriceComparisonChart({
                             {item.product_count} SP
                           </span>
                           <span className="font-bold text-gray-900">
-                            {(item.avg_price / 1000000).toFixed(1)}M ₫
+                            {item.avg_price < 1_000_000
+                              ? `${Math.round(item.avg_price / 1000)}K ₫`
+                              : `${(item.avg_price / 1_000_000).toFixed(1)}M ₫`
+                            }
                           </span>
                         </div>
                       </div>
