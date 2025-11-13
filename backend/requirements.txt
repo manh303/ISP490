@@ -54,7 +54,6 @@ loguru==0.7.2
 sentry-sdk[fastapi]==1.38.0
 
 # HTTP & Networking
-httpx[http2]==0.25.2
 aiohttp==3.9.1
 websockets==12.0
 
