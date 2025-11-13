@@ -8,14 +8,12 @@ import { AnalystFooter } from "./components/analyst/AnalystFooter";
 export default function AnalystPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* <AnalystHeader /> */}
       <main>
         <AnalystHero />
         <KeyFeatures />
         <VisualizationSection />
         <FinalCTA />
       </main>
-      {/* <AnalystFooter /> */}
     </div>
   );
 }
