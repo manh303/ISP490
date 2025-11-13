@@ -1,45 +1,41 @@
 -- Create ODS tables if not exists
 CREATE TABLE IF NOT EXISTS ods_product_clean (
-    product_id VARCHAR(255),
-    product_name TEXT,
+    global_product_id VARCHAR NOT NULL,
+    source_platform VARCHAR NOT NULL,
+    platform_product_id TEXT,
+    product_name TEXT NOT NULL,
+    brand_name TEXT,
+    category TEXT,
+    category_sk INTEGER,
+    seller_name TEXT,
     price_current NUMERIC,
+    price_original NUMERIC,
+    discount_percent NUMERIC,
     rating_avg NUMERIC,
     review_count INTEGER,
-    category VARCHAR(255),
-    source_platform VARCHAR(50),
-    crawl_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (product_id, crawl_date)
-) PARTITION BY RANGE (crawl_date);
+    url TEXT,
+    image_url TEXT,
+    crawled_at TIMESTAMP,
+    created_at TIMESTAMP,
+    last_seen TIMESTAMP,
+    PRIMARY KEY (global_product_id, source_platform)
+);
 
 CREATE TABLE IF NOT EXISTS ods_review_clean (
-    review_id VARCHAR(255),
-    product_id VARCHAR(255),
-    reviewer_name VARCHAR(255),
+    global_review_id VARCHAR NOT NULL,
+    source_platform VARCHAR NOT NULL,
+    platform_product_id TEXT,
+    review_id TEXT,
+    reviewer_name TEXT,
     rating INTEGER,
-    content TEXT,
+    review_text TEXT,
     review_time TIMESTAMP,
-    source_platform VARCHAR(50),
-    crawl_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (review_id, crawl_date)
-) PARTITION BY RANGE (crawl_date);
+    helpful_count INTEGER,
+    crawled_at TIMESTAMP,
+    created_at TIMESTAMP,
+    last_seen TIMESTAMP,
+    PRIMARY KEY (global_review_id, source_platform)
+);
 
--- Auto-create partition for current month
-DO $$
-DECLARE
-    start_date DATE := DATE_TRUNC('month', CURRENT_DATE);
-    end_date DATE := start_date + INTERVAL '1 month';
-    partition_name TEXT;
-BEGIN
-    partition_name := 'ods_product_clean_' || TO_CHAR(start_date, 'YYYY_MM');
-    EXECUTE format('CREATE TABLE IF NOT EXISTS %I PARTITION OF ods_product_clean FOR VALUES FROM (%L) TO (%L)', 
-                   partition_name, start_date, end_date);
-    
-    partition_name := 'ods_review_clean_' || TO_CHAR(start_date, 'YYYY_MM');
-    EXECUTE format('CREATE TABLE IF NOT EXISTS %I PARTITION OF ods_review_clean FOR VALUES FROM (%L) TO (%L)', 
-                   partition_name, start_date, end_date);
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_ods_product_platform ON ods_product_clean(source_platform, crawl_date);
-CREATE INDEX IF NOT EXISTS idx_ods_review_product ON ods_review_clean(product_id, crawl_date);
+CREATE INDEX IF NOT EXISTS idx_ods_product_platform ON ods_product_clean(source_platform);
+CREATE INDEX IF NOT EXISTS idx_ods_review_product ON ods_review_clean(platform_product_id);
