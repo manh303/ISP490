@@ -153,7 +153,7 @@ export const activateRole = async (roleId: number): Promise<RoleResponse> => {
  */
 export const getRoleUsers = async (roleId: number, params?: GetRoleUsersParams): Promise<any> => {
   const response = await api.get(`/v1/roles/users/${roleId}`, { params });
-  return response.data;
+  return response.data.data;
 };
 
 export default api;
