@@ -12,44 +12,40 @@ class AdminService:
     def __init__(self, db):
         self.db = db
 
-    async def get_users(self, page: int = 1, limit: int = 20, status_filter: str = None) -> Tuple[List[Dict], int]:
-        """Get paginated list of users"""
-        offset = (page - 1) * limit
+    async def get_users(self, status_filter: str = None) -> List[Dict]:
+        """Get all users without pagination"""
         
         # Build query with optional status filter
         where_clause = ""
+        params = []
         if status_filter:
-            where_clause = f"WHERE u.status = '{status_filter}'"
+            where_clause = "WHERE u.status = $1"
+            params.append(status_filter)
         
         query = f"""
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status, 
-               u.created_at, u.last_login_at,
-               r.role_code as role
+               u.created_at, u.updated_at, u.last_login_at,
+               r.role_code, r.role_name
         FROM iam_user u
         LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
         LEFT JOIN iam_role r ON ur.role_id = r.role_id
         {where_clause}
         ORDER BY u.created_at DESC
-        LIMIT $1 OFFSET $2
         """
         
-        count_query = f"""
-        SELECT COUNT(*) as total FROM iam_user u
-        {where_clause}
-        """
+        if params:
+            users = await self.db.execute_query(query, tuple(params))
+        else:
+            users = await self.db.execute_query(query)
         
-        users = await self.db.execute_query(query, (limit, offset))
-        count_result = await self.db.execute_query(count_query)
-        total = count_result[0]['total'] if count_result else 0
-        
-        return users, total
+        return users
 
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Get user by ID"""
         query = """
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status, 
-               u.created_at, u.last_login_at,
-               r.role_code as role
+               u.created_at, u.updated_at, u.last_login_at,
+               r.role_code, r.role_name
         FROM iam_user u
         LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
         LEFT JOIN iam_role r ON ur.role_id = r.role_id
@@ -172,6 +168,34 @@ class AdminService:
         await self.db.execute_query("DELETE FROM iam_user WHERE user_id = $1", (user_id,))
         
         return user['email']
+
+    async def disable_user(self, user_id: int) -> bool:
+        """Soft delete user - change status to disabled"""
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            raise ValueError("User not found")
+        
+        query = """
+        UPDATE iam_user 
+        SET status = 'disabled', updated_at = NOW()
+        WHERE user_id = $1
+        """
+        await self.db.execute_query(query, (user_id,))
+        return True
+
+    async def restore_user(self, user_id: int) -> bool:
+        """Restore user - change status back to active"""
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            raise ValueError("User not found")
+        
+        query = """
+        UPDATE iam_user 
+        SET status = 'active', updated_at = NOW()
+        WHERE user_id = $1
+        """
+        await self.db.execute_query(query, (user_id,))
+        return True
 
     async def get_activity_logs(self, page: int = 1, limit: int = 20, user_id: int = None) -> Tuple[List[Dict], int]:
         """Get activity logs"""
