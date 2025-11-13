@@ -6,7 +6,7 @@
 
 kaggle.json
 .env
-
+.env.s3.example
 # Python
 __pycache__/
 *.py[cod]
