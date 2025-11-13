@@ -98,7 +98,7 @@ function Component1() {
   return (
     <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="Component 1">
       <div className="flex flex-col font-['Inter:Regular',_sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13.234px] text-blue-600 text-center text-nowrap">
-        <p className="leading-[20px] whitespace-pre">Forgot Password?</p>
+        <p className="leading-[20px] whitespace-pre">Quên mật khẩu ?</p>
       </div>
     </div>
   );
@@ -108,7 +108,7 @@ function Component2() {
   return (
     <div className="content-stretch flex items-center justify-center relative shrink-0" data-name="Component 1">
       <div className="flex flex-col font-['Inter:Regular',_sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13.234px] text-blue-600 text-center text-nowrap">
-        <p className="leading-[20px] whitespace-pre">Create Account</p>
+        <p className="leading-[20px] whitespace-pre">Tạo tài khoản</p>
       </div>
     </div>
   );

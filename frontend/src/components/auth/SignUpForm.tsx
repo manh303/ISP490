@@ -61,7 +61,7 @@ export default function SignUpForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Back to home
+          Quay lại trang chủ
         </Link>
       </div>
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -70,10 +70,10 @@ export default function SignUpForm() {
         <div>
           <div className="mb-5 sm:mb-8 text-center">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Create Account
+              Tạo tài khoản
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Join us today and start your journey
+              Đăng ký ngay hôm nay – khởi đầu hành trình của bạn!
             </p>
           </div>
           <div>
@@ -182,7 +182,7 @@ export default function SignUpForm() {
                   </Label> */}
                   <Input
                     type="text"
-                    placeholder="Full Name"
+                    placeholder="Tên đầy đủ"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className={errors.name ? "border-red-500" : ""}
@@ -220,7 +220,7 @@ export default function SignUpForm() {
                   </Label> */}
                   <div className="relative">
                     <Input
-                      placeholder="Password"
+                      placeholder="Mật khẩu"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
@@ -240,7 +240,7 @@ export default function SignUpForm() {
                   {formData.password && (
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-600 dark:text-gray-400">Password strength:</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Độ mạnh:</span>
                         <span className={`text-xs font-medium ${
                           passwordStrength.strength === 1 ? 'text-orange-500' :
                           passwordStrength.strength === 2 ? 'text-yellow-500' :
@@ -276,7 +276,7 @@ export default function SignUpForm() {
                   </Label> */}
                   <div className="relative">
                     <Input
-                      placeholder="Confirm Password"
+                      placeholder="Nhập lại mật khẩu"
                       type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
@@ -309,13 +309,12 @@ export default function SignUpForm() {
                     className="w-4 h-4 mt-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <label htmlFor="terms" className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    By creating an account you agree to the{" "}
+                    Bằng việc tạo tài khoản, bạn đồng ý với{" "}
                     <span className="text-gray-800 dark:text-white/90 font-medium">
-                      Terms and Conditions
+                      Điều khoản & Điều kiện
                     </span>{" "}
-                    and our{" "}
                     <span className="text-gray-800 dark:text-white/90 font-medium">
-                      Privacy Policy
+                      Chính sách bảo mật của chúng tôi
                     </span>
                   </label>
                 </div>
@@ -354,10 +353,10 @@ export default function SignUpForm() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Creating Account...
+                        Đang tạo tài khoản  ...
                       </>
                     ) : (
-                      "Create Account"
+                      "Tạo tài khoản"
                     )}
                   </Button>
                 </div>
@@ -366,12 +365,12 @@ export default function SignUpForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400">
-                Already have an account? {""}
+                Bạn đã có sẵn tài khoản ? {""}
                 <Link
                   to="/signin"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
-                  Login
+                  Đăng nhập
                 </Link>
               </p>
             </div>
