@@ -6,9 +6,9 @@ interface CategoryPerformanceChartProps {
   title?: string;
 }
 
-export function CategoryPerformanceChart({ 
-  data, 
-  title = 'Hiệu Suất Theo Danh Mục' 
+export function CategoryPerformanceChart({
+  data,
+  title = 'Hiệu Suất Theo Danh Mục'
 }: CategoryPerformanceChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -41,7 +41,7 @@ export function CategoryPerformanceChart({
 
       <div className="grid grid-cols-1 gap-4">
         {data.map((category, index) => (
-          <div 
+          <div
             key={category.category}
             className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
           >
@@ -76,10 +76,15 @@ export function CategoryPerformanceChart({
                   <DollarSign className="h-3 w-3 text-green-600" />
                   <span className="text-green-700 font-medium">Giá TB</span>
                 </div>
+
                 <div className="font-bold text-green-900 text-[10px]">
-                  {(category.avg_price / 1000000).toFixed(1)}M ₫
+                  {category.avg_price < 1_000_000
+                    ? `${Math.round(category.avg_price / 1000)}K ₫`
+                    : `${(category.avg_price / 1_000_000).toFixed(1)}M ₫`
+                  }
                 </div>
               </div>
+
 
               <div className="bg-purple-50 rounded p-2">
                 <div className="flex items-center gap-1 mb-1">
