@@ -27,7 +27,7 @@ export default function AdminUserManagement() {
           onClick={() => setView("deleted")}
           className="flex items-center gap-2"
         >
-          <Trash2 className="h-4 w-4" /> Người dùng đã xóa
+          <Trash2 className="h-4 w-4" /> Người dùng đã vô hiệu hóa
         </Button>
         <Button
           variant={view === "create" ? "default" : "outline"}
