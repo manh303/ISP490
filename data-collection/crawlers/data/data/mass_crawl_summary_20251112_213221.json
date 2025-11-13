@@ -1,0 +1,215 @@
+{
+  "crawl_info": {
+    "crawl_date": "2025-11-12T21:32:22.315216",
+    "total_products": 20430,
+    "categories_processed": 12,
+    "pages_crawled": 511,
+    "duration_minutes": 29.156946380933125,
+    "products_per_minute": 700.6906598888552
+  },
+  "category_breakdown": {
+    "laptop": 2000,
+    "may tinh bang": 433,
+    "dong ho thong minh": 2000,
+    "tai nghe": 2000,
+    "may anh": 2000,
+    "loa bluetooth": 1999,
+    "man hinh may tinh": 2000,
+    "chuot may tinh": 2000,
+    "ban phim": 2000,
+    "tivi smart": 1998,
+    "may in": 2000
+  },
+  "sample_products": [
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "222707075",
+      "product_name": "Máy tính xách tay Laptop Dell Latitude 5470  (Intel Core i5 -6200 | 14 Inch HD | RAM 8GB | 256GB SSD | Intel UHD Graphics | Fedora Os) - Hàng chính hãng",
+      "price_current": 4520000,
+      "price_original": 0,
+      "discount_percent": 1,
+      "rating_avg": 4.3,
+      "review_count": 27,
+      "brand": "Dell",
+      "seller_name": "Máy tính Bảo Ngọc",
+      "url": "https://tiki.vn/may-tinh-xach-tay-laptop-dell-latitude-5470-intel-core-i5-6300-14-inch-hd-ram-8gb-256gb-ssd-intel-uhd-graphics-fedora-os-hang-chinh-hang-p222707075.html?spid=270465750",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/b7/0e/f1/10ebb987c4bb70d4ff1169fb56c77a67.png"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563551",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "273002756",
+      "product_name": "Laptop Dell Latitude 3590  Core i5 7200U- Ram 8GB- 128GB SSD Ổ cứng -Màn hình 15-6 inch BH 6 thang - Hàng chính hãng",
+      "price_current": 5360000,
+      "price_original": 0,
+      "discount_percent": 1,
+      "rating_avg": 4.3,
+      "review_count": 4,
+      "brand": "Dell",
+      "seller_name": "Âu Cơ Store",
+      "url": "https://tiki.vn/laptop-dell-latitude-3590-cam-ung-core-i5-7200u-ram-8gb-128gb-ssd-o-cung-man-hinh-15-6-inch-bh-6-thang-hang-chinh-hang-p273002756.html?spid=273002758",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/88/ff/11/c0e2995f65ed406e3e4ba54e17c32692.png"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563587",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "67982880",
+      "product_name": "LapTop Lenovo V14 IIL - 82C400W3VN | Intel Core i5 _ 1035G1 | 4GB | 256GB SSD PCIe | VGA INTEL  | 14 inch HD | FreeDos | Hàng Chính Hãng",
+      "price_current": 10120000,
+      "price_original": 0,
+      "discount_percent": 0,
+      "rating_avg": 4.7,
+      "review_count": 3,
+      "brand": "Lenovo",
+      "seller_name": "Vi Tính Bảo An",
+      "url": "https://tiki.vn/laptop-lenovo-v14-iil-82c400w3vn-intel-core-i5-_-1035g1-4gb-256gb-ssd-pcie-vga-intel-14-inch-full-hd-freedos-hang-chinh-hang-p67982880.html?spid=67982881",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/db/b5/11/9b49a332d68f5f3e77ba0cd203e4da60.jpg"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563591",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "273949286",
+      "product_name": "Laptop Asus Expertbook B1502 - B1502CV (Intel Core i5-1335U | RAM 8GB | 512GB SSD | Intel UHD Graphics | 15.6 inch Full HD | Win 11 bản quyền) - Hàng Chính Hãng",
+      "price_current": 13155000,
+      "price_original": 0,
+      "discount_percent": 43,
+      "rating_avg": 0,
+      "review_count": 0,
+      "brand": "Asus",
+      "seller_name": "ThuanThienTs",
+      "url": "https://tiki.vn/laptop-asus-expertbook-b1502cba-b1502-b1502cv-intel-core-i5-1335u-ram-8gb-512gb-ssd-intel-uhd-graphics-15-6-inch-full-hd-win-11-ban-quyen-hang-chinh-hang-p273949286.html?spid=273949287",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/c3/38/e0/78676b0c573733c58a097aaa70a97d37.jpg"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563594",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "275288865",
+      "product_name": "Laptop Dell Latitude 5310 | Core i5-10310U Ram 16GB PCIe 256GB 13.3\" FHD - Hàng Chính Hãng",
+      "price_current": 6830000,
+      "price_original": 0,
+      "discount_percent": 0,
+      "rating_avg": 5,
+      "review_count": 2,
+      "brand": "Dell",
+      "seller_name": "Âu Cơ Store",
+      "url": "https://tiki.vn/laptop-dell-latitude-5310-core-i5-10310u-ram-16gb-pcie-256gb-13-3-fhd-hang-chinh-hang-p275288865.html?spid=275306676",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/20/0b/e3/18771f52e2f1fdcc36ce119db9fa660d.jpg"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563596",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "108924121",
+      "product_name": "Laptop Dell Latitude 3520 70251603 (Core i3-1115G4/ 4 GB/ 256GB SSD/ 15.6HD/ Fedora) - Hàng Chính Hãng",
+      "price_current": 9420000,
+      "price_original": 0,
+      "discount_percent": 0,
+      "rating_avg": 5,
+      "review_count": 3,
+      "brand": "Dell",
+      "seller_name": "Vi Tính Bảo An",
+      "url": "https://tiki.vn/laptop-dell-latitude-3520-70251603--core-i3-1115g4--4-gb--256gb-ssd--15-6hd--fedora----hang-chinh-hang-p108924121.html?spid=163143032",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/43/a8/e0/0fabf09e71ac203abefa2d19dc473ca7.jpg"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563599",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "271949876",
+      "product_name": "Laptop Lenovo V15 G4 IRU (83A100URVN) | Intel Core i5-13420H | 8GB | 512GB SSD | Intel UHD Graphics | 15.6 Inch FHD | No Os | Grey",
+      "price_current": 12720000,
+      "price_original": 0,
+      "discount_percent": 0,
+      "rating_avg": 0,
+      "review_count": 0,
+      "brand": "Lenovo",
+      "seller_name": "Vi Tính Bảo An",
+      "url": "https://tiki.vn/laptop-laptop-lenovo-v15-g3-iap-82tt00arvn-core-i3-_-1215u-8gb-256gb-ssd-pcie-win-11-15-6-inch-full-hd-ips-hang-chinh-hang-p271949876.html?spid=271949877",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/be/f8/1c/0d92c40b96908d1bb98fcd1a9d6733b0.jpg"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563603",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "278588312",
+      "product_name": "Laptop Asus Expertbook P1403CVA (Intel Core i3-1335U | 14 inch FHD IPS | RAM 8GB | SSD 256GB | Win bản quyền) - Hàng Chính Hãng",
+      "price_current": 12365000,
+      "price_original": 0,
+      "discount_percent": 17,
+      "rating_avg": 0,
+      "review_count": 0,
+      "brand": "Asus",
+      "seller_name": "ThuanThienTs",
+      "url": "https://tiki.vn/laptop-asus-expertbook-p1403cva-intel-core-i3-1335u-14-inch-fhd-ips-ram-8gb-ssd-256gb-win-ban-quyen-p278588312.html?spid=278588636",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/32/4b/73/cdfc830c5891013ed6af5c8be68b97cc.png"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563605",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "273679076",
+      "product_name": "Laptop Dell Latitude 3520 (Core i5-1135G7 | 8GB | 256GB | Intel Iris Xe | 15.6 inch FHD - HÀNG CHÍNH HÃNG",
+      "price_current": 8620000,
+      "price_original": 0,
+      "discount_percent": 0,
+      "rating_avg": 0,
+      "review_count": 0,
+      "brand": "Dell",
+      "seller_name": "Âu Cơ Store",
+      "url": "https://tiki.vn/laptop-dell-latitude-3520-core-i5-1135g7-8gb-256gb-intel-iris-xe-15-6-inch-fhd-hang-chinh-hang-p273679076.html?spid=273002151",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/25/db/e4/f439e2d0248760a550b46af11677ce85.png"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563608",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "laptop",
+      "product_id": "274734984",
+      "product_name": "Laptop Dell Vostro 5370 (i5-8250U/ Ram 8GB/ SSD 256GB/ 13.3\"FHD /Sliver/ W10/FG/Key_led) - HÀNG CHÍNH HÃNG",
+      "price_current": 7960000,
+      "price_original": 0,
+      "discount_percent": 0,
+      "rating_avg": 0,
+      "review_count": 0,
+      "brand": "Dell",
+      "seller_name": "Âu Cơ Store",
+      "url": "https://tiki.vn/laptop-dell-vostro-5370-i5-8250u-ram-8gb-ssd-256gb-13-3-fhd-sliver-w10-fg-key_led-hang-chinh-hang-p274734984.html?spid=274734986",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/bc/b2/47/4c8604ed45f2e8668e219508e918ba4f.jpg"
+      ],
+      "crawl_date": "2025-11-12T21:03:25.563610",
+      "page_number": 1
+    }
+  ]
+}

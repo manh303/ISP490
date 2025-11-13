@@ -12,6 +12,7 @@ from pathlib import Path
 
 OUTPUT_DIR = os.environ.get("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
 LOG_PREFIX = "[Tiki-Reviews]"
+CHECKPOINT_FILE = Path(OUTPUT_DIR) / "tiki_reviews_checkpoint.json"
 
 class TikiReviewCrawler:
     def __init__(self):
@@ -21,6 +22,21 @@ class TikiReviewCrawler:
             'Accept': 'application/json',
             'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.8',
         })
+        self.checkpoint = self.load_checkpoint()
+
+    def load_checkpoint(self):
+        """Load crawled product IDs"""
+        if CHECKPOINT_FILE.exists():
+            with open(CHECKPOINT_FILE, 'r') as f:
+                return set(json.load(f))
+        return set()
+
+    def save_checkpoint(self, product_id):
+        """Save progress"""
+        self.checkpoint.add(product_id)
+        CHECKPOINT_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(CHECKPOINT_FILE, 'w') as f:
+            json.dump(list(self.checkpoint), f)
 
     def get_product_ids_from_jsonl(self):
         """Read product IDs from existing Tiki JSONL files"""
@@ -139,6 +155,10 @@ class TikiReviewCrawler:
         all_reviews = []
         
         for i, product_id in enumerate(product_ids, 1):
+            if product_id in self.checkpoint:
+                print(f"{LOG_PREFIX} [{i}/{len(product_ids)}] Skip {product_id} (done)")
+                continue
+            
             print(f"{LOG_PREFIX} [{i}/{len(product_ids)}] Product {product_id}")
             
             reviews = self.crawl_product_reviews(product_id, max_reviews_per_product)
@@ -149,6 +169,7 @@ class TikiReviewCrawler:
             else:
                 print(f"{LOG_PREFIX} No reviews")
             
+            self.save_checkpoint(product_id)
             time.sleep(random.uniform(1, 2))
             
             # Save every 500 reviews

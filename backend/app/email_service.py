@@ -19,6 +19,10 @@ try:
     import redis.asyncio as redis
 except ImportError:
     redis = None
+try:
+    import httpx
+except ImportError:
+    httpx = None
 
 logger = logging.getLogger(__name__)
 
@@ -179,14 +183,44 @@ class EmailService:
         self.otp_manager = OTPManager(redis_client)
 
     async def send_email(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
-        """Send email using Gmail SMTP (async) with retry mechanism"""
-        # Development mode: Skip actual email sending on Render
+        """Send email using SendGrid or Gmail SMTP"""
+        # Try SendGrid first if available
+        sendgrid_key = os.getenv("SENDGRID_API_KEY")
+        if sendgrid_key and httpx:
+            return await self._send_via_sendgrid(to_email, subject, html_content, sendgrid_key)
+        
+        # Fallback to SMTP
+        return await self._send_via_smtp(to_email, subject, html_content)
+
+    async def _send_via_sendgrid(self, to_email: str, subject: str, html_content: str, api_key: str) -> Dict[str, Any]:
+        """Send via SendGrid API"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.sendgrid.com/v3/mail/send",
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json={
+                        "personalizations": [{"to": [{"email": to_email}]}],
+                        "from": {"email": self.config.sender_email, "name": self.config.sender_name},
+                        "subject": subject,
+                        "content": [{"type": "text/html", "value": html_content}]
+                    },
+                    timeout=30.0
+                )
+                if response.status_code == 202:
+                    logger.info(f"Email sent via SendGrid to {to_email}")
+                    return {'success': True, 'message': 'Email sent successfully'}
+                logger.error(f"SendGrid error: {response.status_code}")
+                return {'success': False, 'error': f"SendGrid error: {response.status_code}"}
+        except Exception as e:
+            logger.error(f"SendGrid failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+    async def _send_via_smtp(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
+        """Send via SMTP"""
         if os.getenv("ENVIRONMENT") == "production" and "render.com" in os.getenv("RENDER_EXTERNAL_URL", ""):
-            logger.warning(f"DEV MODE: Skipping email send to {to_email} (SMTP blocked on Render)")
-            return {
-                'success': True,
-                'message': 'Email sent successfully (dev mode)'
-            }
+            logger.warning(f"DEV MODE: Skipping SMTP (blocked on Render) for {to_email}")
+            return {'success': True, 'message': 'Email sent (dev mode)'}
         
         last_error = None
 
