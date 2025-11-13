@@ -6,13 +6,17 @@ import json
 import time
 import random
 import os
+import hashlib
 from datetime import datetime
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import psycopg2
+from psycopg2.extras import execute_values
 
 class MassCrawler:
     def __init__(self):
         self.session = requests.Session()
+        self.db_conn = self.connect_db()
 
         # Browser headers
         self.session.headers.update({
@@ -26,18 +30,18 @@ class MassCrawler:
 
         # Multiple categories for Tiki
         self.tiki_categories = [
-            'dien thoai',
+            'điện thoại',
             'laptop',
-            'may tinh bang',
-            'dong ho thong minh',
+            'máy tính bảng',
+            'dồng hồ thông minh',
             'tai nghe',
-            'may anh',
+            'máy ảnh',
             'loa bluetooth',
-            'man hinh may tinh',
-            'chuot may tinh',
-            'ban phim',
+            'màn hình máy tính',
+            'chuột máy tính',
+            'bàn phím máy tính',
             'tivi smart',
-            'may in'
+            'máy in'
         ]
 
         # CellphoneS categories
@@ -60,6 +64,48 @@ class MassCrawler:
             'pages_crawled': 0,
             'start_time': None
         }
+
+    def connect_db(self):
+        """Connect to PostgreSQL database"""
+        return psycopg2.connect(
+            host=os.getenv('DB_HOST', 'dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com'),
+            database=os.getenv('DB_NAME', 'ecommerce_dss'),
+            user=os.getenv('DB_USER', 'dss_user'),
+            password=os.getenv('DB_PASSWORD', 'IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'),
+            port=os.getenv('DB_PORT', '5432')
+        )
+
+    def generate_global_id(self, platform, product_id):
+        """Generate global product ID"""
+        return hashlib.sha256(f"{platform}_{product_id}".encode()).hexdigest()
+
+    def save_to_db(self, products):
+        """Save products to stg_raw_products table with JSONB format"""
+        if not products:
+            return
+
+        cursor = self.db_conn.cursor()
+        values = []
+
+        for p in products:
+            values.append((
+                'tiki',
+                p['url'],
+                p['product_id'],
+                datetime.now(),
+                json.dumps(p),
+                None
+            ))
+
+        execute_values(cursor, """
+            INSERT INTO stg_raw_products (
+                source_platform, url, platform_product_id, crawled_at, raw_data, load_id
+            ) VALUES %s
+        """, values)
+
+        self.db_conn.commit()
+        cursor.close()
+        print(f"      Saved {len(products)} products to database")
 
     def crawl_tiki_category_paginated(self, category, max_pages=50):
         """Crawl Tiki category with multiple pages"""
@@ -154,9 +200,9 @@ class MassCrawler:
                 all_products.extend(category_products)
                 self.stats['categories_processed'] += 1
 
-                # Save progress after each category
+                # Save to database after each category
                 if category_products:
-                    self.save_progress(category_products, category.replace(' ', '_'))
+                    self.save_to_db(category_products)
 
                 print(f"    Running total: {len(all_products)} products")
 
@@ -168,62 +214,14 @@ class MassCrawler:
                 print(f"    ERROR in category {category}: {e}")
                 continue
 
-        # Save final results
-        self.save_final_results(all_products)
-        self.print_summary(all_products)
+        # Close database connection
+        if self.db_conn:
+            self.db_conn.close()
 
+        self.print_summary(all_products)
         return all_products
 
-    def save_progress(self, products, category_name):
-        """Save progress for each category"""
-        filename = f"progress_{category_name}_{int(time.time())}.json"
-        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw')
-        os.makedirs(data_dir, exist_ok=True)
 
-        filepath = os.path.join(data_dir, filename)
-
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(products, f, ensure_ascii=False, indent=2)
-
-        print(f"      Progress saved: {filename}")
-
-    def save_final_results(self, all_products):
-        """Save comprehensive final results"""
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'data')
-        os.makedirs(data_dir, exist_ok=True)
-
-        # Main results file
-        main_filename = f"mass_crawl_results_{timestamp}.json"
-        main_filepath = os.path.join(data_dir, main_filename)
-
-        with open(main_filepath, 'w', encoding='utf-8') as f:
-            json.dump(all_products, f, ensure_ascii=False, indent=2)
-
-        # Summary file
-        duration = time.time() - self.stats['start_time']
-        summary = {
-            'crawl_info': {
-                'crawl_date': datetime.now().isoformat(),
-                'total_products': len(all_products),
-                'categories_processed': self.stats['categories_processed'],
-                'pages_crawled': self.stats['pages_crawled'],
-                'duration_minutes': duration / 60,
-                'products_per_minute': len(all_products) / (duration / 60) if duration > 0 else 0
-            },
-            'category_breakdown': self.get_breakdown(all_products),
-            'sample_products': all_products[:10]
-        }
-
-        summary_filename = f"mass_crawl_summary_{timestamp}.json"
-        summary_filepath = os.path.join(data_dir, summary_filename)
-
-        with open(summary_filepath, 'w', encoding='utf-8') as f:
-            json.dump(summary, f, ensure_ascii=False, indent=2)
-
-        print(f"\nFiles saved:")
-        print(f"  Main: {main_filename}")
-        print(f"  Summary: {summary_filename}")
 
     def get_breakdown(self, products):
         """Get breakdown by category"""

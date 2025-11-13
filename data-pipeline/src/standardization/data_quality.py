@@ -58,11 +58,15 @@ def remove_duplicates(conn):
     with conn.cursor() as cur:
         # Remove exact timestamp duplicates
         cur.execute("""
-            DELETE FROM ods_price_point a USING ods_price_point b
-            WHERE a.global_product_id = b.global_product_id 
-            AND a.platform_sk = b.platform_sk
-            AND a.captured_at = b.captured_at
-            AND a.id < b.id
+            DELETE FROM ods_price_point
+            WHERE id IN (
+                SELECT a.id FROM ods_price_point a
+                INNER JOIN ods_price_point b ON 
+                    a.global_product_id = b.global_product_id 
+                    AND a.platform_sk = b.platform_sk
+                    AND a.captured_at = b.captured_at
+                    AND a.id < b.id
+            )
         """)
         dup_exact = cur.rowcount
         
@@ -79,10 +83,14 @@ def remove_duplicates(conn):
         dup_daily = cur.rowcount
         
         cur.execute("""
-            DELETE FROM ods_review_clean a USING ods_review_clean b
-            WHERE a.global_product_id = b.global_product_id 
-            AND a.review_content = b.review_content
-            AND a.id < b.id
+            DELETE FROM ods_review_clean
+            WHERE id IN (
+                SELECT a.id FROM ods_review_clean a
+                INNER JOIN ods_review_clean b ON
+                    a.global_product_id = b.global_product_id 
+                    AND a.review_content = b.review_content
+                    AND a.id < b.id
+            )
         """)
         dup_reviews = cur.rowcount
         
@@ -124,7 +132,11 @@ def main():
         print(f"📊 Metadata logged to meta_etl_log")
         
     except Exception as e:
-        log_etl(conn, 'data_quality', 'ODS', 'FAILED', start_time, 0, str(e))
+        conn.rollback()
+        try:
+            log_etl(conn, 'data_quality', 'ODS', 'FAILED', start_time, 0, str(e))
+        except:
+            pass
         print(f"\n❌ FAILED: {e}")
         raise
     finally:

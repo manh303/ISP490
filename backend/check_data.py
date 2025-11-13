@@ -4,25 +4,29 @@ from app.main import db_manager
 async def check():
     await db_manager.connect()
     
-    # Test exact query from analytics API
+    # Check columns in table
     query = """
-        SELECT 
-            p.product_name,
-            p.rating_avg,
-            p.review_count,
-            p.price_current as price,
-            p.category
-        FROM ods_product_clean p
-        WHERE p.review_count >= 10
-        ORDER BY p.rating_avg DESC, p.review_count DESC
-        LIMIT 5
+        SELECT column_name, data_type, is_nullable
+        FROM information_schema.columns
+        WHERE table_name = 'ods_review_clean'
+        ORDER BY ordinal_position
     """
     
     result = await db_manager.execute_query(query)
-    print(f'Query result: {result}')
-    print(f'Result length: {len(result)}')
+    print(f"Columns in ods_review_clean:")
+    for col in result:
+        print(f"  {col['column_name']}: {col['data_type']} (nullable: {col['is_nullable']})")
     
-    if result:
-        print(f'First item: {result[0]}')
+    print(f"\nTotal columns: {len(result)}")
+    
+    # Test exact query from analytics API
+    query2 = """
+        SELECT *
+        FROM ods_review_clean 
+        LIMIT 1
+    """
+    
+    result2 = await db_manager.execute_query(query2)
+    print(f'\nSample data: {result2}')
 
 asyncio.run(check())

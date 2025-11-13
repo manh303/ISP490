@@ -1,0 +1,216 @@
+{
+  "crawl_info": {
+    "crawl_date": "2025-11-13T20:39:48.059189",
+    "total_products": 22425,
+    "categories_processed": 12,
+    "pages_crawled": 561,
+    "duration_minutes": 33.94825905958812,
+    "products_per_minute": 660.5640648799761
+  },
+  "category_breakdown": {
+    "dien thoai": 2000,
+    "laptop": 2000,
+    "may tinh bang": 428,
+    "dong ho thong minh": 2000,
+    "tai nghe": 2000,
+    "may anh": 2000,
+    "loa bluetooth": 1999,
+    "man hinh may tinh": 2000,
+    "chuot may tinh": 2000,
+    "ban phim": 2000,
+    "tivi smart": 1998,
+    "may in": 2000
+  },
+  "sample_products": [
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "278711036",
+      "product_name": "Điện Thoại Samsung Galaxy A07 - Đã Kích Hoạt Bảo Hành Điện Tử - Hàng Chính Hãng",
+      "price_current": 2490000,
+      "price_original": 0,
+      "discount_percent": 19,
+      "rating_avg": 4.5,
+      "review_count": 2,
+      "brand": "Samsung",
+      "seller_name": "Tiki Trading",
+      "url": "https://tiki.vn/dien-thoai-samsung-galaxy-a07-da-kich-hoat-bao-hanh-dien-tu-hang-chinh-hang-p278711036.html?spid=278711046",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/f3/0a/23/f2fe5df32ccb13cf6fb057512e70a3ec.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549406",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "278278564",
+      "product_name": "Điện thoại Xiaomi Redmi 13x - Hàng chính hãng",
+      "price_current": 2690000,
+      "price_original": 0,
+      "discount_percent": 36,
+      "rating_avg": 4.3,
+      "review_count": 6,
+      "brand": "Xiaomi",
+      "seller_name": "Tiki Trading",
+      "url": "https://tiki.vn/dien-thoai-xiaomi-redmi-13x-hang-chinh-hang-p278278564.html?spid=278278572",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/c3/47/f4/40d2c2d4fbc5f433dfb7ac686475e2ee.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549430",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "270975124",
+      "product_name": "Điện Thoại Oppo A58 6GB/128GB - Hàng Chính Hãng",
+      "price_current": 3890000,
+      "price_original": 0,
+      "discount_percent": 22,
+      "rating_avg": 5,
+      "review_count": 148,
+      "brand": "OPPO",
+      "seller_name": "Tiki Trading",
+      "url": "https://tiki.vn/dien-thoai-oppo-a58-6gb-128gb-hang-chinh-hang-p270975124.html?spid=270975156",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/f3/01/96/ec586ec789d954b6a498a7ebfdb68b25.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549434",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "278219968",
+      "product_name": "Điện thoại OPPO A3 8GB/128GB - Hàng Chính Hãng",
+      "price_current": 4090000,
+      "price_original": 0,
+      "discount_percent": 23,
+      "rating_avg": 4.6,
+      "review_count": 7,
+      "brand": "OPPO",
+      "seller_name": "Tiki Trading",
+      "url": "https://tiki.vn/dien-thoai-oppo-a3-6gb-128gb-hang-chinh-hang-p278219968.html?spid=278240505",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/28/50/02/5fb991d06aa5c4ec4dbb735e224a868f.png"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549436",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "277063012",
+      "product_name": "Điện thoại Samsung Galaxy S25, Điện thoại AI, Tìm kiếm thông minh, Video camera đêm Nightography, Chip Snapdragon - Hàng Chính Hãng",
+      "price_current": 15990000,
+      "price_original": 0,
+      "discount_percent": 30,
+      "rating_avg": 5,
+      "review_count": 5,
+      "brand": "Samsung",
+      "seller_name": "Tiki Trading",
+      "url": "https://tiki.vn/dien-thoai-samsung-galaxy-s25-dien-thoai-ai-tim-kiem-thong-minh-video-camera-dem-nightography-chip-snapdragon-hang-chinh-hang-p277063012.html?spid=277165128",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/3a/f1/92/26171c22498fcfa3f602d8666f239eae.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549438",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "273668660",
+      "product_name": "Điện Thoại Oppo A18 4GB/64GB - Hàng Chính Hãng",
+      "price_current": 2619000,
+      "price_original": 0,
+      "discount_percent": 29,
+      "rating_avg": 5,
+      "review_count": 4,
+      "brand": "OPPO",
+      "seller_name": "Hồng Hạnh Mobile",
+      "url": "https://tiki.vn/dien-thoai-oppo-a18-4gb-64gb-hang-chinh-hang-p273668660.html?spid=273668662",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/75/3f/17/e11da64ff2d74dc16c8dab530d479e47.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549440",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "276274790",
+      "product_name": "Điện Thoại Samsung Galaxy A06 4GB/128GB - Hàng Chính Hãng",
+      "price_current": 2529000,
+      "price_original": 0,
+      "discount_percent": 28,
+      "rating_avg": 5,
+      "review_count": 4,
+      "brand": "Samsung",
+      "seller_name": "Hồng Hạnh Mobile",
+      "url": "https://tiki.vn/dien-thoai-samsung-a06-4gb-128gb-hang-chinh-hang-p276274790.html?spid=276274792",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/09/0e/5b/58aaf66e130a4127e9ebac714fff04fd.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549442",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "277737629",
+      "product_name": "Điện Thoại Xiaomi Redmi 13 6GB/128GB - Hàng Chính Hãng",
+      "price_current": 2939000,
+      "price_original": 0,
+      "discount_percent": 31,
+      "rating_avg": 5,
+      "review_count": 3,
+      "brand": "Xiaomi",
+      "seller_name": "Hồng Hạnh Mobile",
+      "url": "https://tiki.vn/dien-thoai-xiaomi-redmi-13-6gb-128gb-hang-chinh-hang-p277737629.html?spid=277737631",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/67/24/2d/17d53a9ca3b08d40d39bff3b6fb979cb.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549444",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "276944892",
+      "product_name": "Điện Thoại Samsung Galaxy A06 4GB/64GB - Hàng Chính Hãng",
+      "price_current": 2189000,
+      "price_original": 0,
+      "discount_percent": 31,
+      "rating_avg": 4.8,
+      "review_count": 4,
+      "brand": "Samsung",
+      "seller_name": "Hồng Hạnh Mobile",
+      "url": "https://tiki.vn/dien-thoai-samsung-a06-4gb-64gb-hang-chinh-hang-p276944892.html?spid=276944894",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/e6/77/8d/695ccf826070451961cb58f5afa5da57.jpg"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549447",
+      "page_number": 1
+    },
+    {
+      "source": "tiki_mass_crawl",
+      "category": "dien thoai",
+      "product_id": "278252203",
+      "product_name": "Điện thoại Samsung Galaxy Z Flip7, Điện thoại AI, Màn hình ngoài vô cực 4.1\", Camera selfie 50MP, Mỏng nhất - Hàng Chính Hãng",
+      "price_current": 20990000,
+      "price_original": 0,
+      "discount_percent": 28,
+      "rating_avg": 5,
+      "review_count": 2,
+      "brand": "Samsung",
+      "seller_name": "Tiki Trading",
+      "url": "https://tiki.vn/dien-thoai-samsung-galaxy-b7-hang-chinh-hang-p278252203.html?spid=278252207",
+      "image_urls": [
+        "https://salt.tikicdn.com/cache/280x280/ts/product/54/db/ac/a7507266526060e632738baceed60ef4.JPG"
+      ],
+      "crawl_date": "2025-11-13T20:05:53.549449",
+      "page_number": 1
+    }
+  ]
+}
