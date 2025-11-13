@@ -11,6 +11,8 @@ CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
 
 default_args = {"owner": "data_eng", "retries": 2, "retry_delay": timedelta(minutes=10)}
 
+SKIP_ML = os.getenv("SKIP_ML_MODELS", "false").lower() == "true"
+
 with DAG(
     dag_id="tiki_lazada_pipeline",
     start_date=datetime(2025, 11, 1),
@@ -128,6 +130,7 @@ python -u "$SCRIPT"
         task_id="load_to_stg",
         bash_command=rf"""
 pip install -q psycopg2-binary 2>/dev/null || true
+export INCREMENTAL_LOAD=true
 python /app/src/staging/load_raw_data.py
 """
     )
@@ -145,7 +148,7 @@ python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0
         task_id="truncate_ods",
         bash_command=r"""
 pip install -q psycopg2-binary 2>/dev/null || true
-python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); cur=conn.cursor(); cur.execute('TRUNCATE TABLE ods_product_clean, ods_review_clean CASCADE'); conn.commit(); conn.close(); print('✅ ODS tables truncated')"
+python -c "import psycopg2; from datetime import date; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); cur=conn.cursor(); today=date.today(); cur.execute('DELETE FROM ods_product_clean WHERE crawl_date = %s', (today,)); cur.execute('DELETE FROM ods_review_clean WHERE crawl_date = %s', (today,)); conn.commit(); conn.close(); print('✅ Today partition cleaned')"
 """
     )
 
@@ -155,7 +158,11 @@ python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0
 docker exec spark-master spark-submit \
   --master spark://spark-master:7077 \
   --deploy-mode client \
+  --executor-cores 4 \
+  --executor-memory 4g \
+  --driver-memory 2g \
   --conf spark.sql.session.timeZone=UTC \
+  --conf spark.sql.shuffle.partitions=200 \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/ods_transformation.py \
   --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
@@ -284,9 +291,22 @@ docker exec spark-master spark-submit \
 
     end = EmptyOperator(task_id="end")
 
-    start >> [crawl_lazada, crawl_tiki] >> wait_raw_ready
-    crawl_lazada >> crawl_lazada_reviews >> wait_reviews_ready
-    crawl_tiki >> crawl_tiki_reviews >> wait_reviews_ready
+    # Parallel crawling
+    start >> [crawl_lazada, crawl_tiki]
+    crawl_lazada >> crawl_lazada_reviews
+    crawl_tiki >> crawl_tiki_reviews
+    [crawl_lazada, crawl_tiki] >> wait_raw_ready
+    [crawl_lazada_reviews, crawl_tiki_reviews] >> wait_reviews_ready
+    
+    # Parallel processing
     [wait_raw_ready, wait_reviews_ready] >> load_to_stg >> create_ods_tables >> truncate_ods >> transform_to_ods >> data_quality_check
-    data_quality_check >> category_mapping >> identifier_sync >> technical_metadata >> build_dwh >> build_datamart
-    build_datamart >> [ml_product_recommendation, ml_price_optimization, ml_demand_forecasting, ml_sales_forecasting] >> end
+    
+    # Parallel standardization
+    data_quality_check >> [category_mapping, identifier_sync, technical_metadata]
+    [category_mapping, identifier_sync, technical_metadata] >> build_dwh >> build_datamart
+    
+    # Parallel ML (all independent)
+    if SKIP_ML:
+        build_datamart >> end
+    else:
+        build_datamart >> [ml_product_recommendation, ml_price_optimization, ml_demand_forecasting, ml_sales_forecasting] >> end

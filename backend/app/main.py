@@ -16,7 +16,18 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-# Setup logging FIRST
+from app.middleware.activity_middleware import ActivityLoggingMiddleware
+from app.services.activity_logger import ActivityLogger
+# Ensure parent directory of `app` is on sys.path so absolute imports like
+# `app.services.*` work when running the script directly.
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+from pydantic import field_validator
+from app.utils.validators import validate_phone, validate_password
+from app.constants.roles import ROLE_MENUS, get_role_menu
+
+# Setup logging FIRSTT
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,21 +47,16 @@ except ImportError:
 
 try:
     from pydantic import field_validator
-    from app.utils.validators import validate_phone, validate_password
-    from app.constants.roles import ROLE_MENUS, get_role_menu
+    from utils.validators import validate_phone, validate_password
+    from constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
-    try:
-        from utils.validators import validate_phone, validate_password
-        from constants.roles import ROLE_MENUS, get_role_menu
-        VALIDATORS_AVAILABLE = True
-    except ImportError:
-        VALIDATORS_AVAILABLE = False
-        field_validator = lambda x: lambda f: f
-        validate_phone = lambda x: x
-        validate_password = lambda x, **kwargs: x
-        ROLE_MENUS = {}
-        get_role_menu = lambda x: {}
+    VALIDATORS_AVAILABLE = False
+    field_validator = lambda x: lambda f: f
+    validate_phone = lambda x: x
+    validate_password = lambda x, **kwargs: x
+    ROLE_MENUS = {}
+    get_role_menu = lambda x: {}
 
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
@@ -332,14 +338,6 @@ try:
     logger.info("✅ Profile routes included successfully")
 except Exception as e:
     logger.error(f"❌ Profile routes failed: {e}")
-
-# Include Test Admin router
-try:
-    from api.v1.test_admin import router as test_admin_router
-    app.include_router(test_admin_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Test Admin routes included")
-except ImportError as e:
-    logger.warning(f"Test Admin routes not available: {e}")
 
 # Include Role Management router
 try:
