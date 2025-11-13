@@ -8,88 +8,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 router = APIRouter(prefix="/test-admin", tags=["🧪 Test Admin"])
 
-@router.get("/get-token")
-async def get_admin_token():
-    """🔑 Get admin token for testing authenticated endpoints"""
-    try:
-        from main import create_access_token
-        
-        admin_user = {
-            "user_id": 1,
-            "full_name": "System Administrator",
-            "role": "ADMIN"
-        }
-        
-        token = create_access_token(admin_user, "admin@dss.com")
-        
-        return {
-            "success": True,
-            "message": "Admin token generated",
-            "access_token": token,
-            "usage": "Use this token in Authorize button: Bearer " + token[:30] + "..."
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Failed to generate token",
-            "error": str(e)
-        }
-
-@router.get("/get-token/{user_id}")
-async def get_user_token(user_id: int):
-    """🔑 Get token for specific user ID"""
-    try:
-        from main import create_access_token, db_manager
-        
-        if not db_manager.is_connected:
-            await db_manager.connect()
-            
-        # Get user info from database
-        query = """
-        SELECT u.user_id, u.email, u.full_name, r.role_code
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
-        WHERE u.user_id = $1 AND u.status = 'active'
-        """
-        
-        result = await db_manager.execute_query(query, (user_id,))
-        
-        if not result:
-            return {
-                "success": False,
-                "message": f"User {user_id} not found or inactive"
-            }
-            
-        user = result[0]
-        user_data = {
-            "user_id": user['user_id'],
-            "full_name": user['full_name'],
-            "role": user['role_code'] or 'CUSTOMER'
-        }
-        
-        token = create_access_token(user_data, user['email'])
-        
-        return {
-            "success": True,
-            "message": f"Token generated for {user['full_name']} ({user['role_code']})",
-            "user_info": {
-                "user_id": user['user_id'],
-                "email": user['email'],
-                "full_name": user['full_name'],
-                "role": user['role_code']
-            },
-            "access_token": token,
-            "usage": "Use this token in Authorize button: Bearer " + token[:30] + "..."
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Failed to generate token",
-            "error": str(e)
-        }
+@router.get("/session-info")
+async def get_session_info():
+    """📋 Get session info (no token needed)"""
+    return {
+        "success": True,
+        "message": "Session-based authentication active",
+        "note": "Token authentication has been removed"
+    }
 
 @router.get("/users")
 async def test_get_users():

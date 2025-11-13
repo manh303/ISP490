@@ -16,9 +16,45 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
+# Setup logging FIRST
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    from app.middleware.activity_middleware import ActivityLoggingMiddleware
+    from app.services.activity_logger import ActivityLogger
+    ACTIVITY_AVAILABLE = True
+except ImportError:
+    try:
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
+    except ImportError:
+        ACTIVITY_AVAILABLE = False
+        logger.warning("Activity logging not available")
+
+try:
+    from pydantic import field_validator
+    from app.utils.validators import validate_phone, validate_password
+    from app.constants.roles import ROLE_MENUS, get_role_menu
+    VALIDATORS_AVAILABLE = True
+except ImportError:
+    try:
+        from utils.validators import validate_phone, validate_password
+        from constants.roles import ROLE_MENUS, get_role_menu
+        VALIDATORS_AVAILABLE = True
+    except ImportError:
+        VALIDATORS_AVAILABLE = False
+        field_validator = lambda x: lambda f: f
+        validate_phone = lambda x: x
+        validate_password = lambda x, **kwargs: x
+        ROLE_MENUS = {}
+        get_role_menu = lambda x: {}
 
 # FastAPI and async
 from fastapi import FastAPI, HTTPException, Depends, Request
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -70,20 +106,19 @@ except ImportError:
         email_service_module = False
         print(f"WARNING: Email service not available: {e2}")
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # ====================================
 # CONFIGURATION
 # ====================================
 class Settings:
     # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")  # Use production to connect to Render
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # Database URLs
-    POSTGRES_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:69420@localhost:5432/ecommerce_dss")
+    # Database URLs - Always use Render database (has data)
+    POSTGRES_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+    )
 
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
@@ -117,6 +152,17 @@ class SignupRequest(BaseModel):
     email: str = Field(..., description="Email address")
     password: str = Field(..., min_length=8, description="Password (min 8 chars)")
     confirm_password: str = Field(..., description="Confirm password")
+    phone: Optional[str] = Field(None, description="Phone number")
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_field(cls, v):
+        return validate_password(v, min_length=8)
+    
+    @field_validator('phone')
+    @classmethod
+    def validate_phone_field(cls, v):
+        return validate_phone(v)
 
 class SignupResponse(BaseModel):
     success: bool
@@ -210,70 +256,55 @@ class DatabaseManager:
 db_manager = DatabaseManager()
 
 # ====================================
+# LIFESPAN EVENT HANDLER
+# ====================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting Vietnam E-commerce DSS API...")
+    app.state.start_time = time.time()
+    
+    if DATABASE_AVAILABLE:
+        try:
+            await db_manager.connect()
+            if db_manager.is_connected:
+                logger.info("PostgreSQL database connected successfully!")
+                if IAM_AVAILABLE:
+                    try:
+                        init_iam_service(db_manager, settings.JWT_SECRET_KEY)
+                        logger.info("IAM service initialized successfully!")
+                    except Exception as e:
+                        logger.error(f"IAM service initialization failed: {e}")
+        except Exception as e:
+            logger.warning(f"PostgreSQL database connection failed: {e}")
+    
+    logger.info("API startup completed successfully!")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down API...")
+    try:
+        await db_manager.disconnect()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
+    logger.info("API shutdown completed")
+
+# ====================================
 # FASTAPI APPLICATION
 # ====================================
 from fastapi.openapi.utils import get_openapi
-from fastapi.security import HTTPBearer
 
 app = FastAPI(
     title="Vietnam E-commerce DSS API",
-    description="""
-    ## Vietnam E-commerce Decision Support System API
-    
-    ### 🔐 Authentication Required
-    **IMPORTANT**: Click the **🔒 Authorize** button below to authenticate!
-    
-    **Quick Start**:
-    1. **Easy Testing**: Use `/api/v1/test-admin/users` (no auth needed)
-    2. **With Auth**: Get token from `/api/v1/test-admin/get-token`
-    3. **Click 🔒 Authorize**: Enter `Bearer <your_token>`
-    
-    **Default Admin**: `admin@dss.com` / `admin123`
-    
-    ### 📋 User Management Features
-    - ✅ Create, Read, Update users
-    - ✅ Soft delete (move to deleted list)
-    - ✅ Restore from deleted list  
-    - ✅ Permanent delete (with confirmation)
-    - ✅ Role-based access control
-    """,
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    contact={
-        "name": "DSS API Support",
-        "email": "admin@dss.com"
-    }
+    lifespan=lifespan
 )
 
-# Add security scheme for Swagger UI
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title="Vietnam E-commerce DSS API",
-        version="2.0.0",
-        description=app.description,
-        routes=app.routes,
-    )
-    openapi_schema["components"]["securitySchemes"] = {
-        "HTTPBearer": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-            "description": "Enter: Bearer <your_token>"
-        }
-    }
-    # Add security to all admin endpoints
-    for path, path_item in openapi_schema["paths"].items():
-        if "/admin/" in path and path != "/api/v1/admin/test/admin-token":
-            for method, operation in path_item.items():
-                if method.lower() in ["get", "post", "put", "delete"]:
-                    operation["security"] = [{"HTTPBearer": []}]
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
+# Remove custom OpenAPI to avoid duplicate security schemes
+# FastAPI will auto-generate based on dependencies
 
 # Include IAM router (temporarily disabled due to database parameter binding issues)
 # if IAM_AVAILABLE:
@@ -293,11 +324,14 @@ except ImportError as e:
 
 # Include Profile router
 try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
     from api.v1.profile import router as profile_router
     app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Profile routes included")
-except ImportError as e:
-    logger.warning(f"Profile routes not available: {e}")
+    logger.info("✅ Profile routes included successfully")
+except Exception as e:
+    logger.error(f"❌ Profile routes failed: {e}")
 
 # Include Test Admin router
 try:
@@ -307,6 +341,30 @@ try:
 except ImportError as e:
     logger.warning(f"Test Admin routes not available: {e}")
 
+# Include Role Management router
+try:
+    from api.v1.roles import router as roles_router
+    app.include_router(roles_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Role Management routes included")
+except ImportError as e:
+    logger.warning(f"Role Management routes not available: {e}")
+
+# Include ML Insights router
+try:
+    from api.v1.ml_insights import router as ml_insights_router
+    app.include_router(ml_insights_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("ML Insights routes included")
+except ImportError as e:
+    logger.warning(f"ML Insights routes not available: {e}")
+
+# Include Analytics router
+try:
+    from api.v1.analytics import router as analytics_router
+    app.include_router(analytics_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Analytics routes included")
+except ImportError as e:
+    logger.warning(f"Analytics routes not available: {e}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -315,6 +373,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add activity logging middleware (only if available)
+if ACTIVITY_AVAILABLE:
+    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+    logger.info("Activity logging middleware enabled")
+else:
+    logger.warning("Activity logging middleware disabled - module not available")
 
 # Update security headers middleware
 @app.middleware("http")
@@ -330,45 +395,7 @@ async def add_security_headers(request: Request, call_next):
     })
     return response
 
-# ====================================
-# STARTUP/SHUTDOWN EVENTS
-# ====================================
-@app.on_event("startup")
-async def startup_event():
-    """Initialize connections"""
-    logger.info("Starting Vietnam E-commerce DSS API...")
-
-    # Set startup time
-    app.state.start_time = time.time()
-
-    # Try PostgreSQL connection
-    if DATABASE_AVAILABLE:
-        try:
-            await db_manager.connect()
-            if db_manager.is_connected:
-                logger.info("PostgreSQL database connected successfully!")
-
-                # Initialize IAM service if available
-                if IAM_AVAILABLE:
-                    try:
-                        init_iam_service(db_manager, settings.JWT_SECRET_KEY)
-                        logger.info("IAM service initialized successfully!")
-                    except Exception as e:
-                        logger.error(f"IAM service initialization failed: {e}")
-        except Exception as e:
-            logger.warning(f"PostgreSQL database connection failed: {e}")
-
-    logger.info("API startup completed successfully!")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup connections"""
-    logger.info("Shutting down API...")
-    try:
-        await db_manager.disconnect()
-    except Exception as e:
-        logger.error(f"Error during shutdown: {e}")
-    logger.info("API shutdown completed")
+# Startup/shutdown events now handled by lifespan context manager above
 
 # ====================================
 # DEPENDENCY INJECTION
@@ -429,33 +456,251 @@ async def api_status():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.get(f"{settings.API_V1_PREFIX}/check-roles")
+async def check_database_roles():
+    """Check roles in database"""
+    try:
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get all roles from database
+        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        roles = await db_manager.execute_query(query)
+        
+        return {
+            "success": True,
+            "total_roles": len(roles),
+            "roles": roles,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+
+@app.get(f"{settings.API_V1_PREFIX}/test-roles")
+async def test_roles():
+    """Test endpoint to check if roles router is working"""
+    return {
+        "message": "Roles router is working!",
+        "timestamp": datetime.now().isoformat()
+    }
+
 # ====================================
 # DSS ENDPOINTS (Essential for Dashboard)
 # ====================================
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/overview")
+async def get_ecommerce_overview(db: DatabaseManager = Depends(get_database)):
+    """Get ecommerce platform overview metrics"""
+    try:
+        if not db.is_connected:
+            # Return mock data if database not connected
+            return {
+                "success": True,
+                "data": {
+                    "total_products": 1250,
+                    "platforms": 2,
+                    "avg_price": 15000000,
+                    "rated_products": 980
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            source_platform,
+            COUNT(*) as total_products,
+            AVG(CAST(raw_data->>'price' AS DECIMAL)) as avg_price,
+            COUNT(CASE WHEN raw_data->>'rating' IS NOT NULL THEN 1 END) as rated_products
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+        GROUP BY source_platform
+        """
+
+        result = await db.execute_query(query)
+
+        # Aggregate metrics
+        total_products = sum(row['total_products'] for row in result)
+        platforms = len(result)
+        avg_price = sum(row['avg_price'] or 0 for row in result) / len(result) if result else 0
+        rated_products = sum(row['rated_products'] for row in result)
+
+        return {
+            "success": True,
+            "data": {
+                "total_products": total_products,
+                "platforms": platforms,
+                "avg_price": avg_price,
+                "rated_products": rated_products,
+                "platform_breakdown": result
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Ecommerce overview error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/price-comparison")
+async def get_price_comparison(db: DatabaseManager = Depends(get_database)):
+    """Get price comparison data between platforms"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"source_platform": "tiki", "product_name": "iPhone 15", "brand": "Apple", "price": 25000000, "discount": 10},
+                    {"source_platform": "lazada", "product_name": "Samsung Galaxy", "brand": "Samsung", "price": 22000000, "discount": 12}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            source_platform,
+            raw_data->>'product_name' as product_name,
+            raw_data->>'brand' as brand,
+            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
+            CAST(raw_data->>'discount_percent' AS DECIMAL) as discount
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+            AND (raw_data->>'price' IS NOT NULL OR raw_data->>'price_current' IS NOT NULL)
+            AND CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) > 0
+        LIMIT 100
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Price comparison error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/brand-analysis")
+async def get_brand_analysis(db: DatabaseManager = Depends(get_database)):
+    """Get brand performance analysis"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"brand": "Apple", "source_platform": "tiki", "product_count": 50, "avg_price": 25000000, "avg_rating": 4.5},
+                    {"brand": "Samsung", "source_platform": "lazada", "product_count": 45, "avg_price": 18000000, "avg_rating": 4.3}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            COALESCE(raw_data->>'brand', raw_data->>'brand_name', 'Unknown') as brand,
+            source_platform,
+            COUNT(*) as product_count,
+            AVG(CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL)) as avg_price,
+            AVG(CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL)) as avg_rating
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+        GROUP BY brand, source_platform
+        HAVING COUNT(*) > 1 AND brand != 'Unknown' AND brand IS NOT NULL
+        ORDER BY product_count DESC
+        LIMIT 20
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Brand analysis error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/trending-products")
+async def get_trending_products(db: DatabaseManager = Depends(get_database)):
+    """Get trending products data"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"product_name": "iPhone 15 Pro", "brand": "Apple", "source_platform": "tiki", "price": 25000000, "rating": 4.5, "review_count": 150, "sold_count": 50},
+                    {"product_name": "Samsung Galaxy S24", "brand": "Samsung", "source_platform": "lazada", "price": 22000000, "rating": 4.3, "review_count": 200, "sold_count": 75}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            raw_data->>'product_name' as product_name,
+            COALESCE(raw_data->>'brand', raw_data->>'brand_name') as brand,
+            source_platform,
+            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
+            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) as rating,
+            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) as review_count,
+            CAST(COALESCE(raw_data->>'sold_count', '0') AS INTEGER) as sold_count,
+            created_at
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+            AND raw_data->>'product_name' IS NOT NULL
+            AND LENGTH(raw_data->>'product_name') > 5
+        ORDER BY
+            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) DESC,
+            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) DESC
+        LIMIT 20
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Trending products error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 @app.get(f"{settings.API_V1_PREFIX}/dss/dashboard")
 async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_database)):
     """Get DSS dashboard data. If Authorization header with valid JWT is provided,
     return a role-specific dashboard and allowed actions/menus for that role.
     """
     try:
-        # Role-based menu definitions
-        ROLE_DASHBOARDS = {
-            "ADMIN": {
-                "modules": ["Dashboard", "User Management", "System Settings", "Audit Logs", "Data Management"],
-                "actions": ["view", "create", "update", "delete"],
-                "permissions": ["system.admin", "user.manage", "data.write", "analytics.view", "dss.dashboard"]
-            },
-            "ANALYST": {
-                "modules": ["Dashboard", "Customer Analytics", "Sales Analytics", "Reports", "Data Visualization"],
-                "actions": ["view", "export", "analyze"],
-                "permissions": ["data.read", "analytics.view", "reports.generate", "dss.dashboard"]
-            },
-            "CUSTOMER": {
-                "modules": ["Dashboard", "Orders", "Profile", "Purchase History"],
-                "actions": ["view", "create_order", "update_profile"],
-                "permissions": ["profile.view", "orders.create", "data.read_own"]
-            }
-        }
+        # Use shared role definitions
+        ROLE_DASHBOARDS = ROLE_MENUS
 
         # Default (unauthenticated) dashboard
         default_dashboard = {
@@ -474,7 +719,14 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
             "timestamp": datetime.now().isoformat(),
             "menu": {
                 "modules": ["Dashboard"],
-                "actions": ["view"]
+                "actions": ["view"],
+                "admin_features": {
+                    "user_management": False,
+                    "activity_logs": False,
+                    "system_settings": False,
+                    "user_creation": False,
+                    "user_deletion": False
+                }
             }
         }
 
@@ -489,12 +741,12 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
         except Exception:
             return default_dashboard
 
-        payload = decode_access_token(token)
+        payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
         if not payload or "role" not in payload:
             return default_dashboard
 
         role = payload.get("role")
-        role_cfg = ROLE_DASHBOARDS.get(role, ROLE_DASHBOARDS.get("CUSTOMER"))
+        role_cfg = get_role_menu(role)
 
         # Role-specific dashboard data
         role_dashboard = {
@@ -519,6 +771,8 @@ async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_
     except Exception as e:
         logger.error(f"DSS dashboard error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Removed duplicate setup endpoint - use /setup-activity-logs instead
 
 @app.get(f"{settings.API_V1_PREFIX}/dss/overview")
 async def dss_overview():
@@ -566,6 +820,64 @@ async def get_dss_modules():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.post("/setup-activity-logs")
+async def setup_activity_logs_direct(db: DatabaseManager = Depends(get_database)):
+    """Create activity logs table and insert test data - Direct endpoint"""
+    try:
+        # Create table
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS user_activity_logs (
+            log_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            email VARCHAR(255),
+            action VARCHAR(100) NOT NULL,
+            resource VARCHAR(100),
+            details JSONB,
+            ip_address INET,
+            user_agent TEXT,
+            status VARCHAR(20) DEFAULT 'success',
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """
+        await db.execute_query(create_table_query)
+        
+        # Create indexes
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON user_activity_logs(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON user_activity_logs(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON user_activity_logs(action)"
+        ]
+        
+        for index_query in indexes:
+            await db.execute_query(index_query)
+        
+        # Insert test data
+        test_data_query = """
+        INSERT INTO user_activity_logs (user_id, email, action, resource, details, ip_address, status)
+        VALUES 
+            (1, 'admin@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
+            (3, 'customer@dss.com', 'GET /api/v1/dss/dashboard', '/api/v1/dss/dashboard', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (1, 'admin@dss.com', 'GET /api/v1/admin/users', '/api/v1/admin/users', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNOUT', '/api/v1/auth/signout', '{"method": "manual"}', '127.0.0.1', 'success')
+        """
+        await db.execute_query(test_data_query)
+        
+        return {
+            "success": True,
+            "message": "Activity logs table created and test data inserted successfully!",
+            "table_created": True,
+            "test_data_inserted": 5
+        }
+        
+    except Exception as e:
+        logger.error(f"Setup activity logs error: {e}")
+        return {
+            "success": False,
+            "message": f"Setup failed: {str(e)}",
+            "error": str(e)
+        }
+
 # ====================================
 # SIMPLE AUTHENTICATION (Temporary Fix)
 # ====================================
@@ -594,6 +906,11 @@ class ResetPasswordRequest(BaseModel):
     email: str
     otp: str
     new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_field(cls, v):
+        return validate_password(v, min_length=8)
 
 class ResetPasswordResponse(BaseModel):
     success: bool
@@ -604,6 +921,7 @@ class SignOutResponse(BaseModel):
     message: str
 
 # Define valid users for authentication - 3 main roles
+# Note: user_ids must match database values
 VALID_USERS = {
     "admin@dss.com": {
         "user_id": 1,
@@ -612,16 +930,22 @@ VALID_USERS = {
         "role": "ADMIN"
     },
     "analyst@dss.com": {
-        "user_id": 2,
+        "user_id": 3,
         "password": "analyst123",
         "full_name": "Data Analyst",
         "role": "ANALYST"
     },
-    "customer@dss.com": {
-        "user_id": 3,
-        "password": "customer123",
-        "full_name": "Customer User",
-        "role": "CUSTOMER"
+    "ml@dss.com": {
+        "user_id": 4,
+        "password": "mleng123",
+        "full_name": "ML Engineer",
+        "role": "ML"
+    },
+    "dataeng@dss.com": {
+        "user_id": 2,
+        "password": "dataeng123",
+        "full_name": "Data Engineer",
+        "role": "DATA_ENGINEER"
     }
 }
 
@@ -676,56 +1000,38 @@ def authenticate_user(email: str, password: str):
         return None
     return user_data
 
-# ---------- REPLACE this function in main.py ----------
-def create_access_token(user_data: dict, email: str):
-    """Create JWT access token with role, roles[], permissions for cross-service guards"""
-    jwt_exp_hours = getattr(settings, 'JWT_EXPIRATION_HOURS', None)
-    jwt_exp_minutes_env = os.getenv("JWT_EXPIRE_MINUTES")
+# Use shared auth helpers
+try:
+    from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+except ImportError:
+    from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
+def create_access_token(user_data: dict, email: str):
+    """Create JWT access token using shared helper"""
+    jwt_exp_hours = getattr(settings, 'JWT_EXPIRATION_HOURS', 24)
+    jwt_exp_minutes_env = os.getenv("JWT_EXPIRE_MINUTES")
+    
     if jwt_exp_minutes_env:
         try:
-            minutes = int(jwt_exp_minutes_env)
-            exp_time = datetime.utcnow() + timedelta(minutes=minutes)
+            expire_hours = int(jwt_exp_minutes_env) / 60
         except Exception:
-            exp_time = datetime.utcnow() + timedelta(hours=(jwt_exp_hours or 24))
+            expire_hours = jwt_exp_hours
     else:
-        exp_time = datetime.utcnow() + timedelta(hours=(jwt_exp_hours or 24))
-
-    # Default permissions per role (extend as needed)
-    DEFAULT_PERMS = {
-        "ADMIN": [
-            "system.admin", "user.manage", "data.read", "analytics.view", "dss.dashboard"
-        ],
-        "ANALYST": ["data.read", "analytics.view"],
-        "CUSTOMER": ["data.read"]
-    }
-
-    role = user_data['role']
-    token_payload = {
-        "user_id": user_data['user_id'],
-        "email": email.lower(),
-        "full_name": user_data.get('full_name', 'User'),  # Add full_name to token
-        "role": role,                          # keep string for backward compat
-        "roles": [role],                       # <-- NEW: array for Node middleware
-        "permissions": DEFAULT_PERMS.get(role, []),  # <-- NEW: basic perms
-        "exp": exp_time,
-        "iat": datetime.utcnow()
-    }
-    return jwt.encode(token_payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-# ---------- END REPLACE ----------
-
-def decode_access_token(token: str) -> Optional[dict]:
-    """Decode JWT token and return payload or None"""
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        return payload
-    except Exception as e:
-        logger.debug(f"Token decode failed: {e}")
-        return None
+        expire_hours = jwt_exp_hours
+    
+    return create_jwt_token(user_data, email, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM, expire_hours)
 
 # ====================================
 # EMAIL SERVICE
 # ====================================
+try:
+    import aiosmtplib
+    EMAIL_AVAILABLE = True
+    logger.info("Email service available")
+except ImportError:
+    EMAIL_AVAILABLE = False
+    logger.warning("Email service not available: No module named 'aiosmtplib'")
+
 class EmailService:
     """Simple email service for verification codes"""
 
@@ -733,7 +1039,7 @@ class EmailService:
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
         self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
         self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
@@ -779,6 +1085,7 @@ class EmailService:
 
 # Initialize email service
 email_service = EmailService()
+
 
 # ====================================
 # DATABASE HELPERS
@@ -890,18 +1197,38 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
         if not user_data:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
+        # Update last login time
+        try:
+            try:
+                from app.services.user_management_service import UserManagementService
+            except ImportError:
+                from services.user_management_service import UserManagementService
+            user_service = UserManagementService(db)
+            await user_service.update_last_login(user_data["user_id"])
+        except Exception as e:
+            logger.error(f"Failed to update last login: {e}")
+
         access_token = create_access_token(user_data, request.email)
+
+        # Log signin activity
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user_data["user_id"],
+                email=user_data["email"],
+                action="USER_SIGNIN",
+                resource="/api/v1/auth/signin",
+                details={"role": user_data["role"], "method": "password"},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log signin activity: {e}")
 
         logger.info(f"Successful signin for: {request.email} with role: {user_data['role']}")
 
-        # Role -> menu mapping to return allowed screens/actions for frontend
-        ROLE_MENU = {
-            "ADMIN": {"modules": ["Dashboard", "User Management", "System Settings", "Audit Logs", "Data Management"], "actions": ["view","create","update","delete"]},
-            "ANALYST": {"modules": ["Dashboard", "Customer Analytics", "Sales Analytics", "Reports", "Data Visualization"], "actions": ["view","export","analyze"]},
-            "CUSTOMER": {"modules": ["Dashboard", "Orders", "Profile", "Purchase History"], "actions": ["view","create_order","update_profile"]}
-        }
+        # Use shared role menu definitions
 
-        role_cfg = ROLE_MENU.get(user_data['role'], ROLE_MENU['CUSTOMER'])
+        role_cfg = get_role_menu(user_data['role'])
 
         return SignInResponse(
             success=True,
@@ -990,8 +1317,8 @@ async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = De
         if not email or not otp or not new_password:
             raise HTTPException(status_code=400, detail="Email, OTP, and new password are required")
 
-        if len(new_password) < 8:
-            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
 
         # Verify OTP
         if email_service_module:
@@ -1050,9 +1377,25 @@ async def signout(request: Request):
         # Expect "Bearer <token>"
         try:
             token = auth_header.split()[1]
-            payload = decode_access_token(token)
+            payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
             if payload:
                 user_email = payload.get("email", "unknown")
+                user_id = payload.get("user_id")
+                
+                # Log signout activity
+                try:
+                    activity_logger = ActivityLogger(db_manager)
+                    await activity_logger.log_activity(
+                        user_id=user_id,
+                        email=user_email,
+                        action="USER_SIGNOUT",
+                        resource="/api/v1/auth/signout",
+                        details={"method": "manual"},
+                        status="success"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to log signout activity: {e}")
+                
                 logger.info(f"User signed out: {user_email}")
         except Exception:
             pass  # Token invalid, but still return success
@@ -1084,7 +1427,7 @@ async def get_auth_profile(request: Request):
         except Exception:
             raise HTTPException(status_code=401, detail="Invalid authorization format")
 
-        payload = decode_access_token(token)
+        payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
         if not payload:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -1118,8 +1461,8 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
         if request.password != request.confirm_password:
             raise HTTPException(status_code=400, detail="Passwords do not match")
 
-        if len(request.password) < 8:
-            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        if len(request.password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
 
         # Check if email already exists
         email_exists = await check_email_exists(db, request.email.lower())
@@ -1135,6 +1478,20 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
 
         # Create user in database (pending status)
         user_id = await create_user_in_db(db, request.name, request.email.lower(), password_hash)
+
+        # Log signup activity
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user_id,
+                email=request.email.lower(),
+                action="USER_SIGNUP",
+                resource="/api/v1/auth/signup",
+                details={"full_name": request.name, "method": "email"},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log signup activity: {e}")
 
         # Store verification token
         # Temporarily disabled: email verification storage requires table iam_email_verification
@@ -1203,10 +1560,13 @@ async def not_found_handler(request: Request, exc: HTTPException):
             "path": str(request.url.path),
             "timestamp": datetime.now().isoformat(),
             "available_endpoints": [
-                "/", "/health", "/api/v1/status",
-                "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
-                "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
-                "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token", "/docs"
+            "/", "/health", "/api/v1/status",
+            "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
+            "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
+            "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token",
+            "/api/v1/roles", "/api/v1/roles/{role_id}", "/docs"
+
             ]
         }
     )

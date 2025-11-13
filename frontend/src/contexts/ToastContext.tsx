@@ -40,15 +40,30 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      {/* Toast container with highest z-index and visible styling */}
+      <div 
+        className="fixed top-4 right-4 space-y-2" 
+        style={{ 
+          zIndex: 99999,
+          pointerEvents: 'none',
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem'
+        }}
+      >
         {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            duration={toast.duration}
-            onClose={() => removeToast(toast.id)}
-          />
+          <div 
+            key={toast.id} 
+            style={{ pointerEvents: 'auto' }}
+            className="transform transition-all duration-300"
+          >
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              duration={toast.duration}
+              onClose={() => removeToast(toast.id)}
+            />
+          </div>
         ))}
       </div>
     </ToastContext.Provider>

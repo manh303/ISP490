@@ -108,8 +108,27 @@ export interface UserProfile {
   status?: string;
 }
 
+export interface UserProfileResponse {
+  user_id: number;
+  email: string;
+  full_name: string;
+  phone: string;
+  status: string;
+  role_code: string;
+  role_name: string;
+  last_login_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ChangePasswordRequest { current_password: string; new_password: string; }
-export interface UpdateProfileRequest { full_name?: string; phone?: string; }
+export interface UpdateProfileRequest { full_name?: string; phone?: string; email?: string; }
+export interface UpdateProfileResponse { 
+  success: boolean; 
+  message: string; 
+  data?: any; 
+  user_id?: number; 
+}
 export interface SignupRequest { name: string; email: string; password: string; confirm_password: string; }
 export interface SignupResponse { success: boolean; message: string; verification_sent: boolean; email: string; }
 export interface VerifyEmailRequest { email: string; verification_code: string; }
@@ -120,6 +139,40 @@ export interface ResetPasswordRequest { email: string; otp: string; new_password
 export interface ResetPasswordResponse { success: boolean; message: string; }
 
 /* ----------------------------- API ------------------------------ */
+
+export const adminAPI = {
+  getActivityLogs: async (params: {
+    page?: number;
+    limit?: number;
+    user_id?: number;
+    action?: string;
+    start_date?: string;
+    end_date?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) queryParams.append(key, value.toString());
+    });
+    
+    const response = await api.get(`/v1/admin/activity-logs?${queryParams}`);
+    return response.data;
+  },
+
+  getActivityStats: async (days: number = 7) => {
+    const response = await api.get(`/v1/admin/activity-stats?days=${days}`);
+    return response.data;
+  },
+
+  getUserActivity: async (userId: number, page: number = 1, limit: number = 20) => {
+    const response = await api.get(`/v1/admin/user-activity/${userId}?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+
+  clearActivityLogs: async (daysOlderThan: number = 30) => {
+    const response = await api.post(`/v1/admin/clear-activity-logs?days_older_than=${daysOlderThan}`);
+    return response.data;
+  }
+};
 
 export const authAPI = {
   /** Đăng nhập DB (FastAPI) */
@@ -237,8 +290,36 @@ export const authAPI = {
     return data;
   },
 
-  updateProfile: async (data: UpdateProfileRequest) =>
-    (await api.put('/auth/profile', data)).data,
+  /** Get current user's profile - v1 API */
+  getMyProfile: async (): Promise<UserProfileResponse> => {
+    console.log('getMyProfile: Start fetching profile');
+    try {
+      const response = await api.get('/v1/profile');
+      console.log('getMyProfile: Response', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('getMyProfile: Error', error);
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch profile');
+    }
+  },
+
+  updateProfile: async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
+    const response = await api.put('/v1/profile', data);
+    return response.data;
+  },
+
+  /** Update current user's profile - v1 API */
+  updateMyProfile: async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
+    console.log('updateMyProfile: Sending data', data);
+    try {
+      const response = await api.put('/v1/profile', data);
+      console.log('updateMyProfile: Response', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('updateMyProfile: Error', error);
+      throw new Error(error.response?.data?.message || error.message || 'Update profile failed');
+    }
+  },
 
   changePassword: async (data: ChangePasswordRequest) =>
     (await api.post('/auth/change-password', data)).data,

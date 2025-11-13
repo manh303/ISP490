@@ -1,23 +1,23 @@
 """
 User Profile Management Pydantic Models
 """
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
-from datetime import datetime
+from models.shared import UserResponse, BaseUserRequest
 
-class ProfileResponse(BaseModel):
-    user_id: int
-    email: str
-    full_name: Optional[str]
-    phone: Optional[str]
-    status: str
-    role_code: Optional[str]
-    role_name: Optional[str]
-    last_login_at: Optional[datetime]
-    created_at: datetime
-    updated_at: datetime
+# Use shared UserResponse instead of duplicate ProfileResponse
+ProfileResponse = UserResponse
 
-class ProfileUpdateRequest(BaseModel):
-    full_name: Optional[str] = Field(None, max_length=100, description="Full name")
-    phone: Optional[str] = Field(None, max_length=32, description="Phone number")
+class ProfileUpdateRequest(BaseUserRequest):
     email: Optional[EmailStr] = Field(None, description="Email address")
+    
+    @field_validator('phone')
+    @classmethod
+    def validate_phone_field(cls, v):
+        return validate_phone(v)
+
+class ProfileActionResponse(BaseModel):
+    """Profile action response"""
+    success: bool
+    message: str
+    user_id: Optional[int] = None

@@ -1,14 +1,3 @@
-# Temporary data files
-data/raw/kaggle_datasets/**/*.csv
-data/processed/**/*.csv
-data/exports/**/*.csv
-# Ignore large data files
-data/transactions.csv
-data/raw/kaggle_datasets/brazilian-ecommerce/olist_geolocation_dataset.csv
-# Temporary data files
-data/raw/temp/
-data/processed/temp/
-data/exports/temp/
 
 # Ignore pickle files
 *.pkl
@@ -49,3 +38,10 @@ logs/
 node_modules/
 backend/app/main.py
 backend/requirements.txt
+
+data-collection/data/fixed_lazada_multi_category_full.csv
+data-collection/data/fixed_lazada_multi_category_full.json
+data-collection/crawlers/lazada/runners/output/fixed_lazada_multi_category_full.json
+data-collection/crawlers/lazada/runners/output/fixed_lazada_multi_category_full.csv
+data-collection/outputs/fixed_lazada_multi_category_full.csv 
+data-collection/outputs/fixed_lazada_multi_category_full.json 
