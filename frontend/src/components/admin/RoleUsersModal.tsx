@@ -47,21 +47,24 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
             setError(null);
             try {
                 const data = await getRoleUsers(roleId, { page, limit });
-                
+               
                 // Handle different response structures
                 if (typeof data === 'string') {
                     // If API returns a string, parse it or handle accordingly
                     setUsers([]);
                     setTotal(0);
                 } else if (data.success && Array.isArray(data.data)) {
-                    setUsers(data.data);
+                
+                    setUsers(data.users);
                     setTotal(data.total || data.data.length);
                 } else if (Array.isArray(data)) {
+                     console.log("2")
                     setUsers(data);
                     setTotal(data.length);
                 } else {
-                    setUsers([]);
-                    setTotal(0);
+                    
+                    setUsers(data.users);
+                    setTotal(data.total);
                 }
             } catch (err: any) {
                 const errorMsg = err?.response?.data?.detail || "Không thể tải danh sách người dùng";

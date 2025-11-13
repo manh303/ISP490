@@ -36,7 +36,7 @@ export default function ForgotPasswordForm() {
 
     setIsLoading(true);
     try {
-      showToast("Sending reset code...", "info", 2000);
+      showToast("Đang gửi mã khôi phục ...", "info", 2000);
 
       const response = await authAPI.forgotPassword({ email });
 
@@ -49,13 +49,13 @@ export default function ForgotPasswordForm() {
         // Chuyển sang trang verify-code
         navigate(`/verify-code`);
       } else {
-        setErrors({ email: "", general: response.message || "Failed to send reset code. Please try again." });
+        setErrors({ email: "", general: response.message || "Không thể gửi mã khôi phục mật khẩu. Xin vui lòng thử lại." });
         showToast("❌ Failed to send reset code", "error");
       }
     } catch (error: any) {
       console.error('Forgot password error:', error);
 
-      let errorMessage = 'Failed to send reset code. Please try again.';
+      let errorMessage = 'Không thể gửi mã khôi phục mật khẩu. Xin vui lòng thử lại.';
 
       if (error?.message) {
         errorMessage = error.message;
@@ -63,9 +63,9 @@ export default function ForgotPasswordForm() {
 
       // Show specific error for common issues
       if (errorMessage.toLowerCase().includes('no account found')) {
-        errorMessage = '❌ No account found with this email address. Please check your email or create a new account.';
+        errorMessage = '❌ Không tìm thấy tài khoản với địa chỉ email này. Vui lòng kiểm tra lại email hoặc tạo tài khoản mới.';
       } else if (errorMessage.toLowerCase().includes('email')) {
-        errorMessage = '❌ Please enter a valid email address.';
+        errorMessage = '❌ Vui lòng nhập địa chỉ email hợp lệ.';
       } else {
         errorMessage = `❌ ${errorMessage}`;
       }
@@ -84,7 +84,7 @@ export default function ForgotPasswordForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Back to home
+          Quay lại trang chủ
         </Link>
       </div>
 
@@ -108,12 +108,12 @@ export default function ForgotPasswordForm() {
           </div>
           <div className="mb-4 text-center">
             <h1 className="mb-2 font-semibold text-gray-900 dark:text-white text-2xl">
-              {success ? "Check Your Email!" : "Forgot Password?"}
+              {success ? "Hãy kiểm tra Email của bạn!" : "Quên mật khẩu ?"}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {success
-                ? "We've sent a password reset code to your email address. Please check your inbox and follow the instructions."
-                : "Enter your email address and we'll send you a reset code."
+                ? "Chúng tôi đã gửi mã đặt lại mật khẩu đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư và làm theo hướng dẫn."
+                : "Nhập email của bạn để nhận mã khôi phục."
               }
             </p>
           </div>
@@ -170,10 +170,10 @@ export default function ForgotPasswordForm() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          Sending...
+                          Đang gửi ...
                         </div>
                       ) : (
-                        "Send Reset Code"
+                        "Gửi mã khôi phục"
                       )}
                     </button>
                   </div>
@@ -189,12 +189,12 @@ export default function ForgotPasswordForm() {
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-2 text-sm font-medium text-green-800 dark:text-green-400">
-                    Reset code sent successfully!
+                    Mã khôi phục mật khẩu đã được gửi thành công!
                   </span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Redirecting to sign in page in 3 seconds...
+                Trang đăng nhập sẽ được chuyển hướng sau 3 giây ...
               </p>
             </div>
           )}
@@ -203,7 +203,7 @@ export default function ForgotPasswordForm() {
               <svg className="mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15 18l-6-6 6-6" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Back to Login
+              Quay lại đăng nhập
             </Link>
           </div>
         </div>
