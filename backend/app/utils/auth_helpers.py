@@ -5,7 +5,7 @@ import jwt
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
-from constants.roles import get_role_menu, ROLE_MENUS
+from app.constants.roles import get_role_menu, ROLE_MENUS
 
 logger = logging.getLogger(__name__)
 
