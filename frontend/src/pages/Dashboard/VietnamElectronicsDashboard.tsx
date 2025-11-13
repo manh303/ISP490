@@ -31,10 +31,10 @@ export default function VietnamElectronicsDashboard() {
         setTimeout(() => {
           setPlatformData([
             { platform: 'Tiki', products: 1250, revenue: 2500000, growth: 12.5 },
-            { platform: 'Shopee', products: 980, revenue: 1900000, growth: 8.3 },
+            // { platform: 'Shopee', products: 980, revenue: 1900000, growth: 8.3 },
             { platform: 'Lazada', products: 750, revenue: 1500000, growth: -2.1 },
-            { platform: 'FPT Shop', products: 620, revenue: 1200000, growth: 15.7 },
-            { platform: 'Sendo', products: 450, revenue: 900000, growth: 5.2 },
+            // { platform: 'FPT Shop', products: 620, revenue: 1200000, growth: 15.7 },
+            // { platform: 'Sendo', products: 450, revenue: 900000, growth: 5.2 },
           ]);
 
           setPipelineStatus({

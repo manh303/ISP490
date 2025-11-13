@@ -1,212 +1,312 @@
-#!/usr/bin/env python3
-from datetime import datetime, timedelta
+# -*- coding: utf-8 -*-
 import os
+from pathlib import Path
+from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.bash import BashOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.operators.email import EmailOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.utils.dates import days_ago
+from airflow.sensors.python import PythonSensor
 
-DEFAULT_ARGS = {
-    "owner": "elt_team",
-    "depends_on_past": False,
-    "start_date": days_ago(1),
-    "email_on_failure": True,
-    "email_on_retry": False,
-    "retries": 0,
-}
+CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
 
-CONTAINER_TIKI = "/app/crawlers/tiki/tiki_crawler.py"
-CONTAINER_LAZADA = "/app/crawlers/lazada/runners/lazada_crawler.py"
-WIN_TIKI = r"C:\DoAn_FPT_FALL2025\ecommerce-dss-project\data-collection\crawlers\tiki\tiki_crawler.py"
-WIN_LAZADA = r"C:\DoAn_FPT_FALL2025\ecommerce-dss-project\data-collection\crawlers\lazada\runners\lazada_crawler.py"
+default_args = {"owner": "data_eng", "retries": 2, "retry_delay": timedelta(minutes=10)}
 
-CRAWLER_OUTPUT_DIR = os.environ.get("CRAWLER_DATA_PATH", "/app/data/outputs")
-CRAWLER_LOG_DIR = os.environ.get("CRAWLER_LOG_DIR", "/tmp/crawler_logs")
+SKIP_ML = os.getenv("SKIP_ML_MODELS", "false").lower() == "true"
 
-DB_HOST = os.environ.get("DB_HOST", "ecommerce-dss-project-postgres-1")
-DB_PORT = int(os.environ.get("DB_PORT", "5433"))
-DB_NAME = os.environ.get("DB_NAME", "ecommerce_dss")
-DB_USER = os.environ.get("DB_USER", "dss_user")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "dss_password_123")
-
-dag = DAG(
-    dag_id="tiki_lazada_elt_pipeline",
-    default_args=DEFAULT_ARGS,
-    description="Parallel crawl Tiki & Lazada then run ELT",
-    schedule_interval="0 3 * * *",
+with DAG(
+    dag_id="tiki_lazada_pipeline",
+    start_date=datetime(2025, 11, 1),
+    schedule_interval="0 10 * * *",
     catchup=False,
     max_active_runs=1,
-    tags=["ecommerce", "crawl", "elt", "tiki", "lazada"],
-)
+    default_args=default_args,
+    tags=["elt", "spark", "retail", "ml"],
+) as dag:
 
-def check_data_availability(**context):
-    import glob, os
-    from pathlib import Path
-    from datetime import datetime, timedelta
-    data_path = Path(CRAWLER_OUTPUT_DIR)
-    data_path.mkdir(parents=True, exist_ok=True)
-    all_files, recent_files = [], []
-    cutoff = datetime.now() - timedelta(hours=24)
-    for pattern in ("*.json", "*.csv"):
-        files = glob.glob(str(data_path / pattern))
-        all_files.extend(files)
-        for f in files:
-            try:
-                st = os.stat(f)
-                if datetime.fromtimestamp(st.st_mtime) > cutoff:
-                    recent_files.append(f)
-            except OSError:
-                pass
-    if not all_files:
-        return {"status": "no_data", "files": [], "total": 0}
-    if not recent_files:
-        recent_files = sorted(all_files, key=lambda p: os.path.getmtime(p), reverse=True)[:10]
-    return {"status": "ok", "files": recent_files, "total": len(all_files), "selected": len(recent_files)}
+    start = EmptyOperator(task_id="start")
 
-def run_elt_pipeline(**context):
-    return {"status": "elt_started"}
-
-def validate_data_quality(**context):
-    postgres_hook = PostgresHook(postgres_conn_id="postgres_default")
-    results = {}
-    try:
-        results["ods_products"] = int(postgres_hook.get_first("SELECT COUNT(*) FROM ods.products;")[0])
-    except Exception as e:
-        results["ods_products"] = f"ERROR: {e}"
-    return results
-
-# IMPORTANT: escape shell ${VAR} → ${{VAR}} to avoid str.format capturing them
-BASH_PREAMBLE = r"""
+    PREAMBLE = rf"""
 set -euo pipefail
 echo "Node: $(hostname)"
-echo "Python: $(which python)  $($([ -x "$(which python)" ] && python -V || echo N/A))"
-mkdir -p "{log_dir}" "{out_dir}"
-export CRAWLER_LOG_DIR="{log_dir}"
-export FORCE_CRAWLER_LOG_DIR="{log_dir}"
-export CRAWLER_OUTPUT_DIR="{out_dir}"
-# Chrome env if present; else webdriver-manager may fallback
+echo "Python path: $(command -v python)"; python -V 2>&1 || true
+mkdir -p "{CRAWLER_OUTPUT_DIR}" "/app/data/logs" "/tmp/crawler_logs"
+export CRAWLER_OUTPUT_DIR="{CRAWLER_OUTPUT_DIR}"
+export CRAWLER_LOG_DIR="/app/data/logs"
+export FORCE_CRAWLER_LOG_DIR="/tmp/crawler_logs"
 export CHROME_BIN="${{CHROME_BIN:-/usr/bin/chromium-browser}}"
 export CHROMEDRIVER_PATH="${{CHROMEDRIVER_PATH:-/usr/bin/chromedriver}}"
 export DISPLAY="${{DISPLAY:-:99}}"
+export LAZADA_PROFILE_DIR="${{LAZADA_PROFILE_DIR:-/app/data/.profiles/lazada}}"
+export TIKI_PROFILE_DIR="${{TIKI_PROFILE_DIR:-/app/data/.profiles/tiki}}"
+export LAZADA_HEADLESS="${{LAZADA_HEADLESS:-1}}"
 """
 
-TIKI_CMD = BASH_PREAMBLE + r"""
-if [ -f "{ct_path}" ]; then
-  SCRIPT="{ct_path}"
-  CWD="$(dirname "{ct_path}")"
-elif [ -f "{win_path}" ]; then
-  SCRIPT="{win_path}"
-  CWD="$(dirname "{win_path}")"
-else
-  echo "❌ Không tìm thấy Tiki crawler script"; exit 1
-fi
-export PYTHONPATH="${{PYTHONPATH:-}}:$CWD:/app/crawlers"
-echo "🚀 Tiki: $SCRIPT"
-echo "CWD    : $CWD"
-cd "$CWD"
+    crawl_lazada = BashOperator(
+        task_id="crawl_lazada",
+        bash_command=PREAMBLE + r"""
+SCRIPT="/app/crawlers/lazada/runners/lazada_with_cookies.py"
+pip install -q playwright 2>/dev/null || true
+playwright install chromium 2>/dev/null || true
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
 """
-
-LAZADA_CMD = BASH_PREAMBLE + r"""
-if [ -f "{ct_path}" ]; then
-  SCRIPT="{ct_path}"
-  CWD="$(dirname "{ct_path}")"
-elif [ -f "{win_path}" ]; then
-  SCRIPT="{win_path}"
-  CWD="$(dirname "{win_path}")"
-else
-  echo "❌ Không tìm thấy Lazada crawler script"; exit 1
-fi
-export PYTHONPATH="${{PYTHONPATH:-}}:$CWD:/app/crawlers:/app/crawlers/lazada"
-echo "🚀 Lazada: $SCRIPT"
-echo "CWD     : $CWD"
-cd "$CWD"
-python -u "$SCRIPT"
-"""
-
-with dag:
-    with TaskGroup(group_id="data_collection") as data_collection:
-        run_tiki = BashOperator(
-            task_id="run_tiki_crawler",
-            bash_command=TIKI_CMD.format(
-                log_dir=CRAWLER_LOG_DIR,
-                out_dir=CRAWLER_OUTPUT_DIR,
-                ct_path=CONTAINER_TIKI,
-                win_path=WIN_TIKI,
-            ),
-            execution_timeout=timedelta(hours=5),
-            doc_md="**Run Tiki crawler** (long running)",
-        )
-
-        run_lazada = BashOperator(
-            task_id="run_lazada_crawler",
-            bash_command=LAZADA_CMD.format(
-                log_dir=CRAWLER_LOG_DIR,
-                out_dir=CRAWLER_OUTPUT_DIR,
-                ct_path=CONTAINER_LAZADA,
-                win_path=WIN_LAZADA,
-            ),
-            execution_timeout=timedelta(hours=5),
-            doc_md="**Run Lazada crawler** (long running)",
-        )
-
-        check_data = PythonOperator(
-            task_id="check_data_availability",
-            python_callable=check_data_availability,
-            doc_md="**Check crawler outputs** in last 24h",
-        )
-        [run_tiki, run_lazada] >> check_data
-
-    with TaskGroup(group_id="database_setup") as database_setup:
-        create_schemas = PostgresOperator(
-            task_id="create_schemas",
-            postgres_conn_id="postgres_default",
-            sql="""
-            CREATE SCHEMA IF NOT EXISTS staging;
-            CREATE SCHEMA IF NOT EXISTS ods;
-            CREATE SCHEMA IF NOT EXISTS dwh;
-            CREATE SCHEMA IF NOT EXISTS marts;
-            CREATE SCHEMA IF NOT EXISTS control;
-            """,
-        )
-        create_tables = BashOperator(
-            task_id="create_tables",
-            bash_command=f"""
-            export PGPASSWORD='{DB_PASSWORD}'
-            psql -h {DB_HOST} -p {DB_PORT} -U {DB_USER} -d {DB_NAME} -f /app/schemas/ecommerce_schema.sql \
-              || echo "Schema file not found, continuing..."
-            """,
-        )
-        create_schemas >> create_tables
-
-    with TaskGroup(group_id="elt_processing") as elt_processing:
-        run_elt = PythonOperator(
-            task_id="run_elt_pipeline",
-            python_callable=run_elt_pipeline,
-            doc_md="Run ELT pipeline after crawling",
-        )
-        validate_quality = PythonOperator(
-            task_id="validate_data_quality",
-            python_callable=validate_data_quality,
-            doc_md="Validate data quality",
-        )
-        run_elt >> validate_quality
-
-    send_success = EmailOperator(
-        task_id="success_email",
-        to=["admin@company.com"],
-        subject="✅ Tiki-Lazada ELT Pipeline - Success {{ ds }}",
-        html_content="""
-        <h3>Pipeline Completed Successfully</h3>
-        <p><strong>Date:</strong> {{ ds }}</p>
-        <p><strong>Execution Time:</strong> {{ ts }}</p>
-        <p>Crawlers finished and ELT completed.</p>
-        """,
-        trigger_rule="all_success",
     )
 
-    data_collection >> database_setup >> elt_processing >> send_success
+    crawl_lazada_reviews = BashOperator(
+        task_id="crawl_lazada_reviews",
+        bash_command=PREAMBLE + r"""
+SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_crawler_airflow.py"
+pip install -q playwright 2>/dev/null || true
+playwright install chromium 2>/dev/null || true
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
+python -u "$SCRIPT"
+"""
+    )
+
+    crawl_tiki = BashOperator(
+        task_id="crawl_tiki",
+        bash_command=PREAMBLE + r"""
+SCRIPT="/app/crawlers/tiki/tiki_crawler.py"
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
+python -u "$SCRIPT"
+"""
+    )
+
+    crawl_tiki_reviews = BashOperator(
+        task_id="crawl_tiki_reviews",
+        bash_command=PREAMBLE + r"""
+SCRIPT="/app/crawlers/tiki/tiki_review_crawler.py"
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
+python -u "$SCRIPT"
+"""
+    )
+
+    def _raw_ready(**context):
+        from datetime import datetime as dt
+        run_date = dt.now().strftime("%Y-%m-%d")
+        need = [
+            Path(CRAWLER_OUTPUT_DIR) / "lazada" / f"date={run_date}",
+            Path(CRAWLER_OUTPUT_DIR) / "tiki" / f"date={run_date}",
+        ]
+        for base in need:
+            if not base.exists():
+                return False
+            if not any(p.suffix == ".jsonl" for p in base.rglob("*.jsonl")):
+                return False
+        return True
+
+    def _reviews_ready(**context):
+        from datetime import datetime as dt
+        run_date = dt.now().strftime("%Y-%m-%d")
+        lazada_reviews = Path(CRAWLER_OUTPUT_DIR) / "lazada_reviews" / f"date={run_date}"
+        tiki_reviews = Path(CRAWLER_OUTPUT_DIR) / "tiki_reviews" / f"date={run_date}"
+        
+        has_lazada = lazada_reviews.exists() and any(p.suffix == ".jsonl" for p in lazada_reviews.rglob("*.jsonl"))
+        has_tiki = tiki_reviews.exists() and any(p.suffix == ".jsonl" for p in tiki_reviews.rglob("*.jsonl"))
+        
+        return has_lazada or has_tiki
+
+    wait_raw_ready = PythonSensor(
+        task_id="wait_raw_ready",
+        python_callable=_raw_ready,
+        poke_interval=30,
+        timeout=1800,
+        mode="reschedule",
+    )
+
+    wait_reviews_ready = PythonSensor(
+        task_id="wait_reviews_ready",
+        python_callable=_reviews_ready,
+        poke_interval=30,
+        timeout=1800,
+        mode="reschedule",
+    )
+
+    load_to_stg = BashOperator(
+        task_id="load_to_stg",
+        bash_command=rf"""
+pip install -q psycopg2-binary 2>/dev/null || true
+export INCREMENTAL_LOAD=true
+python /app/src/staging/load_raw_data.py
+"""
+    )
+
+    create_ods_tables = BashOperator(
+        task_id="create_ods_tables",
+        bash_command=rf"""
+pip install -q psycopg2-binary 2>/dev/null || true
+psql postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss -f /app/src/spark_jobs/create_ods_tables.sql 2>/dev/null || \
+python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); cur=conn.cursor(); cur.execute(open('/app/src/spark_jobs/create_ods_tables.sql').read()); conn.commit(); conn.close(); print('✅ ODS tables created')"
+"""
+    )
+
+    truncate_ods = BashOperator(
+        task_id="truncate_ods",
+        bash_command=r"""
+pip install -q psycopg2-binary 2>/dev/null || true
+python -c "import psycopg2; from datetime import date; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); cur=conn.cursor(); today=date.today(); cur.execute('DELETE FROM ods_product_clean WHERE crawl_date = %s', (today,)); cur.execute('DELETE FROM ods_review_clean WHERE crawl_date = %s', (today,)); conn.commit(); conn.close(); print('✅ Today partition cleaned')"
+"""
+    )
+
+    transform_to_ods = BashOperator(
+        task_id="transform_to_ods",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --executor-cores 4 \
+  --executor-memory 4g \
+  --driver-memory 2g \
+  --conf spark.sql.session.timeZone=UTC \
+  --conf spark.sql.shuffle.partitions=200 \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/spark_jobs/ods_transformation.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    data_quality_check = BashOperator(
+        task_id="data_quality_check",
+        bash_command=rf"""
+python /app/src/standardization/data_quality.py
+"""
+    )
+
+    identifier_sync = BashOperator(
+        task_id="identifier_sync",
+        bash_command=rf"""
+python /app/src/standardization/identifier_sync.py
+"""
+    )
+
+    category_mapping = BashOperator(
+        task_id="category_mapping",
+        bash_command=rf"""
+python /app/src/standardization/category_mapping.py
+"""
+    )
+
+    technical_metadata = BashOperator(
+        task_id="technical_metadata",
+        bash_command=rf"""
+python /app/src/standardization/technical_metadata.py
+"""
+    )
+
+    build_dwh = BashOperator(
+        task_id="build_dwh",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --conf spark.sql.session.timeZone=UTC \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/spark_jobs/dwh_build.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    build_datamart = BashOperator(
+        task_id="build_datamart",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --conf spark.sql.session.timeZone=UTC \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/spark_jobs/datamart_build.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    ml_product_recommendation = BashOperator(
+        task_id="ml_product_recommendation",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --conf spark.sql.session.timeZone=UTC \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/ml_models/product_recommendation.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    ml_price_optimization = BashOperator(
+        task_id="ml_price_optimization",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --conf spark.sql.session.timeZone=UTC \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/ml_models/price_optimization.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    ml_demand_forecasting = BashOperator(
+        task_id="ml_demand_forecasting",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --conf spark.sql.session.timeZone=UTC \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/ml_models/demand_forecasting.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    ml_sales_forecasting = BashOperator(
+        task_id="ml_sales_forecasting",
+        bash_command=r"""
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --conf spark.sql.session.timeZone=UTC \
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \
+  /app/src/ml_models/sales_forecasting.py \
+  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-user dss_user \
+  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+"""
+    )
+
+    end = EmptyOperator(task_id="end")
+
+    # Parallel crawling
+    start >> [crawl_lazada, crawl_tiki]
+    crawl_lazada >> crawl_lazada_reviews
+    crawl_tiki >> crawl_tiki_reviews
+    [crawl_lazada, crawl_tiki] >> wait_raw_ready
+    [crawl_lazada_reviews, crawl_tiki_reviews] >> wait_reviews_ready
+    
+    # Parallel processing
+    [wait_raw_ready, wait_reviews_ready] >> load_to_stg >> create_ods_tables >> truncate_ods >> transform_to_ods >> data_quality_check
+    
+    # Parallel standardization
+    data_quality_check >> [category_mapping, identifier_sync, technical_metadata]
+    [category_mapping, identifier_sync, technical_metadata] >> build_dwh >> build_datamart
+    
+    # Parallel ML (all independent)
+    if SKIP_ML:
+        build_datamart >> end
+    else:
+        build_datamart >> [ml_product_recommendation, ml_price_optimization, ml_demand_forecasting, ml_sales_forecasting] >> end

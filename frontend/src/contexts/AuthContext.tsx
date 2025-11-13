@@ -15,7 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   signin: (credentials: SignInRequest) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: { full_name?: string; phone?: string }) => Promise<void>;
+  updateProfile: (data: { full_name?: string; phone?: string; email?: string }) => Promise<void>;
   changePassword: (data: { current_password: string; new_password: string }) => Promise<void>;
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
@@ -92,6 +92,55 @@ function normalizeUser(raw: any): UserProfile {
   return normalized;
 }
 
+/** Convert v1 profile response to UserProfile format */
+function convertV1ProfileToUserProfile(profileData: any): UserProfile {
+  const roleCode = String(profileData.role_code || '').toUpperCase();
+  
+  return {
+    user_id: String(profileData.user_id || '0'),
+    email: profileData.email || '',
+    full_name: profileData.full_name || '',
+    phone: profileData.phone || '',
+    status: profileData.status || 'inactive',
+    roles: [
+      {
+        role_id: '1',
+        role_code: roleCode,
+        role_name: profileData.role_name || roleCode,
+        description: 'System Role'
+      }
+    ],
+    permissions:
+      roleCode === 'ADMIN'
+        ? [
+            { perm_id: '1', perm_code: 'system.admin',    perm_name: 'System Administration', module: 'system',   action: 'admin' },
+            { perm_id: '2', perm_code: 'user.manage',     perm_name: 'User Management',       module: 'user',     action: 'manage' },
+            { perm_id: '3', perm_code: 'data.write',      perm_name: 'Write Data',            module: 'data',     action: 'write' },
+            { perm_id: '4', perm_code: 'analytics.view',  perm_name: 'View Analytics',        module: 'analytics',action: 'view' },
+            { perm_id: '5', perm_code: 'dss.dashboard',   perm_name: 'DSS Dashboard',         module: 'dss',      action: 'read' }
+          ]
+        : roleCode === 'ANALYST'
+        ? [
+            { perm_id: '3', perm_code: 'data.read',       perm_name: 'Read Data',             module: 'data',     action: 'read' },
+            { perm_id: '4', perm_code: 'analytics.view',  perm_name: 'View Analytics',        module: 'analytics',action: 'view' },
+            { perm_id: '6', perm_code: 'reports.generate',perm_name: 'Generate Reports',      module: 'reports',  action: 'generate' },
+            { perm_id: '5', perm_code: 'dss.dashboard',   perm_name: 'DSS Dashboard',         module: 'dss',      action: 'read' }
+          ]
+        : roleCode === 'DATAENGINEER'
+        ? [
+            { perm_id: '10', perm_code: 'data.pipeline',  perm_name: 'Data Pipeline',         module: 'data',     action: 'pipeline' },
+            { perm_id: '11', perm_code: 'etl.manage',     perm_name: 'ETL Management',        module: 'etl',      action: 'manage' },
+            { perm_id: '3', perm_code: 'data.write',      perm_name: 'Write Data',            module: 'data',     action: 'write' },
+            { perm_id: '12', perm_code: 'system.monitor', perm_name: 'System Monitoring',     module: 'system',   action: 'monitor' }
+          ]
+        : [
+            { perm_id: '7', perm_code: 'profile.view',    perm_name: 'View Profile',          module: 'profile',  action: 'view' },
+            { perm_id: '8', perm_code: 'orders.create',   perm_name: 'Create Orders',         module: 'orders',   action: 'create' },
+            { perm_id: '9', perm_code: 'data.read_own',   perm_name: 'Read Own Data',         module: 'data',     action: 'read_own' }
+          ]
+  };
+}
+
 /** Lưu user vào cookie `user_data` để các lần refresh vẫn có */
 function persistUser(user: UserProfile | null) {
   if (!user) {
@@ -138,8 +187,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshUserData = async () => {
     try {
       console.log('[Auth] refreshUserData: start');
+      
+      // Try new v1 API first
+      try {
+        const profileData = await authAPI.getMyProfile();
+        console.log('[Auth] v1 profile response:', profileData);
+        
+        // Convert v1 response to UserProfile format
+        const userProfile = convertV1ProfileToUserProfile(profileData);
+        console.log('[Auth] v1 profile converted:', userProfile);
+        
+        setUser(userProfile);
+        persistUser(userProfile);
+        return;
+      } catch (v1Error) {
+        console.warn('[Auth] v1 profile failed, falling back to old API:', v1Error);
+      }
+
+      // Fallback to old API
       const response = await authAPI.getProfile();
-      console.log('[Auth] profile raw response:', response);
+      console.log('[Auth] fallback profile raw response:', response);
 
       // Chấp nhận cả 2 dạng: {success, user} hoặc {success, data:{...}}
       const payload: any = response?.data ?? response;
@@ -148,7 +215,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!rawUser) throw new Error('No user in profile payload');
 
       const normalized = normalizeUser(rawUser);
-      console.log('[Auth] profile normalized:', normalized);
+      console.log('[Auth] fallback profile normalized:', normalized);
 
       setUser(normalized);
       persistUser(normalized);
@@ -269,19 +336,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (data: { full_name?: string; phone?: string }) => {
+  const updateProfile = async (data: { full_name?: string; phone?: string; email?: string }) => {
     try {
-      const response = await authAPI.updateProfile(data);
-      if (response.success && response.data) {
-        const normalized = normalizeUser(response.data);
-        setUser(normalized);
-        persistUser(normalized);
+      console.log('[Auth] updateProfile: start with data', data);
+      
+      // Sử dụng API mới v1/profile
+      const response = await authAPI.updateMyProfile(data);
+      console.log('[Auth] updateProfile: response', response);
+      
+      if (response.success) {
+        // Refresh user data từ server để có thông tin mới nhất
+        await refreshUserData();
+        console.log('[Auth] updateProfile: success, user data refreshed');
       } else {
         throw new Error(response.message || 'Update profile failed');
       }
     } catch (error: any) {
       console.error('Update profile error:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Update profile failed');
+      throw new Error(error.message || 'Update profile failed');
     }
   };
 
