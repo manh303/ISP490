@@ -29,15 +29,15 @@ export default function ResetPasswordForm() {
     const newErrors: {[key: string]: string} = {};
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = "Vui lòng nhập mật khẩu.";
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = "Mật khẩu phải có ít nhất 8 ký tự.";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Confirm password is required";
+      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = "Mật khẩu không khớp.";
     }
 
     setErrors(newErrors);
@@ -81,7 +81,7 @@ export default function ResetPasswordForm() {
           navigate("/password-reset-success");
         }, 3000);
       } else {
-        setTokenError(response.message || "Password reset failed. Please try again.");
+        setTokenError(response.message || "Đặt lại mật khẩu thất bại. Vui lòng thử lại.");
         showToast("❌ Password reset failed", "error");
       }
 
@@ -100,11 +100,11 @@ export default function ResetPasswordForm() {
 
       // Show specific error for common issues
       if (errorMessage.toLowerCase().includes('token') && errorMessage.toLowerCase().includes('expired')) {
-        errorMessage = 'Reset token has expired. Please request a new password reset.';
+        errorMessage = 'Mã khôi phục mật khẩu đã hết hạn. Xin vui lòng yêu cầu đặt lại mật khẩu mới.';
       } else if (errorMessage.toLowerCase().includes('token') && errorMessage.toLowerCase().includes('invalid')) {
-        errorMessage = 'Invalid reset token. Please check your token or request a new password reset.';
+        errorMessage = 'Mã khôi phục mật khẩu không hợp lệ. Xin vui lòng kiểm tra mã hoặc yêu cầu đặt lại mật khẩu mới.';
       } else if (errorMessage.toLowerCase().includes('password')) {
-        errorMessage = 'Password requirements not met. Please check your password.';
+        errorMessage = 'Mật khẩu chưa đúng yêu cầu. Vui lòng kiểm tra lại.';
       }
 
       setTokenError(errorMessage);
@@ -153,7 +153,7 @@ export default function ResetPasswordForm() {
             className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
           >
             <ChevronLeftIcon className="size-5" />
-            Back to home
+            Quay lại trang chủ
           </Link>
         </div>
         <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto text-center">
@@ -176,10 +176,10 @@ export default function ResetPasswordForm() {
               </div>
             </div>
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Missing Verification Info
+              Thiếu thông tin xác thực
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Email or OTP is missing. Please go back and verify your email again.
+              Email hoặc mã OTP chưa được cung cấp. Xin vui lòng quay lại và xác minh email của bạn.
             </p>
           </div>
           <div className="space-y-4">
@@ -187,13 +187,13 @@ export default function ResetPasswordForm() {
               to="/forgot-password"
               className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
             >
-              Go to Forgot Password
+              Đi tới Quên Mật Khẩu
             </Link>
             <Link
               to="/signin"
               className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
             >
-              Back to Sign In
+              Quay lại đăng nhập
             </Link>
           </div>
         </div>
@@ -209,18 +209,18 @@ export default function ResetPasswordForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Back to home
+          Quay lại trang chủ
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         {!isSuccess ? (
           <div>
-            <div className="mb-5 sm:mb-8">
+            <div className="mb-5 sm:mb-8 text-center">
               <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                Create New Password
+                Đặt lại mật khẩu
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                 Please enter a new password below.
+                 Xin hãy nhập mật khẩu mới vào ô bên dưới.
               </p>
             </div>
 
@@ -237,7 +237,7 @@ export default function ResetPasswordForm() {
                   <div>
                     <div className="relative">
                       <Input
-                        placeholder="Password"
+                        placeholder="Mật khẩu"
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
@@ -273,7 +273,7 @@ export default function ResetPasswordForm() {
                             passwordStrength.strength === 3 ? 'text-blue-500' :
                             'text-green-500'
                           }`}>
-                            Password strength: {passwordStrength.label}
+                            Độ mạnh: {passwordStrength.label}
                           </span>
                         </div>
                       </div>
@@ -293,7 +293,7 @@ export default function ResetPasswordForm() {
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your new password"
+                        placeholder="Nhập lại mật khẩu mới"
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                         error={!!errors.confirmPassword}
@@ -336,10 +336,10 @@ export default function ResetPasswordForm() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          Updating Password...
+                          Đang cập nhật mật khẩu mới ...
                         </>
                       ) : (
-                        "Update Password"
+                        "Cập nhật mật khẩu mới"
                       )}
                     </button>
                   </div>
@@ -348,12 +348,12 @@ export default function ResetPasswordForm() {
 
               <div className="mt-5">
                 <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                  Remember your password? {""}
+                  Bạn có nhớ mật khẩu của mình không ? {""}
                   <Link
                     to="/signin"
                     className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
-                    Sign In
+                    Đăng nhập
                   </Link>
                 </p>
               </div>
@@ -380,10 +380,10 @@ export default function ResetPasswordForm() {
                 </div>
               </div>
               <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                Password Updated!
+                Cập nhật mật khẩu thành công!
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Your password has been successfully updated. You will be redirected to sign in shortly.
+                Mật khẩu của bạn đã được cập nhật thành công. Trang đăng nhập sẽ được chuyển hướng đến bạn trong vài giây.
               </p>
             </div>
             <div className="space-y-4">
@@ -391,7 +391,7 @@ export default function ResetPasswordForm() {
                 to="/signin"
                 className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
               >
-                Continue to Sign In
+                Tiếp tục tới trang đăng nhập
               </Link>
             </div>
           </div>

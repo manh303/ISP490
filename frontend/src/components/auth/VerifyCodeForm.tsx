@@ -161,18 +161,18 @@ export default function VerifyCodeForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Back to home
+          Quay lại trang chủ
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="text-center">
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              {resetEmail ? 'Reset Password: Enter OTP' : verifyEmail ? 'Verify Email: Enter Code' : 'Verify Code'}
+              {resetEmail ? 'Vui lòng nhập mã OTP' : verifyEmail ? 'Verify Email: Enter Code' : 'Verify Code'}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {resetEmail
-                ? 'Enter the OTP code sent to your email to reset your password.'
+                ? 'Vui lòng nhập mã OTP được gửi đến email của bạn để khôi phục mật khẩu.'
                 : verifyEmail
                 ? 'Enter the verification code sent to your email to activate your account.'
                 : 'Enter the 6-digit code sent to your email.'}
@@ -235,10 +235,10 @@ export default function VerifyCodeForm() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Verifying...
+                      Đang xác thực ...
                     </>
                   ) : (
-                    "Verify"
+                    "Xác thực tài khoản"
                   )}
                 </button>
               </div>
@@ -257,11 +257,11 @@ export default function VerifyCodeForm() {
                       } transition-colors`}
                   >
                     {isResending ? (
-                      "Sending..."
+                      "Đang gửi..."
                     ) : countdown > 0 ? (
                       `Resend Code (${countdown}s)`
                     ) : (
-                      "Resend Code"
+                      "Gửi lại mã xác thực"
                     )}
                   </button>
                 </p>
@@ -274,7 +274,7 @@ export default function VerifyCodeForm() {
               className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             >
               <ChevronLeftIcon className="size-5" />
-              Back to Login
+              Quay lại đăng nhập
             </Link>
           </div>
           {/* Demo hint */}
