@@ -19,7 +19,7 @@ except ImportError:
     import sys
     import os
     sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-    from services.iam_service import IAMService
+    from app.services.iam_service import IAMService
 
 logger = logging.getLogger(__name__)
 
