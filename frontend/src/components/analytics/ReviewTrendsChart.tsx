@@ -84,7 +84,7 @@ export function ReviewTrendsChart({
                 <div className="flex items-center gap-2">
                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                   <span className="font-semibold text-gray-900">
-                    {trend.avg_rating.toFixed(2)}
+                    {trend?.avg_rating?.toFixed(2)}
                   </span>
                 </div>
               </div>

@@ -123,7 +123,7 @@ export const exampleGetReviewTrends = async (days: number = 30) => {
     data.data.forEach((trend) => {
       console.log(`Date: ${trend.date}`);
       console.log(`  Products Reviewed: ${trend.products_reviewed}`);
-      console.log(`  Avg Rating: ${trend.avg_rating.toFixed(2)}`);
+      console.log(`  Avg Rating: ${trend?.avg_rating?.toFixed(2)}`);
       console.log(`  Total Reviews: ${trend.total_reviews}`);
     });
     
@@ -279,7 +279,7 @@ export const exampleGetPlatformPriceComparison = async (category?: string) => {
     
     data.data.forEach((item) => {
       console.log(`\n${item.platform} - ${item.category}`);
-      console.log(`  Avg Price: ${item.avg_price.toLocaleString('vi-VN')} VND`);
+      console.log(`  Avg Price: ${item?.avg_price?.toLocaleString('vi-VN')} VND`);
       console.log(`  Min Price: ${item.min_price.toLocaleString('vi-VN')} VND`);
       console.log(`  Max Price: ${item.max_price.toLocaleString('vi-VN')} VND`);
       console.log(`  Products: ${item.product_count}`);

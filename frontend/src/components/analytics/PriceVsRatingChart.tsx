@@ -103,7 +103,7 @@ export function PriceVsRatingChart({
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                     <span className="text-xs font-medium text-gray-900">
-                      {product.rating_avg.toFixed(1)}
+                      {product?.rating_avg?.toFixed(1)}
                     </span>
                   </div>
                 </div>
@@ -122,7 +122,7 @@ export function PriceVsRatingChart({
               </div>
               
               <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-                <span>{product.review_count.toLocaleString('vi-VN')} đánh giá</span>
+                <span>{product?.review_count?.toLocaleString('vi-VN')} đánh giá</span>
                 <span className="capitalize">{product.category}</span>
               </div>
             </div>

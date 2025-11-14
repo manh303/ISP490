@@ -195,7 +195,7 @@ const SalesTrend: React.FC<SalesTrendProps> = ({ data, loading }) => {
                   {item.period}
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-900">
-                  {item.total_reviews.toLocaleString()}
+                  {item?.total_reviews?.toLocaleString()}
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-900">
                   <span className="flex items-center">

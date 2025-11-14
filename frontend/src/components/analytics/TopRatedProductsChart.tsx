@@ -45,7 +45,7 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
               </span>
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                <span className="font-semibold text-gray-900">{product.rating_avg.toFixed(1)}</span>
+                <span className="font-semibold text-gray-900">{product?.rating_avg?.toFixed(1)}</span>
               </div>
             </div>
             <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -55,7 +55,7 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
               />
             </div>
             <div className="flex justify-between text-xs text-gray-500">
-              <span>{product.review_count.toLocaleString('vi-VN')} đánh giá</span>
+              <span>{product?.review_count?.toLocaleString('vi-VN')} đánh giá</span>
               <span>{product.price.toLocaleString('vi-VN')} ₫</span>
             </div>
           </div>
