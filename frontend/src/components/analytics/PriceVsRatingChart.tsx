@@ -71,10 +71,10 @@ export function PriceVsRatingChart({
           </span>
         </div>
         <p className="text-xs text-gray-600">
-          Sản phẩm giá cao (≥4⭐): {(avgPriceHighRated / 1000000).toFixed(1)}M ₫
+          Sản phẩm giá cao (≥4⭐): {((avgPriceHighRated || 0) / 1000000).toFixed(1)}M ₫
         </p>
         <p className="text-xs text-gray-600">
-          Sản phẩm giá thấp (&lt;4⭐): {(avgPriceLowRated / 1000000).toFixed(1)}M ₫
+          Sản phẩm giá thấp (&lt;4⭐): {((avgPriceLowRated || 0) / 1000000).toFixed(1)}M ₫
         </p>
       </div>
 
@@ -97,13 +97,13 @@ export function PriceVsRatingChart({
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3 text-gray-500" />
                     <span className="text-xs font-medium text-gray-700">
-                      {(product.price / 1000000).toFixed(1)}M
+                       {((product.price || 0) / 1000000).toFixed(1)}M
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                     <span className="text-xs font-medium text-gray-900">
-                      {product.rating_avg.toFixed(1)}
+                        {(product.rating_avg || 0).toFixed(1)}
                     </span>
                   </div>
                 </div>
