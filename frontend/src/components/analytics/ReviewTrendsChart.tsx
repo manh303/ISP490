@@ -79,12 +79,12 @@ export function ReviewTrendsChart({
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">
-                  {trend.products_reviewed.toLocaleString('vi-VN')} sản phẩm
+                  {(trend.products_reviewed || 0).toLocaleString('vi-VN')} sản phẩm
                 </span>
                 <div className="flex items-center gap-2">
                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                   <span className="font-semibold text-gray-900">
-                    {trend.avg_rating.toFixed(2)}
+                    {(trend.avg_rating || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
