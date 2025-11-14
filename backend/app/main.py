@@ -27,10 +27,15 @@ from pydantic import field_validator
 from app.utils.validators import validate_phone, validate_password
 from app.constants.roles import ROLE_MENUS, get_role_menu
 
-# Setup logging FIRSTT
-import logging
+
+# Setup logging FIRST
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Ensure parent directory of `app` is on sys.path
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 try:
     from app.middleware.activity_middleware import ActivityLoggingMiddleware
@@ -44,17 +49,18 @@ except ImportError:
     except ImportError:
         ACTIVITY_AVAILABLE = False
         logger.warning("Activity logging not available")
-
+        
 try:
     from pydantic import field_validator
-    from utils.validators import validate_phone, validate_password
-    from constants.roles import ROLE_MENUS, get_role_menu
+    from .utils.validators import validate_phone, validate_password
+    from .constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
     VALIDATORS_AVAILABLE = False
     field_validator = lambda x: lambda f: f
     validate_phone = lambda x: x
-    validate_password = lambda x, **kwargs: x
+    def validate_password(x, **kwargs):
+        return x
     ROLE_MENUS = {}
     get_role_menu = lambda x: {}
 
@@ -347,13 +353,13 @@ try:
 except ImportError as e:
     logger.warning(f"Role Management routes not available: {e}")
 
-# Include ML Insights router
+# Include Unified ML Insights & Predictions router
 try:
-    from api.v1.ml_insights import router as ml_insights_router
-    app.include_router(ml_insights_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("ML Insights routes included")
+    from api.v1.ml_insights import router as ml_unified_router
+    app.include_router(ml_unified_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("✅ ML Unified (Insights & Predictions) routes included")
 except ImportError as e:
-    logger.warning(f"ML Insights routes not available: {e}")
+    logger.warning(f"ML Unified routes not available: {e}")
 
 # Include Analytics router
 try:
@@ -362,6 +368,30 @@ try:
     logger.info("Analytics routes included")
 except ImportError as e:
     logger.warning(f"Analytics routes not available: {e}")
+
+# Include Dashboard API (v1)
+try:
+    from api.v1.dashboard import router as dashboard_router
+    app.include_router(dashboard_router, prefix=f"{settings.API_V1_PREFIX}/dashboard", tags=["Dashboard"])
+    logger.info("Dashboard API routes included")
+except ImportError as e:
+    logger.warning(f"Dashboard API routes not available: {e}")
+
+# Include ML Serving API (v1)
+try:
+    from api.v1.ml_serving import router as ml_serving_router
+    app.include_router(ml_serving_router, prefix=f"{settings.API_V1_PREFIX}/ml", tags=["ML Serving"])
+    logger.info("ML Serving API routes included")
+except ImportError as e:
+    logger.warning(f"ML Serving API routes not available: {e}")
+
+# Include Reports API (v1)
+try:
+    from api.v1.reports import router as reports_router
+    app.include_router(reports_router, prefix=f"{settings.API_V1_PREFIX}/reports", tags=["Reports"])
+    logger.info("Reports API routes included")
+except ImportError as e:
+    logger.warning(f"Reports API routes not available: {e}")
 
 # Add CORS middleware
 app.add_middleware(

@@ -88,18 +88,19 @@ def clean_products(conn):
     with conn.cursor() as cur:
         cur.execute("""
             INSERT INTO ods_product_clean 
-            (global_product_id, product_name, brand_name, seller_name)
-            SELECT DISTINCT ON (global_product_id)
+            (global_product_id, source_platform, platform_product_id, product_name, brand_name, seller_name)
+            SELECT DISTINCT ON (source_platform || '_' || platform_product_id)
                 source_platform || '_' || platform_product_id as global_product_id,
+                source_platform,
+                platform_product_id,
                 TRIM(raw_data->>'product_name') as product_name,
                 COALESCE(TRIM(raw_data->>'brand'), 'Unknown') as brand_name,
                 raw_data->>'seller_name' as seller_name
             FROM stg_raw_products
             WHERE platform_product_id IS NOT NULL
-            ORDER BY global_product_id, crawled_at DESC
-            ON CONFLICT (global_product_id) DO UPDATE SET
-                product_name = EXCLUDED.product_name,
-                last_seen = NOW();
+            AND source_platform IS NOT NULL
+            ORDER BY source_platform || '_' || platform_product_id, crawled_at DESC
+            ON CONFLICT (global_product_id) DO NOTHING;
                 
             INSERT INTO ods_price_point
             (global_product_id, platform_sk, captured_at, price_current, price_original, discount_percent)
@@ -111,7 +112,8 @@ def clean_products(conn):
                 (raw_data->>'price_original')::DECIMAL,
                 (raw_data->>'discount_percent')::DECIMAL
             FROM stg_raw_products
-            WHERE platform_product_id IS NOT NULL;
+            WHERE platform_product_id IS NOT NULL
+            AND source_platform IS NOT NULL;
         """)
         count = cur.rowcount
         conn.commit()
