@@ -355,7 +355,7 @@ except ImportError as e:
 
 # Include Unified ML Insights & Predictions router
 try:
-    from .api.v1.ml_unified import router as ml_unified_router
+    from api.v1.ml_insights import router as ml_unified_router
     app.include_router(ml_unified_router, prefix=f"{settings.API_V1_PREFIX}")
     logger.info("✅ ML Unified (Insights & Predictions) routes included")
 except ImportError as e:
