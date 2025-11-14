@@ -79,8 +79,8 @@ export function RatingDistributionChart({
                 />
               </div>
               <div className="flex justify-between text-xs text-gray-500">
-                <span>Giá TB: {item.avg_price.toLocaleString('vi-VN')} ₫</span>
-                <span>{item.total_reviews.toLocaleString('vi-VN')} đánh giá</span>
+                <span>Giá TB: {item.avg_price ? item.avg_price.toLocaleString("vi-VN") : "N/A"} ₫</span>
+                <span>{(item.total_reviews || 0).toLocaleString('vi-VN')} đánh giá</span>
               </div>
             </div>
           );

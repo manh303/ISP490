@@ -42,7 +42,7 @@ export function PriceSegmentsChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-sm text-gray-600">
-          {totalProducts.toLocaleString('vi-VN')} sản phẩm
+          {(totalProducts || 0).toLocaleString('vi-VN')} sản phẩm
         </div>
       </div>
 
@@ -88,12 +88,12 @@ export function PriceSegmentsChart({
 
               <div className="flex justify-between text-xs text-gray-500">
                 <span>
-                  {segment.product_count.toLocaleString('vi-VN')} SP • 
+                  {(segment.product_count || 0).toLocaleString('vi-VN')} SP • 
                   <span className="text-yellow-600 ml-1">
                     {segment.high_rated} chất lượng cao ({highRatedPercentage}%)
                   </span>
                 </span>
-                <span>{segment.total_reviews.toLocaleString('vi-VN')} đánh giá</span>
+                <span>{(segment.total_reviews || 0).toLocaleString('vi-VN')} đánh giá</span>
               </div>
             </div>
           );

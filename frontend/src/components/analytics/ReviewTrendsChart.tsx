@@ -25,9 +25,9 @@ export function ReviewTrendsChart({
   }
 
   const latestData = data[data.length - 1] || data[0];
-  const avgRating = latestData?.avg_rating || 0;
-  const totalReviews = latestData?.total_reviews || 0;
-  const productsReviewed = latestData?.products_reviewed || 0;
+  const avgRating = (latestData?.avg_rating ?? 0);
+  const totalReviews = (latestData?.total_reviews ?? 0);
+  const productsReviewed = (latestData?.products_reviewed ?? 0);
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
@@ -54,7 +54,7 @@ export function ReviewTrendsChart({
             <span className="text-xs text-purple-700 font-medium">Tổng đánh giá</span>
           </div>
           <div className="text-2xl font-bold text-purple-900">
-            {totalReviews.toLocaleString('vi-VN')}
+            {(totalReviews || 0).toLocaleString('vi-VN')}
           </div>
         </div>
 
@@ -64,7 +64,7 @@ export function ReviewTrendsChart({
             <span className="text-xs text-green-700 font-medium">Sản phẩm</span>
           </div>
           <div className="text-2xl font-bold text-green-900">
-            {productsReviewed.toLocaleString('vi-VN')}
+            {(productsReviewed || 0).toLocaleString('vi-VN')}
           </div>
         </div>
       </div>
@@ -79,12 +79,12 @@ export function ReviewTrendsChart({
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">
-                  {trend.products_reviewed.toLocaleString('vi-VN')} sản phẩm
+                  {((trend.products_reviewed || 0) || 0).toLocaleString('vi-VN')} sản phẩm
                 </span>
                 <div className="flex items-center gap-2">
                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                   <span className="font-semibold text-gray-900">
-                    {trend.avg_rating.toFixed(2)}
+                    {(trend.avg_rating || 0).toFixed(2)}
                   </span>
                 </div>
               </div>

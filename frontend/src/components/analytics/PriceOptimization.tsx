@@ -164,10 +164,10 @@ const PriceOptimization: React.FC<PriceOptimizationProps> = ({ data, loading }) 
                   {item.product_name}
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-900">
-                  {item.current_price.toLocaleString()}đ
+                  {(item.current_price || 0).toLocaleString()}đ
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-900">
-                  {item.optimal_price.toLocaleString()}đ
+                  {(item.optimal_price || 0).toLocaleString()}đ
                 </td>
                 <td className="px-4 py-4 text-sm">
                   <span className={item.expected_margin_change > 0 ? 'text-green-600' : item.expected_margin_change < 0 ? 'text-red-600' : 'text-gray-600'}>
