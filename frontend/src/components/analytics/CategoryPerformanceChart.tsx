@@ -67,7 +67,7 @@ export function CategoryPerformanceChart({
                   <span className="text-blue-700 font-medium">Sản phẩm</span>
                 </div>
                 <div className="font-bold text-blue-900">
-                  {category.product_count.toLocaleString('vi-VN')}
+                  {(category.product_count || 0).toLocaleString('vi-VN')}
                 </div>
               </div>
 
