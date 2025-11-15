@@ -271,10 +271,6 @@ async def delete_user(
     admin_service: AdminService = Depends(get_admin_service)
 ):
     """
-    ⚠️ XÓA VĨNH VIỄN TÀI KHOẢN (KHÔNG THỂ HOÀN TÁC!)
-    
-    **CẢNH BÁO**: Hành động này sẽ xóa HOÀN TOÀN tài khoản và TẤT CẢ dữ liệu liên quan!
-    
     **Dữ liệu bị xóa bao gồm:**
     - Thông tin tài khoản
     - Vai trò (roles)
