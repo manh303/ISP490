@@ -156,18 +156,53 @@ class AdminService:
         return True
 
     async def delete_user(self, user_id: int) -> str:
-        """Delete user"""
+        """Delete user permanently - removes all related data"""
         user = await self.get_user_by_id(user_id)
         if not user:
             raise ValueError("User not found")
         
-        # Delete user roles first
-        await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
-        
-        # Delete user
-        await self.db.execute_query("DELETE FROM iam_user WHERE user_id = $1", (user_id,))
-        
-        return user['email']
+        try:
+            # Step 1: Delete user roles (iam_user_role)
+            await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+            logger.info(f"Deleted roles for user_id: {user_id}")
+            
+            # Step 2: Delete user sessions (if table exists)
+            try:
+                await self.db.execute_query("DELETE FROM iam_user_session WHERE user_id = $1", (user_id,))
+                logger.info(f"Deleted sessions for user_id: {user_id}")
+            except Exception as e:
+                logger.warning(f"Could not delete sessions (table may not exist): {e}")
+            
+            # Step 3: Delete activity logs (user_activity_logs)
+            try:
+                await self.db.execute_query("DELETE FROM user_activity_logs WHERE user_id = $1", (user_id,))
+                logger.info(f"Deleted activity logs for user_id: {user_id}")
+            except Exception as e:
+                logger.warning(f"Could not delete activity logs: {e}")
+            
+            # Step 4: Delete password reset tokens (if table exists)
+            try:
+                await self.db.execute_query("DELETE FROM iam_password_reset_token WHERE user_id = $1", (user_id,))
+                logger.info(f"Deleted password reset tokens for user_id: {user_id}")
+            except Exception as e:
+                logger.warning(f"Could not delete password reset tokens: {e}")
+            
+            # Step 5: Delete email verification tokens (if exists)
+            try:
+                await self.db.execute_query("DELETE FROM iam_email_verification_token WHERE email = $1", (user['email'],))
+                logger.info(f"Deleted email verification tokens for email: {user['email']}")
+            except Exception as e:
+                logger.warning(f"Could not delete email verification tokens: {e}")
+            
+            # Step 6: Finally, delete the user
+            await self.db.execute_query("DELETE FROM iam_user WHERE user_id = $1", (user_id,))
+            logger.info(f"✅ Successfully deleted user: {user['email']} (ID: {user_id})")
+            
+            return user['email']
+            
+        except Exception as e:
+            logger.error(f"❌ Error deleting user {user_id}: {e}")
+            raise Exception(f"Failed to delete user: {str(e)}")
 
     async def disable_user(self, user_id: int) -> bool:
         """Soft delete user - change status to disabled"""
