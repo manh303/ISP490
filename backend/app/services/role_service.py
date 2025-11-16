@@ -11,9 +11,9 @@ class RoleService:
     def __init__(self, db):
         self.db = db
 
-    async def get_roles(self, page: int = 1, limit: int = 20, active_only: bool = False) -> Tuple[List[Dict], int]:
+    async def get_roles(self, active_only: bool = False) -> Tuple[List[Dict], int]:
         """Get paginated list of roles"""
-        offset = (page - 1) * limit
+
         
         # Query with is_active column
         where_clause = "WHERE COALESCE(is_active, true) = true" if active_only else ""

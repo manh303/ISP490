@@ -48,7 +48,7 @@ class AdminService:
         """
         try:
             # Get user basic info
-            user_query = "SELECT * FROM iam_user WHERE user_id = $1"
+            user_query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
             user_result = await self.db.execute_query(user_query, (user_id,))
 
             if not user_result:
@@ -59,8 +59,8 @@ class AdminService:
             # Get user roles
             roles_query = """
                 SELECT r.role_id, r.role_code, r.role_name, r.description
-                FROM iam_role r
-                JOIN iam_user_role ur ON r.role_id = ur.role_id
+                FROM iam.iam_role r
+                JOIN iam.iam_user_role ur ON r.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
             roles_result = await self.db.execute_query(roles_query, (user_id,))
@@ -68,12 +68,14 @@ class AdminService:
             # Get user permissions
             permissions_query = """
                 SELECT DISTINCT p.perm_id, p.perm_code, p.perm_name, p.module, p.action, p.description
-                FROM iam_permission p
-                JOIN iam_role_permission rp ON p.perm_id = rp.perm_id
-                JOIN iam_user_role ur ON rp.role_id = ur.role_id
+                FROM iam.iam_permission p
+                JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
+                JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
             permissions_result = await self.db.execute_query(permissions_query, (user_id,))
+
+            primary_role = roles_result[0] if roles_result else None
 
             return {
                 'user_id': user['user_id'],
@@ -85,6 +87,10 @@ class AdminService:
                 'last_login_at': user['last_login_at'],
                 'created_at': user['created_at'],
                 'updated_at': user['updated_at'],
+                # Single role fields for UserResponse compatibility
+                'role_code': primary_role['role_code'] if primary_role else None,
+                'role_name': primary_role['role_name'] if primary_role else None,
+                # Full roles array for advanced usage
                 'roles': [
                     {
                         'role_id': role['role_id'],
