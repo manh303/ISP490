@@ -1,0 +1,62 @@
+agg_date,source_platform_std,category_lvl1,category_lvl2,category_lvl3,category_std,distinct_products,avg_price,min_price,max_price,total_review_count,year,month,day,day_of_week
+2025-11-16,tiki_mass_crawl,Electronics,Tablets,,Tablets,423,953990.0827423168,6100.0,18500000.0,947,2025,11,16,0
+2025-11-16,lazada,Electronics,Audio,Speakers,Speakers,272,5048059.62132353,20143.0,74990000.0,11808,2025,11,16,0
+2025-11-16,lazada,Electronics,Computers,Printers,Printers,273,3889273.358974359,75000.0,33582000.0,1199,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Wearables,Smartwatches,Smartwatches,158,1174555.417721519,27000.0,13890000.0,2438,2025,11,16,0
+2025-11-16,lazada,Electronics,TVs,Smart TVs,Smart TVs,1714,20853653.9789965,45540.0,219900000.0,3972,2025,11,16,0
+2025-11-16,lazada,Electronics,Computers,Accessories,Keyboard,44,2562493.272727273,60000.0,8999000.0,1026,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Computers,Monitors,Monitors,1440,1786925.8958333333,5700.0,61560000.0,11106,2025,11,16,0
+2025-11-16,lazada,Electronics,Mobile Phones,Smartphones,Smartphones,310,4640372.612903226,36900.0,53044000.0,501,2025,11,16,0
+2025-11-16,tiki,OTHER,,,OTHER,2326,0.0,0.0,0.0,0,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Computers,Accessories,Keyboard,652,1344609.0889570552,7000.0,19080000.0,4212,2025,11,16,0
+2025-11-16,lazada,Electronics,Computers,Monitors,Monitors,1922,3492339.404266389,1600.0,98990000.0,89202,2025,11,16,0
+2025-11-16,lazada,Electronics,Wearables,Smartwatches,Smartwatches,278,1766155.7302158272,12000.0,14800000.0,2912,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Computers,Laptops,Laptops,2190,941877.9429223745,26040.0,45299000.0,3844,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Cameras,,Cameras,1575,866548.8019047619,6000.0,48600000.0,5499,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Computers,Printers,Printers,1683,3001375.0718954247,5200.0,98990000.0,4129,2025,11,16,0
+2025-11-16,lazada,Electronics,Computers,Desktop,Desktop,696,4390204.219827586,7718.0,69000000.0,26453,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Computers,Desktop,Desktop,4,25951250.0,195000.0,98990000.0,48,2025,11,16,0
+2025-11-16,lazada,Electronics,Tablets,,Tablets,2211,2211770.7512437813,2300.0,63690000.0,131298,2025,11,16,0
+2025-11-16,lazada,Electronics,Computers,Laptops,Laptops,1099,3336265.263876251,7200.0,44390000.0,53570,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Audio,Speakers,Speakers,1500,3510966.638,13800.0,99110000.0,7922,2025,11,16,0
+2025-11-16,lazada,Electronics,Cameras,,Cameras,1832,1481599.58569869,25000.0,50025000.0,40715,2025,11,16,0
+2025-11-16,lazada,OTHER,,,OTHER,1380,6274405.099275363,1500.0,97990000.0,188342,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Audio,Headphones,Headphones,1748,549560.3941647598,3000.0,66000000.0,15298,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,TVs,Smart TVs,Smart TVs,1612,4255587.274193549,9800.0,99890000.0,1512,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Mobile Phones,Smartphones,Smartphones,1473,595224.5322471147,4900.0,40790000.0,2726,2025,11,16,0
+2025-11-16,lazada,Electronics,Audio,Earphones,Earphones,15,2432497.0,129690.0,19826000.0,93,2025,11,16,0
+2025-11-16,tiki_mass_crawl,OTHER,,,OTHER,1452,1476616.2837465564,7000.0,58000000.0,4750,2025,11,16,0
+2025-11-16,lazada,Electronics,Audio,Headphones,Headphones,2412,1192005.9191542289,5555.0,47500000.0,86746,2025,11,16,0
+2025-11-16,tiki_mass_crawl,Electronics,Computers,Accessories,Mouse,834,677273.4388489209,4750.0,20748000.0,5141,2025,11,16,0
+2025-11-16,lazada,Electronics,Computers,Accessories,Mouse,8,522613.375,24200.0,2700000.0,378,2025,11,16,0
+2025-11-15,tiki,OTHER,,,OTHER,308,0.0,0.0,0.0,0,2025,11,15,6
+2025-11-13,lazada,Electronics,Wearables,Smartwatches,Smartwatches,3114,1046510.4524727039,85.0,40515000.0,137787,2025,11,13,4
+2025-11-13,lazada,Electronics,Audio,Speakers,Speakers,178,1159074.8988764044,20000.0,9200000.0,10752,2025,11,13,4
+2025-11-13,lazada,Electronics,Audio,Headphones,Headphones,1313,680835.9207920792,7500.0,14226546.0,92466,2025,11,13,4
+2025-11-13,lazada,Electronics,Computers,Desktop,Desktop,9,1036858.8888888889,12400.0,7990000.0,109,2025,11,13,4
+2025-11-13,lazada,Electronics,Computers,Monitors,Monitors,26,6715326.153846154,161140.0,32990000.0,196,2025,11,13,4
+2025-11-13,lazada,Electronics,Cameras,,Cameras,288,4502721.298611111,230600.0,46990000.0,1037,2025,11,13,4
+2025-11-13,lazada,Electronics,Computers,Accessories,Keyboard,9,768333.3333333334,320000.0,1690000.0,14,2025,11,13,4
+2025-11-13,lazada,Electronics,Tablets,,Tablets,1555,1339542.0360128616,1.0,40990000.0,69448,2025,11,13,4
+2025-11-13,lazada,Electronics,Computers,Accessories,Mouse,1,1351547.0,1351547.0,1351547.0,0,2025,11,13,4
+2025-11-13,lazada,Electronics,Computers,Laptops,Laptops,3227,3421996.6383638056,2000.0,100000000.0,295957,2025,11,13,4
+2025-11-13,tiki,OTHER,,,OTHER,491,0.0,0.0,0.0,0,2025,11,13,4
+2025-11-13,lazada,Electronics,Mobile Phones,Smartphones,Smartphones,2113,3723700.5911026974,3000.0,47479000.0,86363,2025,11,13,4
+2025-11-13,lazada,Electronics,Audio,Earphones,Earphones,3,679597.3333333334,124022.0,1350770.0,47,2025,11,13,4
+2025-11-12,tiki,OTHER,,,OTHER,698,0.0,0.0,0.0,0,2025,11,12,3
+2025-11-11,lazada,Electronics,Computers,Accessories,Keyboard,1,694475.0,694475.0,694475.0,5,2025,11,11,2
+2025-11-11,lazada,Electronics,Tablets,,Tablets,167,2491533.2694610776,13300.0,40600000.0,2656,2025,11,11,2
+2025-11-11,lazada,Electronics,Mobile Phones,Smartphones,Smartphones,182,3091935.087912088,298000.0,46690000.0,2438,2025,11,11,2
+2025-11-11,lazada,Electronics,Computers,Laptops,Laptops,131,5186449.961832061,15000.0,42690000.0,1963,2025,11,11,2
+2025-11-11,lazada,Electronics,Wearables,Smartwatches,Smartwatches,847,1408800.8819362456,9800.0,97217000.0,6782,2025,11,11,2
+2025-11-11,lazada,Electronics,Audio,Headphones,Headphones,756,427556.9880952381,14000.0,10600000.0,21120,2025,11,11,2
+2025-11-11,lazada,Electronics,Audio,Speakers,Speakers,10,739772.0,132000.0,1200000.0,19,2025,11,11,2
+2025-11-11,lazada,Electronics,Computers,Monitors,Monitors,1,708300.0,708300.0,708300.0,0,2025,11,11,2
+2025-11-11,lazada,Electronics,Audio,Earphones,Earphones,3,149602.33333333334,57610.0,303000.0,0,2025,11,11,2
+2025-11-11,lazada,Electronics,Cameras,,Cameras,16,2553373.5625,1047000.0,12345000.0,212,2025,11,11,2
+2025-11-10,lazada,Electronics,Mobile Phones,Smartphones,Smartphones,127,14140307.905511811,577500.0,28913581.0,274207,2025,11,10,1
+2025-11-10,lazada,Electronics,Cameras,,Cameras,1,693000.0,693000.0,693000.0,0,2025,11,10,1
+2025-11-10,lazada,Electronics,Wearables,Smartwatches,Smartwatches,120,7382334.116666666,1788435.0,14722998.0,281144,2025,11,10,1
+2025-11-10,lazada,Electronics,Computers,Laptops,Laptops,120,21489070.35,8639408.0,38980984.0,298730,2025,11,10,1
+2025-11-10,lazada,Electronics,Audio,Headphones,Headphones,120,3499621.091666667,436482.0,7773346.0,294801,2025,11,10,1
+2025-11-10,lazada,Electronics,Tablets,,Tablets,122,12793599.918032788,686000.0,23640567.0,297782,2025,11,10,1

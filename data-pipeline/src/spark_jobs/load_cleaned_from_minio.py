@@ -44,9 +44,21 @@ from pyspark.sql.functions import (
     min as spark_min,
     max as spark_max,
     sum as spark_sum,
+    count,
+    year,
+    month,
+    dayofmonth,
+    dayofweek,
+    row_number,
 )
+from pyspark.sql.window import Window
 from pyspark.sql.types import DoubleType, LongType, StringType
 from pyspark.sql.functions import udf
+
+try:
+    from textblob import TextBlob
+except ImportError:
+    TextBlob = None
 
 load_dotenv()
 
@@ -71,6 +83,7 @@ S3_SECRET_KEY = MINIO_SECRET_KEY
 
 CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
 MINIO_CLEANED_BUCKET = os.getenv("MINIO_CLEANED_BUCKET", "cleaned-data")
+MINIO_PROCESSED_REVIEWS_BUCKET = os.getenv("MINIO_PROCESSED_REVIEWS_BUCKET", "processed-reviews")
 SAVE_TO_MINIO = os.getenv("SAVE_TO_MINIO", "true").lower() == "true"
 
 # --------------------------
@@ -1031,6 +1044,839 @@ def save_cleaned_data(df, spark):
 
 
 # ============================================================
+#  STEP 8 – Load Review Data (Local + MinIO)
+# ============================================================
+def load_review_data(spark):
+    print("\n" + "=" * 60)
+    print(" STEP 8: LOADING REVIEW DATA (LOCAL + MINIO)")
+    print("=" * 60)
+
+    import glob
+    import os as os_module
+
+    dfs = []
+
+    # Load từ local directories - with date subdirectories
+    local_base = f"{CRAWLER_OUTPUT_DIR}"
+    review_dirs = ["tiki_reviews", "lazada_reviews"]
+
+    for review_dir in review_dirs:
+        local_path = f"{local_base}/{review_dir}"
+        if os_module.path.exists(local_path):
+            print(f"\n[INFO] Loading from {local_path}")
+            try:
+                # Search for JSON/JSONL files in date subdirectories
+                json_files = []
+                
+                # Pattern 1: date=*/*.json or date=*/*.jsonl
+                json_files.extend(glob.glob(f"{local_path}/date=*/*.json", recursive=False))
+                json_files.extend(glob.glob(f"{local_path}/date=*/*.jsonl", recursive=False))
+                
+                # Pattern 2: date=**/*.json (deeper nesting)
+                if not json_files:
+                    json_files.extend(glob.glob(f"{local_path}/**/*.json", recursive=True))
+                    json_files.extend(glob.glob(f"{local_path}/**/*.jsonl", recursive=True))
+                
+                # Pattern 3: direct files in root
+                if not json_files:
+                    json_files.extend(glob.glob(f"{local_path}/*.json"))
+                    json_files.extend(glob.glob(f"{local_path}/*.jsonl"))
+
+                if json_files:
+                    print(f"   Found {len(json_files)} JSON/JSONL files")
+                    print(f"   Sample files: {json_files[:3]}")
+                    # Load all files and union them
+                    df_local = spark.read.option("inferSchema", "true").json(json_files)
+                    df_local = df_local.withColumn(
+                        "source_platform",
+                        lit(review_dir.replace("_reviews", ""))
+                    )
+                    dfs.append(df_local)
+                    print(f"   ✓ Loaded {df_local.count():,} reviews from {review_dir}")
+                else:
+                    print(f"   ⚠ No JSON/JSONL files found in {local_path}")
+                    print(f"      Directory contents: {os_module.listdir(local_path) if os_module.path.exists(local_path) else 'directory does not exist'}")
+                    # Check inside date subdirectories
+                    for date_dir in os_module.listdir(local_path):
+                        date_path = os_module.path.join(local_path, date_dir)
+                        if os_module.path.isdir(date_path):
+                            contents = os_module.listdir(date_path)
+                            print(f"      {date_dir}: {contents[:5]}")
+            except Exception as e:
+                print(f"   ✗ Error: {e}")
+                import traceback
+                traceback.print_exc()
+
+    if not dfs:
+        print(" ⚠ No review data found - skipping review pipeline")
+        return None
+
+    # Normalize and union schemas
+    print("\n[INFO] Normalizing schemas for union...")
+    normalized_dfs = []
+    
+    for idx, df in enumerate(dfs):
+        print(f"\n  DataFrame {idx} columns: {df.columns}")
+        df.printSchema()
+        
+        # Normalize Tiki reviews schema
+        if idx == 0:  # tiki_reviews
+            df_norm = (
+                df
+                .withColumn("review_id", col("review_id").cast("string"))
+                .withColumn("product_id", col("product_id").cast("string"))
+                .withColumn("reviewer_name", coalesce(col("reviewer_name"), lit("Anonymous")))
+                .withColumn("rating", col("rating").cast(DoubleType()))
+                .withColumn("review_text", coalesce(col("content"), col("title"), lit("")))
+                .withColumn("review_date", coalesce(col("crawl_date"), lit("")))
+                .withColumn("images", col("images").cast("string"))  # Convert array to string
+                .select(
+                    col("review_id"),
+                    col("product_id"),
+                    col("reviewer_name"),
+                    col("rating"),
+                    col("review_text"),
+                    col("review_date"),
+                    col("helpful_count"),
+                    lit(False).alias("verified_purchase"),
+                    col("source_platform"),
+                    col("images").alias("extra_data"),
+                    col("crawl_date")
+                )
+            )
+        else:  # lazada_reviews
+            df_norm = (
+                df
+                .withColumn("review_id", col("review_id").cast("string"))
+                .withColumn("product_id", col("product_id").cast("string"))
+                .withColumn("reviewer_name", coalesce(col("reviewer_name"), lit("Anonymous")))
+                .withColumn("rating", col("rating").cast(DoubleType()))
+                .withColumn("review_text", coalesce(col("review_text"), col("product_name"), lit("")))
+                .withColumn("review_date", coalesce(col("review_date"), col("crawl_timestamp"), lit("")))
+                .select(
+                    col("review_id"),
+                    col("product_id"),
+                    col("reviewer_name"),
+                    col("rating"),
+                    col("review_text"),
+                    col("review_date"),
+                    col("helpful_count"),
+                    lit(False).alias("verified_purchase"),
+                    col("source_platform"),
+                    col("sku_info").alias("extra_data"),
+                    col("crawl_timestamp").alias("crawl_date")
+                )
+            )
+        
+        normalized_dfs.append(df_norm)
+    
+    # Union all normalized dataframes
+    df_reviews = normalized_dfs[0]
+    for d in normalized_dfs[1:]:
+        df_reviews = df_reviews.union(d)
+
+    print(f"\n ✓ Total loaded: {df_reviews.count():,} raw reviews")
+    print(f"   Final schema: {df_reviews.columns}")
+    return df_reviews
+
+
+# ============================================================
+#  STEP 8.1 – Clean Review Data
+# ============================================================
+def clean_review_data(df_reviews):
+    print("\n" + "=" * 60)
+    print(" STEP 8.1: CLEANING REVIEW DATA")
+    print("=" * 60)
+
+    if df_reviews is None:
+        return None
+
+    df_clean = (
+        df_reviews
+        .withColumn(
+            "review_id",
+            when(col("review_id").isNotNull(), trim(col("review_id").cast("string")))
+            .otherwise(lit(None)),
+        )
+        .withColumn(
+            "product_id",
+            when(col("product_id").isNotNull(), trim(col("product_id").cast("string")))
+            .otherwise(lit(None)),
+        )
+        .withColumn(
+            "reviewer_name",
+            when(col("reviewer_name").isNotNull(), trim(col("reviewer_name")))
+            .otherwise("Anonymous"),
+        )
+        .withColumn(
+            "rating",
+            when(col("rating").isNotNull(), col("rating").cast(DoubleType()))
+            .otherwise(0.0),
+        )
+        .withColumn(
+            "review_text",
+            when(col("review_text").isNotNull(), trim(col("review_text")))
+            .otherwise(""),
+        )
+        .withColumn(
+            "review_date",
+            when(col("review_date").isNotNull(), col("review_date"))
+            .otherwise(col("crawl_date")),
+        )
+        .withColumn(
+            "helpful_count",
+            when(col("helpful_count").isNotNull(), col("helpful_count").cast(LongType()))
+            .otherwise(0),
+        )
+        .withColumn(
+            "verified_purchase",
+            when(col("verified_purchase").isNotNull(), col("verified_purchase"))
+            .otherwise(False),
+        )
+    )
+
+    print(f" ✓ Cleaned {df_clean.count():,} reviews")
+    return df_clean
+
+
+# ============================================================
+#  STEP 8.1.5 – Standardize Review Data
+# ============================================================
+def standardize_review_data(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.1.5: STANDARDIZING REVIEW DATA")
+    print("=" * 60)
+
+    if df is None:
+        return None
+
+    df_std = (
+        df
+        .withColumn(
+            "source_platform_std",
+            when(col("source_platform").isNotNull(),
+                 lower(trim(col("source_platform")))).otherwise(lit("unknown")),
+        )
+        .withColumn(
+            "reviewer_name_std",
+            when(col("reviewer_name").isNotNull(),
+                 trim(col("reviewer_name"))).otherwise("Anonymous"),
+        )
+        .withColumn(
+            "review_text_std",
+            when(col("review_text").isNotNull(),
+                 regexp_replace(trim(col("review_text")), r"\s+", " "))
+            .otherwise(""),
+        )
+        .withColumn(
+            "rating_std",
+            col("rating").cast(DoubleType()),
+        )
+    )
+
+    print(f"\n ✓ Standardized {df_std.count():,} reviews")
+    return df_std
+
+
+# ============================================================
+#  STEP 8.1.7 – Synchronize Review Identifiers
+# ============================================================
+def synchronize_review_identifiers(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.1.7: SYNCHRONIZING REVIEW IDENTIFIERS")
+    print("=" * 60)
+
+    if df is None:
+        return None
+
+    df_id = (
+        df
+        .withColumn(
+            "review_id_std",
+            when(col("review_id").isNotNull(), trim(col("review_id").cast("string")))
+            .otherwise(lit(None)),
+        )
+        .withColumn(
+            "product_id_std",
+            when(col("product_id").isNotNull(), trim(col("product_id").cast("string")))
+            .otherwise(lit(None)),
+        )
+        .withColumn(
+            "global_review_id",
+            when(
+                col("review_id_std").isNotNull(),
+                concat(col("source_platform_std"), lit("_"), col("review_id_std")),
+            ).otherwise(lit(None)),
+        )
+        .withColumn(
+            "global_product_id",
+            when(
+                col("product_id_std").isNotNull(),
+                concat(col("source_platform_std"), lit("_"), col("product_id_std")),
+            ).otherwise(lit(None)),
+        )
+    )
+
+    print(f"\n ✓ Synchronized identifiers for {df_id.count():,} reviews")
+    return df_id
+
+
+# ============================================================
+#  STEP 8.1.8 – Deduplicate Review Data
+# ============================================================
+def deduplicate_review_data(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.1.8: DEDUPLICATING REVIEW DATA")
+    print("=" * 60)
+
+    if df is None:
+        return None
+
+    before_count = df.count()
+
+    # Deduplicate by global_review_id, keep latest by review_date
+    df_dedup = (
+        df
+        .withColumn("review_date_parsed", to_timestamp(col("review_date")))
+        .withColumn(
+            "row_num",
+            row_number().over(
+                Window.partitionBy("global_review_id").orderBy(
+                    col("review_date_parsed").desc_nulls_last()
+                )
+            ),
+        )
+        .filter(col("row_num") == 1)
+        .drop("row_num", "review_date_parsed")
+    )
+
+    after_count = df_dedup.count()
+    duplicates = before_count - after_count
+
+    print(f"\n ✓ Deduplication Summary:")
+    print(f"   Before: {before_count:,}")
+    print(f"   After: {after_count:,}")
+    print(f"   Duplicates removed: {duplicates:,} ({100*duplicates/before_count:.2f}%)")
+
+    return df_dedup
+
+
+# ============================================================
+#  STEP 8.1.9 – Validate Review Data
+# ============================================================
+def validate_review_data(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.1.9: VALIDATING REVIEW DATA")
+    print("=" * 60)
+
+    if df is None:
+        return
+
+    total = df.count()
+    valid_reviews = df.filter(
+        col("review_id_std").isNotNull() & 
+        (col("rating_std") >= 1.0) & 
+        (col("rating_std") <= 5.0)
+    ).count()
+
+    print(f"\n ✓ Validation Summary:")
+    print(f"   Total reviews: {total:,}")
+    print(f"   Valid reviews: {valid_reviews:,} ({100*valid_reviews/total:.2f}%)")
+    print(f"   Invalid reviews: {total - valid_reviews:,}")
+
+
+# ============================================================
+#  STEP 8.2 – Sentiment Analysis
+# ============================================================
+def analyze_sentiment(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.2: SENTIMENT ANALYSIS")
+    print("=" * 60)
+
+    if df is None:
+        return df
+
+    if TextBlob is None:
+        print(" ⚠ TextBlob not available, using default sentiment values")
+        # Add default sentiment columns
+        df_sentiment = (
+            df
+            .withColumn("sentiment_score", lit(0.0))
+            .withColumn("sentiment_label", lit("neutral"))
+            .withColumn("is_positive_review", lit(0))
+            .withColumn("is_negative_review", lit(0))
+            .withColumn("is_neutral_review", lit(1))
+        )
+        print(" ✓ Added default sentiment columns")
+        return df_sentiment
+
+    def _get_sentiment_score(text: str):
+        if not text or len(str(text).strip()) == 0:
+            return 0.0
+        try:
+            blob = TextBlob(str(text))
+            return float(blob.sentiment.polarity)
+        except:
+            return 0.0
+
+    def _get_sentiment_label(score: float):
+        if score < -0.1:
+            return "negative"
+        elif score > 0.1:
+            return "positive"
+        else:
+            return "neutral"
+
+    sentiment_udf = udf(_get_sentiment_score, DoubleType())
+    label_udf = udf(_get_sentiment_label, StringType())
+
+    df_sentiment = (
+        df
+        .withColumn("sentiment_score", sentiment_udf(col("review_text")))
+        .withColumn("sentiment_label", label_udf(col("sentiment_score")))
+        .withColumn(
+            "is_positive_review",
+            when(col("sentiment_score") > 0.1, 1).otherwise(0)
+        )
+        .withColumn(
+            "is_negative_review",
+            when(col("sentiment_score") < -0.1, 1).otherwise(0)
+        )
+        .withColumn(
+            "is_neutral_review",
+            when((col("sentiment_score") >= -0.1) & (col("sentiment_score") <= 0.1), 1)
+            .otherwise(0)
+        )
+    )
+
+    print(" ✓ Sentiment Distribution:")
+    for row in df_sentiment.groupBy("sentiment_label").count().orderBy("sentiment_label").collect():
+        print(f"   {row['sentiment_label'].upper():10s}: {row['count']:>10,}")
+
+    return df_sentiment
+
+
+# ============================================================
+#  STEP 8.3 – Add Time Features
+# ============================================================
+def add_review_time_features(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.3: ADDING TIME FEATURES")
+    print("=" * 60)
+
+    df_time = (
+        df
+        .withColumn("review_date_fmt", to_date(col("review_date")))
+        .withColumn("review_year", year(col("review_date_fmt")))
+        .withColumn("review_month", month(col("review_date_fmt")))
+        .withColumn("review_day", dayofmonth(col("review_date_fmt")))
+        .withColumn("review_dow", dayofweek(col("review_date_fmt")))
+    )
+
+    print(f" ✓ Added time features")
+    return df_time
+
+
+# ============================================================
+#  STEP 8.4 – Load Review Dimensions to DWH
+# ============================================================
+def load_review_dimensions_to_dwh(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.4: LOADING REVIEW DIMENSIONS TO DWH")
+    print("=" * 60)
+
+    if df is None:
+        return
+
+    try:
+        import psycopg2
+        from psycopg2.extras import execute_batch
+        
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+        )
+        cur = conn.cursor()
+
+        # Dimension: dim_reviewer
+        reviewer_df = (
+            df.select(col("reviewer_name_std").alias("reviewer_name"), col("source_platform_std"))
+            .distinct()
+            .limit(100000)
+        ).toPandas()
+
+        if not reviewer_df.empty:
+            dim_reviewer_table = f"{DWH_SCHEMA}.dim_reviewer"
+            create_table_sql = f"""
+                CREATE TABLE IF NOT EXISTS {dim_reviewer_table} (
+                    reviewer_id SERIAL PRIMARY KEY,
+                    reviewer_name VARCHAR(500),
+                    source_platform VARCHAR(50),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(reviewer_name, source_platform)
+                );
+            """
+            cur.execute(create_table_sql)
+            conn.commit()
+
+            insert_sql = f"""
+                INSERT INTO {dim_reviewer_table} (reviewer_name, source_platform)
+                VALUES (%s, %s)
+                ON CONFLICT (reviewer_name, source_platform) DO NOTHING
+            """
+            rows = [(row['reviewer_name'], row['source_platform_std']) for _, row in reviewer_df.iterrows()]
+            execute_batch(cur, insert_sql, rows, page_size=1000)
+            conn.commit()
+            print(f" ✓ Loaded {len(rows)} reviewers to {dim_reviewer_table}")
+
+        cur.close()
+        conn.close()
+
+    except ImportError:
+        print("[WARN] psycopg2 not available, skipping dimension load")
+    except Exception as e:
+        print(f" Error loading review dimensions: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+# ============================================================
+#  STEP 8.5 – Aggregate Reviews Daily
+# ============================================================
+def aggregate_reviews_daily(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.5: AGGREGATING REVIEWS DAILY")
+    print("=" * 60)
+
+    if df is None:
+        return None
+
+    # Check if sentiment columns exist
+    has_sentiment = all(col_name in df.columns for col_name in ["sentiment_score", "is_positive_review", "is_negative_review", "is_neutral_review"])
+    
+    # Filter out rows with NULL review_date before creating review_date_fmt
+    df_filtered = df.filter(col("review_date").isNotNull())
+    df_with_date = df_filtered.withColumn("review_date_fmt", to_date(col("review_date")))
+
+    # Build aggregation dynamically
+    agg_dict = {
+        "review_id": "count",
+        "rating_std": "avg",
+        "helpful_count": "sum",
+    }
+    
+    # Add sentiment aggregations if available
+    if has_sentiment:
+        agg_dict.update({
+            "sentiment_score": "avg",
+            "is_positive_review": "sum",
+            "is_negative_review": "sum",
+            "is_neutral_review": "sum",
+        })
+
+    df_agg = (
+        df_with_date
+        .groupBy("review_date_fmt", "global_product_id", "source_platform_std")
+        .agg(
+            count("review_id").alias("total_reviews"),
+            avg("rating_std").alias("avg_rating"),
+            count(when(col("rating_std") == 5.0, 1)).alias("five_star_count"),
+            count(when(col("rating_std") == 4.0, 1)).alias("four_star_count"),
+            count(when(col("rating_std") == 3.0, 1)).alias("three_star_count"),
+            count(when(col("rating_std") == 2.0, 1)).alias("two_star_count"),
+            count(when(col("rating_std") == 1.0, 1)).alias("one_star_count"),
+            *(
+                [
+                    avg("sentiment_score").alias("avg_sentiment_score"),
+                    spark_sum("is_positive_review").alias("positive_reviews"),
+                    spark_sum("is_negative_review").alias("negative_reviews"),
+                    spark_sum("is_neutral_review").alias("neutral_reviews"),
+                ] if has_sentiment else [
+                    lit(0.0).alias("avg_sentiment_score"),
+                    lit(0).alias("positive_reviews"),
+                    lit(0).alias("negative_reviews"),
+                    lit(0).alias("neutral_reviews"),
+                ]
+            ),
+            spark_sum("helpful_count").alias("total_helpful_count"),
+        )
+    )
+
+    # Add percentage columns
+    df_agg = (
+        df_agg
+        .withColumn(
+            "negative_sentiment_pct",
+            when(col("total_reviews") > 0,
+                 (col("negative_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+            .otherwise(0.0),
+        )
+        .withColumn(
+            "positive_sentiment_pct",
+            when(col("total_reviews") > 0,
+                 (col("positive_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+            .otherwise(0.0),
+        )
+        .withColumn(
+            "review_quality_score",
+            when(col("avg_sentiment_score") > 0.1, 1.0)
+            .when(col("avg_sentiment_score") < -0.1, 0.5)
+            .otherwise(0.75),
+        )
+    )
+
+    # Select final columns in order
+    final_cols = [
+        col("review_date_fmt").alias("agg_date"),
+        col("global_product_id"),
+        col("source_platform_std"),
+        col("total_reviews"),
+        col("avg_rating"),
+        col("five_star_count"),
+        col("four_star_count"),
+        col("three_star_count"),
+        col("two_star_count"),
+        col("one_star_count"),
+        col("avg_sentiment_score"),
+        col("positive_reviews"),
+        col("negative_reviews"),
+        col("neutral_reviews"),
+        col("positive_sentiment_pct"),
+        col("negative_sentiment_pct"),
+        col("total_helpful_count"),
+        col("review_quality_score"),
+    ]
+
+    df_agg = df_agg.select(*final_cols)
+    
+    # Filter out any remaining NULL agg_date values before returning
+    df_agg = df_agg.filter(col("agg_date").isNotNull())
+
+    print(f" ✓ Generated daily aggregates for {df_agg.count():,} product-date combinations")
+    return df_agg
+
+
+# ============================================================
+#  STEP 8.6 – Load Review Aggregation to DWH
+# ============================================================
+def load_review_aggregation_to_dwh(agg_df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.6: LOADING REVIEW AGGREGATION TO DWH")
+    print("=" * 60)
+
+    if agg_df is None:
+        return
+
+    try:
+        import psycopg2
+        from psycopg2.extras import execute_batch
+        
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+        )
+        cur = conn.cursor()
+
+        table_full_name = f"{DWH_SCHEMA}.fact_review_daily_agg"
+        
+        pandas_df = agg_df.toPandas()
+
+        create_table_sql = f"""
+            CREATE TABLE IF NOT EXISTS {table_full_name} (
+                agg_date DATE NOT NULL,
+                global_product_id VARCHAR(100) NOT NULL,
+                source_platform_std VARCHAR(50) NOT NULL,
+                total_reviews BIGINT DEFAULT 0,
+                avg_rating DOUBLE PRECISION,
+                five_star_count BIGINT DEFAULT 0,
+                four_star_count BIGINT DEFAULT 0,
+                three_star_count BIGINT DEFAULT 0,
+                two_star_count BIGINT DEFAULT 0,
+                one_star_count BIGINT DEFAULT 0,
+                avg_sentiment_score DOUBLE PRECISION,
+                positive_reviews BIGINT DEFAULT 0,
+                negative_reviews BIGINT DEFAULT 0,
+                neutral_reviews BIGINT DEFAULT 0,
+                positive_sentiment_pct DOUBLE PRECISION,
+                negative_sentiment_pct DOUBLE PRECISION,
+                total_helpful_count BIGINT DEFAULT 0,
+                review_quality_score DOUBLE PRECISION,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (agg_date, global_product_id, source_platform_std)
+            );
+        """
+        cur.execute(create_table_sql)
+        conn.commit()
+        print(f"[INFO] Table {table_full_name} ready")
+
+        columns = list(pandas_df.columns)
+        columns_str = ", ".join(columns)
+        placeholders = ", ".join(["%s"] * len(columns))
+
+        insert_query = f"""
+            INSERT INTO {table_full_name} ({columns_str})
+            VALUES ({placeholders})
+            ON CONFLICT (agg_date, global_product_id, source_platform_std) DO UPDATE SET
+                total_reviews = EXCLUDED.total_reviews,
+                avg_rating = EXCLUDED.avg_rating,
+                avg_sentiment_score = EXCLUDED.avg_sentiment_score,
+                positive_sentiment_pct = EXCLUDED.positive_sentiment_pct,
+                negative_sentiment_pct = EXCLUDED.negative_sentiment_pct,
+                review_quality_score = EXCLUDED.review_quality_score
+        """
+
+        rows = [tuple(row) for row in pandas_df.values]
+        execute_batch(cur, insert_query, rows, page_size=1000)
+        conn.commit()
+
+        print(f" ✓ Loaded {len(rows)} rows into table: {table_full_name}")
+
+        cur.close()
+        conn.close()
+
+    except ImportError:
+        print("[WARN] psycopg2 not installed, falling back to Spark JDBC...")
+        try:
+            (
+                agg_df.write
+                .format("jdbc")
+                .option("url", JDBC_URL)
+                .option("dbtable", f"{DWH_SCHEMA}.fact_review_daily_agg")
+                .option("user", DB_USER)
+                .option("password", DB_PASSWORD)
+                .option("driver", "org.postgresql.Driver")
+                .option("numPartitions", "1")
+                .mode("append")
+                .save()
+            )
+            print(f" ✓ Loaded review fact table via JDBC")
+        except Exception as e:
+            print(f" Error writing to DWH: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
+    except Exception as e:
+        print(f" Error writing to DWH: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
+
+
+# ============================================================
+#  STEP 8.7 – Aggregate Reviews by Product (Legacy)
+# ============================================================
+def aggregate_reviews_by_product(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.7: AGGREGATING REVIEWS BY PRODUCT (LEGACY)")
+    print("=" * 60)
+
+    if df is None:
+        return None
+
+    df_agg = (
+        df
+        .groupBy("product_id", "source_platform")
+        .agg(
+            count("review_id").alias("total_reviews"),
+            avg("rating").alias("avg_rating"),
+            count(when(col("rating") == 5.0, 1)).alias("five_star_count"),
+            count(when(col("rating") == 4.0, 1)).alias("four_star_count"),
+            count(when(col("rating") == 3.0, 1)).alias("three_star_count"),
+            count(when(col("rating") == 2.0, 1)).alias("two_star_count"),
+            count(when(col("rating") == 1.0, 1)).alias("one_star_count"),
+            avg("sentiment_score").alias("avg_sentiment_score"),
+            spark_sum("is_positive_review").alias("positive_reviews"),
+            spark_sum("is_negative_review").alias("negative_reviews"),
+            spark_sum("is_neutral_review").alias("neutral_reviews"),
+            spark_sum("helpful_count").alias("total_helpful_count"),
+            count(when(col("verified_purchase") == True, 1)).alias("verified_reviews"),
+        )
+        .withColumn("negative_sentiment_pct",
+                   (col("negative_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+        .withColumn("positive_sentiment_pct",
+                   (col("positive_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+        .withColumn("verified_purchase_pct",
+                   (col("verified_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+    )
+
+    print(f" ✓ Generated aggregates for {df_agg.count():,} products")
+    return df_agg
+
+
+# ============================================================
+#  STEP 8.5 – Save Review Results to MinIO
+# ============================================================
+def save_review_results(df_reviews, df_agg):
+    print("\n" + "=" * 60)
+    print(" STEP 8.5: SAVING REVIEW RESULTS")
+    print("=" * 60)
+
+    if df_reviews is None:
+        return False
+
+    try:
+        from pathlib import Path
+        from minio import Minio
+
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        local_base = f"/tmp/reviews_processed_{ts}"
+        os.makedirs(local_base, exist_ok=True)
+
+        # Save cleaned reviews
+        local_reviews = f"{local_base}/cleaned_reviews"
+        print(f"[INFO] Writing cleaned reviews to {local_reviews}")
+        df_reviews.coalesce(4).write.mode("overwrite").parquet(local_reviews)
+
+        # Save aggregates
+        if df_agg is not None:
+            local_agg = f"{local_base}/reviews_by_product"
+            print(f"[INFO] Writing aggregates to {local_agg}")
+            df_agg.coalesce(2).write.mode("overwrite").parquet(local_agg)
+
+        if SAVE_TO_MINIO:
+            minio_client = Minio(
+                MINIO_HOST, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, secure=MINIO_SECURE
+            )
+
+            if not minio_client.bucket_exists(MINIO_PROCESSED_REVIEWS_BUCKET):
+                minio_client.make_bucket(MINIO_PROCESSED_REVIEWS_BUCKET)
+                print(f"[INFO] Bucket created: {MINIO_PROCESSED_REVIEWS_BUCKET}")
+
+            prefix = f"reviews_{ts}/"
+            uploaded = 0
+
+            for root, dirs, files in os.walk(local_base):
+                for file in files:
+                    if file.endswith(".parquet"):
+                        local_file = os.path.join(root, file)
+                        rel_path = os.path.relpath(root, local_base)
+                        remote_path = f"{prefix}{rel_path}/{file}"
+                        print(f"[INFO] Uploading: {remote_path}")
+                        minio_client.fput_object(
+                            MINIO_PROCESSED_REVIEWS_BUCKET,
+                            remote_path,
+                            local_file,
+                        )
+                        uploaded += 1
+
+            print(f" ✓ Uploaded {uploaded} files to MinIO: s3a://{MINIO_PROCESSED_REVIEWS_BUCKET}/{prefix}")
+
+        return True
+
+    except Exception as e:
+        print(f" ✗ Error saving review results: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+# ============================================================
 #  MAIN
 # ============================================================
 def main():
@@ -1075,8 +1921,33 @@ def main():
             print(" Failed to save cleaned data")
             return 1
 
+        # ===== REVIEW DATA PIPELINE =====
         print("\n" + "=" * 60)
-        print(" PIPELINE COMPLETED SUCCESSFULLY! (DWH + MinIO)")
+        print(" STARTING REVIEW DATA PIPELINE")
+        print("=" * 60)
+        
+        df_reviews_raw = load_review_data(spark)
+        if df_reviews_raw is not None:
+            df_reviews_clean = clean_review_data(df_reviews_raw)
+            df_reviews_std = standardize_review_data(df_reviews_clean)
+            df_reviews_synced = synchronize_review_identifiers(df_reviews_std)
+            df_reviews_dedup = deduplicate_review_data(df_reviews_synced)
+            validate_review_data(df_reviews_dedup)
+            df_reviews_sentiment = analyze_sentiment(df_reviews_dedup)
+            df_reviews_time = add_review_time_features(df_reviews_sentiment)
+            
+            # Load review dimensions & fact table
+            load_review_dimensions_to_dwh(df_reviews_dedup)
+            df_reviews_agg = aggregate_reviews_daily(df_reviews_time)
+            load_review_aggregation_to_dwh(df_reviews_agg)
+            
+            # Save cleaned reviews to MinIO
+            save_review_results(df_reviews_dedup, df_reviews_agg)
+        else:
+            print(" ⚠ Skipping review pipeline - no review data found")
+
+        print("\n" + "=" * 60)
+        print(" PIPELINE COMPLETED SUCCESSFULLY! (DWH + MinIO + Reviews)")
         print("=" * 60)
         return 0
 

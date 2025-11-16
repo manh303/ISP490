@@ -164,18 +164,12 @@ class SignupRequest(BaseModel):
     email: str = Field(..., description="Email address")
     password: str = Field(..., min_length=8, description="Password (min 8 chars)")
     confirm_password: str = Field(..., description="Confirm password")
-    phone: Optional[str] = Field(None, description="Phone number")
     
     @field_validator('password')
     @classmethod
     def validate_password_field(cls, v):
         return validate_password(v, min_length=8)
     
-    @field_validator('phone')
-    @classmethod
-    def validate_phone_field(cls, v):
-        return validate_phone(v)
-
 class SignupResponse(BaseModel):
     success: bool
     message: str
@@ -353,13 +347,7 @@ try:
 except ImportError as e:
     logger.warning(f"Role Management routes not available: {e}")
 
-# Include Unified ML Insights & Predictions router
-try:
-    from .api.v1.ml_unified import router as ml_unified_router
-    app.include_router(ml_unified_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("✅ ML Unified (Insights & Predictions) routes included")
-except ImportError as e:
-    logger.warning(f"ML Unified routes not available: {e}")
+
 
 # Include Analytics router
 try:
@@ -377,13 +365,14 @@ try:
 except ImportError as e:
     logger.warning(f"Dashboard API routes not available: {e}")
 
-# Include ML Serving API (v1)
+# Include ML API router
 try:
-    from api.v1.ml_serving import router as ml_serving_router
-    app.include_router(ml_serving_router, prefix=f"{settings.API_V1_PREFIX}/ml", tags=["ML Serving"])
-    logger.info("ML Serving API routes included")
+    from api.v1.ml_api import router as ml_router
+    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["ML Models"])
+    logger.info("✅ ML API routes included")
 except ImportError as e:
-    logger.warning(f"ML Serving API routes not available: {e}")
+    logger.warning(f"ML API routes not available: {e}")
+
 
 # Include Reports API (v1)
 try:
@@ -402,12 +391,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add activity logging middleware (only if available)
+# Add activity logging middleware (only if available and table exists)
+# Disabled for now - user_activity_logs table doesn't exist yet
 if ACTIVITY_AVAILABLE:
     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
     logger.info("Activity logging middleware enabled")
 else:
-    logger.warning("Activity logging middleware disabled - module not available")
+    logger.warning("Activity logging middleware disabled - table not created")
 
 # Update security headers middleware
 @app.middleware("http")
@@ -492,7 +482,7 @@ async def check_database_roles():
             await db_manager.connect()
         
         # Get all roles from database
-        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        query = "SELECT role_id, role_code, role_name, description FROM iam.iam_role ORDER BY role_code"
         roles = await db_manager.execute_query(query)
         
         return {
@@ -982,7 +972,7 @@ async def authenticate_user_db(email: str, password: str, db: DatabaseManager):
     try:
         query = """
         SELECT user_id, email, password_hash, full_name, status
-        FROM iam_user
+        FROM iam.iam_user
         WHERE email = $1 AND status = 'active'
         """
         result = await db.execute_query(query, (email.lower(),))
@@ -1000,8 +990,8 @@ async def authenticate_user_db(email: str, password: str, db: DatabaseManager):
         # Get user roles
         role_query = """
         SELECT r.role_code, r.role_name
-        FROM iam_user_role ur
-        JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user_role ur
+        JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE ur.user_id = $1
         """
         roles_result = await db.execute_query(role_query, (user['user_id'],))
@@ -1026,7 +1016,9 @@ def authenticate_user(email: str, password: str):
     user_data = VALID_USERS.get(email.lower())
     if not user_data or user_data["password"] != password:
         return None
-    return user_data
+    # Add email to user_data for consistency
+    user_data_with_email = {**user_data, "email": email.lower(), "roles": [user_data.get("role", "CUSTOMER")]}
+    return user_data_with_email
 
 # Use shared auth helpers
 try:
@@ -1125,7 +1117,7 @@ async def create_user_in_db(db: DatabaseManager, name: str, email: str, password
 
     # Insert user
     query = """
-    INSERT INTO iam_user (email, password_hash, full_name, status, created_at, updated_at)
+    INSERT INTO iam.iam_user (email, password_hash, full_name, status, created_at, updated_at)
     VALUES ($1, $2, $3, 'active', NOW(), NOW())
     RETURNING user_id
     """
@@ -1138,8 +1130,8 @@ async def create_user_in_db(db: DatabaseManager, name: str, email: str, password
 
     # Assign default CUSTOMER role
     role_query = """
-    INSERT INTO iam_user_role (user_id, role_id, assigned_at)
-    SELECT $1, role_id, NOW() FROM iam_role WHERE role_code = 'CUSTOMER'
+    INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
+    SELECT $1, role_id, NOW() FROM iam.iam_role WHERE role_code = 'CUSTOMER'
     """
     await db.execute_query(role_query, (user_id,))
 
@@ -1149,7 +1141,7 @@ async def store_verification_token(db: DatabaseManager, email: str, token_hash: 
     # Nếu đã có token trước đó, upsert hoặc ghi đè
     await db.execute_query(
         """
-        INSERT INTO iam_email_verification (email, token_hash, created_at, expires_at, consumed)
+        INSERT INTO iam.iam_email_verification (email, token_hash, created_at, expires_at, consumed)
         VALUES ($1, $2, NOW(), NOW() + INTERVAL '15 minutes', false)
         ON CONFLICT (email) DO UPDATE
         SET token_hash = EXCLUDED.token_hash,
@@ -1165,7 +1157,7 @@ async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -
         return False
 
     query = """
-    SELECT token_id FROM iam_email_verification_token
+    SELECT token_id FROM iam.iam_email_verification_token
     WHERE email = $1 AND token_hash = $2 AND expires_at > NOW() AND used_at IS NULL
     """
     result = await db.execute_query(query, (email, token_hash))
@@ -1173,7 +1165,7 @@ async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -
     if result:
         # Mark token as used
         update_query = """
-        UPDATE iam_email_verification_token
+        UPDATE iam.iam_email_verification_token
         SET used_at = NOW()
         WHERE token_id = $1
         """
@@ -1205,7 +1197,7 @@ async def check_email_exists(db: DatabaseManager, email: str) -> bool:
     if not db.is_connected:
         return False
 
-    query = "SELECT user_id FROM iam_user WHERE email = $1"
+    query = "SELECT user_id FROM iam.iam_user WHERE email = $1"
     result = await db.execute_query(query, (email,))
     return len(result) > 0
 
@@ -1364,7 +1356,7 @@ async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = De
             password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             
             query = """
-            UPDATE iam_user
+            UPDATE iam.iam_user
             SET password_hash = $1, updated_at = NOW()
             WHERE email = $2
             RETURNING user_id
@@ -1574,6 +1566,8 @@ async def verify_email(request: VerifyEmailRequest, db: DatabaseManager = Depend
     except Exception as e:
         logger.error(f"Email verification error: {e}")
         raise HTTPException(status_code=500, detail="Email verification failed")
+
+
 
 # ====================================
 # ERROR HANDLERS

@@ -29,9 +29,9 @@ async def test_get_users():
         query = """
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status,
                u.created_at, r.role_code, r.role_name
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user u
+        LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE u.status = 'active'
         ORDER BY u.created_at DESC
         """
@@ -68,7 +68,7 @@ async def test_create_user():
         
         # Insert user
         user_query = """
-        INSERT INTO iam_user (email, password_hash, full_name, status, created_at, updated_at)
+        INSERT INTO iam.iam_user (email, password_hash, full_name, status, created_at, updated_at)
         VALUES ($1, $2, $3, 'active', NOW(), NOW())
         ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
         RETURNING user_id, email, full_name, status
@@ -82,8 +82,8 @@ async def test_create_user():
             user = result[0]
             # Assign CUSTOMER role
             role_query = """
-            INSERT INTO iam_user_role (user_id, role_id, assigned_at)
-            SELECT $1, role_id, NOW() FROM iam_role WHERE role_code = 'CUSTOMER'
+            INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
+            SELECT $1, role_id, NOW() FROM iam.iam_role WHERE role_code = 'CUSTOMER'
             ON CONFLICT (user_id, role_id) DO NOTHING
             """
             await db_manager.execute_query(role_query, (user['user_id'],))
@@ -116,7 +116,7 @@ async def test_disable_user(user_id: int):
             await db_manager.connect()
             
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET status = 'disabled', updated_at = NOW()
         WHERE user_id = $1 AND status = 'active'
         RETURNING user_id, email, status
@@ -154,7 +154,7 @@ async def test_get_deleted_users():
             
         query = """
         SELECT u.user_id, u.email, u.full_name, u.status, u.updated_at
-        FROM iam_user u
+        FROM iam.iam_user u
         WHERE u.status = 'disabled'
         ORDER BY u.updated_at DESC
         """
@@ -184,7 +184,7 @@ async def test_restore_user(user_id: int):
             await db_manager.connect()
             
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET status = 'active', updated_at = NOW()
         WHERE user_id = $1 AND status = 'disabled'
         RETURNING user_id, email, status
@@ -298,7 +298,7 @@ async def test_permanent_delete(user_id: int, confirm: bool = False):
             await db_manager.connect()
             
         # Check if user is in deleted list
-        check_query = "SELECT user_id, email, status FROM iam_user WHERE user_id = $1"
+        check_query = "SELECT user_id, email, status FROM iam.iam_user WHERE user_id = $1"
         user_result = await db_manager.execute_query(check_query, (user_id,))
         
         if not user_result:
@@ -315,11 +315,11 @@ async def test_permanent_delete(user_id: int, confirm: bool = False):
             }
         
         # Delete user roles first
-        await db_manager.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+        await db_manager.execute_query("DELETE FROM iam.iam_user_role WHERE user_id = $1", (user_id,))
         
         # Delete user
         delete_result = await db_manager.execute_query(
-            "DELETE FROM iam_user WHERE user_id = $1 RETURNING email", (user_id,)
+            "DELETE FROM iam.iam_user WHERE user_id = $1 RETURNING email", (user_id,)
         )
         
         if delete_result:

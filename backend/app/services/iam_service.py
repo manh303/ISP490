@@ -47,7 +47,7 @@ class IAMService:
 
             # Insert user
             user_query = """
-                INSERT INTO iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
+                INSERT INTO iam.iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING user_id, email, full_name, phone, status, created_at
             """
@@ -91,7 +91,7 @@ class IAMService:
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
         try:
-            query = "SELECT * FROM iam_user WHERE email = $1"
+            query = "SELECT * FROM iam.iam_user WHERE email = $1"
             logger.info(f"Executing query: {query} with email: {email}")
             result = await self.db.execute_query(query, (email,))
             logger.info(f"Query result: {result}")
@@ -106,7 +106,7 @@ class IAMService:
         """Get user by ID with roles and permissions"""
         try:
             # Get user basic info
-            user_query = "SELECT * FROM iam_user WHERE user_id = $1"
+            user_query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
             user_result = await self.db.execute_query(user_query, (user_id,))
 
             if not user_result:
@@ -117,8 +117,8 @@ class IAMService:
             # Get user roles
             roles_query = """
                 SELECT r.role_id, r.role_code, r.role_name, r.description
-                FROM iam_role r
-                JOIN iam_user_role ur ON r.role_id = ur.role_id
+                FROM iam.iam_role r
+                JOIN iam.iam_user_role ur ON r.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
             roles_result = await self.db.execute_query(roles_query, (user_id,))
@@ -126,9 +126,9 @@ class IAMService:
             # Get user permissions
             permissions_query = """
                 SELECT DISTINCT p.perm_id, p.perm_code, p.perm_name, p.module, p.action, p.description
-                FROM iam_permission p
-                JOIN iam_role_permission rp ON p.perm_id = rp.perm_id
-                JOIN iam_user_role ur ON rp.role_id = ur.role_id
+                FROM iam.iam_permission p
+                JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
+                JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
             permissions_result = await self.db.execute_query(permissions_query, (user_id,))
@@ -199,7 +199,7 @@ class IAMService:
     async def update_last_login(self, user_id: int):
         """Update user's last login timestamp"""
         try:
-            query = "UPDATE iam_user SET last_login_at = $1 WHERE user_id = $2"
+            query = "UPDATE iam.iam_user SET last_login_at = $1 WHERE user_id = $2"
             await self.db.execute_query(query, (datetime.datetime.utcnow(), user_id))
         except Exception as e:
             logger.error(f"Update last login error: {e}")
@@ -210,7 +210,7 @@ class IAMService:
         """Assign role to user"""
         try:
             # Get role ID
-            role_query = "SELECT role_id FROM iam_role WHERE role_code = $1"
+            role_query = "SELECT role_id FROM iam.iam_role WHERE role_code = $1"
             role_result = await self.db.execute_query(role_query, (role_code,))
 
             if not role_result:
@@ -220,7 +220,7 @@ class IAMService:
             role_id = role_result[0]['role_id']
 
             # Check if already assigned
-            check_query = "SELECT 1 FROM iam_user_role WHERE user_id = $1 AND role_id = $2"
+            check_query = "SELECT 1 FROM iam.iam_user_role WHERE user_id = $1 AND role_id = $2"
             check_result = await self.db.execute_query(check_query, (user_id, role_id))
 
             if check_result:
@@ -228,7 +228,7 @@ class IAMService:
 
             # Assign role
             assign_query = """
-                INSERT INTO iam_user_role (user_id, role_id, assigned_at)
+                INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
                 VALUES ($1, $2, $3)
             """
             await self.db.execute_query(assign_query, (
@@ -242,9 +242,9 @@ class IAMService:
         """Check if user has specific permission"""
         try:
             query = """
-                SELECT 1 FROM iam_permission p
-                JOIN iam_role_permission rp ON p.perm_id = rp.perm_id
-                JOIN iam_user_role ur ON rp.role_id = ur.role_id
+                SELECT 1 FROM iam.iam_permission p
+                JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
+                JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1 AND p.perm_code = $2
             """
             result = await self.db.execute_query(query, (user_id, permission_code))
@@ -272,7 +272,7 @@ class IAMService:
                 raise HTTPException(status_code=400, detail="No valid fields to update")
 
             query = f"""
-                UPDATE iam_user
+                UPDATE iam.iam_user
                 SET {', '.join(update_fields)}, updated_at = $2
                 WHERE user_id = $1
                 RETURNING user_id, email, full_name, phone, status, updated_at
@@ -306,7 +306,7 @@ class IAMService:
 
             # Update password
             query = """
-                UPDATE iam_user
+                UPDATE iam.iam_user
                 SET password_hash = $1, updated_at = $2
                 WHERE user_id = $3
             """
@@ -319,7 +319,7 @@ class IAMService:
     async def get_user_by_email_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get basic user info by ID (including password hash for verification)"""
         try:
-            query = "SELECT * FROM iam_user WHERE user_id = $1"
+            query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
             result = await self.db.execute_query(query, (user_id,))
             return result[0] if result else None
         except Exception as e:
@@ -332,7 +332,7 @@ class IAMService:
         """Log user action for audit"""
         try:
             query = """
-                INSERT INTO iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
+                INSERT INTO iam.iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
                 VALUES ($1, $2, $3, $4, $5, $6)
             """
             await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.datetime.utcnow()))
