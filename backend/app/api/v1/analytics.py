@@ -37,12 +37,12 @@ async def get_top_rated_products(
     query = f"""
         SELECT 
             p.product_name,
-            p.rating_avg,
-            p.review_count,
-            p.price_current as price,
-            p.category
+            COALESCE(p.rating_avg, 0) as rating_avg,
+            COALESCE(p.review_count, 0) as review_count,
+            COALESCE(p.price_current, 0) as price,
+            COALESCE(p.category, 'Unknown') as category
         FROM ods_product_clean p
-        WHERE p.review_count >= 10
+        WHERE p.review_count IS NOT NULL AND p.review_count >= 10
         ORDER BY p.rating_avg DESC, p.review_count DESC
         LIMIT {limit}
     """
@@ -61,7 +61,7 @@ async def get_top_rated_products(
         "title": f"Top {limit} Products by Rating",
         "x_axis": "product_name",
         "y_axis": "rating_avg",
-        "data": result
+        "data": result or []
     }
 
 
@@ -77,28 +77,29 @@ async def get_rating_distribution(
     if category:
         query = f"""
             SELECT 
-                FLOOR(p.rating_avg) as rating_bucket,
+                FLOOR(COALESCE(p.rating_avg, 0)) as rating_bucket,
                 COUNT(*) as product_count,
-                AVG(p.price_current) as avg_price,
-                SUM(p.review_count) as total_reviews
+                COALESCE(AVG(p.price_current), 0) as avg_price,
+                COALESCE(SUM(p.review_count), 0) as total_reviews
             FROM ods_product_clean p
-            WHERE p.category = '{category}'
-            GROUP BY FLOOR(p.rating_avg)
+            WHERE p.category = '{category}' AND p.rating_avg IS NOT NULL
+            GROUP BY FLOOR(COALESCE(p.rating_avg, 0))
             ORDER BY rating_bucket
         """
-        logger.info(f"Executing query with limit={category}")
+        logger.info(f"Executing query with category={category}")
         logger.info(f"DB connected: {db.is_connected}")
 
         result = await db.execute_query(query)
     else:
         query = """
             SELECT 
-                FLOOR(p.rating_avg) as rating_bucket,
+                FLOOR(COALESCE(p.rating_avg, 0)) as rating_bucket,
                 COUNT(*) as product_count,
-                AVG(p.price_current) as avg_price,
-                SUM(p.review_count) as total_reviews
+                COALESCE(AVG(p.price_current), 0) as avg_price,
+                COALESCE(SUM(p.review_count), 0) as total_reviews
             FROM ods_product_clean p
-            GROUP BY FLOOR(p.rating_avg)
+            WHERE p.rating_avg IS NOT NULL
+            GROUP BY FLOOR(COALESCE(p.rating_avg, 0))
             ORDER BY rating_bucket
         """
         result = await db.execute_query(query)
@@ -108,7 +109,7 @@ async def get_rating_distribution(
         "title": f"Rating Distribution{' - ' + category if category else ''}",
         "x_axis": "rating_bucket",
         "y_axis": "product_count",
-        "data": result
+        "data": result or []
     }
 
 
@@ -120,14 +121,15 @@ async def get_review_trends(
     """Review trends over time - Line Chart"""
     query = f"""
         SELECT 
-            DATE(f.captured_at) as date,
-            COUNT(DISTINCT f.product_sk) as products_reviewed,
-            AVG(f.rating_avg) as avg_rating,
-            SUM(f.review_count) as total_reviews
-        FROM dwh_fact_product_daily f
-        WHERE f.captured_at >= CURRENT_DATE - {days} * INTERVAL '1 day'
-        GROUP BY DATE(f.captured_at)
-        ORDER BY date
+            DATE(pp.captured_at) as date,
+            COUNT(DISTINCT pp.global_product_id) as products_reviewed,
+            COALESCE(AVG(COALESCE(opc.rating_avg, 3.5)), 0) as avg_rating,
+            COALESCE(SUM(COALESCE(opc.review_count, 0)), 0) as total_reviews
+        FROM ods_price_point pp
+        LEFT JOIN ods_product_clean opc ON pp.global_product_id = opc.global_product_id
+        WHERE pp.captured_at >= CURRENT_DATE - {days} * INTERVAL '1 day'
+        GROUP BY DATE(pp.captured_at)
+        ORDER BY date ASC
     """
     
     result = await db.execute_query(query)
@@ -137,7 +139,7 @@ async def get_review_trends(
         "title": f"Review Trends - Last {days} Days",
         "x_axis": "date",
         "y_axis": ["avg_rating", "total_reviews"],
-        "data": result
+        "data": result or []
     }
 
 
@@ -151,12 +153,12 @@ async def get_price_vs_rating(
         query = f"""
             SELECT 
                 p.product_name,
-                p.price_current as price,
-                p.rating_avg,
-                p.review_count,
-                p.category
+                COALESCE(p.price_current, 0) as price,
+                COALESCE(p.rating_avg, 0) as rating_avg,
+                COALESCE(p.review_count, 0) as review_count,
+                COALESCE(p.category, 'Unknown') as category
             FROM ods_product_clean p
-            WHERE p.category = '{category}'
+            WHERE p.category = '{category}' AND p.review_count IS NOT NULL
             ORDER BY p.review_count DESC
             LIMIT 500
         """
@@ -165,11 +167,12 @@ async def get_price_vs_rating(
         query = """
             SELECT 
                 p.product_name,
-                p.price_current as price,
-                p.rating_avg,
-                p.review_count,
-                p.category
+                COALESCE(p.price_current, 0) as price,
+                COALESCE(p.rating_avg, 0) as rating_avg,
+                COALESCE(p.review_count, 0) as review_count,
+                COALESCE(p.category, 'Unknown') as category
             FROM ods_product_clean p
+            WHERE p.review_count IS NOT NULL
             ORDER BY p.review_count DESC
             LIMIT 500
         """
@@ -181,7 +184,7 @@ async def get_price_vs_rating(
         "x_axis": "price",
         "y_axis": "rating_avg",
         "size": "review_count",
-        "data": result
+        "data": result or []
     }
 
 
@@ -192,15 +195,15 @@ async def get_category_performance(
     """Category performance comparison - Grouped Bar Chart"""
     query = """
         SELECT 
-            p.category,
+            COALESCE(p.category, 'Unknown') as category,
             COUNT(*) as product_count,
-            AVG(p.rating_avg) as avg_rating,
-            AVG(p.price_current) as avg_price,
-            SUM(p.review_count) as total_reviews,
+            COALESCE(AVG(p.rating_avg), 0) as avg_rating,
+            COALESCE(AVG(p.price_current), 0) as avg_price,
+            COALESCE(SUM(p.review_count), 0) as total_reviews,
             COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated_count
         FROM ods_product_clean p
         WHERE p.category IS NOT NULL
-        GROUP BY p.category
+        GROUP BY COALESCE(p.category, 'Unknown')
         ORDER BY total_reviews DESC
         LIMIT 15
     """
@@ -212,7 +215,7 @@ async def get_category_performance(
         "title": "Category Performance Analysis",
         "x_axis": "category",
         "y_axes": ["avg_rating", "product_count", "avg_price"],
-        "data": result
+        "data": result or []
     }
 
 
@@ -225,19 +228,20 @@ async def get_sentiment_distribution(
         WITH sentiment_data AS (
             SELECT 
                 CASE 
-                    WHEN rating_avg >= 4.5 THEN 'Excellent'
-                    WHEN rating_avg >= 4.0 THEN 'Good'
-                    WHEN rating_avg >= 3.0 THEN 'Average'
-                    WHEN rating_avg >= 2.0 THEN 'Poor'
+                    WHEN COALESCE(rating_avg, 0) >= 4.5 THEN 'Excellent'
+                    WHEN COALESCE(rating_avg, 0) >= 4.0 THEN 'Good'
+                    WHEN COALESCE(rating_avg, 0) >= 3.0 THEN 'Average'
+                    WHEN COALESCE(rating_avg, 0) >= 2.0 THEN 'Poor'
                     ELSE 'Very Poor'
                 END as sentiment,
-                review_count
+                COALESCE(review_count, 0) as review_count
             FROM ods_product_clean
+            WHERE rating_avg IS NOT NULL
         )
         SELECT 
             sentiment,
             COUNT(*) as product_count,
-            SUM(review_count) as review_count
+            COALESCE(SUM(review_count), 0) as review_count
         FROM sentiment_data
         GROUP BY sentiment
         ORDER BY 
@@ -257,7 +261,7 @@ async def get_sentiment_distribution(
         "title": "Product Sentiment Distribution",
         "label": "sentiment",
         "value": "product_count",
-        "data": result
+        "data": result or []
     }
 
 
@@ -270,20 +274,21 @@ async def get_price_segments(
         WITH price_data AS (
             SELECT 
                 CASE 
-                    WHEN price_current < 100000 THEN 'Budget (<100K)'
-                    WHEN price_current < 500000 THEN 'Mid-range (100K-500K)'
-                    WHEN price_current < 1000000 THEN 'Premium (500K-1M)'
+                    WHEN COALESCE(price_current, 0) < 100000 THEN 'Budget (<100K)'
+                    WHEN COALESCE(price_current, 0) < 500000 THEN 'Mid-range (100K-500K)'
+                    WHEN COALESCE(price_current, 0) < 1000000 THEN 'Premium (500K-1M)'
                     ELSE 'Luxury (>1M)'
                 END as price_segment,
-                rating_avg,
-                review_count
+                COALESCE(rating_avg, 0) as rating_avg,
+                COALESCE(review_count, 0) as review_count
             FROM ods_product_clean
+            WHERE price_current IS NOT NULL
         )
         SELECT 
             price_segment,
             COUNT(*) as product_count,
-            AVG(rating_avg) as avg_rating,
-            SUM(review_count) as total_reviews,
+            COALESCE(AVG(rating_avg), 0) as avg_rating,
+            COALESCE(SUM(review_count), 0) as total_reviews,
             COUNT(CASE WHEN rating_avg >= 4.0 THEN 1 END) as high_rated
         FROM price_data
         GROUP BY price_segment
@@ -303,7 +308,7 @@ async def get_price_segments(
         "title": "Price Segment Analysis",
         "x_axis": "price_segment",
         "y_axes": ["product_count", "high_rated"],
-        "data": result
+        "data": result or []
     }
 
 
@@ -314,15 +319,15 @@ async def get_platform_comparison(
     """Platform comparison - Tiki vs Lazada - Grouped Bar Chart"""
     query = """
         SELECT 
-            p.source_platform as platform,
+            COALESCE(p.source_platform, 'Unknown') as platform,
             COUNT(*) as product_count,
-            AVG(p.rating_avg) as avg_rating,
-            AVG(p.price_current) as avg_price,
-            SUM(p.review_count) as total_reviews,
+            COALESCE(AVG(p.rating_avg), 0) as avg_rating,
+            COALESCE(AVG(p.price_current), 0) as avg_price,
+            COALESCE(SUM(p.review_count), 0) as total_reviews,
             COUNT(CASE WHEN p.rating_avg >= 4.0 THEN 1 END) as high_rated_count
         FROM ods_product_clean p
         WHERE p.source_platform IN ('tiki', 'lazada')
-        GROUP BY p.source_platform
+        GROUP BY COALESCE(p.source_platform, 'Unknown')
         ORDER BY product_count DESC
     """
     
@@ -333,7 +338,7 @@ async def get_platform_comparison(
         "title": "Platform Comparison: Tiki vs Lazada",
         "x_axis": "platform",
         "y_axes": ["product_count", "avg_rating", "total_reviews"],
-        "data": result
+        "data": result or []
     }
 
 
@@ -346,29 +351,29 @@ async def get_platform_price_comparison(
     if category:
         query = f"""
             SELECT 
-                p.source_platform as platform,
-                p.category,
-                AVG(p.price_current) as avg_price,
-                MIN(p.price_current) as min_price,
-                MAX(p.price_current) as max_price,
+                COALESCE(p.source_platform, 'Unknown') as platform,
+                COALESCE(p.category, 'Unknown') as category,
+                COALESCE(AVG(p.price_current), 0) as avg_price,
+                COALESCE(MIN(p.price_current), 0) as min_price,
+                COALESCE(MAX(p.price_current), 0) as max_price,
                 COUNT(*) as product_count
             FROM ods_product_clean p
             WHERE p.source_platform IN ('tiki', 'lazada')
-            AND p.category = '{category}'
-            GROUP BY p.source_platform, p.category
+            AND p.category = '{category}' AND p.price_current IS NOT NULL
+            GROUP BY COALESCE(p.source_platform, 'Unknown'), COALESCE(p.category, 'Unknown')
         """
     else:
         query = """
             SELECT 
-                p.source_platform as platform,
-                p.category,
-                AVG(p.price_current) as avg_price,
-                MIN(p.price_current) as min_price,
-                MAX(p.price_current) as max_price,
+                COALESCE(p.source_platform, 'Unknown') as platform,
+                COALESCE(p.category, 'Unknown') as category,
+                COALESCE(AVG(p.price_current), 0) as avg_price,
+                COALESCE(MIN(p.price_current), 0) as min_price,
+                COALESCE(MAX(p.price_current), 0) as max_price,
                 COUNT(*) as product_count
             FROM ods_product_clean p
-            WHERE p.source_platform IN ('tiki', 'lazada')
-            GROUP BY p.source_platform, p.category
+            WHERE p.source_platform IN ('tiki', 'lazada') AND p.price_current IS NOT NULL
+            GROUP BY COALESCE(p.source_platform, 'Unknown'), COALESCE(p.category, 'Unknown')
             ORDER BY product_count DESC
             LIMIT 20
         """
@@ -381,7 +386,7 @@ async def get_platform_price_comparison(
         "x_axis": "category",
         "y_axis": "avg_price",
         "group_by": "platform",
-        "data": result
+        "data": result or []
     }
 
 
@@ -393,14 +398,15 @@ async def get_dashboard_summary(
     query = """
         SELECT 
             COUNT(*) as total_products,
-            AVG(rating_avg) as overall_avg_rating,
-            SUM(review_count) as total_reviews,
-            AVG(price_current) as avg_price,
+            COALESCE(AVG(rating_avg), 0) as overall_avg_rating,
+            COALESCE(SUM(review_count), 0) as total_reviews,
+            COALESCE(AVG(price_current), 0) as avg_price,
             COUNT(DISTINCT category) as total_categories,
             COUNT(CASE WHEN rating_avg >= 4.0 THEN 1 END) as high_rated_products,
             COUNT(CASE WHEN review_count >= 100 THEN 1 END) as popular_products,
             COUNT(DISTINCT source_platform) as total_platforms
         FROM ods_product_clean
+        WHERE rating_avg IS NOT NULL AND price_current IS NOT NULL
     """
     
     result = await db.execute_query(query)
