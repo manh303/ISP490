@@ -19,8 +19,8 @@ except ImportError:
 
 OUTPUT_DIR = os.environ.get("CRAWLER_OUTPUT_DIR", "/tmp/data/outputs")
 PROFILE_DIR = os.environ.get("LAZADA_PROFILE_DIR", "/tmp/profiles/lazada")
-LAZADA_EMAIL = os.environ.get("LAZADA_EMAIL", "")
-LAZADA_PASSWORD = os.environ.get("LAZADA_PASSWORD", "")
+LAZADA_EMAIL = os.environ.get("LAZADA_EMAIL", "manh027382@gmail.com")
+LAZADA_PASSWORD = os.environ.get("LAZADA_PASSWORD", "Manhtq144@")
 LOG_PREFIX = "[Lazada-Auto]"
 
 class LazadaAutoLoginCrawler:

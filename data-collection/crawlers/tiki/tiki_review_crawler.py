@@ -139,7 +139,7 @@ class TikiReviewCrawler:
         
         print(f"{LOG_PREFIX} Saved {len(reviews)} reviews to {filepath}")
 
-    def run(self, max_products: int = 100, max_reviews_per_product: int = 50):
+    def run(self, max_products: int = 20000, max_reviews_per_product: int = 100):
         """Run review crawler"""
         print(f"{LOG_PREFIX} Starting Tiki Review crawler...")
         
@@ -185,7 +185,7 @@ class TikiReviewCrawler:
 
 def main():
     crawler = TikiReviewCrawler()
-    crawler.run(max_products=100, max_reviews_per_product=50)
+    crawler.run(max_products=20000, max_reviews_per_product=100)
 
 if __name__ == "__main__":
     main()
