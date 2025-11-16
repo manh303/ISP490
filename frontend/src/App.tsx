@@ -55,6 +55,7 @@ import { useParams } from "react-router-dom";
 import DeletedUsersList from "./components/admin/DeletedUsersList.js";
 import { AnalystWireframe } from "./pages/Analyst/AnalystWireframe.js";
 import { DataEngineerWireframe } from "./pages/DataEngineer/DataEngineerWireframe.js";
+import MLIPage from "./pages/MLInsights/MLIPage.js";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -149,6 +150,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="/admin/home" element={<AdminPage />} />
             <Route path="/admin/dashboard" element={<VietnamElectronicsDashboard />} />
             <Route path="/admin/users" element={<AdminUserManagement />} />
             <Route path="/admin/roles" element={<RoleManagement />} />
@@ -176,6 +178,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="/analyst/home" element={<AnalystPage />} />
             <Route path="/analyst/dashboard" element={<AnalystWireframe />} />
             <Route path="/analyst/sales" element={<BarChart />} />
             <Route path="/analyst/trends" element={<LineChart />} />
@@ -220,7 +223,8 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/mli/dashboard" element={<DSSPage />} />
+            {/* <Route path="/mli/dashboard" element={<DSSPage />} /> */}
+            <Route path="/mli/dashboard" element={<MLIPage />} />
             <Route path="/mli/price-optimization" element={<Blank />} />
             <Route path="/mli/demand-forecast" element={<Blank />} />
             <Route path="/mli/sales-forecast" element={<Blank />} />
@@ -240,6 +244,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="/customer" element={<CustomerPage />} />
             <Route path="/customer/dashboard" element={<VietnamElectronicsDashboard />} />
             <Route path="/customer/products/browse" element={<BasicTables />} />
             <Route path="/customer/products/favorites" element={<BasicTables />} />
