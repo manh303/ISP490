@@ -103,7 +103,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
     const confirmed = window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn người dùng này? Hành động này không thể hoàn tác!");
     if (!confirmed) return;
     try {
-      const res = await userApi.permanentDeleteUser(id);
+      const res = await userApi.deleteUser(id);
       if (res && res.detail) {
         setError(res.detail);
         showToast(res.detail, 'error');
