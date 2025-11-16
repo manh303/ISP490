@@ -35,7 +35,6 @@ RUN set -eux; \
         apt-get install -y --no-install-recommends chromium-browser chromium-chromedriver || true; \
     fi; \
     rm -rf /var/lib/apt/lists/*
-RUN python -m playwright install --with-deps chromium
 
 # Env cho Selenium/Chrome
 ENV CHROME_BIN=/usr/bin/chromium-browser
@@ -54,6 +53,11 @@ COPY requirements.txt /opt/airflow/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /opt/airflow/requirements.txt
+
+# Install playwright browsers as root (needs sudo access)
+USER root
+RUN python -m playwright install --with-deps chromium
+USER airflow
 
 # -------------------------------
 # 4) Folders (dags/plugins/config)

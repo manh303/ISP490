@@ -9,12 +9,26 @@ import sys
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
+# Python libraries - configure logging first
+import pandas as pd
+import numpy as np
+import json
+import logging
+from pathlib import Path
+import boto3
+from pymongo import MongoClient
+import redis
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Airflow imports
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
-from airflow.operators.email import EmailOperator
+from airflow.providers.email.operators.email import EmailOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.http.sensors.http import HttpSensor
@@ -39,20 +53,6 @@ except ImportError as e:
     DataQualityOperator = PythonOperator
     MLTrainingOperator = PythonOperator
     DataExportOperator = PythonOperator
-
-# Python libraries
-import pandas as pd
-import numpy as np
-import json
-import logging
-from pathlib import Path
-import boto3
-from pymongo import MongoClient
-import redis
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # ====================================
 # DAG CONFIGURATION

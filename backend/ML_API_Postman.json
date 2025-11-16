@@ -1,0 +1,467 @@
+{
+  "info": {
+    "name": "E-commerce DSS - ML API",
+    "description": "ML API Contract Test Collection for Day 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. ML Models Endpoints",
+      "item": [
+        {
+          "name": "1.1 List all ML models",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/models",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "models"]
+            },
+            "description": "GET /api/v1/ml/models\nReturns list of all ML models with version info"
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Get model metrics (Demand Model)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/models/1/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "models", "1", "metrics"]
+            },
+            "description": "GET /api/v1/ml/models/{model_id}/metrics\nReturns metrics and history for Model ID 1"
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get model metrics (Recommendation Model)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/models/3/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "models", "3", "metrics"]
+            },
+            "description": "GET /api/v1/ml/models/3/metrics"
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Trigger model training",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triggered_by\": 1,\n  \"note\": \"Scheduled retraining on 2025-11-16\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ml/models/1/train",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "models", "1", "train"]
+            },
+            "description": "POST /api/v1/ml/models/{model_id}/train\nTrigger training for a specific model"
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 Check ML service health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/health",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "health"]
+            },
+            "description": "GET /api/v1/ml/health"
+          },
+          "response": []
+        },
+        {
+          "name": "1.6 Get model status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/models/status",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "models", "status"]
+            },
+            "description": "GET /api/v1/ml/models/status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Product Recommendations",
+      "item": [
+        {
+          "name": "2.1 Get recommendations for Product 1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/recommendations/sample?product_sk=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "recommendations", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "GET /api/v1/ml/recommendations/sample?product_sk=...&limit=10"
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Get recommendations for Product 2 (limit=5)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/recommendations/sample?product_sk=2&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "recommendations", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "2"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "GET /api/v1/ml/recommendations/sample?product_sk=2&limit=5"
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Get recommendations for Product 5",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/recommendations/sample?product_sk=5&limit=3",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "recommendations", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "5"
+                },
+                {
+                  "key": "limit",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Price Predictions",
+      "item": [
+        {
+          "name": "3.1 Get price predictions (Product 1, Platform 1)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/price-predictions/sample?product_sk=1&platform_sk=1",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "price-predictions", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "1"
+                },
+                {
+                  "key": "platform_sk",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "GET /api/v1/ml/price-predictions/sample?product_sk=1&platform_sk=1"
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Get price predictions with custom date",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/price-predictions/sample?product_sk=2&platform_sk=2&date=2025-11-16&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "price-predictions", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "2"
+                },
+                {
+                  "key": "platform_sk",
+                  "value": "2"
+                },
+                {
+                  "key": "date",
+                  "value": "2025-11-16"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Get price predictions (Product 3, Platform 1)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/price-predictions/sample?product_sk=3&platform_sk=1",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "price-predictions", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "3"
+                },
+                {
+                  "key": "platform_sk",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 Get price predictions (Product 4, Platform 2)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/price-predictions/sample?product_sk=4&platform_sk=2&limit=7",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "price-predictions", "sample"],
+              "query": [
+                {
+                  "key": "product_sk",
+                  "value": "4"
+                },
+                {
+                  "key": "platform_sk",
+                  "value": "2"
+                },
+                {
+                  "key": "limit",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. ML Predictions (Existing)",
+      "item": [
+        {
+          "name": "4.1 Predict demand for a product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"avg_price\": 250000.0,\n  \"min_price\": 220000.0,\n  \"max_price\": 280000.0,\n  \"total_review_count\": 500,\n  \"day_of_week\": 3,\n  \"month\": 11,\n  \"year\": 2025,\n  \"avg_rating\": 4.5,\n  \"price_change_pct\": 2.5,\n  \"price_volatility\": 0.15,\n  \"review_ma7\": 45.0,\n  \"review_ma30\": 40.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ml/predict/demand",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "predict", "demand"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Batch demand predictions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"product_id\": 1,\n    \"avg_price\": 250000.0,\n    \"min_price\": 220000.0,\n    \"max_price\": 280000.0,\n    \"total_review_count\": 500,\n    \"day_of_week\": 3,\n    \"month\": 11,\n    \"year\": 2025,\n    \"avg_rating\": 4.5,\n    \"price_change_pct\": 2.5,\n    \"price_volatility\": 0.15,\n    \"review_ma7\": 45.0,\n    \"review_ma30\": 40.0\n  },\n  {\n    \"product_id\": 2,\n    \"avg_price\": 350000.0,\n    \"min_price\": 320000.0,\n    \"max_price\": 380000.0,\n    \"total_review_count\": 800,\n    \"day_of_week\": 3,\n    \"month\": 11,\n    \"year\": 2025,\n    \"avg_rating\": 4.3,\n    \"price_change_pct\": -1.5,\n    \"price_volatility\": 0.20,\n    \"review_ma7\": 65.0,\n    \"review_ma30\": 62.0\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/ml/predict/batch-demand",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "predict", "batch-demand"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 Get product recommendations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"num_recommendations\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ml/predict/recommendation",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "predict", "recommendation"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.4 Get ML metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "metrics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.5 Reload models",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ml/reload-models",
+              "host": ["{{base_url}}"],
+              "path": ["ml", "reload-models"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    }
+  ]
+}

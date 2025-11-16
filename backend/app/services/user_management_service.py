@@ -21,9 +21,9 @@ class UserManagementService:
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status,
                u.last_login_at, u.created_at, u.updated_at,
                r.role_code, r.role_name
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user u
+        LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE u.status = $1
         ORDER BY u.created_at DESC
         LIMIT $2 OFFSET $3
@@ -32,7 +32,7 @@ class UserManagementService:
         users = await self.db.execute_query(query, (status, limit, offset))
         
         # Count total
-        count_query = "SELECT COUNT(*) as total FROM iam_user WHERE status = $1"
+        count_query = "SELECT COUNT(*) as total FROM iam.iam_user WHERE status = $1"
         count_result = await self.db.execute_query(count_query, (status,))
         total = count_result[0]['total'] if count_result else 0
         
@@ -49,9 +49,9 @@ class UserManagementService:
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status,
                u.last_login_at, u.created_at, u.updated_at,
                r.role_code, r.role_name
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user u
+        LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE u.user_id = $1
         """
         
@@ -63,7 +63,7 @@ class UserManagementService:
         """Create new user"""
         # Check if email exists
         existing = await self.db.execute_query(
-            "SELECT user_id FROM iam_user WHERE email = $1", (email,)
+            "SELECT user_id FROM iam.iam_user WHERE email = $1", (email,)
         )
         if existing:
             raise ValueError("Email already exists")
@@ -73,7 +73,7 @@ class UserManagementService:
         
         # Create user
         user_query = """
-        INSERT INTO iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
+        INSERT INTO iam.iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
         VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
         RETURNING user_id, email, full_name, phone, status, created_at, updated_at
         """
@@ -98,7 +98,7 @@ class UserManagementService:
         # Update user basic info
         if full_name is not None or phone is not None:
             update_query = """
-            UPDATE iam_user 
+            UPDATE iam.iam_user 
             SET full_name = COALESCE($1, full_name),
                 phone = COALESCE($2, phone),
                 updated_at = NOW()
@@ -117,7 +117,7 @@ class UserManagementService:
         password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET password_hash = $1, updated_at = NOW()
         WHERE user_id = $2
         """
@@ -128,7 +128,7 @@ class UserManagementService:
     async def soft_delete_user(self, user_id: int) -> bool:
         """Soft delete user (set status to disabled)"""
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET status = 'disabled', updated_at = NOW()
         WHERE user_id = $1 AND status = 'active'
         """
@@ -139,7 +139,7 @@ class UserManagementService:
     async def restore_user(self, user_id: int) -> bool:
         """Restore user (set status back to active)"""
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET status = 'active', updated_at = NOW()
         WHERE user_id = $1 AND status = 'disabled'
         """
@@ -150,26 +150,26 @@ class UserManagementService:
     async def permanent_delete_user(self, user_id: int) -> bool:
         """Permanently delete user from database"""
         # Delete user roles first
-        await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+        await self.db.execute_query("DELETE FROM iam.iam_user_role WHERE user_id = $1", (user_id,))
         
         # Delete user sessions
-        await self.db.execute_query("DELETE FROM iam_user_session WHERE user_id = $1", (user_id,))
+        await self.db.execute_query("DELETE FROM iam.iam_user_session WHERE user_id = $1", (user_id,))
         
         # Delete user
-        await self.db.execute_query("DELETE FROM iam_user WHERE user_id = $1", (user_id,))
+        await self.db.execute_query("DELETE FROM iam.iam_user WHERE user_id = $1", (user_id,))
         
         return True
 
     async def _assign_role(self, user_id: int, role_code: str):
         """Assign role to user"""
         # Get role_id
-        role_query = "SELECT role_id FROM iam_role WHERE role_code = $1"
+        role_query = "SELECT role_id FROM iam.iam_role WHERE role_code = $1"
         role_result = await self.db.execute_query(role_query, (role_code,))
         
         if not role_result:
             # Create role if not exists
             create_role_query = """
-            INSERT INTO iam_role (role_code, role_name, description)
+            INSERT INTO iam.iam_role (role_code, role_name, description)
             VALUES ($1, $2, $3)
             RETURNING role_id
             """
@@ -181,7 +181,7 @@ class UserManagementService:
         
         # Assign role
         assign_query = """
-        INSERT INTO iam_user_role (user_id, role_id, assigned_at)
+        INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
         VALUES ($1, $2, NOW())
         ON CONFLICT (user_id, role_id) DO NOTHING
         """
@@ -193,9 +193,9 @@ class UserManagementService:
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status,
                u.last_login_at, u.created_at, u.updated_at,
                r.role_code, r.role_name, r.description as role_description
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user u
+        LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE u.user_id = $1
         """
         
@@ -218,14 +218,14 @@ class UserManagementService:
         # Check if email already exists (if updating email)
         if email:
             existing = await self.db.execute_query(
-                "SELECT user_id FROM iam_user WHERE email = $1 AND user_id != $2", (email, user_id)
+                "SELECT user_id FROM iam.iam_user WHERE email = $1 AND user_id != $2", (email, user_id)
             )
             if existing:
                 raise ValueError("Email already exists")
         
         # Update user profile
         update_query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET full_name = COALESCE($1, full_name),
             phone = COALESCE($2, phone),
             email = COALESCE($3, email),
@@ -238,7 +238,7 @@ class UserManagementService:
     async def update_last_login(self, user_id: int) -> bool:
         """Update user's last login timestamp"""
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET last_login_at = NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh', 
             updated_at = NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh'
         WHERE user_id = $1
@@ -257,7 +257,7 @@ class UserManagementService:
     async def _update_user_role(self, user_id: int, role_code: str):
         """Update user role"""
         # Remove existing roles
-        await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+        await self.db.execute_query("DELETE FROM iam.iam_user_role WHERE user_id = $1", (user_id,))
         
         # Assign new role
         await self._assign_role(user_id, role_code)

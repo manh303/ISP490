@@ -16,10 +16,12 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     col, when, regexp_replace, trim, concat, lit,
     lower, concat_ws, coalesce, upper, to_timestamp,
-    sha2, split, element_at,
+    sha2, split, element_at, avg, count, sum as spark_sum,
+    explode, array, collect_list, size, isnan, isnull,
 )
-from pyspark.sql.types import DoubleType, LongType, StringType
+from pyspark.sql.types import DoubleType, LongType, StringType, ArrayType
 from pyspark.sql.functions import udf
+from textblob import TextBlob
 
 # ================== CONFIG ==================
 load_dotenv()
@@ -310,6 +312,253 @@ def map_categories(df):
     return df_mapped
 
 
+# ================== STEP 2.6: LOAD & CLEAN REVIEWS ==================
+def load_review_data(spark):
+    """Load review data từ local directories + MinIO"""
+    print("\n" + "=" * 60)
+    print(" STEP 2.6: LOADING REVIEW DATA FROM LOCAL & MINIO")
+    print("=" * 60)
+    
+    import glob
+    import os as os_module
+    
+    dfs = []
+    
+    # Load từ local directories
+    local_base = "/app/data/outputs"
+    review_dirs = ["tiki_reviews", "lazada_reviews"]
+    
+    for review_dir in review_dirs:
+        local_path = f"{local_base}/{review_dir}"
+        if os_module.path.exists(local_path):
+            print(f"\n[INFO] Loading from {local_path}")
+            try:
+                json_files = glob.glob(f"{local_path}/**/*.json", recursive=True)
+                if not json_files:
+                    json_files = glob.glob(f"{local_path}/*.json")
+                
+                if json_files:
+                    print(f"   Found {len(json_files)} JSON files")
+                    df_local = spark.read.option("inferSchema", "true").json(json_files)
+                    df_local = df_local.withColumn(
+                        "source_platform",
+                        lit(review_dir.replace("_reviews", ""))
+                    )
+                    dfs.append(df_local)
+                    print(f"   ✓ Loaded {df_local.count():,} reviews from {review_dir}")
+            except Exception as e:
+                print(f"   ✗ Error loading from {local_path}: {e}")
+    
+    # Load từ MinIO (backup)
+    try:
+        print(f"\n[INFO] Loading from MinIO s3a://reviews-data/")
+        df_minio = spark.read.option("inferSchema", "true").json("s3a://reviews-data/")
+        if "source_platform" not in df_minio.columns:
+            df_minio = df_minio.withColumn("source_platform", lit("minio"))
+        dfs.append(df_minio)
+        print(f"   ✓ Loaded {df_minio.count():,} reviews from MinIO")
+    except Exception as e:
+        print(f"   ⚠ Could not load from MinIO: {e}")
+    
+    if not dfs:
+        print(" ⚠ No review data found")
+        return None
+    
+    df_reviews = dfs[0]
+    for d in dfs[1:]:
+        df_reviews = df_reviews.union(d)
+    
+    print(f"\n ✓ Total loaded: {df_reviews.count():,} raw reviews")
+    return df_reviews
+
+
+def clean_review_data(df_reviews):
+    """Clean & standardize review data"""
+    print("\n" + "=" * 60)
+    print(" STEP 2.6.1: CLEANING REVIEWS")
+    print("=" * 60)
+    
+    if df_reviews is None:
+        return None
+    
+    df_clean = (
+        df_reviews
+        .withColumn(
+            "review_id",
+            when(col("review_id").isNotNull(), trim(col("review_id").cast("string")))
+            .otherwise(lit(None)),
+        )
+        .withColumn(
+            "product_id",
+            when(col("product_id").isNotNull(), trim(col("product_id").cast("string")))
+            .otherwise(lit(None)),
+        )
+        .withColumn(
+            "reviewer_name",
+            when(col("reviewer_name").isNotNull(), trim(col("reviewer_name")))
+            .otherwise("Anonymous"),
+        )
+        .withColumn(
+            "rating",
+            when(
+                col("rating").isNotNull(),
+                col("rating").cast(DoubleType())
+            ).otherwise(0.0),
+        )
+        .withColumn(
+            "review_text",
+            when(col("review_text").isNotNull(), trim(col("review_text")))
+            .otherwise(""),
+        )
+        .withColumn(
+            "review_date",
+            when(col("review_date").isNotNull(), col("review_date"))
+            .otherwise(col("crawl_date")),
+        )
+        .withColumn(
+            "helpful_count",
+            when(col("helpful_count").isNotNull(), col("helpful_count").cast(LongType()))
+            .otherwise(0),
+        )
+        .withColumn(
+            "verified_purchase",
+            when(col("verified_purchase").isNotNull(), col("verified_purchase"))
+            .otherwise(False),
+        )
+    )
+    
+    print(f" Cleaned {df_clean.count():,} reviews")
+    return df_clean
+
+
+def sentiment_analysis(df_reviews):
+    """Analyze sentiment từ review text"""
+    print("\n" + "=" * 60)
+    print(" STEP 2.6.2: SENTIMENT ANALYSIS")
+    print("=" * 60)
+    
+    if df_reviews is None:
+        return None
+    
+    def _get_sentiment_score(text: str):
+        """Tính polarity (-1 to 1) từ review text"""
+        if not text or len(text.strip()) == 0:
+            return 0.0
+        try:
+            blob = TextBlob(text)
+            return float(blob.sentiment.polarity)
+        except:
+            return 0.0
+    
+    def _get_sentiment_label(score: float):
+        """Phân loại sentiment: negative, neutral, positive"""
+        if score < -0.1:
+            return "negative"
+        elif score > 0.1:
+            return "positive"
+        else:
+            return "neutral"
+    
+    sentiment_udf = udf(_get_sentiment_score, DoubleType())
+    label_udf = udf(_get_sentiment_label, StringType())
+    
+    df_sentiment = (
+        df_reviews
+        .withColumn("sentiment_score", sentiment_udf(col("review_text")))
+        .withColumn("sentiment_label", label_udf(col("sentiment_score")))
+        .withColumn(
+            "is_positive_review",
+            when(col("sentiment_score") > 0.1, 1).otherwise(0)
+        )
+        .withColumn(
+            "is_negative_review",
+            when(col("sentiment_score") < -0.1, 1).otherwise(0)
+        )
+    )
+    
+    print(" Sentiment Distribution:")
+    for row in df_sentiment.groupBy("sentiment_label").count().collect():
+        print(f"   {row['sentiment_label'].upper()}: {row['count']:,}")
+    
+    return df_sentiment
+
+
+def enrich_reviews(df_reviews, df_products):
+    """Enrich reviews với product metadata"""
+    print("\n" + "=" * 60)
+    print(" STEP 2.6.3: ENRICHING REVIEWS WITH PRODUCT DATA")
+    print("=" * 60)
+    
+    if df_reviews is None:
+        return None
+    
+    # Join với product data
+    product_cols = [
+        "global_product_id_synced",
+        "product_name_std",
+        "brand_std",
+        "category_std",
+        "source_platform_std",
+        "product_master_id",
+        "sku_id",
+    ]
+    
+    available_cols = [c for c in product_cols if c in df_products.columns]
+    df_prod_subset = df_products.select("product_id", *available_cols).distinct()
+    
+    df_enriched = (
+        df_reviews
+        .join(
+            df_prod_subset,
+            on="product_id",
+            how="left"
+        )
+        .withColumn("global_product_id_synced",
+                   coalesce(col("global_product_id_synced"), 
+                           concat(lit("unknown_"), col("product_id"))))
+        .withColumn("product_name_std",
+                   coalesce(col("product_name_std"), lit("Unknown")))
+        .withColumn("brand_std",
+                   coalesce(col("brand_std"), lit("UNKNOWN")))
+        .withColumn("category_std",
+                   coalesce(col("category_std"), lit("OTHER")))
+    )
+    
+    print(f" Enriched {df_enriched.count():,} reviews")
+    return df_enriched
+
+
+def aggregate_review_metrics(df_reviews):
+    """Tính aggregate metrics per product"""
+    print("\n" + "=" * 60)
+    print(" STEP 2.6.4: AGGREGATING REVIEW METRICS")
+    print("=" * 60)
+    
+    if df_reviews is None:
+        return None
+    
+    df_agg = (
+        df_reviews
+        .groupBy("global_product_id_synced", "product_name_std", "brand_std", "category_std")
+        .agg(
+            count("review_id").alias("total_reviews"),
+            avg("rating").alias("avg_rating"),
+            avg("sentiment_score").alias("avg_sentiment_score"),
+            spark_sum("is_positive_review").alias("positive_reviews"),
+            spark_sum("is_negative_review").alias("negative_reviews"),
+            spark_sum("helpful_count").alias("total_helpful_count"),
+            count(when(col("verified_purchase") == True, 1)).alias("verified_reviews"),
+        )
+        .withColumn("negative_sentiment_pct",
+                   (col("negative_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+        .withColumn("positive_sentiment_pct",
+                   (col("positive_reviews") / col("total_reviews") * 100).cast(DoubleType()))
+    )
+    
+    print(f" Generated metrics for {df_agg.count():,} products")
+    return df_agg
+
+
 # ================== STEP 2.8: STANDARDIZATION ==================
 def standardize_data(df):
     print("\n" + "=" * 60)
@@ -490,6 +739,7 @@ def main():
     cleaned_prefix = None
 
     try:
+        # ===== PRODUCT DATA PIPELINE =====
         df_raw = load_raw_data(spark)
         if df_raw is None:
             log_etl(
@@ -511,7 +761,44 @@ def main():
 
         records_final = df_dedup.count()
 
+        # ===== REVIEW DATA PIPELINE =====
+        print("\n" + "=" * 60)
+        print("STARTING REVIEW DATA PIPELINE")
+        print("=" * 60)
+        
+        df_reviews_raw = load_review_data(spark)
+        df_reviews_clean = clean_review_data(df_reviews_raw)
+        df_reviews_sentiment = sentiment_analysis(df_reviews_clean)
+        df_reviews_enriched = enrich_reviews(df_reviews_sentiment, df_dedup)
+        df_review_metrics = aggregate_review_metrics(df_reviews_enriched)
+        
+        # Save both product and review data
         cleaned_prefix, saved_records = save_cleaned_data(df_dedup)
+        
+        if df_review_metrics is not None:
+            review_prefix = f"{cleaned_prefix}reviews/"
+            print(f"\n[INFO] Saving review metrics to {review_prefix}")
+            if SAVE_TO_MINIO:
+                try:
+                    from minio import Minio
+                    from pathlib import Path
+                    
+                    local_review_path = f"/tmp/cleaned_data/reviews"
+                    df_review_metrics.coalesce(2).write.mode("overwrite").parquet(local_review_path)
+                    
+                    client = Minio(
+                        MINIO_HOST, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, secure=MINIO_SECURE
+                    )
+                    
+                    p = Path(local_review_path)
+                    for f in p.rglob("*.parquet"):
+                        remote = f"{review_prefix}{f.name}"
+                        print(f"[INFO] Uploading review data: {remote}")
+                        client.fput_object(MINIO_CLEANED_BUCKET, remote, str(f))
+                    
+                    print(f" Uploaded review metrics to s3a://{MINIO_CLEANED_BUCKET}/{review_prefix}")
+                except Exception as e:
+                    print(f" Warning: Could not save review metrics: {e}")
 
         # Ghi metadata SUCCESS
         log_etl(
