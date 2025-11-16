@@ -3,7 +3,9 @@ Admin Service - Business Logic
 """
 import logging
 import bcrypt
+import datetime
 from typing import List, Dict, Any, Optional, Tuple
+from fastapi import HTTPException
 from models.admin import UserCreateRequest, UserUpdateRequest, PasswordChangeRequest, UserPasswordUpdateRequest, UserActionResponse
 
 logger = logging.getLogger(__name__)
@@ -41,54 +43,121 @@ class AdminService:
         return users
 
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
-        """Get user by ID"""
-        query = """
-        SELECT u.user_id, u.email, u.full_name, u.phone, u.status, 
-               u.created_at, u.updated_at, u.last_login_at,
-               r.role_code, r.role_name
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
-        WHERE u.user_id = $1
+        """Get user by ID with full roles and permissions array
+        Enhanced version - returns complete user data with roles[] and permissions[]
         """
-        result = await self.db.execute_query(query, (user_id,))
-        return result[0] if result else None
+        try:
+            # Get user basic info
+            user_query = "SELECT * FROM iam_user WHERE user_id = $1"
+            user_result = await self.db.execute_query(user_query, (user_id,))
 
-    async def create_user(self, user_data: UserCreateRequest) -> int:
-        """Create new user"""
-        # Check if email already exists
-        check_query = "SELECT user_id FROM iam_user WHERE email = $1"
-        existing = await self.db.execute_query(check_query, (user_data.email.lower(),))
-        
-        if existing:
-            raise ValueError("Email already exists")
-        
-        # Hash password
-        password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        
-        # Create user
-        insert_query = """
-        INSERT INTO iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
-        RETURNING user_id
-        """
-        
-        result = await self.db.execute_query(insert_query, (
-            user_data.email.lower(),
-            password_hash,
-            user_data.full_name,
-            user_data.phone
-        ))
-        
-        if not result:
-            raise Exception("Failed to create user")
-        
-        user_id = result[0]['user_id']
-        
-        # Assign role
-        await self._assign_role(user_id, user_data.role)
-        
-        return user_id
+            if not user_result:
+                return None
+
+            user = user_result[0]
+
+            # Get user roles
+            roles_query = """
+                SELECT r.role_id, r.role_code, r.role_name, r.description
+                FROM iam_role r
+                JOIN iam_user_role ur ON r.role_id = ur.role_id
+                WHERE ur.user_id = $1
+            """
+            roles_result = await self.db.execute_query(roles_query, (user_id,))
+
+            # Get user permissions
+            permissions_query = """
+                SELECT DISTINCT p.perm_id, p.perm_code, p.perm_name, p.module, p.action, p.description
+                FROM iam_permission p
+                JOIN iam_role_permission rp ON p.perm_id = rp.perm_id
+                JOIN iam_user_role ur ON rp.role_id = ur.role_id
+                WHERE ur.user_id = $1
+            """
+            permissions_result = await self.db.execute_query(permissions_query, (user_id,))
+
+            return {
+                'user_id': user['user_id'],
+                'email': user['email'],
+                'full_name': user['full_name'],
+                'phone': user['phone'],
+                'status': user['status'],
+                'mfa_enabled': user['mfa_enabled'],
+                'last_login_at': user['last_login_at'],
+                'created_at': user['created_at'],
+                'updated_at': user['updated_at'],
+                'roles': [
+                    {
+                        'role_id': role['role_id'],
+                        'role_code': role['role_code'],
+                        'role_name': role['role_name'],
+                        'description': role['description']
+                    }
+                    for role in roles_result
+                ],
+                'permissions': [
+                    {
+                        'perm_id': perm['perm_id'],
+                        'perm_code': perm['perm_code'],
+                        'perm_name': perm['perm_name'],
+                        'module': perm['module'],
+                        'action': perm['action'],
+                        'description': perm['description']
+                    }
+                    for perm in permissions_result
+                ]
+            }
+
+        except Exception as e:
+            logger.error(f"Get user by ID error: {e}")
+            return None
+
+    async def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create new user (Admin function)"""
+        try:
+            from app.services.iam_service import IAMService
+            iam_service = IAMService(self.db)
+            
+            # Check if email exists
+            check_query = "SELECT user_id FROM iam_user WHERE email = $1"
+            existing = await self.db.execute_query(check_query, (user_data['email'],))
+            if existing:
+                raise HTTPException(status_code=400, detail="Email already exists")
+            
+            # Hash password using IAMService
+            password_hash = await iam_service.hash_password(user_data['password'])
+            
+            # Insert user
+            query = """
+                INSERT INTO iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING user_id, email, full_name, phone, status, created_at
+            """
+            now = datetime.datetime.utcnow()
+            result = await self.db.execute_query(query, (
+                user_data['email'],
+                password_hash,
+                user_data.get('full_name', ''),
+                user_data.get('phone', ''),
+                user_data.get('status', 'active'),
+                now,
+                now
+            ))
+            
+            if result:
+                user = result[0]
+                # Assign default role if specified
+                if 'role_code' in user_data:
+                    await self._assign_role(user['user_id'], user_data['role_code'])
+                
+                await self._log_activity(user['user_id'], "USER_CREATED", f"Admin created user: {user['email']}")
+                return user
+            
+            raise HTTPException(status_code=500, detail="Failed to create user")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Create user error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
     async def update_user(self, user_id: int, user_data: UserUpdateRequest) -> bool:
         """Update user"""
@@ -135,25 +204,35 @@ class AdminService:
         
         return True
 
-    async def change_password(self, user_id: int, password_data: PasswordChangeRequest) -> bool:
-        """Change user password"""
-        # Check if user exists
-        existing = await self.get_user_by_id(user_id)
-        if not existing:
-            raise ValueError("User not found")
-        
-        # Hash new password
-        password_hash = bcrypt.hashpw(password_data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        
-        # Update password
-        update_query = """
-        UPDATE iam_user 
-        SET password_hash = $1, updated_at = NOW()
-        WHERE user_id = $2
+    async def change_password(self, user_id: int, new_password: str) -> bool:
+        """Change user password (admin function - no current password verification)
+        Note: For user self-service password change, use IAMService.change_password() which requires current password
         """
-        
-        await self.db.execute_query(update_query, (password_hash, user_id))
-        return True
+        try:
+            from app.services.iam_service import IAMService
+            iam_service = IAMService(self.db)
+            
+            password_hash = await iam_service.hash_password(new_password)
+            
+            query = """
+                UPDATE iam_user 
+                SET password_hash = $1, updated_at = $2 
+                WHERE user_id = $3
+                RETURNING user_id
+            """
+            result = await self.db.execute_query(query, (
+                password_hash, 
+                datetime.datetime.utcnow(), 
+                user_id
+            ))
+            
+            if result:
+                await self._log_activity(user_id, "PASSWORD_CHANGED", "Admin changed user password")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Change password error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
     async def delete_user(self, user_id: int) -> str:
         """Delete user permanently - removes all related data"""
@@ -231,6 +310,21 @@ class AdminService:
         """
         await self.db.execute_query(query, (user_id,))
         return True
+
+    async def update_last_login(self, user_id: int) -> bool:
+        """Update user's last login timestamp"""
+        query = """
+        UPDATE iam_user 
+        SET last_login_at = NOW(), updated_at = NOW()
+        WHERE user_id = $1
+        """
+        try:
+            await self.db.execute_query(query, (user_id,))
+            logger.info(f"Last login updated for user_id: {user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update last login for user_id {user_id}: {e}")
+            return False
 
     async def get_activity_logs(self, page: int = 1, limit: int = 20, user_id: int = None) -> Tuple[List[Dict], int]:
         """Get activity logs"""
