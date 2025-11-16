@@ -314,7 +314,7 @@ class AdminService:
     async def update_last_login(self, user_id: int) -> bool:
         """Update user's last login timestamp"""
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET last_login_at = NOW(), updated_at = NOW()
         WHERE user_id = $1
         """
