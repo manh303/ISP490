@@ -36,22 +36,6 @@ class IAMService:
 
     # create_user() removed - use AdminService.create_user() instead
 
-    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
-        """Get user by email"""
-        try:
-            query = "SELECT * FROM iam_user WHERE email = $1"
-            logger.info(f"Executing query: {query} with email: {email}")
-            result = await self.db.execute_query(query, (email,))
-            logger.info(f"Query result: {result}")
-            return result[0] if result else None
-        except Exception as e:
-            logger.error(f"Get user by email error: {e}")
-            logger.error(f"Query was: {query}")
-            logger.error(f"Email was: {email}")
-            return None
-
-    # get_user_by_id() removed - use AdminService.get_user_by_id() instead
-    # AdminService version returns full user data with roles[] and permissions[]
 
     async def authenticate_user(self, email: str, password: str) -> Optional[Dict[str, Any]]:
         """Authenticate user with email and password"""
