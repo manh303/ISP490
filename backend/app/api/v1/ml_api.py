@@ -36,14 +36,14 @@ router = APIRouter(prefix="/ml", tags=["ML Models"])
 # Get ML folder path with fallback for Render deployment
 # Try multiple paths in order of likelihood
 possible_paths = [
-    # Local development
-    Path(__file__).resolve().parent.parent.parent.parent.parent / "ml",
-    # Render environment variable
-    Path(os.getenv("ML_PATH", "/nonexistent")) if os.getenv("ML_PATH") else None,
-    # Render alternate structure
+    # Render/Railway deployment
+    Path("/app/ml"),
     Path("/opt/render/project/src/ml"),
     Path("/opt/render/project/ml"),
-    Path("/app/ml"),
+    # Local development
+    Path(__file__).resolve().parent.parent.parent.parent.parent / "ml",
+    # Environment variable
+    Path(os.getenv("ML_PATH", "/nonexistent")) if os.getenv("ML_PATH") else None,
 ]
 
 ml_folder = None

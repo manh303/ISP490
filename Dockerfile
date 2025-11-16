@@ -23,6 +23,7 @@ RUN pip install --upgrade pip && \
 
 # Copy backend source code
 COPY backend/ ./backend/
+COPY ml/ ./ml/
 COPY start.sh ./
 
 # Set ownership

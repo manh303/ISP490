@@ -59,7 +59,7 @@ class AdminService:
             # Get user roles
             roles_query = """
                 SELECT r.role_id, r.role_code, r.role_name, r.description
-                FROM iam_role r
+                FROM iam.am_role r
                 JOIN iam.iam_user_role ur ON r.role_id = ur.role_id
                 WHERE ur.user_id = $1
             """
