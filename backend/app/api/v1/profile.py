@@ -9,11 +9,10 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from models.user import ProfileResponse, ProfileUpdateRequest
-from app.services.admin_service import UserActionResponse
+from app.services.admin_service import AdminService, UserActionResponse
 
 class ProfileActionResponse(UserActionResponse):
     pass
-from app.services.user_management_service import UserManagementService
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +38,14 @@ async def get_database():
         raise HTTPException(status_code=500, detail="Database connection failed")
 
 async def get_user_service(db=Depends(get_database)):
-    """Get user management service"""
-    return UserManagementService(db)
+    """Get admin service for user management"""
+    return AdminService(db)
 
 # Endpoints
 @router.get("", response_model=ProfileResponse, summary="👤 View My Profile")
 async def get_my_profile(
     user_id: int = 1,
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: AdminService = Depends(get_user_service)
 ):
     """
     Get user profile by user_id
@@ -57,7 +56,7 @@ async def get_my_profile(
     """
     try:
         # Get profile from database
-        profile = await user_service.get_profile(user_id)
+        profile = await user_service.get_user_by_id(user_id)
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
         
@@ -73,7 +72,7 @@ async def get_my_profile(
 async def update_my_profile(
     user_id: int,
     profile_data: ProfileUpdateRequest,
-    user_service: UserManagementService = Depends(get_user_service)
+    user_service: AdminService = Depends(get_user_service)
 ):
     """
     Update user profile
@@ -95,13 +94,13 @@ async def update_my_profile(
     ```
     """
     try:
-        # Update profile
-        updated_profile = await user_service.update_profile(
-            user_id=user_id,
+        # Update profile using update_user from AdminService
+        from models.admin import UserUpdateRequest
+        update_data = UserUpdateRequest(
             full_name=profile_data.full_name,
-            phone=profile_data.phone,
-            email=profile_data.email
+            phone=profile_data.phone
         )
+        await user_service.update_user(user_id, update_data)
         
         return ProfileActionResponse(
             success=True,
