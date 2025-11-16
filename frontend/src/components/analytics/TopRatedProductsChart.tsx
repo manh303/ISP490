@@ -55,8 +55,8 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
               />
             </div>
             <div className="flex justify-between text-xs text-gray-500">
-              <span>{product.review_count.toLocaleString('vi-VN')} đánh giá</span>
-              <span>{product.price.toLocaleString('vi-VN')} ₫</span>
+              <span>{(product.review_count || 0).toLocaleString('vi-VN')} đánh giá</span>
+              <span>{(product.price || 0).toLocaleString('vi-VN')} ₫</span>
             </div>
           </div>
         ))}

@@ -21,6 +21,7 @@ kaggle==1.5.16
 pymongo==4.4.1
 psycopg2-binary==2.9.7
 sqlalchemy==2.0.19
+psycopg2==2.9.7
 
 # Utilities
 python-dotenv==1.0.0

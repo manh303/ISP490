@@ -95,17 +95,17 @@ export function PriceVsRatingChart({
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-700">
+                     <DollarSign className="h-3 w-3 text-gray-500" />
+                     <span className="text-xs font-medium text-gray-700">
                        {((product.price || 0) / 1000000).toFixed(1)}M
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-medium text-gray-900">
-                        {(product.rating_avg || 0).toFixed(1)}
-                    </span>
-                  </div>
+                     </span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                     <span className="text-xs font-medium text-gray-900">
+                       {(product.rating_avg || 0).toFixed(1)}
+                     </span>
+                   </div>
                 </div>
               </div>
               
@@ -122,7 +122,7 @@ export function PriceVsRatingChart({
               </div>
               
               <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-                <span>{product.review_count.toLocaleString('vi-VN')} đánh giá</span>
+                <span>{(product.review_count || 0).toLocaleString('vi-VN')} đánh giá</span>
                 <span className="capitalize">{product.category}</span>
               </div>
             </div>

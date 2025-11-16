@@ -8,15 +8,19 @@ import random
 import os
 import hashlib
 from datetime import datetime
+from pathlib import Path
+
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import psycopg2
-from psycopg2.extras import execute_values
+
 
 class MassCrawler:
     def __init__(self):
         self.session = requests.Session()
-        self.db_conn = self.connect_db()
+
+        # --- Thư mục output để MinIO / Airflow đọc ---
+        # Sẽ trùng với CRAWLER_OUTPUT_DIR trong Airflow (ví dụ: /app/data/outputs)
+        self.output_dir = Path(os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs"))
 
         # Browser headers
         self.session.headers.update({
@@ -44,7 +48,7 @@ class MassCrawler:
             'máy in'
         ]
 
-        # CellphoneS categories
+        # CellphoneS categories (chưa dùng, để sẵn)
         self.cellphones_categories = {
             'dien-thoai': 'smartphone',
             'laptop': 'laptop',
@@ -65,48 +69,49 @@ class MassCrawler:
             'start_time': None
         }
 
-    def connect_db(self):
-        """Connect to PostgreSQL database"""
-        return psycopg2.connect(
-            host=os.getenv('DB_HOST', 'dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com'),
-            database=os.getenv('DB_NAME', 'ecommerce_dss'),
-            user=os.getenv('DB_USER', 'dss_user'),
-            password=os.getenv('DB_PASSWORD', 'IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'),
-            port=os.getenv('DB_PORT', '5432')
-        )
-
+    # vẫn giữ cho tương lai nếu cần
     def generate_global_id(self, platform, product_id):
         """Generate global product ID"""
         return hashlib.sha256(f"{platform}_{product_id}".encode()).hexdigest()
 
-    def save_to_db(self, products):
-        """Save products to stg_raw_products table with JSONB format"""
+    # -----------------------------
+    #  LƯU DỮ LIỆU DẠNG JSONL → MINIO BUFFER
+    # -----------------------------
+    @staticmethod
+    def _slugify(text: str) -> str:
+        text = text.lower()
+        return "".join(ch if ch.isalnum() else "_" for ch in text).strip("_")
+
+    def save_to_minio_buffer(self, products, category: str):
+        """
+        Thay cho save_to_db:
+        - Ghi products ra file .jsonl trong CRAWLER_OUTPUT_DIR
+        - Để Airflow upload lên MinIO sau này
+        """
         if not products:
             return
 
-        cursor = self.db_conn.cursor()
-        values = []
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        category_slug = self._slugify(category)
 
-        for p in products:
-            values.append((
-                'tiki',
-                p['url'],
-                p['product_id'],
-                datetime.now(),
-                json.dumps(p),
-                None
-            ))
+        # ví dụ: /app/data/outputs/tiki/date=2025-11-15/dien_thoai.jsonl
+        out_dir = self.output_dir / "tiki" / f"date={date_str}"
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-        execute_values(cursor, """
-            INSERT INTO stg_raw_products (
-                source_platform, url, platform_product_id, crawled_at, raw_data, load_id
-            ) VALUES %s
-        """, values)
+        file_path = out_dir / f"{category_slug}.jsonl"
 
-        self.db_conn.commit()
-        cursor.close()
-        print(f"      Saved {len(products)} products to database")
+        with file_path.open("w", encoding="utf-8") as f:
+            for p in products:
+                f.write(json.dumps(p, ensure_ascii=False) + "\n")
 
+        print(
+            f"      Saved {len(products)} products for category '{category}' "
+            f"to {file_path} (MinIO buffer)"
+        )
+
+    # -----------------------------
+    #  CRAWL TIKI
+    # -----------------------------
     def crawl_tiki_category_paginated(self, category, max_pages=50):
         """Crawl Tiki category with multiple pages"""
         print(f"\n>>> Crawling category: {category} (up to {max_pages} pages)")
@@ -179,10 +184,13 @@ class MassCrawler:
         print(f"    Category '{category}' total: {len(all_products)} products")
         return all_products
 
+    # -----------------------------
+    #  MASS CRAWL
+    # -----------------------------
     def run_mass_crawl(self):
-        """Run mass crawl across all categories"""
+        """Run crawl tiki across all categories"""
         print("=" * 60)
-        print("MASS CRAWLER STARTING")
+        print("CRAWLER TIKI STARTING")
         print("=" * 60)
         print(f"Categories to crawl: {len(self.categories)}")
         print(f"Expected products: {len(self.categories) * 15 * 40}")  # categories * pages * products_per_page
@@ -200,9 +208,9 @@ class MassCrawler:
                 all_products.extend(category_products)
                 self.stats['categories_processed'] += 1
 
-                # Save to database after each category
+                # --- thay vì save_to_db, lưu ra file cho MinIO ---
                 if category_products:
-                    self.save_to_db(category_products)
+                    self.save_to_minio_buffer(category_products, category)
 
                 print(f"    Running total: {len(all_products)} products")
 
@@ -214,15 +222,14 @@ class MassCrawler:
                 print(f"    ERROR in category {category}: {e}")
                 continue
 
-        # Close database connection
-        if self.db_conn:
-            self.db_conn.close()
+        # Không còn db_conn nên không close
 
         self.print_summary(all_products)
         return all_products
 
-
-
+    # -----------------------------
+    #  SUMMARY
+    # -----------------------------
     def get_breakdown(self, products):
         """Get breakdown by category"""
         breakdown = {}
@@ -236,7 +243,7 @@ class MassCrawler:
         duration = time.time() - self.stats['start_time']
 
         print("\n" + "=" * 60)
-        print("MASS CRAWL COMPLETED!")
+        print("CRAWL TIKI COMPLETED!")
         print("=" * 60)
         print(f"Duration: {duration/60:.1f} minutes")
         print(f"Total products: {len(products):,}")
@@ -255,7 +262,15 @@ class MassCrawler:
         for i, product in enumerate(products[:5], 1):
             name = product.get('product_name', 'N/A')[:50]
             price = product.get('price_current', 'N/A')
-            print(f"  {i}. {name}... | {price:,} VND" if isinstance(price, int) else f"  {i}. {name}... | {price}")
+            print(
+                f"  {i}. {name}... | {price:,} VND"
+                if isinstance(price, int) else
+                f"  {i}. {name}... | {price}"
+            )
+
+        print()
+        print(f"Data saved for MinIO upload under: {self.output_dir / 'tiki'}")
+
 
 def main():
     """Run the mass crawler"""
@@ -271,7 +286,7 @@ def main():
         products = crawler.run_mass_crawl()
 
         print(f"\nSUCCESS! Collected {len(products):,} total products")
-        print("Check data/mass_crawl/ folder for results")
+        print("Check MinIO buffer folder (CRAWLER_OUTPUT_DIR/tiki/date=YYYY-MM-DD) for results")
 
     except KeyboardInterrupt:
         print("\nCrawl interrupted by user")
@@ -279,6 +294,7 @@ def main():
         print(f"\nCrawl error: {e}")
         import traceback
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()

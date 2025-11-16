@@ -56,7 +56,7 @@ python -u "$SCRIPT"
     crawl_lazada_reviews = BashOperator(
         task_id="crawl_lazada_reviews",
         bash_command=PREAMBLE + r"""
-SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_crawler_airflow.py"
+SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_from_products.py"
 pip install -q playwright 2>/dev/null || true
 playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }

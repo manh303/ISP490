@@ -28,9 +28,9 @@ class AdminService:
         SELECT u.user_id, u.email, u.full_name, u.phone, u.status, 
                u.created_at, u.updated_at, u.last_login_at,
                r.role_code, r.role_name
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user u
+        LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
         {where_clause}
         ORDER BY u.created_at DESC
         """
@@ -191,7 +191,7 @@ class AdminService:
             values.append(user_id)
             
             update_query = f"""
-            UPDATE iam_user 
+            UPDATE iam.iam_user 
             SET {', '.join(update_fields)}
             WHERE user_id = ${param_count}
             """
@@ -290,7 +290,7 @@ class AdminService:
             raise ValueError("User not found")
         
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET status = 'disabled', updated_at = NOW()
         WHERE user_id = $1
         """
@@ -304,7 +304,7 @@ class AdminService:
             raise ValueError("User not found")
         
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET status = 'active', updated_at = NOW()
         WHERE user_id = $1
         """
@@ -340,14 +340,14 @@ class AdminService:
         query = f"""
         SELECT log_id, user_id, email, action, resource, details, 
                ip_address, status, created_at
-        FROM user_activity_logs
+        FROM iam.user_activity_logs
         {where_clause}
         ORDER BY created_at DESC
         LIMIT $1 OFFSET $2
         """
         
         count_query = f"""
-        SELECT COUNT(*) as total FROM user_activity_logs
+        SELECT COUNT(*) as total FROM iam.user_activity_logs
         {where_clause.replace('$3', '$1') if where_clause else ''}
         """
         
@@ -367,13 +367,13 @@ class AdminService:
             COUNT(CASE WHEN status = 'success' THEN 1 END) as successful_activities,
             COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_activities,
             COUNT(DISTINCT user_id) as unique_users
-        FROM user_activity_logs
+        FROM iam.user_activity_logs
         WHERE created_at >= NOW() - INTERVAL '30 days'
         """
         
         top_actions_query = """
         SELECT action, COUNT(*) as count
-        FROM user_activity_logs
+        FROM iam.user_activity_logs
         WHERE created_at >= NOW() - INTERVAL '7 days'
         GROUP BY action
         ORDER BY count DESC
@@ -383,7 +383,7 @@ class AdminService:
         recent_query = """
         SELECT log_id, user_id, email, action, resource, details, 
                ip_address, status, created_at
-        FROM user_activity_logs
+        FROM iam.user_activity_logs
         ORDER BY created_at DESC
         LIMIT 10
         """
@@ -401,7 +401,7 @@ class AdminService:
     async def _assign_role(self, user_id: int, role_code: str) -> None:
         """Assign role to user"""
         # Get role ID
-        role_query = "SELECT role_id FROM iam_role WHERE role_code = $1"
+        role_query = "SELECT role_id FROM iam.iam_role WHERE role_code = $1"
         role_result = await self.db.execute_query(role_query, (role_code,))
         
         if not role_result:
@@ -410,11 +410,11 @@ class AdminService:
         role_id = role_result[0]['role_id']
         
         # Remove existing roles
-        await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+        await self.db.execute_query("DELETE FROM iam.iam_user_role WHERE user_id = $1", (user_id,))
         
         # Assign new role
         assign_query = """
-        INSERT INTO iam_user_role (user_id, role_id, assigned_at)
+        INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
         VALUES ($1, $2, NOW())
         """
         await self.db.execute_query(assign_query, (user_id, role_id))

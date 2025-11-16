@@ -1,3 +1,29 @@
+-- ML Model Registry & Management
+
+CREATE TABLE IF NOT EXISTS ml_model_registry (
+    model_id BIGSERIAL PRIMARY KEY,
+    model_name VARCHAR(100) NOT NULL,
+    model_type VARCHAR(50) NOT NULL, -- demand_prediction|product_recommendation|price_prediction|customer_segmentation
+    version VARCHAR(50) NOT NULL,
+    status VARCHAR(20) DEFAULT 'inactive', -- active|inactive|training|archived
+    description TEXT,
+    model_path VARCHAR(255),
+    metrics JSONB, -- Store model metrics as JSON
+    accuracy DECIMAL(5,4),
+    precision DECIMAL(5,4),
+    recall DECIMAL(5,4),
+    f1_score DECIMAL(5,4),
+    trained_at TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    triggered_by BIGINT, -- user_id who triggered training
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (triggered_by) REFERENCES "user"(user_id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_ml_model_type ON ml_model_registry(model_type);
+CREATE INDEX idx_ml_model_status ON ml_model_registry(status);
+CREATE INDEX idx_ml_model_created ON ml_model_registry(created_at DESC);
+
 -- ML Model Output Tables
 
 CREATE TABLE IF NOT EXISTS ml_product_recommendations (

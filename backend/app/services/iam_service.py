@@ -39,7 +39,7 @@ class IAMService:
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
         try:
-            query = "SELECT * FROM iam_user WHERE email = $1"
+            query = "SELECT * FROM iam.iam_user WHERE email = $1"
             logger.info(f"Executing query: {query} with email: {email}")
             result = await self.db.execute_query(query, (email,))
             logger.info(f"Query result: {result}")
@@ -100,9 +100,9 @@ class IAMService:
         """Check if user has specific permission"""
         try:
             query = """
-                SELECT 1 FROM iam_permission p
-                JOIN iam_role_permission rp ON p.perm_id = rp.perm_id
-                JOIN iam_user_role ur ON rp.role_id = ur.role_id
+                SELECT 1 FROM iam.iam_permission p
+                JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
+                JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1 AND p.perm_code = $2
             """
             result = await self.db.execute_query(query, (user_id, permission_code))
@@ -132,7 +132,7 @@ class IAMService:
 
             # Update password
             query = """
-                UPDATE iam_user
+                UPDATE iam.iam_user
                 SET password_hash = $1, updated_at = $2
                 WHERE user_id = $3
             """
@@ -145,7 +145,7 @@ class IAMService:
     async def get_user_by_email_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get basic user info by ID (including password hash for verification)"""
         try:
-            query = "SELECT * FROM iam_user WHERE user_id = $1"
+            query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
             result = await self.db.execute_query(query, (user_id,))
             return result[0] if result else None
         except Exception as e:
@@ -158,7 +158,7 @@ class IAMService:
         """Log user action for audit"""
         try:
             query = """
-                INSERT INTO iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
+                INSERT INTO iam.iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
                 VALUES ($1, $2, $3, $4, $5, $6)
             """
             await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.datetime.utcnow()))

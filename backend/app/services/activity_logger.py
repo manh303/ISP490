@@ -30,7 +30,7 @@ class ActivityLogger:
                 user_agent = request.headers.get("user-agent")
             
             query = """
-            INSERT INTO user_activity_logs 
+            INSERT INTO iam.user_activity_logs 
             (user_id, email, action, resource, details, ip_address, user_agent, status)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             """
@@ -87,7 +87,7 @@ class ActivityLogger:
             query = f"""
             SELECT log_id, user_id, email, action, resource, details, 
                    ip_address, user_agent, status, created_at
-            FROM user_activity_logs
+            FROM iam.user_activity_logs
             {where_clause}
             ORDER BY created_at DESC
             LIMIT ${param_count + 1} OFFSET ${param_count + 2}
@@ -97,7 +97,7 @@ class ActivityLogger:
             logs = await self.db.execute_query(query, params)
             
             # Get total count
-            count_query = f"SELECT COUNT(*) FROM user_activity_logs {where_clause}"
+            count_query = f"SELECT COUNT(*) FROM iam.user_activity_logs {where_clause}"
             count_params = params[:-2] if params else []
             total_result = await self.db.execute_query(count_query, count_params)
             total = total_result[0]['count'] if total_result and len(total_result) > 0 else 0
@@ -121,7 +121,7 @@ class ActivityLogger:
             # Daily activity count
             daily_query = """
             SELECT DATE(created_at) as date, COUNT(*) as count
-            FROM user_activity_logs
+            FROM iam.user_activity_logs
             WHERE created_at >= NOW() - INTERVAL '%s days'
             GROUP BY DATE(created_at)
             ORDER BY date DESC
@@ -131,7 +131,7 @@ class ActivityLogger:
             # Action breakdown
             action_query = """
             SELECT action, COUNT(*) as count
-            FROM user_activity_logs
+            FROM iam.user_activity_logs
             WHERE created_at >= NOW() - INTERVAL '%s days'
             GROUP BY action
             ORDER BY count DESC
@@ -144,8 +144,8 @@ class ActivityLogger:
             SELECT COALESCE(u.email, l.email) as email, 
                    COALESCE(u.full_name, 'Unknown User') as full_name, 
                    COUNT(l.log_id) as activity_count
-            FROM user_activity_logs l
-            LEFT JOIN iam_user u ON l.user_id = u.user_id
+            FROM iam.user_activity_logs l
+            LEFT JOIN iam.iam_user u ON l.user_id = u.user_id
             WHERE l.created_at >= NOW() - INTERVAL '%s days'
             GROUP BY u.user_id, u.email, u.full_name, l.email
             ORDER BY activity_count DESC
