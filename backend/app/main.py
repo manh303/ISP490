@@ -61,6 +61,8 @@ except ImportError:
     validate_phone = lambda x: x
     def validate_password(x, **kwargs):
         return x
+    def validate_email(email: str):
+        return email
     ROLE_MENUS = {}
     get_role_menu = lambda x: {}
 
@@ -175,6 +177,11 @@ class SignupRequest(BaseModel):
     @classmethod
     def validate_phone_field(cls, v):
         return validate_phone(v)
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email_field(cls, v):
+        return validate_email(v)
 
 class SignupResponse(BaseModel):
     success: bool
