@@ -17,7 +17,6 @@ from models.admin import (
     UserListResponse, UserActionResponse
 )
 from models.shared import UserResponse
-from app.services.user_management_service import UserManagementService
 from app.utils.admin_helpers import get_current_admin_user, format_user_response
 from app.constants.roles import validate_role_code
 
@@ -54,14 +53,14 @@ async def get_user_service(db = Depends(get_database)) -> AdminService:
     return AdminService(db)
 
 @router.get("/users", response_model=UserListResponse, 
-           summary="📋 Get Active Users",
+           summary=" Get Active Users",
            description="Get all active users (no pagination)")
 async def get_users(
     admin_service: AdminService = Depends(get_admin_service)
 ):
     """Get all active users - NO AUTH REQUIRED, NO PAGINATION"""
     try:
-        logger.info(f"📋 Getting all active users")
+        logger.info( f" Getting all active users")
         users = await admin_service.get_users('active')
         
         # Return raw dict data - Pydantic will validate and convert
@@ -271,34 +270,53 @@ async def delete_user(
     admin_service: AdminService = Depends(get_admin_service)
 ):
     """
-    ⚠️ Delete user (IRREVERSIBLE)
+    **Dữ liệu bị xóa bao gồm:**
+    - Thông tin tài khoản
+    - Vai trò (roles)
+    - Phiên đăng nhập (sessions)
+    - Lịch sử hoạt động (activity logs)
+    - Token xác thực
     
-    **WARNING**: This action cannot be undone!
+    **Cách sử dụng**: Thêm `?confirm=true` vào URL
     
-    **Example**: `/api/v1/admin/users/123?confirm=true`
+    **Ví dụ**: `DELETE /api/v1/admin/users/123?confirm=true`
     """
     try:
+        logger.info(f"🗑️ Attempting to permanently delete user_id: {user_id}")
+        
         # Require confirmation
         if not confirm:
             raise HTTPException(
                 status_code=400, 
-                detail="Deletion requires confirmation. Add ?confirm=true to the request"
+                detail="⚠️ Xóa vĩnh viễn cần xác nhận. Vui lòng thêm ?confirm=true vào URL"
             )
         
-        # Delete user
+        # Get user info before deletion
+        user = await admin_service.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+        
+        logger.info(f"🔍 Found user to delete: {user['email']} (ID: {user_id})")
+        
+        # Delete user (this will also delete all related data)
         email = await admin_service.delete_user(user_id)
+        
+        logger.info(f"✅ Successfully deleted user: {email} (ID: {user_id})")
         
         return UserActionResponse(
             success=True,
-            message=f"User {email} deleted successfully",
+            message=f"✅ Đã xóa vĩnh viễn tài khoản {email}",
             user_id=user_id
         )
         
+    except HTTPException:
+        raise
     except ValueError as e:
+        logger.error(f"❌ User not found: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Delete user error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete user")
+        logger.error(f"❌ Delete user error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Không thể xóa người dùng: {str(e)}")
 
 @router.get("/activity-logs")
 async def get_activity_logs(

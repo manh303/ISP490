@@ -1220,11 +1220,11 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
         # Update last login time
         try:
             try:
-                from app.services.user_management_service import UserManagementService
+                from app.services.admin_service import AdminService
             except ImportError:
-                from services.user_management_service import UserManagementService
-            user_service = UserManagementService(db)
-            await user_service.update_last_login(user_data["user_id"])
+                from services.admin_service import AdminService
+            admin_service = AdminService(db)
+            await admin_service.update_last_login(user_data["user_id"])
         except Exception as e:
             logger.error(f"Failed to update last login: {e}")
 
