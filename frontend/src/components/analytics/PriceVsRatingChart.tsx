@@ -79,55 +79,68 @@ export function PriceVsRatingChart({
       </div>
 
       {/* Scatter Plot Visualization */}
-      <div className="space-y-3 max-h-[300px] overflow-y-auto">
-        {displayProducts.map((product, index) => {
-          const pricePosition = (product.price / maxPrice) * 100;
-          const ratingPosition = (product.rating_avg / maxRating) * 100;
+      <div className="relative h-56 bg-gray-50 rounded-lg p-4 mb-4">
+        <svg width="100%" height="100%" className="overflow-visible">
+          {/* Y-axis (Rating) grid lines */}
+          {[0, 1, 2, 3, 4, 5].map((rating) => (
+            <g key={rating}>
+              <line
+                x1="8%"
+                y1={`${100 - (rating / 5) * 90}%`}
+                x2="100%"
+                y2={`${100 - (rating / 5) * 90}%`}
+                stroke="#e5e7eb"
+                strokeWidth="1"
+                strokeDasharray="2 2"
+              />
+              <text
+                x="2%"
+                y={`${100 - (rating / 5) * 90}%`}
+                fontSize="10"
+                fill="#6b7280"
+                alignmentBaseline="middle"
+              >
+                {rating}
+              </text>
+            </g>
+          ))}
           
-          // Determine segment color
-          const segment = priceSegments.find(s => product.price >= s.min && product.price <= s.max);
+          {/* X-axis (Price) */}
+          <line x1="8%" y1="95%" x2="100%" y2="95%" stroke="#9ca3af" strokeWidth="1" />
+          <line x1="8%" y1="5%" x2="8%" y2="95%" stroke="#9ca3af" strokeWidth="1" />
           
-          return (
-            <div key={index} className="relative">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-700 truncate max-w-[150px]" title={product.product_name}>
-                  {product.product_name}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-700">
-                      {(product.price / 1000000).toFixed(1)}M
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-medium text-gray-900">
-                      {product?.rating_avg?.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Visual representation */}
-              <div className="relative h-2 bg-gray-100 rounded-full">
-                <div
-                  className={`absolute h-full rounded-full ${segment?.color || 'bg-gray-400'} opacity-70`}
-                  style={{ width: `${pricePosition}%` }}
+          {/* Data points */}
+          {displayProducts.map((product, index) => {
+            const x = 8 + ((product.price / maxPrice) * 90);
+            const y = 95 - ((product.rating_avg / 5) * 90);
+            const segment = priceSegments.find(s => product.price >= s.min && product.price <= s.max);
+            const color = segment?.label === 'Rẻ' ? '#22c55e' :
+                         segment?.label === 'TB' ? '#3b82f6' :
+                         segment?.label === 'Cao' ? '#a855f7' : '#f59e0b';
+            
+            return (
+              <g key={index}>
+                <circle
+                  cx={`${x}%`}
+                  cy={`${y}%`}
+                  r="4"
+                  fill={color}
+                  opacity="0.8"
+                  stroke="white"
+                  strokeWidth="1.5"
                 />
-                <div
-                  className="absolute top-0 w-1 h-full bg-yellow-400 border border-yellow-600"
-                  style={{ left: `${ratingPosition}%` }}
-                />
-              </div>
-              
-              <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-                <span>{product?.review_count?.toLocaleString('vi-VN')} đánh giá</span>
-                <span className="capitalize">{product.category}</span>
-              </div>
-            </div>
-          );
-        })}
+              </g>
+            );
+          })}
+        </svg>
+        
+        {/* Axis labels */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-xs text-gray-600">
+          Giá (VNĐ)
+        </div>
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-xs text-gray-600">
+          Rating
+        </div>
       </div>
 
       {/* Legend */}

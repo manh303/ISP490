@@ -101,26 +101,30 @@ export function PlatformPriceComparisonChart({
                         </div>
                       </div>
 
-                      {/* Average Price Bar */}
-                      <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+                      {/* Average Price Bar with value */}
+                      <div className="relative h-3 bg-gray-100 rounded-lg overflow-hidden">
                         <div
-                          className="absolute h-full bg-gradient-to-r from-teal-500 to-teal-600 rounded-full transition-all duration-500"
+                          className="absolute h-full bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg transition-all duration-700 flex items-center justify-end pr-1"
                           style={{ width: `${barWidth}%` }}
-                        />
+                        >
+                          <span className="text-[10px] text-white font-bold opacity-80">
+                            {(item.avg_price / 1000000).toFixed(1)}M
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Price Range Info */}
+                      {/* Price Range Indicator */}
                       <div className="flex justify-between text-[10px] text-gray-500">
                         <span className="flex items-center gap-1">
                           <TrendingDown className="h-2 w-2" />
-                          {(item.min_price / 1000000).toFixed(1)}M ₫
+                          Min: {(item.min_price / 1000000).toFixed(1)}M ₫
                         </span>
-                        <span className="text-orange-600">
+                        <span className="text-orange-600 font-medium">
                           Biên độ: {rangePercentage}%
                         </span>
                         <span className="flex items-center gap-1">
                           <TrendingUp className="h-2 w-2" />
-                          {(item.max_price / 1000000).toFixed(1)}M ₫
+                          Max: {(item.max_price / 1000000).toFixed(1)}M ₫
                         </span>
                       </div>
                     </div>

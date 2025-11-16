@@ -275,25 +275,25 @@ export function AnalystWireframe() {
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                   <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
                   <div className="text-2xl font-bold text-gray-900">
-                    {dashboardSummary.summary.total_products.toLocaleString('vi-VN')}
+                    {dashboardSummary?.summary?.total_products?.toLocaleString('vi-VN')}
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                   <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
                   <div className="text-2xl font-bold text-blue-600">
-                    {dashboardSummary.summary.overall_avg_rating.toFixed(2)} ⭐
+                    {dashboardSummary?.summary?.overall_avg_rating?.toFixed(2)} ⭐
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                   <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
                   <div className="text-2xl font-bold text-purple-600">
-                    {(dashboardSummary.summary.total_reviews / 1000).toFixed(0)}K
+                    {(dashboardSummary?.summary?.total_reviews / 1000)?.toFixed(0)}K
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                   <div className="text-sm text-gray-600 mb-1">SP chất lượng cao</div>
                   <div className="text-2xl font-bold text-green-600">
-                    {dashboardSummary.summary.high_rated_products.toLocaleString('vi-VN')}
+                    {dashboardSummary?.summary?.high_rated_products?.toLocaleString('vi-VN')}
                   </div>
                 </div>
               </div>

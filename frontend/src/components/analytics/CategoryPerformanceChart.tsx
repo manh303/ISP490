@@ -8,7 +8,7 @@ interface CategoryPerformanceChartProps {
 
 export function CategoryPerformanceChart({
   data,
-  title = 'Hiệu Suất Theo Danh Mục'
+  title = 'Hiệu Suất Theo Danh Mụ'
 }: CategoryPerformanceChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -32,6 +32,8 @@ export function CategoryPerformanceChart({
     smartwatches: '⌚',
   };
 
+  const maxCount = Math.max(...data.map(c => c.product_count));
+
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
       <div className="flex items-center gap-2 mb-4">
@@ -39,75 +41,53 @@ export function CategoryPerformanceChart({
         <h3 className="font-semibold text-gray-900">{title}</h3>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {data.map((category, index) => (
-          <div
-            key={category.category}
-            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{categoryIcons[category.category] || '📦'}</span>
-                <h4 className="font-semibold text-gray-900 capitalize">
-                  {category.category}
-                </h4>
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                <span className="font-bold text-gray-900">
-                  {category.avg_rating.toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-3 text-xs">
-              <div className="bg-blue-50 rounded p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <ShoppingBag className="h-3 w-3 text-blue-600" />
-                  <span className="text-blue-700 font-medium">Sản phẩm</span>
+      {/* Bar Chart */}
+      <div className="space-y-3">
+        {data.map((category) => {
+          const barWidth = (category.product_count / maxCount) * 100;
+          const ratingPercentage = (category.avg_rating / 5) * 100;
+          
+          return (
+            <div key={category.category} className="space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{categoryIcons[category.category] || '📦'}</span>
+                  <span className="font-medium text-gray-900 capitalize text-sm">
+                    {category.category}
+                  </span>
                 </div>
-                <div className="font-bold text-blue-900">
-                  {(category.product_count || 0).toLocaleString('vi-VN')}
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                  <span className="font-bold text-gray-900 text-sm">
+                    {category.avg_rating.toFixed(2)}
+                  </span>
                 </div>
               </div>
-
-              <div className="bg-green-50 rounded p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <DollarSign className="h-3 w-3 text-green-600" />
-                  <span className="text-green-700 font-medium">Giá TB</span>
-                </div>
-
-                <div className="font-bold text-green-900 text-[10px]">
-                  {category.avg_price < 1_000_000
-                    ? `${Math.round(category.avg_price / 1000)}K ₫`
-                    : `${(category.avg_price / 1_000_000).toFixed(1)}M ₫`
-                  }
-                </div>
+              
+              {/* Product count bar */}
+              <div className="relative h-3 bg-gray-100 rounded-lg overflow-hidden">
+                <div
+                  className="absolute h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg transition-all duration-700"
+                  style={{ width: `${barWidth}%` }}
+                />
               </div>
-
-
-              <div className="bg-purple-50 rounded p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <TrendingUp className="h-3 w-3 text-purple-600" />
-                  <span className="text-purple-700 font-medium">Đánh giá</span>
-                </div>
-                <div className="font-bold text-purple-900 text-[10px]">
-                  {(category.total_reviews / 1000).toFixed(0)}K
-                </div>
+              
+              {/* Rating bar */}
+              <div className="relative h-1.5 bg-gray-50 rounded-full overflow-hidden">
+                <div
+                  className="absolute h-full bg-yellow-400 rounded-full transition-all duration-700"
+                  style={{ width: `${ratingPercentage}%` }}
+                />
               </div>
-
-              <div className="bg-yellow-50 rounded p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <Star className="h-3 w-3 text-yellow-600" />
-                  <span className="text-yellow-700 font-medium">Chất lượng</span>
-                </div>
-                <div className="font-bold text-yellow-900">
-                  {category.high_rated_count}
-                </div>
+              
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>{(category.product_count || 0).toLocaleString('vi-VN')} SP</span>
+                <span>{category.high_rated_count} chất lượng cao</span>
+                <span>{(category.total_reviews / 1000).toFixed(0)}K đánh giá</span>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
