@@ -45,10 +45,19 @@ class AdminService:
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Get user by ID with full roles and permissions array
         Enhanced version - returns complete user data with roles[] and permissions[]
+        Also includes primary role_code and role_name at top level for compatibility
         """
         try:
-            # Get user basic info
-            user_query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
+            # Get user basic info with primary role
+            user_query = """
+                SELECT u.*, 
+                       COALESCE(r.role_code, 'NO_ROLE') as role_code,
+                       COALESCE(r.role_name, 'No Role Assigned') as role_name
+                FROM iam.iam_user u
+                LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+                LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
+                WHERE u.user_id = $1
+            """
             user_result = await self.db.execute_query(user_query, (user_id,))
 
             if not user_result:
@@ -56,12 +65,13 @@ class AdminService:
 
             user = user_result[0]
 
-            # Get user roles
+            # Get all user roles (for detailed roles array)
             roles_query = """
                 SELECT r.role_id, r.role_code, r.role_name, r.description
                 FROM iam.iam_role r
                 JOIN iam.iam_user_role ur ON r.role_id = ur.role_id
                 WHERE ur.user_id = $1
+                ORDER BY r.role_code
             """
             roles_result = await self.db.execute_query(roles_query, (user_id,))
 
@@ -72,6 +82,7 @@ class AdminService:
                 JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
                 JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1
+                ORDER BY p.perm_code
             """
             permissions_result = await self.db.execute_query(permissions_query, (user_id,))
 
@@ -81,10 +92,12 @@ class AdminService:
                 'full_name': user['full_name'],
                 'phone': user['phone'],
                 'status': user['status'],
-                'mfa_enabled': user['mfa_enabled'],
+                'mfa_enabled': user.get('mfa_enabled', False),
                 'last_login_at': user['last_login_at'],
                 'created_at': user['created_at'],
                 'updated_at': user['updated_at'],
+                'role_code': user['role_code'],  # Primary role code (top level)
+                'role_name': user['role_name'],  # Primary role name (top level)
                 'roles': [
                     {
                         'role_id': role['role_id'],
