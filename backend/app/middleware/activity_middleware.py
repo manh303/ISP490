@@ -1,5 +1,6 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from services.activity_logger import ActivityLogger
 try:
     from app.core.config import settings
 except ImportError:
