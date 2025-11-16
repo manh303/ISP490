@@ -16,8 +16,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from app.middleware.activity_middleware import ActivityLoggingMiddleware
-from app.services.activity_logger import ActivityLogger
+from middleware.activity_middleware import ActivityLoggingMiddleware
+from services.activity_logger import ActivityLogger
 # Ensure parent directory of `app` is on sys.path so absolute imports like
 # `app.services.*` work when running the script directly.
 parent_dir = os.path.dirname(os.path.dirname(__file__))
