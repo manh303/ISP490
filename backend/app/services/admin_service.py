@@ -15,17 +15,20 @@ class AdminService:
         self.db = db
 
     async def get_users(self, status_filter: str = None) -> List[Dict]:
-        """Get all users without pagination"""
+        """Get all users without pagination
+        
+        Uses subquery to avoid duplicate rows from JOIN
+        """
         
         # Build query with optional status filter
         where_clause = ""
         params = []
         if status_filter:
-            where_clause = "WHERE u.status = $1"
+            where_clause = "WHERE status = $1"
             params.append(status_filter)
         
         query = f"""
-        SELECT u.user_id, u.email, u.full_name, u.phone, u.status, 
+       SELECT u.user_id, u.email, u.full_name, u.phone, u.status, 
                u.created_at, u.updated_at, u.last_login_at,
                r.role_code, r.role_name
         FROM iam.iam_user u
@@ -40,6 +43,7 @@ class AdminService:
         else:
             users = await self.db.execute_query(query)
         
+        logger.info(f"✅ Query returned {len(users)} users")
         return users
 
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
@@ -117,48 +121,84 @@ class AdminService:
             logger.error(f"Get user by ID error: {e}")
             return None
 
-    async def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create new user (Admin function)"""
+    async def create_user(self, user_data: 'UserCreateRequest') -> Dict[str, Any]:
+        from app.services.iam_service import IAMService
+        from models.admin import UserCreateRequest
+        
         try:
-            from app.services.iam_service import IAMService
-            iam_service = IAMService(self.db)
-            
-            # Check if email exists
-            check_query = "SELECT user_id FROM iam_user WHERE email = $1"
-            existing = await self.db.execute_query(check_query, (user_data['email'],))
-            if existing:
+            email = user_data.email
+            password = user_data.password
+            full_name = user_data.full_name or ''
+            phone = user_data.phone or ''
+            status = user_data.status or 'active'
+            role_code = user_data.role
+            #  Kiểm tra email đã tồn tại chưa
+            check_query = "SELECT user_id FROM iam.iam_user WHERE email = $1"
+            existing_user = await self.db.execute_query(check_query, (email,))
+            if existing_user:
                 raise HTTPException(status_code=400, detail="Email already exists")
             
-            # Hash password using IAMService
-            password_hash = await iam_service.hash_password(user_data['password'])
+            #  Mã hóa password
+            iam_service = IAMService(self.db)
+            password_hash = await iam_service.hash_password(password)
             
-            # Insert user
-            query = """
-                INSERT INTO iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                RETURNING user_id, email, full_name, phone, status, created_at
-            """
-            now = datetime.datetime.utcnow()
-            result = await self.db.execute_query(query, (
-                user_data['email'],
-                password_hash,
-                user_data.get('full_name', ''),
-                user_data.get('phone', ''),
-                user_data.get('status', 'active'),
-                now,
-                now
-            ))
-            
-            if result:
-                user = result[0]
-                # Assign default role if specified
-                if 'role_code' in user_data:
-                    await self._assign_role(user['user_id'], user_data['role_code'])
+            # Tạo user trong transaction 
+            async with self.db.transaction() as conn:
+                #  Insert user vào database
+                query = """
+                    INSERT INTO iam.iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+                    RETURNING user_id, email, full_name, phone, status, created_at
+                """
+                user_result = await conn.fetchrow(
+                    query, 
+                    email, 
+                    password_hash, 
+                    full_name, 
+                    phone, 
+                    status
+                )
                 
-                await self._log_activity(user['user_id'], "USER_CREATED", f"Admin created user: {user['email']}")
-                return user
+                if not user_result:
+                    raise HTTPException(status_code=500, detail="Failed to create user")
+                
+                # Lấy user_id trực tiếp từ Record object
+                user_id = user_result['user_id']
+                
+                #  Gán role cho user (nếu có)
+                if role_code:
+                    # Tìm role_id từ role_code
+                    get_role_query = "SELECT role_id FROM iam.iam_role WHERE role_code = $1"
+                    role_id = await conn.fetchval(get_role_query, role_code)
+                    
+                    if not role_id:
+                        raise ValueError(f"Role '{role_code}' not found")
+                    
+                    # Insert vào bảng user_role
+                    assign_role_query = """
+                        INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at) 
+                        VALUES ($1, $2, NOW())
+                    """
+                    await conn.execute(assign_role_query, user_id, role_id)
+                
+                #  Ghi log activity
+                log_query = """
+                    INSERT INTO iam.user_activity_logs (user_id, action, details, created_at) 
+                    VALUES ($1, $2, $3, NOW())
+                """
+                await conn.execute(
+                    log_query, 
+                    user_id, 
+                    "USER_CREATED", 
+                    f"Admin created user: {email}"
+                )
             
-            raise HTTPException(status_code=500, detail="Failed to create user")
+            # Transaction thành công - log thông báo
+            logger.info(f"✅ User created successfully: {email} (ID: {user_id})")
+            
+            # Trả về user data dạng dict
+            return dict(user_result)
+            
         except HTTPException:
             raise
         except Exception as e:
@@ -403,6 +443,17 @@ class AdminService:
             "top_actions": top_actions,
             "recent_activities": recent
         }
+
+    async def _log_activity(self, user_id: int, action: str, details: str = None) -> None:
+        """Log user activity to database"""
+        try:
+            query = """
+                INSERT INTO iam.user_activity_logs (user_id, action, details, created_at)
+                VALUES ($1, $2, $3, NOW())
+            """
+            await self.db.execute_query(query, (user_id, action, details))
+        except Exception as e:
+            logger.warning(f"Failed to log activity: {e}")
 
     async def _assign_role(self, user_id: int, role_code: str) -> None:
         """Assign role to user"""

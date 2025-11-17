@@ -132,7 +132,6 @@ async def create_user(
             raise HTTPException(status_code=400, detail="Invalid role code")
         
         user_id = await admin_service.create_user(user_data)
-        
         return UserActionResponse(
             success=True,
             message="User created successfully",
