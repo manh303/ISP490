@@ -45,10 +45,19 @@ class AdminService:
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Get user by ID with full roles and permissions array
         Enhanced version - returns complete user data with roles[] and permissions[]
+        Also includes primary role_code and role_name at top level for compatibility
         """
         try:
-            # Get user basic info
-            user_query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
+            # Get user basic info with primary role
+            user_query = """
+                SELECT u.*, 
+                       COALESCE(r.role_code, 'NO_ROLE') as role_code,
+                       COALESCE(r.role_name, 'No Role Assigned') as role_name
+                FROM iam.iam_user u
+                LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+                LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
+                WHERE u.user_id = $1
+            """
             user_result = await self.db.execute_query(user_query, (user_id,))
 
             if not user_result:
@@ -56,12 +65,13 @@ class AdminService:
 
             user = user_result[0]
 
-            # Get user roles
+            # Get all user roles (for detailed roles array)
             roles_query = """
                 SELECT r.role_id, r.role_code, r.role_name, r.description
                 FROM iam.iam_role r
                 JOIN iam.iam_user_role ur ON r.role_id = ur.role_id
                 WHERE ur.user_id = $1
+                ORDER BY r.role_code
             """
             roles_result = await self.db.execute_query(roles_query, (user_id,))
 
@@ -72,10 +82,9 @@ class AdminService:
                 JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
                 JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
                 WHERE ur.user_id = $1
+                ORDER BY p.perm_code
             """
             permissions_result = await self.db.execute_query(permissions_query, (user_id,))
-
-            primary_role = roles_result[0] if roles_result else None
 
             return {
                 'user_id': user['user_id'],
@@ -83,14 +92,12 @@ class AdminService:
                 'full_name': user['full_name'],
                 'phone': user['phone'],
                 'status': user['status'],
-                'mfa_enabled': user['mfa_enabled'],
+                'mfa_enabled': user.get('mfa_enabled', False),
                 'last_login_at': user['last_login_at'],
                 'created_at': user['created_at'],
                 'updated_at': user['updated_at'],
-                # Single role fields for UserResponse compatibility
-                'role_code': primary_role['role_code'] if primary_role else None,
-                'role_name': primary_role['role_name'] if primary_role else None,
-                # Full roles array for advanced usage
+                'role_code': user['role_code'],  # Primary role code (top level)
+                'role_name': user['role_name'],  # Primary role name (top level)
                 'roles': [
                     {
                         'role_id': role['role_id'],
@@ -124,7 +131,7 @@ class AdminService:
             iam_service = IAMService(self.db)
             
             # Check if email exists
-            check_query = "SELECT user_id FROM iam_user WHERE email = $1"
+            check_query = "SELECT user_id FROM iam.iam_user WHERE email = $1"
             existing = await self.db.execute_query(check_query, (user_data['email'],))
             if existing:
                 raise HTTPException(status_code=400, detail="Email already exists")
@@ -134,7 +141,7 @@ class AdminService:
             
             # Insert user
             query = """
-                INSERT INTO iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
+                INSERT INTO iam.iam_user (email, password_hash, full_name, phone, status, created_at, updated_at)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING user_id, email, full_name, phone, status, created_at
             """
@@ -221,7 +228,7 @@ class AdminService:
             password_hash = await iam_service.hash_password(new_password)
             
             query = """
-                UPDATE iam_user 
+                UPDATE iam.iam_user 
                 SET password_hash = $1, updated_at = $2 
                 WHERE user_id = $3
                 RETURNING user_id
@@ -248,39 +255,39 @@ class AdminService:
         
         try:
             # Step 1: Delete user roles (iam_user_role)
-            await self.db.execute_query("DELETE FROM iam_user_role WHERE user_id = $1", (user_id,))
+            await self.db.execute_query("DELETE FROM iam.iam_user_role WHERE user_id = $1", (user_id,))
             logger.info(f"Deleted roles for user_id: {user_id}")
             
             # Step 2: Delete user sessions (if table exists)
             try:
-                await self.db.execute_query("DELETE FROM iam_user_session WHERE user_id = $1", (user_id,))
+                await self.db.execute_query("DELETE FROM iam.iam_user_session WHERE user_id = $1", (user_id,))
                 logger.info(f"Deleted sessions for user_id: {user_id}")
             except Exception as e:
                 logger.warning(f"Could not delete sessions (table may not exist): {e}")
             
             # Step 3: Delete activity logs (user_activity_logs)
             try:
-                await self.db.execute_query("DELETE FROM user_activity_logs WHERE user_id = $1", (user_id,))
+                await self.db.execute_query("DELETE FROM iam.user_activity_logs WHERE user_id = $1", (user_id,))
                 logger.info(f"Deleted activity logs for user_id: {user_id}")
             except Exception as e:
                 logger.warning(f"Could not delete activity logs: {e}")
             
             # Step 4: Delete password reset tokens (if table exists)
             try:
-                await self.db.execute_query("DELETE FROM iam_password_reset_token WHERE user_id = $1", (user_id,))
+                await self.db.execute_query("DELETE FROM iam.iam_password_reset_token WHERE user_id = $1", (user_id,))
                 logger.info(f"Deleted password reset tokens for user_id: {user_id}")
             except Exception as e:
                 logger.warning(f"Could not delete password reset tokens: {e}")
             
             # Step 5: Delete email verification tokens (if exists)
             try:
-                await self.db.execute_query("DELETE FROM iam_email_verification_token WHERE email = $1", (user['email'],))
+                await self.db.execute_query("DELETE FROM iam.iam_email_verification_token WHERE email = $1", (user['email'],))
                 logger.info(f"Deleted email verification tokens for email: {user['email']}")
             except Exception as e:
                 logger.warning(f"Could not delete email verification tokens: {e}")
             
             # Step 6: Finally, delete the user
-            await self.db.execute_query("DELETE FROM iam_user WHERE user_id = $1", (user_id,))
+            await self.db.execute_query("DELETE FROM iam.iam_user WHERE user_id = $1", (user_id,))
             logger.info(f"✅ Successfully deleted user: {user['email']} (ID: {user_id})")
             
             return user['email']
@@ -320,7 +327,7 @@ class AdminService:
     async def update_last_login(self, user_id: int) -> bool:
         """Update user's last login timestamp"""
         query = """
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET last_login_at = NOW(), updated_at = NOW()
         WHERE user_id = $1
         """

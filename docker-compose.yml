@@ -3,6 +3,7 @@ version: "3.9"
 x-airflow-common-env:
   &airflow-common-env # Crawler config (dùng chung cho mọi service Airflow)
   LAZADA_PROFILE_DIR: /app/data/.profiles/lazada
+  TIKI_PROFILE_DIR: /app/data/.profiles/tiki
   CRAWLER_OUTPUT_DIR: /app/data/outputs
   LAZADA_HEADLESS: "1"
   LAZADA_PAGES_PER_RUN: "5"
@@ -149,7 +150,7 @@ services:
       - ./data:/app/data
       - ./streaming/spark-jobs:/app/streaming
       - ./data-collection/data:/app/raw_data
-      - ./data-pipeline/scipts/spark_processing:/app/scripts
+      - ./data-pipeline/scripts/spark_processing:/app/scripts
       - ./data-pipeline/src/spark_jobs:/app/src/spark_jobs
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
@@ -185,7 +186,7 @@ services:
       - ./data:/app/data
       - ./streaming/spark-jobs:/app/streaming
       - ./data-collection/data:/app/raw_data
-      - ./data-pipeline/scipts/spark_processing:/app/scripts
+      - ./data-pipeline/scripts/spark_processing:/app/scripts
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
     networks:
@@ -214,7 +215,7 @@ services:
       - ./data:/app/data
       - ./streaming/spark-jobs:/app/streaming
       - ./data-collection/data:/app/raw_data
-      - ./data-pipeline/scipts/spark_processing:/app/scripts
+      - ./data-pipeline/scripts/spark_processing:/app/scripts
       - spark_logs:/app/logs
       - spark_checkpoints:/app/checkpoints
     networks:
@@ -322,6 +323,8 @@ services:
       - ./data:/app/data
       - ./data/logs_app:/app/logs
       - ./ml:/app/ml
+      - ./data/.profiles/lazada:/tmp/profiles/lazada  # Mount Lazada cookies
+      - ./data/.profiles/tiki:/tmp/profiles/tiki  # Mount Tiki cookies
     entrypoint: /bin/bash
     command:
       - -c
@@ -343,13 +346,13 @@ services:
 
   # -------------------- AIRFLOW WEBSERVER ----------------------
   airflow-webserver:
-    build: ./airflow
-    user: "50000:0"
-    command: webserver
-    ports:
+   build: ./airflow
+   user: "50000:0"
+   command: webserver
+   ports:
       - "8080:8080"
-    environment: *airflow-common-env
-    volumes:
+   environment: *airflow-common-env
+   volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
@@ -360,12 +363,15 @@ services:
       - ./data:/app/data
       - ./data/logs_app:/app/logs
       - ./ml:/app/ml
-    depends_on:
+      - ./ml:/opt/airflow/ml  # Mount ML folder to Airflow writable location
+      - ./data/.profiles/lazada:/tmp/profiles/lazada  # Mount Lazada cookies
+      - ./data/.profiles/tiki:/tmp/profiles/tiki  # Mount Tiki cookies
+   depends_on:
       airflow-init:
         condition: service_completed_successfully
-    restart: unless-stopped
-    networks: [dss_network]
-    healthcheck:
+   restart: unless-stopped
+   networks: [dss_network]
+   healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
@@ -388,6 +394,8 @@ services:
       - ./data-pipeline/src:/app/src
       - ./data:/app/data
       - ./ml:/app/ml
+      - ./data/.profiles/lazada:/tmp/profiles/lazada  # Mount Lazada cookies
+      - ./data/.profiles/tiki:/tmp/profiles/tiki  # Mount Tiki cookies
     depends_on:
       airflow-init:
         condition: service_completed_successfully
@@ -412,6 +420,8 @@ services:
       - ./data:/app/data
       - ./ml:/app/ml
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/.profiles/lazada:/tmp/profiles/lazada  # Mount Lazada cookies
+      - ./data/.profiles/tiki:/tmp/profiles/tiki  # Mount Tiki cookies
     depends_on:
       airflow-init:
         condition: service_completed_successfully
@@ -425,10 +435,12 @@ services:
     command: celery flower
     environment: *airflow-common-env 
     ports:
-      - "5555:5555"
+       - "5555:5555"
     volumes:
-      - ./data/logs_app:/app/logs
-      - ./ml:/app/ml
+       - ./data/logs_app:/app/logs
+       - ./ml:/app/ml
+       - ./data/.profiles/lazada:/tmp/profiles/lazada  # Mount Lazada cookies
+       - ./data/.profiles/tiki:/tmp/profiles/tiki  # Mount Tiki cookies
     depends_on:
       airflow-init:
         condition: service_completed_successfully

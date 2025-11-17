@@ -14,6 +14,9 @@ DIM_TABLES = [
     "dim_brand",
     "dim_product",
     "dim_date",
+    "dim_reviewer",
+    "fact_product_daily_agg",
+    "fact_review_daily_agg"
 ]
 
 async def check_table(conn, schema, table_name):

@@ -1195,7 +1195,7 @@ async def activate_user(db: DatabaseManager, email: str) -> int:
         raise HTTPException(status_code=500, detail="Database not connected")
 
     query = """
-    UPDATE iam_user
+    UPDATE iam.iam_user
     SET status = 'active', updated_at = NOW()
     WHERE email = $1 AND status = 'pending'
     RETURNING user_id

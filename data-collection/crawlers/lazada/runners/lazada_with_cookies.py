@@ -18,7 +18,7 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 OUTPUT_DIR = os.environ.get("CRAWLER_OUTPUT_DIR", "/tmp/data/outputs")
-COOKIE_FILE = "/tmp/profiles/lazada/cookies.json"
+COOKIE_FILE = "/tmp/profiles/lazada/lazada_cookies.json"
 LOG_PREFIX = "[Lazada-Cookies]"
 
 class LazadaCookieCrawler:
