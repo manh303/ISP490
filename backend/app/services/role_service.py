@@ -11,10 +11,8 @@ class RoleService:
     def __init__(self, db):
         self.db = db
 
-    async def get_roles(self, active_only: bool = False) -> Tuple[List[Dict], int]:
-        """Get paginated list of roles"""
-
-        
+    async def get_roles(self, active_only: bool = False) -> List[Dict]:
+        """Get all roles with optional active filter"""
         # Query with is_active column
         where_clause = "WHERE COALESCE(is_active, true) = true" if active_only else ""
         query = f"""
@@ -24,23 +22,12 @@ class RoleService:
         {where_clause}
         ORDER BY role_code
         """
-        count_where = "WHERE COALESCE(is_active, true) = true" if active_only else ""
-        count_query = f"SELECT COUNT(*) as total FROM iam.iam_role {count_where}"
         
         logger.info(f"Executing query: {query}")
         all_roles = await self.db.execute_query(query)
         logger.info(f"Query returned {len(all_roles)} roles")
         
-        # Manual pagination
-        start_idx = offset
-        end_idx = offset + limit
-        roles = all_roles[start_idx:end_idx] if all_roles else []
-        
-        # Get total count
-        count_result = await self.db.execute_query(count_query)
-        total = count_result[0]['total'] if count_result else 0
-        
-        return roles, total
+        return all_roles
 
     async def get_role_by_id(self, role_id: int) -> Optional[Dict]:
         """Get role by ID"""
