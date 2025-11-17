@@ -37,53 +37,58 @@ def extract_product_clustering_data():
     
     conn = DWHConnector()
     
-    # Query lấy product features để clustering
+    # Query lấy product features để clustering từ product fact table
+    # Cấp độ: Category x Platform x Date
     sql = """
     SELECT 
-        fac.global_product_id,
-        fac.source_platform_std,
-        fac.category_std,
-        fac.avg_price,
-        fac.min_price,
-        fac.max_price,
-        fac.total_reviews,
-        fac.avg_rating,
-        fac.positive_reviews,
-        fac.negative_reviews,
-        fac.review_quality_score,
-        COUNT(DISTINCT fac.agg_date) as active_days,
-        SUM(fac.total_reviews) as total_reviews_sum
-    FROM dwh.fact_review_daily_agg fac
-    WHERE fac.agg_date >= CURRENT_DATE - INTERVAL '90 days'
-    AND fac.total_reviews > 0
-    GROUP BY fac.global_product_id, fac.source_platform_std, fac.category_std,
-             fac.avg_price, fac.min_price, fac.max_price, fac.total_reviews,
-             fac.avg_rating, fac.positive_reviews, fac.negative_reviews,
-             fac.review_quality_score
-    HAVING COUNT(DISTINCT fac.agg_date) >= 7
+        fpd.category_std,
+        fpd.source_platform_std,
+        fpd.agg_date,
+        fpd.avg_price,
+        fpd.min_price,
+        fpd.max_price,
+        fpd.total_review_count,
+        fpd.distinct_products
+    FROM dwh.fact_product_daily_agg fpd
+    WHERE fpd.agg_date >= CURRENT_DATE - INTERVAL '90 days'
+    AND fpd.total_review_count > 0
+    ORDER BY fpd.category_std, fpd.source_platform_std, fpd.agg_date DESC
     LIMIT 5000
     """
     
     try:
         df = conn.query(sql)
-        logger.info(f"[OK] Total products: {len(df)}")
+        logger.info(f"[OK] Total records: {len(df)}")
         logger.info(f"[OK] Categories: {df['category_std'].nunique()}")
         logger.info(f"[OK] Platforms: {df['source_platform_std'].nunique()}")
         
+        # Group by category and platform để tạo segment-level aggregates
+        df_agg = df.groupby(['category_std', 'source_platform_std']).agg({
+            'avg_price': 'mean',
+            'min_price': 'min',
+            'max_price': 'max',
+            'total_review_count': 'sum',
+            'distinct_products': 'mean',
+            'agg_date': 'count'  # Days active
+        }).reset_index()
+        df_agg.rename(columns={'agg_date': 'active_days'}, inplace=True)
+        
+        logger.info(f"[OK] Aggregated to: {len(df_agg)} category-platform combinations")
+        
         # Data quality checks
         logger.info("\nData Quality Checks:")
-        logger.info(f"  Missing avg_price: {df['avg_price'].isna().sum()}")
-        logger.info(f"  Missing avg_rating: {df['avg_rating'].isna().sum()}")
-        logger.info(f"  Avg reviews per product: {df['total_reviews_sum'].mean():.0f}")
+        logger.info(f"  Missing avg_price: {df_agg['avg_price'].isna().sum()}")
+        logger.info(f"  Missing distinct_products: {df_agg['distinct_products'].isna().sum()}")
+        logger.info(f"  Avg reviews per segment: {df_agg['total_review_count'].mean():.0f}")
         
         # Save raw data
         output_dir = Path(config['data_extraction']['product_clustering']['output_dir'])
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        df.to_csv(output_dir / 'raw_clustering_data.csv', index=False)
+        df_agg.to_csv(output_dir / 'raw_clustering_data.csv', index=False)
         logger.info(f"[OK] Saved to {output_dir / 'raw_clustering_data.csv'}")
         
-        return df
+        return df_agg
     
     except Exception as e:
         logger.error(f"[ERROR] Error extracting clustering data: {e}")
@@ -105,26 +110,27 @@ def prepare_clustering_features(df):
     
     # Fill missing values
     df['avg_price'].fillna(df['avg_price'].median(), inplace=True)
-    df['avg_rating'].fillna(3.0, inplace=True)
-    df['review_quality_score'].fillna(0.5, inplace=True)
+    df['min_price'].fillna(0, inplace=True)
+    df['max_price'].fillna(df['avg_price'], inplace=True)
+    df['distinct_products'].fillna(0, inplace=True)
     
     # Calculate additional features
     df['price_range'] = df['max_price'] - df['min_price']
-    df['sentiment_score'] = (df['positive_reviews'] / (df['positive_reviews'] + df['negative_reviews'] + 1))
-    df['engagement_score'] = df['total_reviews_sum'] / df['active_days'] if df['active_days'].max() > 0 else 0
+    df['avg_product_reviews'] = df['total_review_count'] / (df['distinct_products'] + 1)  # Avoid division by zero
+    df['engagement_score'] = df['total_review_count'] / (df['active_days'] + 1)  # Avoid division by zero
     
     # Log transformation for price (để cân bằng scale)
     df['log_avg_price'] = np.log1p(df['avg_price'])
     df['log_engagement'] = np.log1p(df['engagement_score'])
+    df['log_product_reviews'] = np.log1p(df['avg_product_reviews'])
     
     # Select features for clustering
     feature_cols = [
         'log_avg_price',
         'price_range',
-        'avg_rating',
-        'sentiment_score',
+        'distinct_products',
         'log_engagement',
-        'review_quality_score'
+        'log_product_reviews'
     ]
     
     logger.info(f"[OK] Features selected for clustering: {feature_cols}")
