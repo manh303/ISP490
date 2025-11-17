@@ -16,9 +16,9 @@ class ProfileService:
         query = """
         SELECT u.user_id, u.email, u.full_name, u.phone, u.last_login_at,
                r.role_code as role
-        FROM iam_user u
-        LEFT JOIN iam_user_role ur ON u.user_id = ur.user_id
-        LEFT JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user u
+        LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE u.user_id = $1 AND u.status = 'active'
         """
         result = await self.db.execute_query(query, (user_id,))
@@ -48,7 +48,7 @@ class ProfileService:
             
         if profile_data.email is not None:
             # Check if email already exists for another user
-            email_check_query = "SELECT user_id FROM iam_user WHERE email = $1 AND user_id != $2"
+            email_check_query = "SELECT user_id FROM iam.iam_user WHERE email = $1 AND user_id != $2"
             email_exists = await self.db.execute_query(email_check_query, (str(profile_data.email).lower(), user_id))
             
             if email_exists:
@@ -64,7 +64,7 @@ class ProfileService:
         values.append(user_id)
         
         update_query = f"""
-        UPDATE iam_user 
+        UPDATE iam.iam_user 
         SET {', '.join(update_fields)}, updated_at = NOW()
         WHERE user_id = ${param_count}
         """

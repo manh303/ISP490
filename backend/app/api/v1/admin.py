@@ -17,7 +17,6 @@ from models.admin import (
     UserListResponse, UserActionResponse
 )
 from models.shared import UserResponse
-from app.services.user_management_service import UserManagementService
 from app.utils.admin_helpers import get_current_admin_user, format_user_response
 from app.constants.roles import validate_role_code
 
@@ -306,7 +305,7 @@ async def delete_user(
         
         return UserActionResponse(
             success=True,
-            message=f"✅ Đã xóa vĩnh viễn tài khoản {email} và tất cả dữ liệu liên quan",
+            message=f"✅ Đã xóa vĩnh viễn tài khoản {email}",
             user_id=user_id
         )
         

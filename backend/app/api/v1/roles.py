@@ -55,9 +55,7 @@ async def get_role_service(db = Depends(get_database)) -> RoleService:
            summary="Get All Roles",
            description="Get paginated list of all roles in the system")
 async def get_roles(
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(20, ge=1, le=100, description="Items per page"),
-    active_only: bool = Query(False, description="Show only active roles"),
+   
     role_service: RoleService = Depends(get_role_service)
 ):
     """Get list of all roles"""

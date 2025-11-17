@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for Airflow metadata and ML results
+  postgres-airflow:
+    image: postgres:14-alpine
+    container_name: postgres-airflow
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-db:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Celery broker
+  redis-airflow:
+    image: redis:7-alpine
+    container_name: redis-airflow
+    ports:
+      - "6379:6379"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Airflow Webserver
+  airflow-webserver:
+    image: apache/airflow:2.7.0-python3.11
+    container_name: airflow-webserver
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis-airflow:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: UTC
+      PYTHONPATH: /opt/airflow:/app/ml
+    volumes:
+      - ${PWD}/airflow/dags:/opt/airflow/dags
+      - ${PWD}/airflow/logs:/opt/airflow/logs
+      - ${PWD}/airflow/plugins:/opt/airflow/plugins
+      - ${PWD}/ml:/app/ml
+      - ${PWD}/backend:/app/backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+      redis-airflow:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    command: webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Airflow Scheduler
+  airflow-scheduler:
+    image: apache/airflow:2.7.0-python3.11
+    container_name: airflow-scheduler
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis-airflow:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: UTC
+      PYTHONPATH: /opt/airflow:/app/ml
+    volumes:
+      - ${PWD}/airflow/dags:/opt/airflow/dags
+      - ${PWD}/airflow/logs:/opt/airflow/logs
+      - ${PWD}/airflow/plugins:/opt/airflow/plugins
+      - ${PWD}/ml:/app/ml
+      - ${PWD}/backend:/app/backend
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+      redis-airflow:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    command: scheduler
+    restart: always
+
+  # Airflow Worker (Celery)
+  airflow-worker:
+    image: apache/airflow:2.7.0-python3.11
+    container_name: airflow-worker
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis-airflow:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: UTC
+      PYTHONPATH: /opt/airflow:/app/ml
+    volumes:
+      - ${PWD}/airflow/dags:/opt/airflow/dags
+      - ${PWD}/airflow/logs:/opt/airflow/logs
+      - ${PWD}/airflow/plugins:/opt/airflow/plugins
+      - ${PWD}/ml:/app/ml
+      - ${PWD}/backend:/app/backend
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+      redis-airflow:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    command: celery worker --loglevel=info
+    restart: always
+
+  # Airflow Flower (Celery monitoring)
+  airflow-flower:
+    image: apache/airflow:2.7.0-python3.11
+    container_name: airflow-flower
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis-airflow:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+    volumes:
+      - ${PWD}/airflow/dags:/opt/airflow/dags
+      - ${PWD}/airflow/logs:/opt/airflow/logs
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis-airflow
+      - postgres-airflow
+    networks:
+      - ecommerce-network
+    command: celery flower
+    restart: always
+
+volumes:
+  airflow-db:
+
+networks:
+  ecommerce-network:
+    external: true

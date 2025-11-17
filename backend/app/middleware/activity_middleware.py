@@ -1,6 +1,6 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.services.activity_logger import ActivityLogger
+from services.activity_logger import ActivityLogger
 try:
     from app.core.config import settings
 except ImportError:
@@ -52,7 +52,7 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
             # Check if table exists before logging
             if self.db_manager.is_connected:
                 table_check = await self.db_manager.execute_query(
-                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'user_activity_logs')"
+                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'iam' AND table_name = 'user_activity_logs')"
                 )
                 if table_check and table_check[0].get('exists'):
                     process_time = time.time() - start_time

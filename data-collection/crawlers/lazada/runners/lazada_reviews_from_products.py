@@ -21,7 +21,40 @@ except ImportError:
 
 OUTPUT_DIR = os.environ.get("CRAWLER_OUTPUT_DIR", "/tmp/data/outputs")
 COOKIE_FILE = "/tmp/profiles/lazada/cookies.json"
+CHECKPOINT_FILE = os.environ.get("CRAWLER_CHECKPOINT_DIR", "/tmp/crawler_checkpoints") + "/lazada_reviews_checkpoint.json"
 LOG_PREFIX = "[Lazada-Reviews]"
+
+def load_checkpoint():
+    """Load checkpoint to resume from last product"""
+    try:
+        if os.path.exists(CHECKPOINT_FILE):
+            with open(CHECKPOINT_FILE, 'r', encoding='utf-8') as f:
+                checkpoint = json.load(f)
+                print(f"{LOG_PREFIX} Loaded checkpoint: {checkpoint}")
+                return checkpoint
+    except Exception as e:
+        print(f"{LOG_PREFIX} Error loading checkpoint: {e}")
+    return {"last_product_idx": 0, "total_reviews_saved": 0}
+
+def save_checkpoint(idx: int, total_reviews: int):
+    """Save progress checkpoint"""
+    try:
+        checkpoint_dir = os.path.dirname(CHECKPOINT_FILE)
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        checkpoint = {"last_product_idx": idx, "total_reviews_saved": total_reviews}
+        with open(CHECKPOINT_FILE, 'w', encoding='utf-8') as f:
+            json.dump(checkpoint, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"{LOG_PREFIX} Error saving checkpoint: {e}")
+
+def clear_checkpoint():
+    """Clear checkpoint when completed successfully"""
+    try:
+        if os.path.exists(CHECKPOINT_FILE):
+            os.remove(CHECKPOINT_FILE)
+            print(f"{LOG_PREFIX} Checkpoint cleared")
+    except Exception as e:
+        print(f"{LOG_PREFIX} Error clearing checkpoint: {e}")
 
 def load_product_urls_from_today() -> List[Dict[str, str]]:
     """Load product URLs from today's products data"""
@@ -51,7 +84,7 @@ def load_product_urls_from_today() -> List[Dict[str, str]]:
     print(f"{LOG_PREFIX} Loaded {len(products)} product URLs from today's data")
     return products
 
-def extract_reviews_from_product(page, product_url: str, product_id: str, product_name: str, max_reviews: int = 5) -> List[Dict[str, Any]]:
+def extract_reviews_from_product(page, product_url: str, product_id: str, product_name: str, max_reviews: int = 20) -> List[Dict[str, Any]]:
     """Extract reviews from product detail page"""
     reviews = []
     
@@ -147,57 +180,74 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
     
     return reviews
 
-def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: int = 10) -> List[Dict[str, Any]]:
-    """Crawl reviews from product URLs"""
-    if not PLAYWRIGHT_AVAILABLE:
-        print(f"{LOG_PREFIX} Playwright not available")
-        return []
-    
-    all_reviews = []
-    
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=['--no-sandbox', '--disable-dev-shm-usage']
-        )
-        
-        context = browser.new_context(
-            viewport={'width': 1920, 'height': 1080},
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        )
-        
-        # Load cookies if available
-        if os.path.exists(COOKIE_FILE):
-            with open(COOKIE_FILE, 'r') as f:
-                cookies = json.load(f)
-                context.add_cookies(cookies)
-            print(f"{LOG_PREFIX} Cookies loaded")
-        
-        page = context.new_page()
-        
-        try:
-            for i, product in enumerate(products[:max_products], 1):
-                print(f"\n{LOG_PREFIX} Product {i}/{min(len(products), max_products)}")
-                
-                try:
-                    reviews = extract_reviews_from_product(
-                        page,
-                        product['url'],
-                        product['id'],
-                        product['name']
-                    )
-                    all_reviews.extend(reviews)
-                    time.sleep(random.uniform(3, 5))
-                    
-                except Exception as e:
-                    print(f"{LOG_PREFIX} Failed product {i}: {e}")
-                    continue
-            
-        finally:
-            context.close()
-            browser.close()
-    
-    return all_reviews
+def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: int = 10000) -> List[Dict[str, Any]]:
+     """Crawl reviews from product URLs with checkpoint support"""
+     if not PLAYWRIGHT_AVAILABLE:
+         print(f"{LOG_PREFIX} Playwright not available")
+         return []
+     
+     # Load checkpoint to resume from last position
+     checkpoint = load_checkpoint()
+     start_idx = checkpoint["last_product_idx"]
+     total_reviews_saved = checkpoint["total_reviews_saved"]
+     
+     all_reviews = []
+     max_idx = min(len(products), max_products)
+     
+     print(f"{LOG_PREFIX} Resuming from product {start_idx}/{max_idx}")
+     
+     with sync_playwright() as p:
+         browser = p.chromium.launch(
+             headless=True,
+             args=['--no-sandbox', '--disable-dev-shm-usage']
+         )
+         
+         context = browser.new_context(
+             viewport={'width': 1920, 'height': 1080},
+             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+         )
+         
+         # Load cookies if available
+         if os.path.exists(COOKIE_FILE):
+             with open(COOKIE_FILE, 'r') as f:
+                 cookies = json.load(f)
+                 context.add_cookies(cookies)
+             print(f"{LOG_PREFIX} Cookies loaded")
+         
+         page = context.new_page()
+         
+         try:
+             for i in range(start_idx, max_idx):
+                 product = products[i]
+                 progress = i + 1
+                 print(f"\n{LOG_PREFIX} Product {progress}/{max_idx}")
+                 
+                 try:
+                     reviews = extract_reviews_from_product(
+                         page,
+                         product['url'],
+                         product['id'],
+                         product['name']
+                     )
+                     all_reviews.extend(reviews)
+                     
+                     # Save checkpoint after each product
+                     save_checkpoint(i + 1, total_reviews_saved + len(reviews))
+                     total_reviews_saved += len(reviews)
+                     
+                     time.sleep(random.uniform(3, 5))
+                     
+                 except Exception as e:
+                     print(f"{LOG_PREFIX} Failed product {progress}: {e}")
+                     # Save checkpoint even on error to resume from next product
+                     save_checkpoint(i + 1, total_reviews_saved)
+                     continue
+             
+         finally:
+             context.close()
+             browser.close()
+     
+     return all_reviews
 
 def save_reviews(reviews: List[Dict[str, Any]]):
     """Save reviews to JSONL file"""
@@ -220,30 +270,31 @@ def save_reviews(reviews: List[Dict[str, Any]]):
     print(f"\n{LOG_PREFIX} Saved {len(reviews)} reviews to: {filepath}")
 
 def main():
-    """Main execution"""
-    print(f"{LOG_PREFIX} Starting Reviews Crawler")
-    print("=" * 60)
-    
-    # Step 1: Load product URLs from today's products data
-    products = load_product_urls_from_today()
-    
-    if not products:
-        print(f"{LOG_PREFIX} No products found. Run products crawler first!")
-        return
-    
-    print(f"{LOG_PREFIX} Found {len(products)} products to crawl reviews")
-    
-    # Step 2: Crawl reviews from products (limit to 10 for efficiency)
-    reviews = crawl_reviews_from_products(products, max_products=10)
-    
-    # Step 3: Save reviews
-    if reviews:
-        save_reviews(reviews)
-        print(f"\n{LOG_PREFIX} SUCCESS! Total reviews: {len(reviews)}")
-    else:
-        print(f"\n{LOG_PREFIX} No reviews extracted")
-    
-    print("=" * 60)
+     """Main execution"""
+     print(f"{LOG_PREFIX} Starting Reviews Crawler")
+     print("=" * 60)
+     
+     # Step 1: Load product URLs from today's products data
+     products = load_product_urls_from_today()
+     
+     if not products:
+         print(f"{LOG_PREFIX} No products found. Run products crawler first!")
+         return
+     
+     print(f"{LOG_PREFIX} Found {len(products)} products to crawl reviews")
+     
+     # Step 2: Crawl reviews from products (limit to 10 for efficiency)
+     reviews = crawl_reviews_from_products(products, max_products=10000)
+     
+     # Step 3: Save reviews
+     if reviews:
+         save_reviews(reviews)
+         clear_checkpoint()  # Clear checkpoint on successful completion
+         print(f"\n{LOG_PREFIX} SUCCESS! Total reviews: {len(reviews)}")
+     else:
+         print(f"\n{LOG_PREFIX} No reviews extracted")
+     
+     print("=" * 60)
 
 if __name__ == "__main__":
     main()

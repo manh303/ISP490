@@ -11,21 +11,21 @@ class RoleService:
     def __init__(self, db):
         self.db = db
 
-    async def get_roles(self, page: int = 1, limit: int = 20, active_only: bool = False) -> Tuple[List[Dict], int]:
+    async def get_roles(self, active_only: bool = False) -> Tuple[List[Dict], int]:
         """Get paginated list of roles"""
-        offset = (page - 1) * limit
+
         
         # Query with is_active column
         where_clause = "WHERE COALESCE(is_active, true) = true" if active_only else ""
         query = f"""
         SELECT role_id, role_code, role_name, description, 
                COALESCE(is_active, true) as is_active
-        FROM iam_role
+        FROM iam.iam_role
         {where_clause}
         ORDER BY role_code
         """
         count_where = "WHERE COALESCE(is_active, true) = true" if active_only else ""
-        count_query = f"SELECT COUNT(*) as total FROM iam_role {count_where}"
+        count_query = f"SELECT COUNT(*) as total FROM iam.iam_role {count_where}"
         
         logger.info(f"Executing query: {query}")
         all_roles = await self.db.execute_query(query)
@@ -47,7 +47,7 @@ class RoleService:
         role_query = """
         SELECT role_id, role_code, role_name, description,
                COALESCE(is_active, true) as is_active
-        FROM iam_role
+        FROM iam.iam_role
         WHERE role_id = $1
         """
         role_result = await self.db.execute_query(role_query, (role_id,))
@@ -57,8 +57,8 @@ class RoleService:
         """Get number of users assigned to role"""
         user_count_query = """
         SELECT COUNT(*) as user_count
-        FROM iam_user_role ur
-        JOIN iam_user u ON ur.user_id = u.user_id
+        FROM iam.iam_user_role ur
+        JOIN iam.iam_user u ON ur.user_id = u.user_id
         WHERE ur.role_id = $1 AND u.status = 'active'
         """
         user_count_result = await self.db.execute_query(user_count_query, (role_id,))
@@ -67,7 +67,7 @@ class RoleService:
     async def create_role(self, role_data: RoleCreateRequest) -> int:
         """Create new role"""
         # Check if role code already exists
-        check_query = "SELECT role_id FROM iam_role WHERE role_code = $1"
+        check_query = "SELECT role_id FROM iam.iam_role WHERE role_code = $1"
         existing = await self.db.execute_query(check_query, (role_data.role_code.upper(),))
         
         if existing:
@@ -75,7 +75,7 @@ class RoleService:
         
         # Create role
         insert_query = """
-        INSERT INTO iam_role (role_code, role_name, description)
+        INSERT INTO iam.iam_role (role_code, role_name, description)
         VALUES ($1, $2, $3)
         RETURNING role_id
         """
@@ -119,7 +119,7 @@ class RoleService:
         values.append(role_id)
         
         update_query = f"""
-        UPDATE iam_role 
+        UPDATE iam.iam_role 
         SET {', '.join(update_fields)}
         WHERE role_id = ${param_count}
         """
@@ -134,7 +134,7 @@ class RoleService:
             raise ValueError("Role not found")
         
         update_query = """
-        UPDATE iam_role 
+        UPDATE iam.iam_role 
         SET is_active = false
         WHERE role_id = $1
         """
@@ -149,7 +149,7 @@ class RoleService:
             raise ValueError("Role not found")
         
         update_query = """
-        UPDATE iam_role 
+        UPDATE iam.iam_role 
         SET is_active = true
         WHERE role_id = $1
         """
@@ -166,7 +166,7 @@ class RoleService:
         # Check if any users have this role
         user_count_query = """
         SELECT COUNT(*) as user_count
-        FROM iam_user_role
+        FROM iam.iam_user_role
         WHERE role_id = $1
         """
         user_count_result = await self.db.execute_query(user_count_query, (role_id,))
@@ -176,7 +176,7 @@ class RoleService:
             raise ValueError(f"Cannot delete role '{role['role_code']}'. {user_count} users are assigned to this role. Deactivate the role instead.")
         
         # Delete role
-        delete_query = "DELETE FROM iam_role WHERE role_id = $1"
+        delete_query = "DELETE FROM iam.iam_role WHERE role_id = $1"
         await self.db.execute_query(delete_query, (role_id,))
         return role['role_code']
 
@@ -187,8 +187,8 @@ class RoleService:
         # Get users with this role
         query = """
         SELECT u.user_id, u.email, u.full_name, u.status, u.last_login_at, ur.assigned_at
-        FROM iam_user u
-        JOIN iam_user_role ur ON u.user_id = ur.user_id
+        FROM iam.iam_user u
+        JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
         WHERE ur.role_id = $1
         ORDER BY ur.assigned_at DESC
         LIMIT $2 OFFSET $3
@@ -199,8 +199,8 @@ class RoleService:
         # Get total count
         count_query = """
         SELECT COUNT(*) as total
-        FROM iam_user u
-        JOIN iam_user_role ur ON u.user_id = ur.user_id
+        FROM iam.iam_user u
+        JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
         WHERE ur.role_id = $1
         """
         count_result = await self.db.execute_query(count_query, (role_id,))
