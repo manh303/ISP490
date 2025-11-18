@@ -49,8 +49,17 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
                 throw new Error("API trả về lỗi");
             }
         } catch (err: any) {
-            setError(err?.response?.data?.detail || "Không thể tải danh sách vai trò");
-            showToast(err?.response?.data?.detail || "Không thể tải danh sách vai trò", "error");
+             const detail = err?.response?.data?.detail;
+            let errorMsg = "Không thể tạo vai trò";
+            if (typeof detail === 'string') {
+                errorMsg = detail;
+            } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                errorMsg = detail[0].msg;
+            } else if (detail?.msg) {
+                errorMsg = detail.msg;
+            }
+            setError(errorMsg);
+            showToast(errorMsg, "error");
         } finally {
             setLoading(false);
         }

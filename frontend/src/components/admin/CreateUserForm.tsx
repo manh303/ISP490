@@ -45,8 +45,19 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
       setFullName(""); setEmail(""); setRoleCode(ROLE_OPTIONS[0].code); setPassword(""); setPhone("");
       onCreated();
     } catch (err: any) {
-      setError(err.message);
-      showToast(err.message, 'error');
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Không thể tạo người dùng mới";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }

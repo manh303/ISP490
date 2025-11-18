@@ -70,7 +70,16 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                     })));
                 }
             } catch (err: any) {
-                setError(err?.response?.data?.detail || "Bạn không có quyền truy cập chức năng này");
+                 const detail = err?.response?.data?.detail;
+            let errorMsg = "Không thể tạo vai trò";
+            if (typeof detail === 'string') {
+                errorMsg = detail;
+            } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                errorMsg = detail[0].msg;
+            } else if (detail?.msg) {
+                errorMsg = detail.msg;
+            }
+                setError(errorMsg);
             } finally {
                 setLoading(false);
             }

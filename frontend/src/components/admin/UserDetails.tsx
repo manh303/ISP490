@@ -53,7 +53,18 @@ export default function UserDetails(props: UserDetailsProps) {
           role_code: user.role_code || "CUSTOMER"
         });
       })
-      .catch((err) => setError(err?.response?.data?.detail || "Lỗi không xác định"))
+      .catch((err) => {
+        const detail = err?.response?.data?.detail;
+        let errorMsg = "Lỗi không xác định";
+        if (typeof detail === 'string') {
+          errorMsg = detail;
+        } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+          errorMsg = detail[0].msg;
+        } else if (detail?.msg) {
+          errorMsg = detail.msg;
+        }
+        setError(errorMsg);
+      })
       .finally(() => setLoading(false));
   }, [userId]);
 
@@ -68,7 +79,16 @@ export default function UserDetails(props: UserDetailsProps) {
       setEditModeState(false);
       showToast('✓ Cập nhật thông tin người dùng thành công!', 'success');
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Cập nhật thất bại";
+      console.error(" Error updating user:", err);
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Cập nhật thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -105,7 +125,15 @@ export default function UserDetails(props: UserDetailsProps) {
       setShowPasswordForm(false);
       showToast('✓ Cập nhật mật khẩu thành công!', 'success');
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Cập nhật mật khẩu thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Cập nhật mật khẩu thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setPasswordError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -127,7 +155,15 @@ export default function UserDetails(props: UserDetailsProps) {
       showToast('✓ Vô hiệu hóa tài khoản thành công!', 'success');
       onBack();
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Vô hiệu hóa thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Vô hiệu hóa thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -142,7 +178,15 @@ export default function UserDetails(props: UserDetailsProps) {
       showToast('✓ Khôi phục tài khoản thành công!', 'success');
       onBack();
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Khôi phục thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Khôi phục thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -163,7 +207,7 @@ export default function UserDetails(props: UserDetailsProps) {
   // };
 
   if (loading) return <div className="text-gray-500 text-center py-8">Đang tải dữ liệu người dùng...</div>;
-  if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
+  if (error) return <div className="text-red-500 text-center py-8">{error}<button onClick={() => setError(null)} className="ml-4 text-blue-600 underline">Thử lại</button></div>;
   if (!user) return null;
 
   // Show password change form

@@ -72,7 +72,16 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
           })));
         }
       } catch (err: any) {
-        setError(err?.response?.data?.detail || "Lỗi không xác định");
+        const detail = err?.response?.data?.detail;
+        let errorMsg = "Lỗi không xác định";
+        if (typeof detail === 'string') {
+          errorMsg = detail;
+        } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+          errorMsg = detail[0].msg;
+        } else if (detail?.msg) {
+          errorMsg = detail.msg;
+        }
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -93,7 +102,15 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
         showToast('✓ Khôi phục tài khoản thành công!', 'success');
       }
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Khôi phục thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Khôi phục thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     }
@@ -113,7 +130,15 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
         showToast('✓ Xóa vĩnh viễn tài khoản thành công!', 'success');
       }
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Xóa vĩnh viễn thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Xóa vĩnh viễn thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     }
