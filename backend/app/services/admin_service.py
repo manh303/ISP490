@@ -3,7 +3,6 @@ Admin Service - Business Logic Layer
 Handles user management, activity logging, and admin operations
 """
 import logging
-import bcrypt
 import datetime
 from typing import List, Dict, Any, Optional, Tuple
 from fastapi import HTTPException
@@ -12,7 +11,6 @@ from models.admin import (
     UserCreateRequest, 
     UserUpdateRequest, 
     PasswordChangeRequest, 
-    UserPasswordUpdateRequest, 
     UserActionResponse
 )
 from app.services.activity_logger import ActivityLogger
@@ -27,6 +25,8 @@ class AdminService:
     def __init__(self, db):
         self.db = db
         self.iam_service = IAMService(db)
+        self.activity_logger = ActivityLogger(db)
+       
 
     # ==================== USER QUERIES ====================
 
@@ -237,7 +237,7 @@ class AdminService:
         
         return True
 
-    async def change_password(self, user_id: int, new_password: UserPasswordUpdateRequest) -> bool:
+    async def change_password(self, user_id: int, new_password: PasswordChangeRequest) -> bool:
         """Change user password (admin function - no verification required)"""
         try:
             password_hash = await self.iam_service.hash_password(new_password.new_password)
@@ -253,7 +253,7 @@ class AdminService:
             )
             
             if result:
-                await self._log_activity(user_id, "PASSWORD_CHANGED", "Admin changed user password")
+                await self.activity_logger.log_activity(user_id, "PASSWORD_CHANGED", "Admin changed user password")
                 return True
             return False
         except Exception as e:
@@ -392,17 +392,6 @@ class AdminService:
         }
 
     # ==================== HELPER METHODS ====================
-
-    async def _log_activity(self, user_id: int, action: str, details: str = None) -> None:
-        """Log user activity to database"""
-        try:
-            query = """
-                INSERT INTO iam.user_activity_logs (user_id, action, details, created_at)
-                VALUES ($1, $2, $3, NOW())
-            """
-            await self.db.execute_query(query, (user_id, action, details or ''))
-        except Exception as e:
-            logger.warning(f"Failed to log activity: {e}")
 
     async def _assign_role(self, user_id: int, role_code: str) -> None:
         """Assign role to user (replaces existing role)"""

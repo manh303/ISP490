@@ -46,8 +46,9 @@ async def get_admin_service(db=Depends(get_database)) -> AdminService:
 # ==================== USER ENDPOINTS ====================
 
 @router.get("/users", response_model=UserListResponse)
-async def get_users(admin_service: AdminService = Depends(get_admin_service)):
+async def get_users(admin_service: AdminService = Depends(get_admin_service),):
     """Get all active users"""
+    
     try:
         users = await admin_service.get_users('active')
         return {
@@ -296,17 +297,3 @@ async def get_activity_stats(
         logger.error(f"Get activity stats error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get activity stats: {str(e)}")
 
-@router.get("/user-activity/{user_id}")
-async def get_user_activity(user_id: int, db=Depends(get_database)):
-    """Get all activity logs for specific user"""
-    try:
-        activity_logger = ActivityLogger(db)
-        result = await activity_logger.get_activity_logs(
-            page=1,
-            limit=10000,
-            user_id=user_id
-        )
-        return {"success": True, "data": result}
-    except Exception as e:
-        logger.error(f"Get user activity error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get user activity: {str(e)}")
