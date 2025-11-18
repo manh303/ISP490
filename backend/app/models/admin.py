@@ -15,6 +15,7 @@ class UserCreateRequest(BaseModel):
     phone: Optional[str] = Field(None, description="Phone number")
     role: str = Field(..., description="User role")
     
+
     @field_validator('full_name')
     @classmethod
     def validate_full_name_field(cls, v):

@@ -56,11 +56,6 @@ class DatabaseManager:
     @asynccontextmanager
     async def transaction(self):
         """Context manager for database transactions with automatic rollback on error
-        
-        Usage:
-            async with db.transaction() as conn:
-                await conn.fetchrow(query, *params)
-                await conn.execute(query, *params)
         """
         await self.ensure_connected()
         if not self.is_connected:

@@ -4,13 +4,13 @@ Admin User Management API Endpoints
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Dict, Any, Optional
 import logging
-from app.services.activity_logger import ActivityLogger
 
 # Import models and services
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from app.services.activity_logger import ActivityLogger
 from app.services.admin_service import AdminService
 from models.admin import (
     UserCreateRequest, UserUpdateRequest, UserPasswordUpdateRequest,
@@ -131,7 +131,11 @@ async def create_user(
         if not validate_role_code(user_data.role):
             raise HTTPException(status_code=400, detail="Invalid role code")
         
-        user_id = await admin_service.create_user(user_data)
+        result = await admin_service.create_user(user_data)
+        
+        # Extract user_id from result dict
+        user_id = result.get('user_id') if isinstance(result, dict) else result
+        
         return UserActionResponse(
             success=True,
             message="User created successfully",
