@@ -87,7 +87,7 @@ class ActivityLogger:
             query = f"""
             SELECT log_id, user_id, email, action, resource, details, 
                    ip_address, user_agent, status, created_at
-            FROM iam.iam.user_activity_logs
+            FROM iam.user_activity_logs
             {where_clause}
             ORDER BY created_at DESC
             LIMIT ${param_count + 1} OFFSET ${param_count + 2}
@@ -121,7 +121,7 @@ class ActivityLogger:
             # Daily activity count
             daily_query = """
             SELECT DATE(created_at) as date, COUNT(*) as count
-            FROM iam.iam.user_activity_logs
+            FROM iam.user_activity_logs
             WHERE created_at >= NOW() - INTERVAL '%s days'
             GROUP BY DATE(created_at)
             ORDER BY date DESC
@@ -131,7 +131,7 @@ class ActivityLogger:
             # Action breakdown
             action_query = """
             SELECT action, COUNT(*) as count
-            FROM iam.iam.user_activity_logs
+            FROM iam.user_activity_logs
             WHERE created_at >= NOW() - INTERVAL '%s days'
             GROUP BY action
             ORDER BY count DESC

@@ -16,19 +16,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from middleware.activity_middleware import ActivityLoggingMiddleware
-from services.activity_logger import ActivityLogger
-# Ensure parent directory of `app` is on sys.path so absolute imports like
-# `app.services.*` work when running the script directly.
-parent_dir = os.path.dirname(os.path.dirname(__file__))
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
-from pydantic import field_validator
-from app.utils.validators import validate_phone, validate_password
-from app.constants.roles import ROLE_MENUS, get_role_menu
 
-
-# Setup logging FIRST
+# Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -37,23 +26,19 @@ parent_dir = os.path.dirname(os.path.dirname(__file__))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
+# Now import after path setup
 try:
     from app.middleware.activity_middleware import ActivityLoggingMiddleware
     from app.services.activity_logger import ActivityLogger
     ACTIVITY_AVAILABLE = True
 except ImportError:
-    try:
-        from middleware.activity_middleware import ActivityLoggingMiddleware
-        from services.activity_logger import ActivityLogger
-        ACTIVITY_AVAILABLE = True
-    except ImportError:
-        ACTIVITY_AVAILABLE = False
-        logger.warning("Activity logging not available")
+    ACTIVITY_AVAILABLE = False
+    logger.warning("Activity logging not available")
         
 try:
     from pydantic import field_validator
-    from .utils.validators import validate_phone, validate_password, validate_email
-    from .constants.roles import ROLE_MENUS, get_role_menu
+    from app.utils.validators import validate_phone, validate_password, validate_email
+    from app.constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
     VALIDATORS_AVAILABLE = False
@@ -268,6 +253,17 @@ class DatabaseManager:
             logger.error(f"Query: {query}")
             logger.error(f"Values: {values}")
             return []
+
+    def transaction(self):
+        """Return transaction context manager for atomic operations"""
+        @asynccontextmanager
+        async def _transaction():
+            # Access raw asyncpg pool from databases library
+            pool = self.database._backend._pool
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    yield conn
+        return _transaction()
 
 # ====================================
 # INITIALIZE COMPONENTS
@@ -989,7 +985,7 @@ async def authenticate_user_db(email: str, password: str, db: DatabaseManager):
     try:
         query = """
         SELECT user_id, email, password_hash, full_name, status
-        FROM iam_user
+        FROM iam.iam_user
         WHERE email = $1 AND status = 'active'
         """
         result = await db.execute_query(query, (email.lower(),))
@@ -1007,8 +1003,8 @@ async def authenticate_user_db(email: str, password: str, db: DatabaseManager):
         # Get user roles
         role_query = """
         SELECT r.role_code, r.role_name
-        FROM iam_user_role ur
-        JOIN iam_role r ON ur.role_id = r.role_id
+        FROM iam.iam_user_role ur
+        JOIN iam.iam_role r ON ur.role_id = r.role_id
         WHERE ur.user_id = $1
         """
         roles_result = await db.execute_query(role_query, (user['user_id'],))
@@ -1132,7 +1128,7 @@ async def create_user_in_db(db: DatabaseManager, name: str, email: str, password
 
     # Insert user
     query = """
-    INSERT INTO iam_user (email, password_hash, full_name, status, created_at, updated_at)
+    INSERT INTO iam.iam_user (email, password_hash, full_name, status, created_at, updated_at)
     VALUES ($1, $2, $3, 'active', NOW(), NOW())
     RETURNING user_id
     """
@@ -1145,8 +1141,8 @@ async def create_user_in_db(db: DatabaseManager, name: str, email: str, password
 
     # Assign default CUSTOMER role
     role_query = """
-    INSERT INTO iam_user_role (user_id, role_id, assigned_at)
-    SELECT $1, role_id, NOW() FROM iam_role WHERE role_code = 'CUSTOMER'
+    INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
+    SELECT $1, role_id, NOW() FROM iam.iam_role WHERE role_code = 'CUSTOMER'
     """
     await db.execute_query(role_query, (user_id,))
 
@@ -1212,7 +1208,7 @@ async def check_email_exists(db: DatabaseManager, email: str) -> bool:
     if not db.is_connected:
         return False
 
-    query = "SELECT user_id FROM iam_user WHERE email = $1"
+    query = "SELECT user_id FROM iam.iam_user WHERE email = $1"
     result = await db.execute_query(query, (email,))
     return len(result) > 0
 
@@ -1340,60 +1336,7 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
         logger.error(f"Forgot-password error: {e}")
         raise HTTPException(status_code=500, detail="Forgot password failed")
 
-@app.post(f"{settings.API_V1_PREFIX}/auth/reset-password", response_model=ResetPasswordResponse)
-async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = Depends(get_database)):
-    """Reset password using OTP"""
-    try:
-        email = request.email.strip().lower()
-        otp = request.otp.strip()
-        new_password = request.new_password
 
-        # Validate input
-        if not email or not otp or not new_password:
-            raise HTTPException(status_code=400, detail="Email, OTP, and new password are required")
-
-        if len(new_password) < 6:
-            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
-
-        # Verify OTP
-        if email_service_module:
-            otp_result = await verify_otp(email, otp)
-            
-            if not otp_result.get('valid'):
-                error = otp_result.get('error', 'Invalid OTP')
-                attempts = otp_result.get('attempts_remaining', 0)
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"{error}. Attempts remaining: {attempts}"
-                )
-
-            # OTP verified - reset password
-            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            
-            query = """
-            UPDATE iam_user
-            SET password_hash = $1, updated_at = NOW()
-            WHERE email = $2
-            RETURNING user_id
-            """
-            result = await db.execute_query(query, (password_hash, email))
-            
-            if not result:
-                raise HTTPException(status_code=404, detail="User not found")
-            
-            logger.info(f"Password reset successful for {email}")
-            return ResetPasswordResponse(
-                success=True,
-                message="Password reset successfully. You can now sign in."
-            )
-        else:
-            raise HTTPException(status_code=500, detail="OTP verification service not available")
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Reset password error: {e}")
-        raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
 
 
