@@ -1,30 +1,44 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { userApi } from "../../services/userApi";
+import { getAllRoles } from "../../services/roleApi";
 import { Button } from '../../components/ui/figma/button';
 import { useToast } from "../../contexts/ToastContext";
 interface CreateUserFormProps {
   onCreated: () => void;
 }
 
-const ROLE_OPTIONS = [
-  { code: "ADMIN", name: "Admin" },
-  { code: "ANALYST", name: "Analyst" },
-  { code: "CUSTOMER", name: "Customer" },
-  { code: "MANAGER", name: "Manager" },
-];
-
 export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [roleCode, setRoleCode] = useState(ROLE_OPTIONS[0].code);
+  const [roleCode, setRoleCode] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<Array<{ role_code: string; role_name: string }>>([]);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    // Fetch roles
+    getAllRoles({ page: 1, limit: 100 })
+      .then((rolesData) => {
+        if (rolesData.success) {
+          setAvailableRoles(rolesData.data.map(role => ({
+            role_code: role.role_code,
+            role_name: role.role_name
+          })));
+          if (rolesData.data.length > 0) {
+            setRoleCode(rolesData.data[0].role_code);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching roles:", err);
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +56,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
       if (!data.success) throw new Error(data.message || "Không thể tạo người dùng mới");
       setSuccess("Tạo người dùng thành công!");
       showToast("Tạo người dùng thành công!", 'success');
-      setFullName(""); setEmail(""); setRoleCode(ROLE_OPTIONS[0].code); setPassword(""); setPhone("");
+      setFullName(""); setEmail(""); setRoleCode(availableRoles.length > 0 ? availableRoles[0].role_code : ""); setPassword(""); setPhone("");
       onCreated();
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
@@ -89,24 +103,24 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
             onClick={() => setShowRoleDropdown(v => !v)}
           >
             <span className="text-gray-900">
-              {ROLE_OPTIONS.find(opt => opt.code === roleCode)?.name || "Chọn vai trò"}
+              {availableRoles.find(opt => opt.role_code === roleCode)?.role_name || "Chọn vai trò"}
             </span>
             <span className={`ml-2 text-gray-400 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`}>▼</span>
           </button>
           {showRoleDropdown && (
             <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-60 overflow-auto">
-              {ROLE_OPTIONS.map(opt => (
+              {availableRoles.map(opt => (
                 <li
-                  key={opt.code}
+                  key={opt.role_code}
                   className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${
-                    roleCode === opt.code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
+                    roleCode === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
                   }`}
                   onClick={() => { 
-                    setRoleCode(opt.code); 
+                    setRoleCode(opt.role_code); 
                     setShowRoleDropdown(false); 
                   }}
                 >
-                  {opt.name}
+                  {opt.role_name}
                 </li>
               ))}
             </ul>
