@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """
 Email Service for OTP and Authentication
-Handles email sending with Gmail SMTP and OTP generation
+Handles email sending with Mailjet API and OTP generation
 """
 
 import os
-import asyncio
 import secrets
 import string
-import aiosmtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Any
 import logging
@@ -19,23 +16,19 @@ try:
     import redis.asyncio as redis
 except ImportError:
     redis = None
-try:
-    import httpx
-except ImportError:
-    httpx = None
 
 logger = logging.getLogger(__name__)
 
 @dataclass
 class EmailConfig:
     """Email configuration settings"""
-    smtp_server: str = "smtp.gmail.com"
-    smtp_port: int = 587
-    sender_email: str = os.getenv("SMTP_USERNAME", "manhndhe173383@fpt.edu.vn")
-    timeout: int = 30  # Increased timeout
-    retry_attempts: int = 3  # Retry mechanism
-    sender_password: str = os.getenv("SMTP_PASSWORD", "cvin xncb nmfi ogsa")
-    sender_name: str = "DSS E-commerce"
+    mailjet_api_key: str = os.getenv("MAILJET_API_KEY")
+    mailjet_api_secret: str = os.getenv("MAILJET_API_SECRET")
+    sender_email: str = os.getenv("EMAIL_FROM")
+    sender_name: str = os.getenv("EMAIL_FROM_NAME", "DSS E-commerce")
+    mailjet_url: str = "https://api.mailjet.com/v3.1/send"
+    timeout: int = 30
+    retry_attempts: int = 3
 
     # OTP settings
     otp_length: int = 6
@@ -176,95 +169,78 @@ class OTPManager:
                 }
 
 class EmailService:
-    """Email service for sending OTP and other notifications"""
+    """Email service for sending OTP and other notifications using Mailjet"""
 
     def __init__(self, redis_client=None):
         self.config = EmailConfig()
         self.otp_manager = OTPManager(redis_client)
 
-    async def send_email(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
-        """Send email using SendGrid or Gmail SMTP"""
-        # Try SendGrid first if available
-        sendgrid_key = os.getenv("SENDGRID_API_KEY")
-        if sendgrid_key and httpx:
-            return await self._send_via_sendgrid(to_email, subject, html_content, sendgrid_key)
-        
-        # Fallback to SMTP
-        return await self._send_via_smtp(to_email, subject, html_content)
-
-    async def _send_via_sendgrid(self, to_email: str, subject: str, html_content: str, api_key: str) -> Dict[str, Any]:
-        """Send via SendGrid API"""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    "https://api.sendgrid.com/v3/mail/send",
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    json={
-                        "personalizations": [{"to": [{"email": to_email}]}],
-                        "from": {"email": self.config.sender_email, "name": self.config.sender_name},
-                        "subject": subject,
-                        "content": [{"type": "text/html", "value": html_content}]
-                    },
-                    timeout=30.0
-                )
-                if response.status_code == 202:
-                    logger.info(f"Email sent via SendGrid to {to_email}")
-                    return {'success': True, 'message': 'Email sent successfully'}
-                logger.error(f"SendGrid error: {response.status_code}")
-                return {'success': False, 'error': f"SendGrid error: {response.status_code}"}
-        except Exception as e:
-            logger.error(f"SendGrid failed: {e}")
-            return {'success': False, 'error': str(e)}
-
-    async def _send_via_smtp(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
-        """Send via SMTP"""
-        if os.getenv("ENVIRONMENT") == "production" and "render.com" in os.getenv("RENDER_EXTERNAL_URL", ""):
-            logger.warning(f"DEV MODE: Skipping SMTP (blocked on Render) for {to_email}")
+    def send_email(self, to_email: str, subject: str, html_content: str) -> Dict[str, Any]:
+        """Send email using Mailjet API (synchronous)"""
+        # Check if Mailjet is configured
+        if not self.config.mailjet_api_key or not self.config.mailjet_api_secret or not self.config.sender_email:
+            logger.warning(
+                f"DEV MODE (Mailjet): Missing configuration. "
+                f"Would send email to {to_email}"
+            )
             return {'success': True, 'message': 'Email sent (dev mode)'}
-        
+
         last_error = None
 
         for attempt in range(self.config.retry_attempts):
             try:
-                # Create message
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = subject
-                msg['From'] = f"{self.config.sender_name} <{self.config.sender_email}>"
-                msg['To'] = to_email
-
-                # Add HTML content
-                html_part = MIMEText(html_content, 'html')
-                msg.attach(html_part)
-
-                # Send email using aiosmtplib with increased timeout
-                await aiosmtplib.send(
-                    msg,
-                    hostname=self.config.smtp_server,
-                    port=self.config.smtp_port,
-                    start_tls=True,
-                    username=self.config.sender_email,
-                    password=self.config.sender_password,
-                    timeout=self.config.timeout  # Increased timeout
-                )
-
-                logger.info(f"Email sent successfully to {to_email} on attempt {attempt + 1}")
-                return {
-                    'success': True,
-                    'message': 'Email sent successfully'
+                payload = {
+                    "Messages": [
+                        {
+                            "From": {
+                                "Email": self.config.sender_email,
+                                "Name": self.config.sender_name
+                            },
+                            "To": [
+                                {
+                                    "Email": to_email,
+                                    "Name": to_email.split('@')[0]
+                                }
+                            ],
+                            "Subject": subject,
+                            "HTMLPart": html_content
+                        }
+                    ]
                 }
 
+                # Mailjet uses Basic Auth
+                auth = (self.config.mailjet_api_key, self.config.mailjet_api_secret)
+
+                response = requests.post(
+                    self.config.mailjet_url,
+                    json=payload,
+                    auth=auth,
+                    timeout=self.config.timeout
+                )
+
+                if 200 <= response.status_code < 300:
+                    logger.info(f"[Mailjet] Email sent successfully to {to_email} on attempt {attempt + 1}")
+                    return {
+                        'success': True,
+                        'message': 'Email sent successfully'
+                    }
+                else:
+                    last_error = f"Status {response.status_code}: {response.text}"
+                    logger.warning(f"[Mailjet] Attempt {attempt + 1} failed for {to_email}: {last_error}")
+
             except Exception as e:
-                last_error = e
-                logger.warning(f"Email attempt {attempt + 1} failed for {to_email}: {e}")
+                last_error = str(e)
+                logger.warning(f"[Mailjet] Attempt {attempt + 1} failed for {to_email}: {e}")
 
-                # Wait before retry (except last attempt)
-                if attempt < self.config.retry_attempts - 1:
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+            # Wait before retry (except last attempt)
+            if attempt < self.config.retry_attempts - 1:
+                import time
+                time.sleep(2 ** attempt)  # Exponential backoff
 
-        logger.error(f"Failed to send email to {to_email} after {self.config.retry_attempts} attempts: {last_error}")
+        logger.error(f"[Mailjet] Failed to send email to {to_email} after {self.config.retry_attempts} attempts: {last_error}")
         return {
             'success': False,
-            'error': str(last_error)
+            'error': f'Failed to send email: {last_error}'
         }
 
     async def send_otp_email(self, email: str, name: str = None) -> Dict[str, Any]:
@@ -273,8 +249,7 @@ class EmailService:
             # Generate OTP
             otp = await self.otp_manager.generate_otp(email)
 
-            # Create email content
-            display_name = name or email.split('@')[0]
+            
 
             html_content = f"""
             <!DOCTYPE html>
@@ -348,37 +323,37 @@ class EmailService:
                         <h1>Email Verification Code</h1>
                     </div>
 
-                    <p>Hi {display_name},</p>
+                    <p>Chào {name},</p>
 
-                    <p>Thank you for creating an account with DSS E-commerce! To complete your registration, please use the verification code below:</p>
+                    <p>Cảm ơn bạn đã tạo tài khoản với DSS E-commerce! Để hoàn tất đăng ký, vui lòng sử dụng mã xác minh bên dưới:</p>
 
                     <div class="otp-code">
-                        <div style="margin-bottom: 10px; color: #6b7280; font-size: 14px;">Your verification code is:</div>
+                        <div style="margin-bottom: 10px; color: #6b7280; font-size: 14px;">Mã xác minh của bạn là:</div>
                         <div class="otp-number">{otp}</div>
                     </div>
 
                     <div class="warning">
-                        <strong>⚠️ Important:</strong>
+                        <strong>⚠️ Quan trọng:</strong>
                         <ul style="margin: 5px 0; padding-left: 20px;">
-                            <li>This code will expire in <strong>{self.config.otp_expires_minutes} minutes</strong></li>
-                            <li>You have <strong>{self.config.max_attempts} attempts</strong> to enter the correct code</li>
-                            <li>Never share this code with anyone</li>
+                            <li>Mã này sẽ hết hạn sau <strong>{self.config.otp_expires_minutes} phút</strong></li>
+                            <li>Bạn có <strong>{self.config.max_attempts} lần thử</strong> để nhập đúng mã</li>
+                            <li>Không bao giờ chia sẻ mã này với bất kỳ ai</li>
                         </ul>
                     </div>
 
-                    <p>If you didn't request this verification code, you can safely ignore this email. Someone else might have typed your email address by mistake.</p>
+                    <p>Nếu bạn không yêu cầu mã xác minh này, bạn có thể bỏ qua email này. Có thể ai đó đã nhập nhầm địa chỉ email của bạn.</p>
 
                     <div class="footer">
-                        <p>This is an automated message from DSS E-commerce System</p>
-                        <p>© 2024 DSS E-commerce. All rights reserved.</p>
+                        <p>Đây là tin nhắn tự động từ Hệ thống DSS E-commerce</p>
+                        <p>© 2024 DSS E-commerce. Bảo lưu mọi quyền.</p>
                     </div>
                 </div>
             </body>
             </html>
             """
 
-            # Send email
-            result = await self.send_email(
+            # Send email (synchronous call)
+            result = self.send_email(
                 to_email=email,
                 subject="Email Verification Code - DSS E-commerce",
                 html_content=html_content
