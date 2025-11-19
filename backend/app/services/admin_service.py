@@ -315,7 +315,7 @@ class AdminService:
 
     async def update_last_login(self, user_id: int) -> bool:
         """Update user's last login timestamp"""
-        query = "UPDATE iam_user SET last_login_at = NOW(), updated_at = NOW() WHERE user_id = $1"
+        query = "UPDATE iam.iam_user SET last_login_at = NOW(), updated_at = NOW() WHERE user_id = $1"
         try:
             await self.db.execute_query(query, (user_id,))
             logger.info(f"Last login updated for user {user_id}")
