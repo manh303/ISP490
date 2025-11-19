@@ -56,6 +56,10 @@ import DeletedUsersList from "./components/admin/DeletedUsersList.js";
 import { AnalystWireframe } from "./pages/Analyst/AnalystWireframe.js";
 import { DataEngineerWireframe } from "./pages/DataEngineer/DataEngineerWireframe.js";
 import MLIPage from "./pages/MLInsights/MLIPage.js";
+import { AnalyticsDashboard } from "./pages/Analyst/AnalyticsDashboard.js";
+import { ProductAnalytics } from "./pages/Analyst/ProductAnalytics.js";
+import { ReviewAnalytics } from "./pages/Analyst/ReviewAnalytics.js";
+import { PlatformAnalytics } from "./pages/Analyst/PlatformAnalytics.js";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -180,6 +184,10 @@ export default function App() {
           >
             <Route path="/analyst/home" element={<AnalystPage />} />
             <Route path="/analyst/dashboard" element={<AnalystWireframe />} />
+            <Route path="/analyst/analytics-dashboard" element={<AnalyticsDashboard />} />
+            <Route path="/analyst/product-analytics" element={<ProductAnalytics />} />
+            <Route path="/analyst/review-analytics" element={<ReviewAnalytics />} />
+            <Route path="/analyst/platform-analytics" element={<PlatformAnalytics />} />
             <Route path="/analyst/sales" element={<BarChart />} />
             <Route path="/analyst/trends" element={<LineChart />} />
             <Route path="/analyst/customers" element={<DSSPage />} />

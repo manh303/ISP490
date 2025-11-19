@@ -35,6 +35,10 @@ const navItems: NavItem[] = [
     icon: <PieChartIcon />,
     name: "Data Analysis",
     subItems: [
+      { name: "Analytics Dashboard", path: "/analyst/analytics-dashboard", pro: false },
+      { name: "Product Analytics", path: "/analyst/product-analytics", pro: false },
+      { name: "Review Analytics", path: "/analyst/review-analytics", pro: false },
+      { name: "Platform Analytics", path: "/analyst/platform-analytics", pro: false },
       { name: "Sales Analysis", path: "/analyst/sales", pro: false },
       { name: "Market Trends", path: "/analyst/trends", pro: false },
       { name: "Customer Insights", path: "/analyst/customers", pro: false },
