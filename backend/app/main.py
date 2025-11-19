@@ -15,7 +15,7 @@ import bcrypt
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import Dict, Optional
 
 # Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
@@ -28,12 +28,12 @@ if parent_dir not in sys.path:
 
 # Now import after path setup
 try:
-    from app.middleware.activity_middleware import ActivityLoggingMiddleware
-    from app.services.activity_logger import ActivityLogger
-    ACTIVITY_AVAILABLE = True
+        from .middleware.activity_middleware import ActivityLoggingMiddleware
+        from .services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
 except ImportError:
-    ACTIVITY_AVAILABLE = False
-    logger.warning("Activity logging not available")
+        ACTIVITY_AVAILABLE = False
+        logger.warning("Activity logging not available")
         
 try:
     from pydantic import field_validator
