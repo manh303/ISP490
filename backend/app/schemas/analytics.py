@@ -154,3 +154,26 @@ class PriceVsRevenueItem(BaseModel):
     total_revenue: float
     avg_rating: Optional[float]
     total_reviews: int
+
+class OverviewReportResponse(BaseModel):
+    """Report tổng quan cho dashboard chính của Analyst."""
+    from_date: date
+    to_date: date
+    platform_code: Optional[str] = None
+    category_key: Optional[str] = None
+
+    kpis: OverviewKPIResponse
+    trends: OverviewTrendResponse
+    platform_comparison: List[PlatformComparisonItem]
+    category_share: List[CategoryShareItem]
+
+
+class ProductReportResponse(BaseModel):
+    """Report chi tiết cho 1 sản phẩm (price + review)."""
+    product_key: str
+    platform_code: str
+    from_date: date
+    to_date: date
+
+    timeseries: ProductTimeseriesResponse
+    review_summary: ReviewSummaryResponse

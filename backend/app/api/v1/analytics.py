@@ -19,7 +19,7 @@ from schemas.analytics import (
     PriceDistributionResponse,
     PriceVsRevenueItem,
     OverviewReportResponse,
-    ProductReportResponse
+    ProductReportResponse,
 )
 from app.services.analytics_service import AnalyticsService
 import os
