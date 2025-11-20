@@ -386,13 +386,19 @@ try:
 except ImportError as e:
     logger.warning(f"Dashboard API routes not available: {e}")
 
-# Include ML Serving API (v1)
+# Include ML API router
 try:
-    from api.v1.ml_serving import router as ml_serving_router
-    app.include_router(ml_serving_router, prefix=f"{settings.API_V1_PREFIX}/ml", tags=["ML Serving"])
-    logger.info("ML Serving API routes included")
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+
+    from api.v1.ml_router import router as ml_router
+    # ml_router nên có prefix = "/ml" bên trong, nên ở đây chỉ thêm API_V1_PREFIX
+    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["Machine Learning"] )
+    logger.info("✅ ML API routes included")
 except ImportError as e:
-    logger.warning(f"ML Serving API routes not available: {e}")
+    logger.warning(f"ML API routes not available: {e}")
+
 
 # Include Reports API (v1)
 try:
@@ -411,7 +417,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add activity logging middleware (only if available)
+# Add activity logging middleware (only if available and table exists)
+# Disabled for now - user_activity_logs table doesn't exist yet
 if ACTIVITY_AVAILABLE:
     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
     logger.info("Activity logging middleware enabled")
@@ -501,7 +508,7 @@ async def check_database_roles():
             await db_manager.connect()
         
         # Get all roles from database
-        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        query = "SELECT role_id, role_code, role_name, description FROM iam.iam_role ORDER BY role_code"
         roles = await db_manager.execute_query(query)
         
         return {
@@ -1185,7 +1192,7 @@ async def store_verification_token(db: DatabaseManager, email: str, token_hash: 
     # Nếu đã có token trước đó, upsert hoặc ghi đè
     await db.execute_query(
         """
-        INSERT INTO iam_email_verification (email, token_hash, created_at, expires_at, consumed)
+        INSERT INTO iam.iam_email_verification (email, token_hash, created_at, expires_at, consumed)
         VALUES ($1, $2, NOW(), NOW() + INTERVAL '15 minutes', false)
         ON CONFLICT (email) DO UPDATE
         SET token_hash = EXCLUDED.token_hash,
@@ -1201,7 +1208,7 @@ async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -
         return False
 
     query = """
-    SELECT token_id FROM iam_email_verification_token
+    SELECT token_id FROM iam.iam_email_verification_token
     WHERE email = $1 AND token_hash = $2 AND expires_at > NOW() AND used_at IS NULL
     """
     result = await db.execute_query(query, (email, token_hash))
@@ -1209,7 +1216,7 @@ async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -
     if result:
         # Mark token as used
         update_query = """
-        UPDATE iam_email_verification_token
+        UPDATE iam.iam_email_verification_token
         SET used_at = NOW()
         WHERE token_id = $1
         """
@@ -1372,7 +1379,6 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
     except Exception as e:
         logger.error(f"Forgot-password error: {e}")
         raise HTTPException(status_code=500, detail="Forgot password failed")
-
 
 
 
