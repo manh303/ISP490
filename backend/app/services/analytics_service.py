@@ -219,6 +219,7 @@ class AnalyticsService:
             points=points,
         )
 
+    
     # =========================
     # PLATFORM COMPARISON
     # =========================
@@ -720,3 +721,5 @@ class AnalyticsService:
             )
             for r in rows
         ]
+    
+    

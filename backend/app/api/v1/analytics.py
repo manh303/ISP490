@@ -18,6 +18,8 @@ from schemas.analytics import (
     ReviewSummaryResponse,
     PriceDistributionResponse,
     PriceVsRevenueItem,
+    OverviewReportResponse,
+    ProductReportResponse
 )
 from app.services.analytics_service import AnalyticsService
 import os
@@ -208,4 +210,110 @@ async def get_price_vs_revenue(
         platform_code=platform_code,
         category_key=category_key,
         limit=limit,
+    )
+
+
+# ====== REPORT APIs ======
+
+@router.get("/report/overview", response_model=OverviewReportResponse)
+async def get_overview_report(
+    from_date: date = Query(...),
+    to_date: date = Query(...),
+    platform_code: Optional[str] = Query(
+        None, description="tiki / lazada, nếu null thì tổng tất cả"
+    ),
+    category_key: Optional[str] = Query(
+        None, description="category_sk, lấy từ /filters/categories"
+    ),
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """
+    API gom tất cả dữ liệu cần cho 1 report tổng quan:
+      - KPIs
+      - Trend theo ngày
+      - So sánh giữa các platform
+      - Tỷ trọng category theo platform (nếu có platform_code)
+    """
+    # 1. KPIs
+    kpis = await service.get_overview_kpis(
+        from_date=from_date,
+        to_date=to_date,
+        platform_code=platform_code,
+        category_key=category_key,
+    )
+
+    # 2. Trends
+    trends = await service.get_overview_trends(
+        from_date=from_date,
+        to_date=to_date,
+        platform_code=platform_code,
+        category_key=category_key,
+    )
+
+    # 3. So sánh platform (không filter platform_code để vẫn thấy full)
+    platform_comparison = await service.get_platform_comparison(
+        from_date=from_date,
+        to_date=to_date,
+        category_key=category_key,
+    )
+
+    # 4. Category share theo platform (chỉ khi có platform_code)
+    if platform_code:
+        category_share = await service.get_category_share(
+            from_date=from_date,
+            to_date=to_date,
+            platform_code=platform_code,
+        )
+    else:
+        category_share = []
+
+    return OverviewReportResponse(
+        from_date=from_date,
+        to_date=to_date,
+        platform_code=platform_code,
+        category_key=category_key,
+        kpis=kpis,
+        trends=trends,
+        platform_comparison=platform_comparison,
+        category_share=category_share,
+    )
+
+
+@router.get("/report/product", response_model=ProductReportResponse)
+async def get_product_report(
+    product_key: str = Query(..., description="global product key, vd: tiki_123456"),
+    platform_code: str = Query(..., description="tiki / lazada"),
+    from_date: date = Query(...),
+    to_date: date = Query(...),
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """
+    Report chi tiết cho 1 product:
+      - Timeseries: giá / rating / review theo ngày
+      - Review summary: tổng số review, breakdown rating, top review
+    UI có thể dùng report này cho màn product-detail report.
+    """
+
+    timeseries = await service.get_product_timeseries(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
+    review_summary = await service.get_review_summary(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+        top_n=5,
+    )
+
+    return ProductReportResponse(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+        timeseries=timeseries,
+        review_summary=review_summary,
     )
