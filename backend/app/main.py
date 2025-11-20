@@ -10,16 +10,22 @@ import time
 import logging
 import secrets
 import hashlib
-import smtplib
 import bcrypt
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
 # Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger.info("✅ Loaded .env file")
+except ImportError:
+    logger.warning("python-dotenv not installed, using system environment variables")
 
 # Ensure parent directory of `app` is on sys.path
 parent_dir = os.path.dirname(os.path.dirname(__file__))
@@ -1053,40 +1059,38 @@ def create_access_token(user_data: dict, email: str):
     return create_jwt_token(user_data, email, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM, expire_hours)
 
 # ====================================
-# EMAIL SERVICE
+# EMAIL SERVICE (Mailjet)
 # ====================================
 try:
-    import aiosmtplib
+    import requests
     EMAIL_AVAILABLE = True
-    logger.info("Email service available")
+    logger.info("Email service available (Mailjet)")
 except ImportError:
     EMAIL_AVAILABLE = False
-    logger.warning("Email service not available: No module named 'aiosmtplib'")
+    logger.warning("Email service not available: No module named 'requests'")
 
 class EmailService:
-    """Simple email service for verification codes"""
+    """Email service using Mailjet HTTP API"""
 
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
+        self.api_key = os.getenv("MAILJET_API_KEY")
+        self.api_secret = os.getenv("MAILJET_API_SECRET")
+        self.from_email = os.getenv("EMAIL_FROM")
+        self.from_name = os.getenv("EMAIL_FROM_NAME", "E-commerce DSS")
+        self.mailjet_url = "https://api.mailjet.com/v3.1/send"
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
-        """Send email verification code"""
+        """Send email verification code using Mailjet API"""
         try:
-            # For development, just log the code
-            if not self.smtp_username or not self.smtp_password:
-                logger.info(f"DEV MODE: Verification code for {to_email}: {verification_code}")
+            # Nếu thiếu config thì bật dev mode, không gửi thật
+            if not self.api_key or not self.api_secret or not self.from_email:
+                logger.warning(
+                    f"DEV MODE (Mailjet): Missing MAILJET_API_KEY / MAILJET_API_SECRET / EMAIL_FROM. "
+                    f"Verification code for {to_email}: {verification_code}"
+                )
                 return True
 
-            msg = MIMEMultipart()
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = "Verify Your Email - E-commerce DSS"
-
-            html = f"""
+            html_content = f"""
             <html>
             <body>
                 <h2>Welcome to E-commerce DSS, {user_name}!</h2>
@@ -1100,18 +1104,47 @@ class EmailService:
             </html>
             """
 
-            msg.attach(MIMEText(html, 'html'))
+            payload = {
+                "Messages": [
+                    {
+                        "From": {
+                            "Email": self.from_email,
+                            "Name": self.from_name
+                        },
+                        "To": [
+                            {
+                                "Email": to_email,
+                                "Name": user_name or to_email
+                            }
+                        ],
+                        "Subject": "Verify Your Email - E-commerce DSS",
+                        "HTMLPart": html_content
+                    }
+                ]
+            }
 
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.smtp_username, self.smtp_password)
-            text = msg.as_string()
-            server.sendmail(self.from_email, to_email, text)
-            server.quit()
+            # Mailjet dùng Basic Auth
+            auth = (self.api_key, self.api_secret)
 
-            return True
+            response = requests.post(
+                self.mailjet_url,
+                json=payload,
+                auth=auth,
+                timeout=10
+            )
+
+            if 200 <= response.status_code < 300:
+                logger.info(f"[Mailjet] Verification email sent to {to_email}")
+                return True
+            else:
+                logger.error(
+                    f"[Mailjet] Failed to send email to {to_email}. "
+                    f"Status: {response.status_code}, Body: {response.text}"
+                )
+                return False
+
         except Exception as e:
-            logger.error(f"Failed to send verification email: {e}")
+            logger.error(f"[Mailjet] Exception while sending verification email: {e}")
             return False
 
 # Initialize email service
@@ -1289,21 +1322,25 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
         if not email:
             raise HTTPException(status_code=400, detail="Email is required")
 
-        # Check if email exists
-        email_exists = await check_email_exists(db, email)
+        # Check if email exists and get user info
+        user_query = "SELECT full_name FROM iam.iam_user WHERE email = $1"
+        user_result = await db.execute_query(user_query, (email,))
         
         # Always respond success (avoid user enumeration)
-        if not email_exists:
+        if not user_result:
             logger.info(f"Forgot password requested for non-existent email: {email}")
             return ForgotPasswordResponse(
                 success=True,
                 message="If this email exists, we've sent a reset code."
             )
+        
+        # Get user's full name
+        user_name = user_result[0].get('full_name', 'User') if user_result else 'User'
 
         # Use the new EmailService to send OTP
         if email_service_module:
             try:
-                result = await send_otp_email(email, name="User")
+                result = await send_otp_email(email, name=user_name)
                 if result['success']:
                     logger.info(f"✅ OTP sent to {email}")
                     return ForgotPasswordResponse(
