@@ -423,8 +423,9 @@ class MLService:
     ) -> Optional[SentimentSummaryResponse]:
         """
         Tổng hợp sentiment theo ngày cho 1 sản phẩm.
+        Dùng ml.fact_review_sentiment + dwh.dim_date + ml.dim_ml_model.
         """
-        # map product_key -> product_sk
+        # 1) map product_key -> product_sk
         prod_sql = """
             SELECT product_sk
             FROM dwh.dim_product
@@ -435,22 +436,25 @@ class MLService:
             return None
         product_sk = prod["product_sk"]
 
+        # 2) tổng hợp theo ngày + lấy model_name / model_version từ fact
         sql = """
             SELECT
                 d.date_value AS date,
                 COUNT(*) AS total_reviews,
                 COUNT(*) FILTER (WHERE s.sentiment_label = 'positive') AS positive,
                 COUNT(*) FILTER (WHERE s.sentiment_label = 'negative') AS negative,
-                COUNT(*) FILTER (WHERE s.sentiment_label = 'neutral')  AS neutral
+                COUNT(*) FILTER (WHERE s.sentiment_label = 'neutral')  AS neutral,
+                MAX(m.model_name)   AS model_name,
+                MAX(m.model_version) AS model_version
             FROM ml.fact_review_sentiment s
-            JOIN dwh.dim_date d ON d.date_sk = s.date_sk
+            JOIN dwh.dim_date d    ON d.date_sk = s.date_sk
             JOIN ml.dim_ml_model m ON m.model_sk = s.model_sk
             WHERE s.product_sk = $1
               AND s.platform_code = $2
               AND d.date_value BETWEEN $3 AND $4
         """
 
-        params = [product_sk, platform_code, from_date, to_date]
+        params: List[Any] = [product_sk, platform_code, from_date, to_date]
 
         if model_name:
             sql += " AND m.model_name = $" + str(len(params) + 1)
@@ -465,16 +469,21 @@ class MLService:
         if not rows:
             return None
 
-        # lấy info model dùng ở điểm đầu tiên
-        # (ở đây anh có thể query riêng model nếu cần chính xác hơn)
-        resolved_model_name = model_name or "sentiment_bert"
-        resolved_model_version = model_version or "v1.0"
+        # 3) lấy model_name/model_version từ dòng đầu tiên (đã group)
+        first = rows[0]
+        resolved_model_name = model_name or first["model_name"] or "sentiment_bert"
+        resolved_model_version = model_version or first["model_version"] or "v1.0"
 
         points: List[SentimentSummaryItem] = []
         for r in rows:
             total = r["total_reviews"]
             positive = r["positive"]
-            ratio = float(positive) / total if total > 0 else 0.0
+            negative = r["negative"]
+            neutral = r["neutral"]
+
+            ratio = float(positive) / total if total and total > 0 else 0.0
+            ratio = _safe_float(ratio) or 0.0
+
             points.append(
                 SentimentSummaryItem(
                     date=r["date"],
@@ -482,8 +491,8 @@ class MLService:
                     platform_code=platform_code,
                     total_reviews=total,
                     positive=positive,
-                    negative=r["negative"],
-                    neutral=r["neutral"],
+                    negative=negative,
+                    neutral=neutral,
                     positive_ratio=ratio,
                 )
             )
@@ -497,6 +506,7 @@ class MLService:
             to_date=to_date,
             points=points,
         )
+
 
     # ------------------------------------------------------------------
     # ONLINE SENTIMENT (stub – sau nối với model thật)

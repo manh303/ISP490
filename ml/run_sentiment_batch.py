@@ -33,10 +33,6 @@ def load_model():
 def fetch_unscored_reviews(conn, model_sk: int) -> pd.DataFrame:
     """
     Lấy các review chưa có bản ghi trong ml.fact_review_sentiment cho model_sk này.
-
-    Thực tế dùng:
-      - dwh.fact_review(review_sk, product_sk, date_sk, rating, review_text)
-      - dwh.dim_product(product_sk, product_key)
     """
     sql = """
         SELECT
@@ -44,7 +40,7 @@ def fetch_unscored_reviews(conn, model_sk: int) -> pd.DataFrame:
             r.product_sk,
             r.date_sk,
             r.rating,
-            r.review_text,
+            r.review_body AS review_text,      -- 🔧 dùng review_body, alias thành review_text
             p.product_key,
             split_part(p.product_key, '_', 1) AS platform_code
         FROM dwh.fact_review r
@@ -52,7 +48,7 @@ def fetch_unscored_reviews(conn, model_sk: int) -> pd.DataFrame:
         LEFT JOIN ml.fact_review_sentiment s
             ON s.review_id = r.review_sk
            AND s.model_sk = %s
-        WHERE r.review_text IS NOT NULL
+        WHERE r.review_body IS NOT NULL       -- 🔧 đổi điều kiện ở đây
           AND r.rating IS NOT NULL
           AND s.review_id IS NULL
     """

@@ -635,12 +635,18 @@ def standardize_data(df):
     print("=" * 60)
 
     df_std = (
-        df.withColumn(
-            "source_platform_std",
-            when(col("source_platform").isNotNull(), lower(trim(col("source_platform")))).otherwise(
-                lit("unknown")
-            ),
+        df.withColumn("platform_raw",
+            when(col("source_platform").isNotNull(),
+                lower(trim(col("source_platform")))
+            ).otherwise(lit("unknown"))
         )
+        .withColumn(
+            "source_platform_std",
+            when(col("platform_raw").isin("tiki", "tiki_mass_crawl"), lit("tiki"))
+            .when(col("platform_raw").isin("lazada", "lazada_mass_crawl"), lit("lazada"))
+            .otherwise(col("platform_raw"))
+        )
+        .drop("platform_raw")
         .withColumn(
             "brand_std",
             when(col("brand_name").isNotNull(), upper(trim(col("brand_name")))).otherwise(
@@ -657,6 +663,7 @@ def standardize_data(df):
         .withColumn("price_current_vnd", col("price_current").cast(DoubleType()))
         .withColumn("price_original_vnd", col("price_original").cast(DoubleType()))
     )
+
 
     df_std = df_std.withColumn(
         "crawl_ts",
@@ -1295,7 +1302,16 @@ def load_fact_review_star(df_reviews_time, conn, mappings):
         reviewer_name = r.get("reviewer_name_std") or None
         verified = bool(r.get("verified_purchase")) if r.get("verified_purchase") is not None else False
 
-        raw_review_date = r.get("review_date") or review_date_fmt
+        # 🔧 CHỈ DÙNG NGÀY ĐÃ CHUẨN HÓA LÀM raw_review_date
+        from datetime import datetime as dt
+
+        raw_review_date_val = None
+        if review_date_fmt:
+            try:
+                # review_date_fmt là 'YYYY-MM-DD' → convert thành datetime
+                raw_review_date_val = dt.strptime(str(review_date_fmt)[:10], "%Y-%m-%d")
+            except Exception:
+                raw_review_date_val = None
 
         rows.append(
             {
@@ -1310,7 +1326,7 @@ def load_fact_review_star(df_reviews_time, conn, mappings):
                 "review_body": review_body,
                 "reviewer_name": reviewer_name,
                 "is_verified_purchase": verified,
-                "raw_review_date": raw_review_date,
+                "raw_review_date": raw_review_date_val,   # ⬅️ chỉ gửi datetime hợp lệ
             }
         )
 
@@ -1769,12 +1785,18 @@ def standardize_review_data(df):
         return None
 
     df_std = (
-        df.withColumn(
-            "source_platform_std",
-            when(col("source_platform").isNotNull(), lower(trim(col("source_platform")))).otherwise(
-                lit("unknown")
-            ),
+        df.withColumn("platform_raw",
+            when(col("source_platform").isNotNull(),
+                lower(trim(col("source_platform")))
+            ).otherwise(lit("unknown"))
         )
+        .withColumn(
+            "source_platform_std",
+            when(col("platform_raw").isin("tiki", "tiki_mass_crawl"), lit("tiki"))
+            .when(col("platform_raw").isin("lazada", "lazada_mass_crawl"), lit("lazada"))
+            .otherwise(col("platform_raw"))
+        )
+        .drop("platform_raw")
         .withColumn(
             "reviewer_name_std",
             when(col("reviewer_name").isNotNull(), trim(col("reviewer_name"))).otherwise(
@@ -1783,9 +1805,8 @@ def standardize_review_data(df):
         )
         .withColumn(
             "review_text_std",
-            when(col("review_text").isNotNull(), regexp_replace(trim(col("review_text")), r"\s+", " ")).otherwise(
-                ""
-            ),
+            when(col("review_text").isNotNull(),
+                regexp_replace(trim(col("review_text")), r"\s+", " ")).otherwise(""),
         )
         .withColumn("rating_std", col("rating").cast(DoubleType()))
     )

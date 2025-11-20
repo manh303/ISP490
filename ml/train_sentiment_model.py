@@ -22,7 +22,7 @@ def fetch_training_data(conn) -> pd.DataFrame:
     Lấy dữ liệu review từ DWH để train sentiment.
 
     Thực tế dùng:
-        dwh.fact_review(review_sk, product_sk, date_sk, rating, review_text)
+        dwh.fact_review(review_sk, product_sk, date_sk, rating, review_body)
     → alias review_sk AS review_id cho dễ xử lý về sau.
     """
     sql = """
@@ -31,9 +31,9 @@ def fetch_training_data(conn) -> pd.DataFrame:
             r.product_sk,
             r.date_sk,
             r.rating,
-            r.review_text
+            r.review_body AS review_text   -- 🔧 dùng review_body, alias thành review_text
         FROM dwh.fact_review r
-        WHERE r.review_text IS NOT NULL
+        WHERE r.review_body IS NOT NULL    -- 🔧 đổi điều kiện ở đây
           AND r.rating IS NOT NULL
     """
     return pd.read_sql(sql, conn)
