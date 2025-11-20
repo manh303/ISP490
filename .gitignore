@@ -1,8 +1,4 @@
 
-# Ignore pickle files
-*.pkl
-# Or specific: clv_model.pkl, data/clv_model.pkl
-# Credentials
 
 kaggle.json
 .env
@@ -30,9 +26,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Logs
+# Logs (except ML metrics)
 logs/
 *.log
+!ml/logs/metrics/*.json
 
 # Node modules
 node_modules/

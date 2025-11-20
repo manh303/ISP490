@@ -1,370 +1,189 @@
--- =====================
--- STAGING (Data Integration Framework - Raw Landing)
--- =====================
-CREATE TABLE stg_raw_products (
-  id                BIGSERIAL PRIMARY KEY,
-  source_platform   VARCHAR(20) NOT NULL,  -- lazada|fptshop|cellphones|tiki|hoanghamobile|thegioididong
-  url               TEXT,
-  platform_product_id TEXT,
-  crawled_at        TIMESTAMP NOT NULL,
-  raw_data          JSONB NOT NULL,        -- Full JSON payload from crawlers
-  checksum          TEXT,
-  load_id           VARCHAR(36),
-  created_at        TIMESTAMP DEFAULT NOW()
+-- ===================================================================
+-- STAR SCHEMA CHO E-COMMERCE DSS
+-- ===================================================================
+
+-- ========= SCHEMA =========
+CREATE SCHEMA IF NOT EXISTS dwh;
+CREATE SCHEMA IF NOT EXISTS ml;
+
+-- ========= DIMENSIONS =========
+
+-- 1. dim_date
+CREATE TABLE IF NOT EXISTS dwh.dim_date (
+    date_sk      SERIAL PRIMARY KEY,
+    date_value   DATE NOT NULL UNIQUE,
+    year         INT  NOT NULL,
+    month        INT  NOT NULL,
+    day          INT  NOT NULL,
+    quarter      INT  NOT NULL,
+    week_of_year INT  NOT NULL,
+    day_of_week  INT  NOT NULL,       -- 1=Mon ... 7=Sun
+    day_name     VARCHAR(10),
+    is_weekend   BOOLEAN NOT NULL
 );
 
-CREATE TABLE stg_raw_reviews (
-  id                  BIGSERIAL PRIMARY KEY,
-  source_platform     VARCHAR(20) NOT NULL,
-  platform_product_id TEXT,
-  crawled_at          TIMESTAMP NOT NULL,
-  raw_data            JSONB NOT NULL,
-  load_id             VARCHAR(36),
-  created_at          TIMESTAMP DEFAULT NOW()
+-- 2. dim_platform
+CREATE TABLE IF NOT EXISTS dwh.dim_platform (
+    platform_sk    SERIAL PRIMARY KEY,
+    platform_code  VARCHAR(50) NOT NULL UNIQUE,     -- 'tiki', 'lazada'
+    platform_name  VARCHAR(100),
+    country_code   CHAR(2),
+    base_url       VARCHAR(255),
+    is_active      BOOLEAN DEFAULT TRUE,
+    created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================
--- ODS (Data Standardization Tool Output)
--- =====================
-
--- Platform reference (after data cleaning)
-CREATE TABLE ods_platform_ref (
-  platform_sk   SERIAL PRIMARY KEY,
-  platform_code VARCHAR(20) UNIQUE NOT NULL,  -- lazada|fptshop|cellphones|tiki|hoanghamobile|thegioididong
-  platform_name TEXT NOT NULL,
-  website_url   TEXT,
-  country_code  VARCHAR(2) DEFAULT 'VN',
-  is_active     BOOLEAN DEFAULT TRUE
+-- 3. dim_brand
+CREATE TABLE IF NOT EXISTS dwh.dim_brand (
+    brand_sk         SERIAL PRIMARY KEY,
+    brand_name       VARCHAR(150) NOT NULL UNIQUE,  -- 'SAMSUNG'
+    brand_normalized VARCHAR(150),
+    country          VARCHAR(100),
+    created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Product ID mapping (synchronize identifier step)
-CREATE TABLE ods_product_id_map (
-  platform_sk          INT NOT NULL,
-  platform_product_id  TEXT NOT NULL,
-  global_product_id    VARCHAR(36) NOT NULL,
-  first_seen           TIMESTAMP DEFAULT NOW(),
-  last_seen            TIMESTAMP DEFAULT NOW(),
-  is_active            BOOLEAN DEFAULT TRUE,
-  PRIMARY KEY (platform_sk, platform_product_id),
-  FOREIGN KEY (platform_sk) REFERENCES ods_platform_ref(platform_sk)
+-- 4. dim_category
+CREATE TABLE IF NOT EXISTS dwh.dim_category (
+    category_sk       SERIAL PRIMARY KEY,
+    category_std_key  VARCHAR(100) NOT NULL UNIQUE,  -- 'laptop_gaming'
+    category_lvl1     VARCHAR(100),
+    category_lvl2     VARCHAR(100),
+    category_lvl3     VARCHAR(100),
+    full_path         VARCHAR(400),
+    created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Category mapping (standardized categories)
-CREATE TABLE ods_category_taxonomy (
-  category_sk        SERIAL PRIMARY KEY,
-  category_code      VARCHAR(100) UNIQUE NOT NULL,
-  category_name      TEXT NOT NULL,
-  parent_category_sk INT,
-  level              INT DEFAULT 1,
-  FOREIGN KEY (parent_category_sk) REFERENCES ods_category_taxonomy(category_sk)
+-- 5. dim_product
+CREATE TABLE IF NOT EXISTS dwh.dim_product (
+    product_sk        SERIAL PRIMARY KEY,
+    product_key       VARCHAR(100) NOT NULL UNIQUE, -- global_product_id_synced
+    product_master_id VARCHAR(256),
+    product_name      VARCHAR(500),
+    product_slug      VARCHAR(500),
+    brand_sk          INT REFERENCES dwh.dim_brand(brand_sk),
+    category_sk       INT REFERENCES dwh.dim_category(category_sk),
+    created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Platform category mapping (category mapping step)
-CREATE TABLE ods_platform_category_map (
-  platform_sk           INT NOT NULL,
-  platform_category_id  TEXT NOT NULL,
-  category_sk           INT NOT NULL,
-  confidence_score      DECIMAL(3,2) DEFAULT 1.0,
-  PRIMARY KEY (platform_sk, platform_category_id),
-  FOREIGN KEY (platform_sk) REFERENCES ods_platform_ref(platform_sk),
-  FOREIGN KEY (category_sk) REFERENCES ods_category_taxonomy(category_sk)
+-- ========= FACT TABLES =========
+
+-- 6. fact_product_daily
+CREATE TABLE IF NOT EXISTS dwh.fact_product_daily (
+    date_sk       INT NOT NULL REFERENCES dwh.dim_date(date_sk),
+    product_sk    INT NOT NULL REFERENCES dwh.dim_product(product_sk),
+    platform_sk   INT NOT NULL REFERENCES dwh.dim_platform(platform_sk),
+
+    currency_code     VARCHAR(10),
+    min_price         NUMERIC(15,2),
+    max_price         NUMERIC(15,2),
+    avg_price         NUMERIC(15,2),
+    median_price      NUMERIC(15,2),
+    price_stddev      NUMERIC(15,2),
+
+    total_review_count BIGINT,
+    avg_rating         NUMERIC(3,2),
+
+    snapshot_count     INT,
+
+    CONSTRAINT fact_product_daily_pk PRIMARY KEY (date_sk, product_sk, platform_sk)
 );
 
--- Cleaned products (after data quality & dedup)
-CREATE TABLE ods_product_clean (
-  global_product_id VARCHAR(36) PRIMARY KEY,
-  product_name      TEXT NOT NULL,
-  brand_name        TEXT,
-  category_sk       INT,
-  description       TEXT,
-  image_urls        TEXT[],
-  seller_name       TEXT,
-  seller_type       VARCHAR(50),
-  attributes_json   JSONB,
-  first_seen        TIMESTAMP DEFAULT NOW(),
-  last_seen         TIMESTAMP DEFAULT NOW(),
-  is_active         BOOLEAN DEFAULT TRUE,
-  data_quality_score DECIMAL(3,2) DEFAULT 0.0,
-  FOREIGN KEY (category_sk) REFERENCES ods_category_taxonomy(category_sk)
+CREATE INDEX IF NOT EXISTS idx_fact_product_daily_prod_plat_date
+ON dwh.fact_product_daily (product_sk, platform_sk, date_sk);
+
+-- 7. fact_review (detail)
+CREATE TABLE IF NOT EXISTS dwh.fact_review (
+    review_sk        BIGSERIAL PRIMARY KEY,
+    review_id_nk     VARCHAR(255) NOT NULL,
+    product_sk       INT NOT NULL REFERENCES dwh.dim_product(product_sk),
+    platform_sk      INT NOT NULL REFERENCES dwh.dim_platform(platform_sk),
+    date_sk          INT NOT NULL REFERENCES dwh.dim_date(date_sk),
+
+    rating           SMALLINT,
+    helpful_votes    INT,
+    sentiment_score  NUMERIC(4,3),
+
+    review_title     TEXT,
+    review_body      TEXT,
+    reviewer_name    VARCHAR(255),
+    is_verified_purchase BOOLEAN,
+    raw_review_date  TIMESTAMPTZ,
+
+    UNIQUE (review_id_nk, platform_sk)
 );
 
--- Price points (time-series data)
-CREATE TABLE ods_price_point (
-  id                BIGSERIAL PRIMARY KEY,
-  global_product_id VARCHAR(36) NOT NULL,
-  platform_sk       INT NOT NULL,
-  captured_at       TIMESTAMP NOT NULL,
-  price_current     DECIMAL(15,2),
-  price_original    DECIMAL(15,2),
-  discount_percent  DECIMAL(5,2),
-  currency          VARCHAR(3) DEFAULT 'VND',
-  is_available      BOOLEAN DEFAULT TRUE,
-  FOREIGN KEY (global_product_id) REFERENCES ods_product_clean(global_product_id),
-  FOREIGN KEY (platform_sk) REFERENCES ods_platform_ref(platform_sk)
+CREATE INDEX IF NOT EXISTS idx_fact_review_prod_plat_date
+ON dwh.fact_review (product_sk, platform_sk, date_sk);
+
+-- 8. fact_review_daily (aggregate)
+CREATE TABLE IF NOT EXISTS dwh.fact_review_daily (
+    date_sk      INT NOT NULL REFERENCES dwh.dim_date(date_sk),
+    product_sk   INT NOT NULL REFERENCES dwh.dim_product(product_sk),
+    platform_sk  INT NOT NULL REFERENCES dwh.dim_platform(platform_sk),
+
+    review_count   BIGINT,
+    avg_rating     NUMERIC(3,2),
+    rating_1_count BIGINT,
+    rating_2_count BIGINT,
+    rating_3_count BIGINT,
+    rating_4_count BIGINT,
+    rating_5_count BIGINT,
+    avg_sentiment  NUMERIC(4,3),
+
+    CONSTRAINT fact_review_daily_pk PRIMARY KEY (date_sk, product_sk, platform_sk)
 );
 
--- Rating and reviews (aggregated)
-CREATE TABLE ods_rating_snapshot (
-  id                BIGSERIAL PRIMARY KEY,
-  global_product_id VARCHAR(36) NOT NULL,
-  platform_sk       INT NOT NULL,
-  captured_at       TIMESTAMP NOT NULL,
-  rating_avg        DECIMAL(3,2),
-  rating_count      INT,
-  review_count      INT,
-  sold_count        INT,
-  FOREIGN KEY (global_product_id) REFERENCES ods_product_clean(global_product_id),
-  FOREIGN KEY (platform_sk) REFERENCES ods_platform_ref(platform_sk)
+CREATE INDEX IF NOT EXISTS idx_fact_review_daily_prod_plat_date
+ON dwh.fact_review_daily (product_sk, platform_sk, date_sk);
+
+-- ========= ML TABLES =========
+
+-- 9. dim_ml_model
+CREATE TABLE IF NOT EXISTS ml.dim_ml_model (
+    model_sk      SERIAL PRIMARY KEY,
+    model_name    VARCHAR(100) NOT NULL,
+    model_type    VARCHAR(50) NOT NULL,
+    model_version VARCHAR(50) NOT NULL,
+    training_data_until DATE,
+    metrics       JSONB,
+    status        VARCHAR(20),
+    created_at    TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (model_name, model_version)
 );
 
--- Individual reviews (cleaned)
-CREATE TABLE ods_review_clean (
-  id                BIGSERIAL PRIMARY KEY,
-  global_product_id VARCHAR(36) NOT NULL,
-  platform_sk       INT NOT NULL,
-  reviewer_name     TEXT,
-  rating            INT CHECK (rating >= 1 AND rating <= 5),
-  review_content    TEXT,
-  review_time       TIMESTAMP,
-  helpful_count     INT DEFAULT 0,
-  sku_info          TEXT,
-  sentiment_score   DECIMAL(5,2),
-  sentiment_label   VARCHAR(20),
-  created_at        TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (global_product_id) REFERENCES ods_product_clean(global_product_id),
-  FOREIGN KEY (platform_sk) REFERENCES ods_platform_ref(platform_sk)
+-- 10. fact_price_prediction
+CREATE TABLE IF NOT EXISTS ml.fact_price_prediction (
+    prediction_sk   BIGSERIAL PRIMARY KEY,
+    model_sk        INT NOT NULL REFERENCES ml.dim_ml_model(model_sk),
+    date_sk         INT NOT NULL REFERENCES dwh.dim_date(date_sk),
+    product_sk      INT NOT NULL REFERENCES dwh.dim_product(product_sk),
+    platform_sk     INT NOT NULL REFERENCES dwh.dim_platform(platform_sk),
+
+    predicted_price NUMERIC(15,2) NOT NULL,
+    ci_lower        NUMERIC(15,2),
+    ci_upper        NUMERIC(15,2),
+
+    run_id          VARCHAR(100),
+    created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================
--- DWH (Data Warehouse - Star Schema)
--- =====================
+CREATE INDEX IF NOT EXISTS idx_price_pred_prod_plat_date
+ON ml.fact_price_prediction (product_sk, platform_sk, date_sk);
 
--- Dimension Tables
-CREATE TABLE dwh_dim_date (
-  date_sk       INT PRIMARY KEY,
-  date_value    DATE UNIQUE NOT NULL,
-  day           INT,
-  month         INT,
-  quarter       INT,
-  year          INT,
-  week_of_year  INT,
-  is_weekend    BOOLEAN,
-  day_name      VARCHAR(10),
-  month_name    VARCHAR(12)
+-- 11. fact_product_recommendation
+CREATE TABLE IF NOT EXISTS ml.fact_product_recommendation (
+    recommendation_sk      BIGSERIAL PRIMARY KEY,
+    model_sk               INT NOT NULL REFERENCES ml.dim_ml_model(model_sk),
+    date_sk                INT NOT NULL REFERENCES dwh.dim_date(date_sk),
+
+    source_product_sk      INT NOT NULL REFERENCES dwh.dim_product(product_sk),
+    recommended_product_sk INT NOT NULL REFERENCES dwh.dim_product(product_sk),
+    rank                   INT NOT NULL,
+
+    similarity_score       NUMERIC(5,4),
+    recommendation_type    VARCHAR(50),
+    created_at             TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE dwh_dim_platform (
-  platform_sk   SERIAL PRIMARY KEY,
-  platform_code VARCHAR(20) UNIQUE NOT NULL,
-  platform_name TEXT NOT NULL,
-  website_url   TEXT,
-  country_code  VARCHAR(2) DEFAULT 'VN',
-  is_active     BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE dwh_dim_brand (
-  brand_sk   SERIAL PRIMARY KEY,
-  brand_code VARCHAR(100) UNIQUE,
-  brand_name TEXT NOT NULL
-);
-
-CREATE TABLE dwh_dim_category (
-  category_sk        SERIAL PRIMARY KEY,
-  category_code      VARCHAR(100) UNIQUE NOT NULL,
-  category_name      TEXT NOT NULL,
-  parent_category_sk INT,
-  category_level     INT DEFAULT 1,
-  category_path      TEXT,
-  FOREIGN KEY (parent_category_sk) REFERENCES dwh_dim_category(category_sk)
-);
-
-CREATE TABLE dwh_dim_product (
-  product_sk        BIGSERIAL PRIMARY KEY,
-  global_product_id VARCHAR(36) NOT NULL,
-  product_name      TEXT NOT NULL,
-  brand_sk          INT,
-  category_sk       INT,
-  seller_name       TEXT,
-  seller_type       VARCHAR(50),
-  effective_from    DATE NOT NULL,
-  effective_to      DATE NOT NULL,
-  is_current        BOOLEAN NOT NULL,
-  UNIQUE (global_product_id, effective_from),
-  FOREIGN KEY (brand_sk)    REFERENCES dwh_dim_brand(brand_sk),
-  FOREIGN KEY (category_sk) REFERENCES dwh_dim_category(category_sk)
-);
-
--- Fact Tables
-CREATE TABLE dwh_fact_product_daily (
-  date_sk          INT NOT NULL,
-  product_sk       BIGINT NOT NULL,
-  platform_sk      INT NOT NULL,
-  price_current    DECIMAL(15,2),
-  price_original   DECIMAL(15,2),
-  discount_pct     DECIMAL(5,2),
-  rating_avg       DECIMAL(3,2),
-  rating_count     INT,
-  review_count     INT,
-  sold_count       INT,
-  is_available     BOOLEAN DEFAULT TRUE,
-  captured_at      TIMESTAMP,
-  PRIMARY KEY (date_sk, product_sk, platform_sk),
-  FOREIGN KEY (date_sk)     REFERENCES dwh_dim_date(date_sk),
-  FOREIGN KEY (product_sk)  REFERENCES dwh_dim_product(product_sk),
-  FOREIGN KEY (platform_sk) REFERENCES dwh_dim_platform(platform_sk)
-);
-
-CREATE TABLE dwh_fact_review_summary (
-  date_sk          INT NOT NULL,
-  product_sk       BIGINT NOT NULL,
-  platform_sk      INT NOT NULL,
-  total_reviews    INT DEFAULT 0,
-  avg_rating       DECIMAL(3,2),
-  positive_reviews INT DEFAULT 0,
-  negative_reviews INT DEFAULT 0,
-  neutral_reviews  INT DEFAULT 0,
-  sentiment_score  DECIMAL(5,2),
-  PRIMARY KEY (date_sk, product_sk, platform_sk),
-  FOREIGN KEY (date_sk)     REFERENCES dwh_dim_date(date_sk),
-  FOREIGN KEY (product_sk)  REFERENCES dwh_dim_product(product_sk),
-  FOREIGN KEY (platform_sk) REFERENCES dwh_dim_platform(platform_sk)
-);
-
--- =====================
--- DATA MART (Business Intelligence Layer)
--- =====================
-
--- Price Optimization Data Mart (chỉ về price analysis)
-CREATE TABLE dm_price_analytics (
-  product_sk       BIGINT NOT NULL,
-  platform_sk      INT NOT NULL,
-  date_sk          INT NOT NULL,
-  price_current    DECIMAL(15,2),
-  price_original   DECIMAL(15,2),
-  discount_pct     DECIMAL(5,2),
-  competitor_min_price DECIMAL(15,2),
-  competitor_max_price DECIMAL(15,2),
-  price_rank       INT,
-  price_trend      VARCHAR(20), -- increasing|decreasing|stable
-  PRIMARY KEY (product_sk, platform_sk, date_sk),
-  FOREIGN KEY (product_sk)  REFERENCES dwh_dim_product(product_sk),
-  FOREIGN KEY (platform_sk) REFERENCES dwh_dim_platform(platform_sk),
-  FOREIGN KEY (date_sk)     REFERENCES dwh_dim_date(date_sk)
-);
-
--- =====================
--- METADATA (technical + business)
--- =====================
-CREATE TABLE meta_source_system (
-  source_id     BIGSERIAL PRIMARY KEY,
-  code          VARCHAR(32) UNIQUE NOT NULL,
-  name          TEXT,
-  owner_contact TEXT
-);
-
-CREATE TABLE meta_dataset (
-  dataset_id    BIGSERIAL PRIMARY KEY,
-  source_id     BIGINT,
-  layer         VARCHAR(16) NOT NULL,     -- stg|ods|dwh|dm|external
-  schema_name   TEXT NOT NULL,            -- chỉ để mô tả
-  table_name    TEXT NOT NULL,
-  dataset_type  VARCHAR(24) NOT NULL,     -- table|view|file|topic
-  pii_class     VARCHAR(24),
-  retention_days INT,
-  created_at     TIMESTAMP,
-  updated_at     TIMESTAMP,
-  UNIQUE (schema_name, table_name),
-  FOREIGN KEY (source_id) REFERENCES meta_source_system(source_id)
-);
-
-CREATE TABLE meta_column (
-  column_id       BIGSERIAL PRIMARY KEY,
-  dataset_id      BIGINT NOT NULL,
-  column_name     TEXT NOT NULL,
-  data_type       TEXT,
-  nullable        BOOLEAN,
-  description     TEXT,
-  is_business_key BOOLEAN DEFAULT FALSE,
-  is_surrogate_key BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY (dataset_id) REFERENCES meta_dataset(dataset_id)
-);
-
-CREATE TABLE meta_job (
-  job_id    BIGSERIAL PRIMARY KEY,
-  job_name  TEXT UNIQUE NOT NULL,
-  owner     TEXT,
-  schedule  TEXT,
-  active    BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE meta_job_run (
-  run_id      BIGSERIAL PRIMARY KEY,
-  job_id      BIGINT NOT NULL,
-  started_at  TIMESTAMP,
-  ended_at    TIMESTAMP,
-  status      VARCHAR(16) NOT NULL,       -- success|failed|running
-  rows_in     BIGINT,
-  rows_out    BIGINT,
-  error_message TEXT,
-  FOREIGN KEY (job_id) REFERENCES meta_job(job_id)
-);
-
-CREATE TABLE meta_lineage_edge (
-  edge_id         BIGSERIAL PRIMARY KEY,
-  run_id          BIGINT,
-  src_dataset_id  BIGINT,
-  tgt_dataset_id  BIGINT,
-  FOREIGN KEY (run_id)         REFERENCES meta_job_run(run_id),
-  FOREIGN KEY (src_dataset_id) REFERENCES meta_dataset(dataset_id),
-  FOREIGN KEY (tgt_dataset_id) REFERENCES meta_dataset(dataset_id)
-);
-
-CREATE TABLE meta_partition (
-  partition_id    BIGSERIAL PRIMARY KEY,
-  dataset_id      BIGINT NOT NULL,
-  partition_name  TEXT NOT NULL,
-  partition_value TEXT NOT NULL,
-  row_count       BIGINT,
-  size_mb         DECIMAL(18,2),
-  last_loaded_at  TIMESTAMP,
-  FOREIGN KEY (dataset_id) REFERENCES meta_dataset(dataset_id)
-);
-
-CREATE TABLE meta_expectation (
-  exp_id     BIGSERIAL PRIMARY KEY,
-  dataset_id BIGINT NOT NULL,
-  name       TEXT NOT NULL,
-  severity   VARCHAR(8) NOT NULL,         -- warn|error
-  check_sql  TEXT NOT NULL,
-  owner      TEXT,
-  tags       TEXT,
-  FOREIGN KEY (dataset_id) REFERENCES meta_dataset(dataset_id)
-);
-
-CREATE TABLE meta_expectation_result (
-  result_id    BIGSERIAL PRIMARY KEY,
-  exp_id       BIGINT NOT NULL,
-  run_id       BIGINT,
-  status       VARCHAR(8) NOT NULL,       -- pass|fail
-  failed_rows  BIGINT,
-  sample_rows_json TEXT,
-  FOREIGN KEY (exp_id) REFERENCES meta_expectation(exp_id),
-  FOREIGN KEY (run_id) REFERENCES meta_job_run(run_id)
-);
-
-CREATE TABLE meta_business_term (
-  term_id   BIGSERIAL PRIMARY KEY,
-  term_name TEXT UNIQUE NOT NULL,
-  definition TEXT,
-  steward   TEXT,
-  status    VARCHAR(12)
-);
-
-CREATE TABLE meta_term_mapping (
-  map_id     BIGSERIAL PRIMARY KEY,
-  term_id    BIGINT NOT NULL,
-  dataset_id BIGINT NOT NULL,
-  column_name TEXT NOT NULL,
-  FOREIGN KEY (term_id)   REFERENCES meta_business_term(term_id),
-  FOREIGN KEY (dataset_id) REFERENCES meta_dataset(dataset_id)
-);
+CREATE INDEX IF NOT EXISTS idx_rec_source_prod_date
+ON ml.fact_product_recommendation (source_product_sk, date_sk, rank);

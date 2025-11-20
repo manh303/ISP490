@@ -16,8 +16,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from app.middleware.activity_middleware import ActivityLoggingMiddleware
-from app.services.activity_logger import ActivityLogger
 # Ensure parent directory of `app` is on sys.path so absolute imports like
 # `app.services.*` work when running the script directly.
 parent_dir = os.path.dirname(os.path.dirname(__file__))
@@ -269,7 +267,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Vietnam E-commerce DSS API...")
     app.state.start_time = time.time()
-    
+
     if DATABASE_AVAILABLE:
         try:
             await db_manager.connect()
@@ -283,18 +281,19 @@ async def lifespan(app: FastAPI):
                         logger.error(f"IAM service initialization failed: {e}")
         except Exception as e:
             logger.warning(f"PostgreSQL database connection failed: {e}")
-    
-    logger.info("API startup completed successfully!")
-    
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down API...")
+
+    # Allow application to run
     try:
-        await db_manager.disconnect()
-    except Exception as e:
-        logger.error(f"Error during shutdown: {e}")
-    logger.info("API shutdown completed")
+        yield
+    finally:
+        # Shutdown
+        logger.info("Shutting down Vietnam E-commerce DSS API...")
+        if DATABASE_AVAILABLE and db_manager.is_connected:
+            try:
+                await db_manager.disconnect()
+                logger.info("Database connection closed")
+            except Exception as e:
+                logger.error(f"Error during database disconnect: {e}")
 
 # ====================================
 # FASTAPI APPLICATION
@@ -367,8 +366,13 @@ except ImportError as e:
 
 # Include ML API router
 try:
-    from api.v1.ml_api import router as ml_router
-    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["ML Models"])
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+
+    from api.v1.ml_router import router as ml_router
+    # ml_router nên có prefix = "/ml" bên trong, nên ở đây chỉ thêm API_V1_PREFIX
+    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["Machine Learning"] )
     logger.info("✅ ML API routes included")
 except ImportError as e:
     logger.warning(f"ML API routes not available: {e}")
@@ -457,7 +461,6 @@ async def health_check():
         health_status["services"]["postgresql"] = "not connected"
         health_status["status"] = "degraded"
 
-    return health_status
 
 @app.get(f"{settings.API_V1_PREFIX}/status")
 async def api_status():
@@ -499,8 +502,6 @@ async def check_database_roles():
             "timestamp": datetime.now().isoformat()
         }
 
-
-
 @app.get(f"{settings.API_V1_PREFIX}/test-roles")
 async def test_roles():
     """Test endpoint to check if roles router is working"""
@@ -508,208 +509,6 @@ async def test_roles():
         "message": "Roles router is working!",
         "timestamp": datetime.now().isoformat()
     }
-
-# ====================================
-# DSS ENDPOINTS (Essential for Dashboard)
-# ====================================
-
-@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/overview")
-async def get_ecommerce_overview(db: DatabaseManager = Depends(get_database)):
-    """Get ecommerce platform overview metrics"""
-    try:
-        if not db.is_connected:
-            # Return mock data if database not connected
-            return {
-                "success": True,
-                "data": {
-                    "total_products": 1250,
-                    "platforms": 2,
-                    "avg_price": 15000000,
-                    "rated_products": 980
-                },
-                "timestamp": datetime.now().isoformat()
-            }
-
-        query = """
-        SELECT
-            source_platform,
-            COUNT(*) as total_products,
-            AVG(CAST(raw_data->>'price' AS DECIMAL)) as avg_price,
-            COUNT(CASE WHEN raw_data->>'rating' IS NOT NULL THEN 1 END) as rated_products
-        FROM stg_raw_products
-        WHERE source_platform IN ('tiki', 'lazada')
-        GROUP BY source_platform
-        """
-
-        result = await db.execute_query(query)
-
-        # Aggregate metrics
-        total_products = sum(row['total_products'] for row in result)
-        platforms = len(result)
-        avg_price = sum(row['avg_price'] or 0 for row in result) / len(result) if result else 0
-        rated_products = sum(row['rated_products'] for row in result)
-
-        return {
-            "success": True,
-            "data": {
-                "total_products": total_products,
-                "platforms": platforms,
-                "avg_price": avg_price,
-                "rated_products": rated_products,
-                "platform_breakdown": result
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Ecommerce overview error: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/price-comparison")
-async def get_price_comparison(db: DatabaseManager = Depends(get_database)):
-    """Get price comparison data between platforms"""
-    try:
-        if not db.is_connected:
-            # Return mock data
-            return {
-                "success": True,
-                "data": [
-                    {"source_platform": "tiki", "product_name": "iPhone 15", "brand": "Apple", "price": 25000000, "discount": 10},
-                    {"source_platform": "lazada", "product_name": "Samsung Galaxy", "brand": "Samsung", "price": 22000000, "discount": 12}
-                ],
-                "timestamp": datetime.now().isoformat()
-            }
-
-        query = """
-        SELECT
-            source_platform,
-            raw_data->>'product_name' as product_name,
-            raw_data->>'brand' as brand,
-            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
-            CAST(raw_data->>'discount_percent' AS DECIMAL) as discount
-        FROM stg_raw_products
-        WHERE source_platform IN ('tiki', 'lazada')
-            AND (raw_data->>'price' IS NOT NULL OR raw_data->>'price_current' IS NOT NULL)
-            AND CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) > 0
-        LIMIT 100
-        """
-
-        result = await db.execute_query(query)
-
-        return {
-            "success": True,
-            "data": result,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Price comparison error: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/brand-analysis")
-async def get_brand_analysis(db: DatabaseManager = Depends(get_database)):
-    """Get brand performance analysis"""
-    try:
-        if not db.is_connected:
-            # Return mock data
-            return {
-                "success": True,
-                "data": [
-                    {"brand": "Apple", "source_platform": "tiki", "product_count": 50, "avg_price": 25000000, "avg_rating": 4.5},
-                    {"brand": "Samsung", "source_platform": "lazada", "product_count": 45, "avg_price": 18000000, "avg_rating": 4.3}
-                ],
-                "timestamp": datetime.now().isoformat()
-            }
-
-        query = """
-        SELECT
-            COALESCE(raw_data->>'brand', raw_data->>'brand_name', 'Unknown') as brand,
-            source_platform,
-            COUNT(*) as product_count,
-            AVG(CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL)) as avg_price,
-            AVG(CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL)) as avg_rating
-        FROM stg_raw_products
-        WHERE source_platform IN ('tiki', 'lazada')
-        GROUP BY brand, source_platform
-        HAVING COUNT(*) > 1 AND brand != 'Unknown' AND brand IS NOT NULL
-        ORDER BY product_count DESC
-        LIMIT 20
-        """
-
-        result = await db.execute_query(query)
-
-        return {
-            "success": True,
-            "data": result,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Brand analysis error: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/trending-products")
-async def get_trending_products(db: DatabaseManager = Depends(get_database)):
-    """Get trending products data"""
-    try:
-        if not db.is_connected:
-            # Return mock data
-            return {
-                "success": True,
-                "data": [
-                    {"product_name": "iPhone 15 Pro", "brand": "Apple", "source_platform": "tiki", "price": 25000000, "rating": 4.5, "review_count": 150, "sold_count": 50},
-                    {"product_name": "Samsung Galaxy S24", "brand": "Samsung", "source_platform": "lazada", "price": 22000000, "rating": 4.3, "review_count": 200, "sold_count": 75}
-                ],
-                "timestamp": datetime.now().isoformat()
-            }
-
-        query = """
-        SELECT
-            raw_data->>'product_name' as product_name,
-            COALESCE(raw_data->>'brand', raw_data->>'brand_name') as brand,
-            source_platform,
-            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
-            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) as rating,
-            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) as review_count,
-            CAST(COALESCE(raw_data->>'sold_count', '0') AS INTEGER) as sold_count,
-            created_at
-        FROM stg_raw_products
-        WHERE source_platform IN ('tiki', 'lazada')
-            AND raw_data->>'product_name' IS NOT NULL
-            AND LENGTH(raw_data->>'product_name') > 5
-        ORDER BY
-            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) DESC,
-            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) DESC
-        LIMIT 20
-        """
-
-        result = await db.execute_query(query)
-
-        return {
-            "success": True,
-            "data": result,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Trending products error: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
 
 @app.get(f"{settings.API_V1_PREFIX}/dss/dashboard")
 async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_database)):
