@@ -92,9 +92,6 @@ class IAMService:
         except Exception as e:
             logger.error(f"Update last login error: {e}")
 
-    # Token functionality removed - using session-based auth
-
-    # assign_role_to_user() removed - use AdminService._assign_role() instead
 
     async def check_permission(self, user_id: int, permission_code: str) -> bool:
         """Check if user has specific permission"""
@@ -142,15 +139,7 @@ class IAMService:
             logger.error(f"Change password error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def get_user_by_email_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
-        """Get basic user info by ID (including password hash for verification)"""
-        try:
-            query = "SELECT * FROM iam.iam_user WHERE user_id = $1"
-            result = await self.db.execute_query(query, (user_id,))
-            return result[0] if result else None
-        except Exception as e:
-            logger.error(f"Get user by ID error: {e}")
-            return None
+   
 
     # Password reset token functionality removed
 

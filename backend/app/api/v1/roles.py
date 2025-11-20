@@ -55,14 +55,12 @@ async def get_role_service(db = Depends(get_database)) -> RoleService:
            summary="Get All Roles",
            description="Get paginated list of all roles in the system")
 async def get_roles(
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(20, ge=1, le=100, description="Items per page"),
     active_only: bool = Query(False, description="Show only active roles"),
     role_service: RoleService = Depends(get_role_service)
 ):
     """Get list of all roles"""
     try:
-        roles, total = await role_service.get_roles(page, limit, active_only)
+        roles = await role_service.get_roles(active_only)
         
         # Convert roles to RoleResponse objects
         role_responses = []
@@ -76,9 +74,9 @@ async def get_roles(
         return RoleListResponse(
             success=True,
             data=role_responses,
-            total=total,
-            page=page,
-            limit=limit
+            total=len(roles),
+            page=1,
+            limit=len(roles)
         )
         
     except Exception as e:

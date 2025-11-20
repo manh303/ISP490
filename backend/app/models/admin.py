@@ -4,7 +4,7 @@ Admin Management Pydantic Models
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
-from utils.validators import validate_phone, validate_password, validate_full_name
+from utils.validators import validate_phone, validate_password, validate_full_name,validate_email
 from models.shared import UserResponse  # Import from shared models
 
 class UserCreateRequest(BaseModel):
@@ -15,6 +15,7 @@ class UserCreateRequest(BaseModel):
     phone: Optional[str] = Field(None, description="Phone number")
     role: str = Field(..., description="User role")
     
+
     @field_validator('full_name')
     @classmethod
     def validate_full_name_field(cls, v):
@@ -29,6 +30,11 @@ class UserCreateRequest(BaseModel):
     @classmethod
     def validate_phone_field(cls, v):
         return validate_phone(v)
+
+    @field_validator('email')
+    @classmethod
+    def validate_email_field(cls, v):
+        return validate_email(v)
 
 class UserUpdateRequest(BaseModel):
     """Update user request"""

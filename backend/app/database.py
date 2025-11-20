@@ -1,4 +1,5 @@
 import asyncpg, asyncio, logging, os, re
+from contextlib import asynccontextmanager
 logger = logging.getLogger(__name__)
 
 class DatabaseManager:
@@ -51,3 +52,16 @@ class DatabaseManager:
         else:
             rows = await self.connection.fetch(text)
         return [dict(r) for r in rows]
+    
+    @asynccontextmanager
+    async def transaction(self):
+        """Context manager for database transactions with automatic rollback on error
+        """
+        await self.ensure_connected()
+        if not self.is_connected:
+            raise RuntimeError("Database unavailable for transaction")
+        
+        # Start transaction
+        async with self.connection.transaction():
+            # Yield connection object để gọi fetchrow, execute, fetchval...
+            yield self.connection

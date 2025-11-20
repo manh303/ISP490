@@ -10,48 +10,41 @@ import time
 import logging
 import secrets
 import hashlib
-import smtplib
 import bcrypt
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-# Ensure parent directory of `app` is on sys.path so absolute imports like
-# `app.services.*` work when running the script directly.
-parent_dir = os.path.dirname(os.path.dirname(__file__))
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
-from pydantic import field_validator
-from app.utils.validators import validate_phone, validate_password
-from app.constants.roles import ROLE_MENUS, get_role_menu
+from typing import Dict, Optional
 
-
-# Setup logging FIRST
+# Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger.info("✅ Loaded .env file")
+except ImportError:
+    logger.warning("python-dotenv not installed, using system environment variables")
 
 # Ensure parent directory of `app` is on sys.path
 parent_dir = os.path.dirname(os.path.dirname(__file__))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
+# Now import after path setup
 try:
-    from app.middleware.activity_middleware import ActivityLoggingMiddleware
-    from app.services.activity_logger import ActivityLogger
-    ACTIVITY_AVAILABLE = True
-except ImportError:
-    try:
-        from middleware.activity_middleware import ActivityLoggingMiddleware
-        from services.activity_logger import ActivityLogger
+        from .middleware.activity_middleware import ActivityLoggingMiddleware
+        from .services.activity_logger import ActivityLogger
         ACTIVITY_AVAILABLE = True
-    except ImportError:
+except ImportError:
         ACTIVITY_AVAILABLE = False
         logger.warning("Activity logging not available")
         
 try:
     from pydantic import field_validator
-    from .utils.validators import validate_phone, validate_password
-    from .constants.roles import ROLE_MENUS, get_role_menu
+    from app.utils.validators import validate_phone, validate_password, validate_email
+    from app.constants.roles import ROLE_MENUS, get_role_menu
     VALIDATORS_AVAILABLE = True
 except ImportError:
     VALIDATORS_AVAILABLE = False
@@ -59,6 +52,8 @@ except ImportError:
     validate_phone = lambda x: x
     def validate_password(x, **kwargs):
         return x
+    def validate_email(email: str):
+        return email
     ROLE_MENUS = {}
     get_role_menu = lambda x: {}
 
@@ -162,12 +157,23 @@ class SignupRequest(BaseModel):
     email: str = Field(..., description="Email address")
     password: str = Field(..., min_length=8, description="Password (min 8 chars)")
     confirm_password: str = Field(..., description="Confirm password")
+    phone: Optional[str] = Field(None, description="Phone number")
     
     @field_validator('password')
     @classmethod
     def validate_password_field(cls, v):
         return validate_password(v, min_length=8)
     
+    @field_validator('phone')
+    @classmethod
+    def validate_phone_field(cls, v):
+        return validate_phone(v)
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email_field(cls, v):
+        return validate_email(v)
+
 class SignupResponse(BaseModel):
     success: bool
     message: str
@@ -254,6 +260,17 @@ class DatabaseManager:
             logger.error(f"Values: {values}")
             return []
 
+    def transaction(self):
+        """Return transaction context manager for atomic operations"""
+        @asynccontextmanager
+        async def _transaction():
+            # Access raw asyncpg pool from databases library
+            pool = self.database._backend._pool
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    yield conn
+        return _transaction()
+
 # ====================================
 # INITIALIZE COMPONENTS
 # ====================================
@@ -267,7 +284,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Vietnam E-commerce DSS API...")
     app.state.start_time = time.time()
-
+    
     if DATABASE_AVAILABLE:
         try:
             await db_manager.connect()
@@ -281,19 +298,18 @@ async def lifespan(app: FastAPI):
                         logger.error(f"IAM service initialization failed: {e}")
         except Exception as e:
             logger.warning(f"PostgreSQL database connection failed: {e}")
-
-    # Allow application to run
+    
+    logger.info("API startup completed successfully!")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down API...")
     try:
-        yield
-    finally:
-        # Shutdown
-        logger.info("Shutting down Vietnam E-commerce DSS API...")
-        if DATABASE_AVAILABLE and db_manager.is_connected:
-            try:
-                await db_manager.disconnect()
-                logger.info("Database connection closed")
-            except Exception as e:
-                logger.error(f"Error during database disconnect: {e}")
+        await db_manager.disconnect()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
+    logger.info("API shutdown completed")
 
 # ====================================
 # FASTAPI APPLICATION
@@ -346,7 +362,13 @@ try:
 except ImportError as e:
     logger.warning(f"Role Management routes not available: {e}")
 
-
+# Include Unified ML Insights & Predictions router
+try:
+    from api.v1.ml_insights import router as ml_unified_router
+    app.include_router(ml_unified_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("✅ ML Unified (Insights & Predictions) routes included")
+except ImportError as e:
+    logger.warning(f"ML Unified routes not available: {e}")
 
 # Include Analytics router
 try:
@@ -401,7 +423,7 @@ if ACTIVITY_AVAILABLE:
     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
     logger.info("Activity logging middleware enabled")
 else:
-    logger.warning("Activity logging middleware disabled - table not created")
+    logger.warning("Activity logging middleware disabled - module not available")
 
 # Update security headers middleware
 @app.middleware("http")
@@ -461,6 +483,7 @@ async def health_check():
         health_status["services"]["postgresql"] = "not connected"
         health_status["status"] = "degraded"
 
+    return health_status
 
 @app.get(f"{settings.API_V1_PREFIX}/status")
 async def api_status():
@@ -502,6 +525,8 @@ async def check_database_roles():
             "timestamp": datetime.now().isoformat()
         }
 
+
+
 @app.get(f"{settings.API_V1_PREFIX}/test-roles")
 async def test_roles():
     """Test endpoint to check if roles router is working"""
@@ -509,6 +534,208 @@ async def test_roles():
         "message": "Roles router is working!",
         "timestamp": datetime.now().isoformat()
     }
+
+# ====================================
+# DSS ENDPOINTS (Essential for Dashboard)
+# ====================================
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/overview")
+async def get_ecommerce_overview(db: DatabaseManager = Depends(get_database)):
+    """Get ecommerce platform overview metrics"""
+    try:
+        if not db.is_connected:
+            # Return mock data if database not connected
+            return {
+                "success": True,
+                "data": {
+                    "total_products": 1250,
+                    "platforms": 2,
+                    "avg_price": 15000000,
+                    "rated_products": 980
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            source_platform,
+            COUNT(*) as total_products,
+            AVG(CAST(raw_data->>'price' AS DECIMAL)) as avg_price,
+            COUNT(CASE WHEN raw_data->>'rating' IS NOT NULL THEN 1 END) as rated_products
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+        GROUP BY source_platform
+        """
+
+        result = await db.execute_query(query)
+
+        # Aggregate metrics
+        total_products = sum(row['total_products'] for row in result)
+        platforms = len(result)
+        avg_price = sum(row['avg_price'] or 0 for row in result) / len(result) if result else 0
+        rated_products = sum(row['rated_products'] for row in result)
+
+        return {
+            "success": True,
+            "data": {
+                "total_products": total_products,
+                "platforms": platforms,
+                "avg_price": avg_price,
+                "rated_products": rated_products,
+                "platform_breakdown": result
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Ecommerce overview error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/price-comparison")
+async def get_price_comparison(db: DatabaseManager = Depends(get_database)):
+    """Get price comparison data between platforms"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"source_platform": "tiki", "product_name": "iPhone 15", "brand": "Apple", "price": 25000000, "discount": 10},
+                    {"source_platform": "lazada", "product_name": "Samsung Galaxy", "brand": "Samsung", "price": 22000000, "discount": 12}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            source_platform,
+            raw_data->>'product_name' as product_name,
+            raw_data->>'brand' as brand,
+            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
+            CAST(raw_data->>'discount_percent' AS DECIMAL) as discount
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+            AND (raw_data->>'price' IS NOT NULL OR raw_data->>'price_current' IS NOT NULL)
+            AND CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) > 0
+        LIMIT 100
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Price comparison error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/brand-analysis")
+async def get_brand_analysis(db: DatabaseManager = Depends(get_database)):
+    """Get brand performance analysis"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"brand": "Apple", "source_platform": "tiki", "product_count": 50, "avg_price": 25000000, "avg_rating": 4.5},
+                    {"brand": "Samsung", "source_platform": "lazada", "product_count": 45, "avg_price": 18000000, "avg_rating": 4.3}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            COALESCE(raw_data->>'brand', raw_data->>'brand_name', 'Unknown') as brand,
+            source_platform,
+            COUNT(*) as product_count,
+            AVG(CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL)) as avg_price,
+            AVG(CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL)) as avg_rating
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+        GROUP BY brand, source_platform
+        HAVING COUNT(*) > 1 AND brand != 'Unknown' AND brand IS NOT NULL
+        ORDER BY product_count DESC
+        LIMIT 20
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Brand analysis error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/ecommerce/trending-products")
+async def get_trending_products(db: DatabaseManager = Depends(get_database)):
+    """Get trending products data"""
+    try:
+        if not db.is_connected:
+            # Return mock data
+            return {
+                "success": True,
+                "data": [
+                    {"product_name": "iPhone 15 Pro", "brand": "Apple", "source_platform": "tiki", "price": 25000000, "rating": 4.5, "review_count": 150, "sold_count": 50},
+                    {"product_name": "Samsung Galaxy S24", "brand": "Samsung", "source_platform": "lazada", "price": 22000000, "rating": 4.3, "review_count": 200, "sold_count": 75}
+                ],
+                "timestamp": datetime.now().isoformat()
+            }
+
+        query = """
+        SELECT
+            raw_data->>'product_name' as product_name,
+            COALESCE(raw_data->>'brand', raw_data->>'brand_name') as brand,
+            source_platform,
+            CAST(COALESCE(raw_data->>'price', raw_data->>'price_current', '0') AS DECIMAL) as price,
+            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) as rating,
+            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) as review_count,
+            CAST(COALESCE(raw_data->>'sold_count', '0') AS INTEGER) as sold_count,
+            created_at
+        FROM stg_raw_products
+        WHERE source_platform IN ('tiki', 'lazada')
+            AND raw_data->>'product_name' IS NOT NULL
+            AND LENGTH(raw_data->>'product_name') > 5
+        ORDER BY
+            CAST(COALESCE(raw_data->>'review_count', '0') AS INTEGER) DESC,
+            CAST(COALESCE(raw_data->>'rating', raw_data->>'rating_avg', '0') AS DECIMAL) DESC
+        LIMIT 20
+        """
+
+        result = await db.execute_query(query)
+
+        return {
+            "success": True,
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Trending products error: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get(f"{settings.API_V1_PREFIX}/dss/dashboard")
 async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_database)):
@@ -815,9 +1042,7 @@ def authenticate_user(email: str, password: str):
     user_data = VALID_USERS.get(email.lower())
     if not user_data or user_data["password"] != password:
         return None
-    # Add email to user_data for consistency
-    user_data_with_email = {**user_data, "email": email.lower(), "roles": [user_data.get("role", "CUSTOMER")]}
-    return user_data_with_email
+    return user_data
 
 # Use shared auth helpers
 try:
@@ -841,40 +1066,38 @@ def create_access_token(user_data: dict, email: str):
     return create_jwt_token(user_data, email, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM, expire_hours)
 
 # ====================================
-# EMAIL SERVICE
+# EMAIL SERVICE (Mailjet)
 # ====================================
 try:
-    import aiosmtplib
+    import requests
     EMAIL_AVAILABLE = True
-    logger.info("Email service available")
+    logger.info("Email service available (Mailjet)")
 except ImportError:
     EMAIL_AVAILABLE = False
-    logger.warning("Email service not available: No module named 'aiosmtplib'")
+    logger.warning("Email service not available: No module named 'requests'")
 
 class EmailService:
-    """Simple email service for verification codes"""
+    """Email service using Mailjet HTTP API"""
 
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
+        self.api_key = os.getenv("MAILJET_API_KEY")
+        self.api_secret = os.getenv("MAILJET_API_SECRET")
+        self.from_email = os.getenv("EMAIL_FROM")
+        self.from_name = os.getenv("EMAIL_FROM_NAME", "E-commerce DSS")
+        self.mailjet_url = "https://api.mailjet.com/v3.1/send"
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
-        """Send email verification code"""
+        """Send email verification code using Mailjet API"""
         try:
-            # For development, just log the code
-            if not self.smtp_username or not self.smtp_password:
-                logger.info(f"DEV MODE: Verification code for {to_email}: {verification_code}")
+            # Nếu thiếu config thì bật dev mode, không gửi thật
+            if not self.api_key or not self.api_secret or not self.from_email:
+                logger.warning(
+                    f"DEV MODE (Mailjet): Missing MAILJET_API_KEY / MAILJET_API_SECRET / EMAIL_FROM. "
+                    f"Verification code for {to_email}: {verification_code}"
+                )
                 return True
 
-            msg = MIMEMultipart()
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = "Verify Your Email - E-commerce DSS"
-
-            html = f"""
+            html_content = f"""
             <html>
             <body>
                 <h2>Welcome to E-commerce DSS, {user_name}!</h2>
@@ -888,18 +1111,47 @@ class EmailService:
             </html>
             """
 
-            msg.attach(MIMEText(html, 'html'))
+            payload = {
+                "Messages": [
+                    {
+                        "From": {
+                            "Email": self.from_email,
+                            "Name": self.from_name
+                        },
+                        "To": [
+                            {
+                                "Email": to_email,
+                                "Name": user_name or to_email
+                            }
+                        ],
+                        "Subject": "Verify Your Email - E-commerce DSS",
+                        "HTMLPart": html_content
+                    }
+                ]
+            }
 
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.smtp_username, self.smtp_password)
-            text = msg.as_string()
-            server.sendmail(self.from_email, to_email, text)
-            server.quit()
+            # Mailjet dùng Basic Auth
+            auth = (self.api_key, self.api_secret)
 
-            return True
+            response = requests.post(
+                self.mailjet_url,
+                json=payload,
+                auth=auth,
+                timeout=10
+            )
+
+            if 200 <= response.status_code < 300:
+                logger.info(f"[Mailjet] Verification email sent to {to_email}")
+                return True
+            else:
+                logger.error(
+                    f"[Mailjet] Failed to send email to {to_email}. "
+                    f"Status: {response.status_code}, Body: {response.text}"
+                )
+                return False
+
         except Exception as e:
-            logger.error(f"Failed to send verification email: {e}")
+            logger.error(f"[Mailjet] Exception while sending verification email: {e}")
             return False
 
 # Initialize email service
@@ -1077,21 +1329,25 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
         if not email:
             raise HTTPException(status_code=400, detail="Email is required")
 
-        # Check if email exists
-        email_exists = await check_email_exists(db, email)
+        # Check if email exists and get user info
+        user_query = "SELECT full_name FROM iam.iam_user WHERE email = $1"
+        user_result = await db.execute_query(user_query, (email,))
         
         # Always respond success (avoid user enumeration)
-        if not email_exists:
+        if not user_result:
             logger.info(f"Forgot password requested for non-existent email: {email}")
             return ForgotPasswordResponse(
                 success=True,
                 message="If this email exists, we've sent a reset code."
             )
+        
+        # Get user's full name
+        user_name = user_result[0].get('full_name', 'User') if user_result else 'User'
 
         # Use the new EmailService to send OTP
         if email_service_module:
             try:
-                result = await send_otp_email(email, name="User")
+                result = await send_otp_email(email, name=user_name)
                 if result['success']:
                     logger.info(f"✅ OTP sent to {email}")
                     return ForgotPasswordResponse(
@@ -1124,60 +1380,6 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
         logger.error(f"Forgot-password error: {e}")
         raise HTTPException(status_code=500, detail="Forgot password failed")
 
-@app.post(f"{settings.API_V1_PREFIX}/auth/reset-password", response_model=ResetPasswordResponse)
-async def reset_password(request: ResetPasswordRequest, db: DatabaseManager = Depends(get_database)):
-    """Reset password using OTP"""
-    try:
-        email = request.email.strip().lower()
-        otp = request.otp.strip()
-        new_password = request.new_password
-
-        # Validate input
-        if not email or not otp or not new_password:
-            raise HTTPException(status_code=400, detail="Email, OTP, and new password are required")
-
-        if len(new_password) < 6:
-            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
-
-        # Verify OTP
-        if email_service_module:
-            otp_result = await verify_otp(email, otp)
-            
-            if not otp_result.get('valid'):
-                error = otp_result.get('error', 'Invalid OTP')
-                attempts = otp_result.get('attempts_remaining', 0)
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"{error}. Attempts remaining: {attempts}"
-                )
-
-            # OTP verified - reset password
-            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            
-            query = """
-            UPDATE iam.iam_user
-            SET password_hash = $1, updated_at = NOW()
-            WHERE email = $2
-            RETURNING user_id
-            """
-            result = await db.execute_query(query, (password_hash, email))
-            
-            if not result:
-                raise HTTPException(status_code=404, detail="User not found")
-            
-            logger.info(f"Password reset successful for {email}")
-            return ResetPasswordResponse(
-                success=True,
-                message="Password reset successfully. You can now sign in."
-            )
-        else:
-            raise HTTPException(status_code=500, detail="OTP verification service not available")
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Reset password error: {e}")
-        raise HTTPException(status_code=500, detail=f"Password reset failed: {str(e)}")
 
 
 
@@ -1365,8 +1567,6 @@ async def verify_email(request: VerifyEmailRequest, db: DatabaseManager = Depend
     except Exception as e:
         logger.error(f"Email verification error: {e}")
         raise HTTPException(status_code=500, detail="Email verification failed")
-
-
 
 # ====================================
 # ERROR HANDLERS

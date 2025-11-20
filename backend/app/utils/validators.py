@@ -128,3 +128,8 @@ def validate_role_name(role_name: Optional[str]) -> Optional[str]:
         raise ValueError('Tên vai trò không được chứa nhiều khoảng trắng liên tiếp')
     
     return name_clean
+
+def validate_email(email: str):
+    if not re.match(r'^[^@]+@[^@]+\.[^@.]+(\.[^@.]+)*$', email):
+        raise ValueError('Email không hợp lệ')
+    return email
