@@ -17,7 +17,7 @@ from models.admin import (
 )
 from models.shared import UserResponse
 from app.constants.roles import validate_role_code
-
+from app.api.dependencies import require_role
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -45,7 +45,7 @@ async def get_admin_service(db=Depends(get_database)) -> AdminService:
 
 # ==================== USER ENDPOINTS ====================
 
-@router.get("/users", response_model=UserListResponse)
+@router.get("/users", response_model=UserListResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def get_users(admin_service: AdminService = Depends(get_admin_service),):
     """Get all active users"""
     
@@ -62,7 +62,7 @@ async def get_users(admin_service: AdminService = Depends(get_admin_service),):
         logger.error(f"Get users error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get users: {str(e)}")
 
-@router.get("/users/deleted", response_model=UserListResponse)
+@router.get("/users/deleted", response_model=UserListResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def get_deleted_users(admin_service: AdminService = Depends(get_admin_service)):
     """Get all deleted users (status = disabled)"""
     try:
@@ -78,7 +78,7 @@ async def get_deleted_users(admin_service: AdminService = Depends(get_admin_serv
         logger.error(f"Get deleted users error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get deleted users: {str(e)}")
 
-@router.get("/users/{user_id}", response_model=UserResponse)
+@router.get("/users/{user_id}", response_model=UserResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def get_user(user_id: int, admin_service: AdminService = Depends(get_admin_service)):
     """Get user by ID"""
     try:
@@ -92,7 +92,7 @@ async def get_user(user_id: int, admin_service: AdminService = Depends(get_admin
         logger.error(f"Get user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get user")
 
-@router.post("/users", response_model=UserActionResponse)
+@router.post("/users", response_model=UserActionResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def create_user(
     user_data: UserCreateRequest,
     admin_service: AdminService = Depends(get_admin_service)
@@ -117,7 +117,7 @@ async def create_user(
         logger.error(f"Create user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to create user")
 
-@router.put("/users/{user_id}", response_model=UserActionResponse)
+@router.put("/users/{user_id}", response_model=UserActionResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def update_user(
     user_id: int,
     user_data: UserUpdateRequest,
@@ -141,7 +141,7 @@ async def update_user(
         logger.error(f"Update user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update user")
 
-@router.put("/users/{user_id}/password", response_model=UserActionResponse)
+@router.put("/users/{user_id}/password", response_model=UserActionResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def update_user_password(
     user_id: int,
     password_data: UserPasswordUpdateRequest,
@@ -164,7 +164,7 @@ async def update_user_password(
 
 # ==================== USER STATUS MANAGEMENT ====================
 
-@router.put("/users/{user_id}/disable", response_model=UserActionResponse)
+@router.put("/users/{user_id}/disable", response_model=UserActionResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def disable_user(user_id: int, admin_service: AdminService = Depends(get_admin_service)):
     """Soft delete user (move to deleted list)"""
     try:
@@ -188,7 +188,7 @@ async def disable_user(user_id: int, admin_service: AdminService = Depends(get_a
         logger.error(f"Disable user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to disable user")
 
-@router.put("/users/{user_id}/restore", response_model=UserActionResponse)
+@router.put("/users/{user_id}/restore", response_model=UserActionResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def restore_user(user_id: int, admin_service: AdminService = Depends(get_admin_service)):
     """Restore user from deleted list"""
     try:
@@ -212,7 +212,7 @@ async def restore_user(user_id: int, admin_service: AdminService = Depends(get_a
         logger.error(f"Restore user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to restore user")
 
-@router.delete("/users/{user_id}", response_model=UserActionResponse)
+@router.delete("/users/{user_id}", response_model=UserActionResponse,dependencies=[Depends(require_role("ADMIN"))])
 async def delete_user(
     user_id: int,
     confirm: bool = Query(False, description="⚠️ Set to true to confirm permanent deletion"),
@@ -259,7 +259,7 @@ async def delete_user(
 
 # ==================== ACTIVITY LOGS ====================
 
-@router.get("/activity-logs")
+@router.get("/activity-logs", dependencies=[Depends(require_role("ADMIN"))])
 async def get_activity_logs(
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
     action: Optional[str] = Query(None, description="Filter by action"),
@@ -283,17 +283,5 @@ async def get_activity_logs(
         logger.error(f"Get activity logs error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get activity logs")
 
-@router.get("/activity-stats")
-async def get_activity_stats(
-    days: int = Query(7, ge=1, le=365, description="Number of days to analyze"),
-    db=Depends(get_database)
-):
-    """Get activity statistics"""
-    try:
-        admin_service = AdminService(db)
-        stats = await admin_service.get_activity_stats()
-        return {"success": True, "data": stats}
-    except Exception as e:
-        logger.error(f"Get activity stats error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get activity stats: {str(e)}")
+
 
