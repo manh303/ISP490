@@ -8,3 +8,5 @@ export { PriceSegmentsChart } from './PriceSegmentsChart';
 export { PriceVsRatingChart } from './PriceVsRatingChart';
 export { PlatformComparisonChart } from './PlatformComparisonChart';
 export { PlatformPriceComparisonChart } from './PlatformPriceComparisonChart';
+export { ProductTimeseriesChart } from './ProductTimeseriesChart';
+export { ReviewSummaryChart } from './ReviewSummaryChart';

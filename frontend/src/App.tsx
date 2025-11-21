@@ -60,6 +60,9 @@ import { AnalyticsDashboard } from "./pages/Analyst/AnalyticsDashboard.js";
 import { ProductAnalytics } from "./pages/Analyst/ProductAnalytics.js";
 import { ReviewAnalytics } from "./pages/Analyst/ReviewAnalytics.js";
 import { PlatformAnalytics } from "./pages/Analyst/PlatformAnalytics.js";
+import { CategoryAnalytics } from "./pages/Analyst/CategoryAnalytics.js";
+import { PricingAnalytics } from "./pages/Analyst/PricingAnalytics.js";
+import { ProductDetailAnalytics } from "./pages/Analyst/ProductDetailAnalytics.js";
 import MLOverview from "./pages/MLInsights/MLOverview.js";
 import PriceIntelligence from "./pages/MLInsights/PriceIntelligence.js";
 import DemandSalesForecasting from "./pages/MLInsights/DemandSalesForecasting.js";
@@ -192,6 +195,9 @@ export default function App() {
             <Route path="/analyst/product-analytics" element={<ProductAnalytics />} />
             <Route path="/analyst/review-analytics" element={<ReviewAnalytics />} />
             <Route path="/analyst/platform-analytics" element={<PlatformAnalytics />} />
+            <Route path="/analyst/category-analytics" element={<CategoryAnalytics />} />
+            <Route path="/analyst/pricing-analytics" element={<PricingAnalytics />} />
+            <Route path="/analyst/product-detail-analytics" element={<ProductDetailAnalytics />} />
             <Route path="/analyst/sales" element={<BarChart />} />
             <Route path="/analyst/trends" element={<LineChart />} />
             <Route path="/analyst/customers" element={<DSSPage />} />

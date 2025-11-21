@@ -8,25 +8,32 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/figma/button';
 import {
-  getPlatformComparison,
-  type PlatformComparisonItem,
-  type GetPlatformComparisonParams,
+  getCategoryShare,
+  getPlatforms,
+  getCategories,
+  type CategoryShareItem,
+  type Platform,
+  type Category,
+  type GetCategoryShareParams,
 } from '../../services/analyticsApi';
-import { PlatformComparisonChart } from '../../components/analytics/PlatformComparisonChart';
+import { CategoryShareChart } from '../../components/analytics/CategoryShareChart';
+import { PlatformSelect } from '../../components/analytics/PlatformSelect';
+import { CategoryHierarchySelector } from '../../components/analytics/CategoryHierarchySelector';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
-import { CategorySelect } from '../../components/analytics/CategorySelect';
 
-export function PlatformAnalytics() {
+export function CategoryAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Filter states
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
-  const [categoryKey, setCategoryKey] = useState<string>();
+  const [platformCode, setPlatformCode] = useState<string>('tiki'); // Default to tiki
+  const [selectedCategory, setSelectedCategory] = useState<string>();
+  const [selectedParentCategory, setSelectedParentCategory] = useState<string>();
 
   // Analytics data state
-  const [platformComparison, setPlatformComparison] = useState<PlatformComparisonItem[] | null>(null);
+  const [categoryShare, setCategoryShare] = useState<CategoryShareItem[] | null>(null);
 
   // Load analytics data
   const loadAnalyticsData = async () => {
@@ -37,18 +44,17 @@ export function PlatformAnalytics() {
       const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
       const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
 
-      const params: GetPlatformComparisonParams = {
+      const params: GetCategoryShareParams = {
         from_date: fromDateStr || '2025-10-22',
         to_date: toDateStr || '2025-11-21',
-        category_key: categoryKey,
+        platform_code: platformCode || 'tiki',
       };
 
-      const platformCompData = await getPlatformComparison(params);
-
-      setPlatformComparison(platformCompData);
+      const data = await getCategoryShare(params);
+      setCategoryShare(data);
     } catch (err) {
-      console.error('Error loading analytics data:', err);
-      setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+      console.error('Error loading category analytics data:', err);
+      setError('Không thể tải dữ liệu phân tích danh mục. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -64,13 +70,20 @@ export function PlatformAnalytics() {
   }, []);
 
   useEffect(() => {
-    if (fromDate && toDate) {
+    if (fromDate && toDate && platformCode) {
+      console.log('Filter changed:', {
+        platformCode,
+        selectedCategory,
+        selectedParentCategory,
+        fromDate: fromDate.toISOString().split('T')[0],
+        toDate: toDate.toISOString().split('T')[0]
+      });
       loadAnalyticsData();
     }
-  }, [fromDate, toDate, categoryKey]);
+  }, [fromDate, toDate, platformCode, selectedCategory, selectedParentCategory]);
 
   const handleRefresh = () => {
-    loadAnalyticsData();
+    window.location.reload();
   };
 
   if (loading) {
@@ -78,7 +91,7 @@ export function PlatformAnalytics() {
       <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải dữ liệu phân tích...</p>
+          <p className="text-gray-600">Đang tải dữ liệu phân tích danh mục...</p>
         </div>
       </div>
     );
@@ -109,7 +122,7 @@ export function PlatformAnalytics() {
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center gap-4 justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <Button variant="outline" size="sm" onClick={loadAnalyticsData}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Làm mới
                 </Button>
@@ -138,23 +151,32 @@ export function PlatformAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Nền tảng:</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => setPlatformCode(value || 'tiki')}
+                />
+              </div>
+              <div className="flex items-center gap-2">
                 <label className="text-sm font-medium">Danh mục:</label>
-                <CategorySelect
-                  value={categoryKey}
-                  onValueChange={setCategoryKey}
+                <CategoryHierarchySelector
+                  platformCode={platformCode}
+                  onCategoryChange={(categoryKey, parentKey) => {
+                    setSelectedCategory(categoryKey);
+                    setSelectedParentCategory(parentKey);
+                  }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Charts Section */}
+          {/* Category Share Chart */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
-            <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ So Sánh Các Nền Tảng</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Tỷ Trọng Danh Mục Theo Nền Tảng</h3>
 
-            {/* Row 1: Platform Comparison */}
             <div className="grid grid-cols-1 gap-4">
-              {platformComparison && (
-                <PlatformComparisonChart data={platformComparison} />
+              {categoryShare && (
+                <CategoryShareChart data={categoryShare} />
               )}
             </div>
           </div>
@@ -162,7 +184,7 @@ export function PlatformAnalytics() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Platform Analytics - So sánh các nền tảng
+              Category Analytics - Phân tích danh mục
             </div>
             <Button>
               <FileDown className="h-4 w-4 mr-2" />

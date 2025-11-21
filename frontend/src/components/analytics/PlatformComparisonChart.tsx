@@ -1,8 +1,8 @@
 import { GitCompare, BarChart3, Star, ShoppingBag, TrendingUp } from 'lucide-react';
-import { PlatformComparisonData } from '../../services/analyticsApi';
+import { PlatformComparisonItem } from '../../services/analyticsApi';
 
 interface PlatformComparisonChartProps {
-  data: PlatformComparisonData[];
+  data: PlatformComparisonItem[];
   title?: string;
 }
 
@@ -31,7 +31,7 @@ export function PlatformComparisonChart({
     'sendo': '📦',
   };
 
-  const maxProductCount = Math.max(...data.map(p => p.product_count));
+  const maxProductCount = Math.max(...data.map(p => p.total_products));
   const maxReviews = Math.max(...data.map(p => p.total_reviews));
 
   return (
@@ -44,22 +44,22 @@ export function PlatformComparisonChart({
       {/* Grouped Bar Chart */}
       <div className="space-y-4">
         {data.map((platform) => {
-          const productPercentage = (platform.product_count / maxProductCount) * 100;
+          const productPercentage = (platform.total_products / maxProductCount) * 100;
           const reviewPercentage = (platform.total_reviews / maxReviews) * 100;
-          const ratingPercentage = (platform.avg_rating / 5) * 100;
+          const ratingPercentage = ((platform.avg_rating || 0) / 5) * 100;
 
           return (
-            <div key={platform.platform} className="space-y-2">
+            <div key={platform.platform_code} className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{platformIcons[platform.platform.toLowerCase()] || '🏬'}</span>
+                  <span className="text-xl">{platformIcons[platform.platform_code.toLowerCase()] || '🏬'}</span>
                   <span className="font-semibold text-gray-900 capitalize text-sm">
-                    {platform.platform}
+                    {platform.platform_name}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                  <span className="font-bold text-gray-900 text-sm">{platform.avg_rating.toFixed(2)}</span>
+                  <span className="font-bold text-gray-900 text-sm">{(platform.avg_rating || 0).toFixed(2)}</span>
                 </div>
               </div>
 
@@ -78,7 +78,7 @@ export function PlatformComparisonChart({
                     />
                   </div>
                   <span className="w-16 text-xs font-medium text-gray-900 text-right">
-                    {platform.product_count.toLocaleString('vi-VN')}
+                    {platform.total_products.toLocaleString('vi-VN')}
                   </span>
                 </div>
 
@@ -112,14 +112,14 @@ export function PlatformComparisonChart({
                     />
                   </div>
                   <span className="w-16 text-xs font-medium text-gray-900 text-right">
-                    {platform.avg_rating.toFixed(2)}
+                    {(platform.avg_rating || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-between text-xs text-gray-500 pt-1">
-                <span>Giá TB: {(platform.avg_price / 1000000).toFixed(1)}M ₫</span>
-                <span>{platform.high_rated_count} chất lượng cao</span>
+                <span>Giá TB: {((platform.avg_price || 0) / 1000000).toFixed(1)}M ₫</span>
+                <span>Doanh thu: {((platform.total_revenue || 0) / 1000000000).toFixed(1)}B ₫</span>
               </div>
             </div>
           );
@@ -131,7 +131,7 @@ export function PlatformComparisonChart({
         <div className="mt-4 pt-3 border-t border-gray-200">
           <div className="text-xs text-gray-600">
             <BarChart3 className="h-4 w-4 inline mr-1" />
-            Tổng: {data.reduce((sum, p) => sum + p.product_count, 0).toLocaleString('vi-VN')} sản phẩm
+            Tổng: {data.reduce((sum, p) => sum + p.total_products, 0).toLocaleString('vi-VN')} sản phẩm
           </div>
         </div>
       )}

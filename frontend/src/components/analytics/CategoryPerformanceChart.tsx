@@ -8,7 +8,7 @@ interface CategoryPerformanceChartProps {
 
 export function CategoryPerformanceChart({
   data,
-  title = 'Hiệu Suất Theo Danh Mụ'
+  title = 'Hiệu Suất Theo Danh Mục'
 }: CategoryPerformanceChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -43,12 +43,12 @@ export function CategoryPerformanceChart({
 
       {/* Bar Chart */}
       <div className="space-y-3">
-        {data.map((category) => {
+        {data.map((category, index) => {
           const barWidth = (category.product_count / maxCount) * 100;
           const ratingPercentage = (category.avg_rating / 5) * 100;
           
           return (
-            <div key={category.category} className="space-y-1">
+            <div key={`${category.category}-${index}`} className="space-y-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{categoryIcons[category.category] || '📦'}</span>
@@ -59,7 +59,7 @@ export function CategoryPerformanceChart({
                 <div className="flex items-center gap-1">
                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                   <span className="font-bold text-gray-900 text-sm">
-                    {category.avg_rating.toFixed(2)}
+                    {(category.avg_rating || 0).toFixed(2)}
                   </span>
                 </div>
               </div>

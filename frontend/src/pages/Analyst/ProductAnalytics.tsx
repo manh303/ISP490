@@ -16,72 +16,93 @@ import {
   TableRow,
 } from '../../components/ui/figma/table';
 import {
-  getTopRatedProducts,
-  getRatingDistribution,
-  getCategoryPerformance,
-  getPriceSegments,
-  getPriceVsRating,
-  type TopRatedProductsResponse,
-  type RatingDistributionResponse,
-  type CategoryPerformanceResponse,
-  type PriceSegmentsResponse,
-  type PriceVsRatingResponse,
+  getTopProducts,
+  getPriceVsRevenue,
+  type TopProduct,
+  type PriceVsRevenueItem,
+  type GetTopProductsParams,
+  type GetPriceVsRevenueParams,
 } from '../../services/analyticsApi';
-import { RatingDistributionChart } from '../../components/analytics/RatingDistributionChart';
 import { PriceVsRatingChart } from '../../components/analytics/PriceVsRatingChart';
-import { CategoryPerformanceChart } from '../../components/analytics/CategoryPerformanceChart';
-import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
+import { DateRangePicker } from '../../components/analytics/DateRangePicker';
+import { PlatformSelect } from '../../components/analytics/PlatformSelect';
+import { CategorySelect } from '../../components/analytics/CategorySelect';
+import { MetricSelect } from '../../components/analytics/MetricSelect';
 
 export function ProductAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Analytics data state
-  const [topRatedProducts, setTopRatedProducts] = useState<TopRatedProductsResponse | null>(null);
-  const [ratingDistribution, setRatingDistribution] = useState<RatingDistributionResponse | null>(null);
-  const [categoryPerformance, setCategoryPerformance] = useState<CategoryPerformanceResponse | null>(null);
-  const [priceSegments, setPriceSegments] = useState<PriceSegmentsResponse | null>(null);
-  const [priceVsRating, setPriceVsRating] = useState<PriceVsRatingResponse | null>(null);
+  const [topProducts, setTopProducts] = useState<TopProduct[] | null>(null);
+  const [priceVsRevenue, setPriceVsRevenue] = useState<PriceVsRevenueItem[] | null>(null);
+
+  // Filter state
+  const [fromDate, setFromDate] = useState<Date | undefined>();
+  const [toDate, setToDate] = useState<Date | undefined>();
+  const [platformCode, setPlatformCode] = useState<string>('');
+  const [categoryKey, setCategoryKey] = useState<string>('');
+  const [metric, setMetric] = useState<string>('revenue');
 
   // Load analytics data
+  const loadAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
+      const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
+
+      const topProductsParams: GetTopProductsParams = {
+        from_date: fromDateStr || '2025-10-22',
+        to_date: toDateStr || '2025-11-21',
+        platform_code: platformCode,
+        category_key: categoryKey,
+        limit: 10,
+      };
+
+      const priceVsRevenueParams: GetPriceVsRevenueParams = {
+        from_date: fromDateStr || '2025-10-22',
+        to_date: toDateStr || '2025-11-21',
+        platform_code: platformCode || 'tiki',
+        limit: 100,
+      };
+
+      const [
+        topProductsData,
+        priceVsRevenueData,
+      ] = await Promise.all([
+        getTopProducts(topProductsParams),
+        getPriceVsRevenue(priceVsRevenueParams),
+      ]);
+
+      setTopProducts(topProductsData);
+      setPriceVsRevenue(priceVsRevenueData);
+    } catch (err) {
+      console.error('Error loading analytics data:', err);
+      setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadAnalyticsData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [
-          topRatedData,
-          ratingDistData,
-          categoryData,
-          priceSegData,
-          priceVsRatingData,
-        ] = await Promise.all([
-          getTopRatedProducts({ limit: 10 }),
-          getRatingDistribution(),
-          getCategoryPerformance(),
-          getPriceSegments(),
-          getPriceVsRating(),
-        ]);
-
-        setTopRatedProducts(topRatedData);
-        setRatingDistribution(ratingDistData);
-        setCategoryPerformance(categoryData);
-        setPriceSegments(priceSegData);
-        setPriceVsRating(priceVsRatingData);
-      } catch (err) {
-        console.error('Error loading analytics data:', err);
-        setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAnalyticsData();
+    // Set default date range (last 30 days)
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+    setFromDate(thirtyDaysAgo);
+    setToDate(now);
   }, []);
 
+  useEffect(() => {
+    if (fromDate && toDate) {
+      loadAnalyticsData();
+    }
+  }, [fromDate, toDate, platformCode, categoryKey, metric]);
+
   const handleRefresh = () => {
-    window.location.reload();
+    loadAnalyticsData();
   };
 
   if (loading) {
@@ -136,48 +157,74 @@ export function ProductAnalytics() {
             </div>
           </div>
 
+          {/* Filters */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Thời gian:</label>
+                <DateRangePicker
+                  fromDate={fromDate}
+                  toDate={toDate}
+                  onFromDateChange={setFromDate}
+                  onToDateChange={setToDate}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Nền tảng:</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => setPlatformCode(value || '')}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Danh mục:</label>
+                <CategorySelect
+                  value={categoryKey}
+                  onValueChange={(value) => setCategoryKey(value || '')}
+                  platformCode={platformCode}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Chỉ số:</label>
+                <MetricSelect
+                  value={metric}
+                  onValueChange={setMetric}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Charts Section */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
             <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Phân Tích Sản Phẩm</h3>
 
-            {/* Row 1: Rating Distribution, Price vs Rating */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {ratingDistribution && (
-                <RatingDistributionChart data={ratingDistribution.data} />
-              )}
-              {priceVsRating && (
-                <PriceVsRatingChart data={priceVsRating.data} />
-              )}
-            </div>
-
-            {/* Row 2: Category Performance, Price Segments */}
-            <div className="grid grid-cols-2 gap-4">
-              {categoryPerformance && (
-                <CategoryPerformanceChart data={categoryPerformance.data} />
-              )}
-              {priceSegments && (
-                <PriceSegmentsChart data={priceSegments.data} />
+            {/* Row 1: Price vs Revenue */}
+            <div className="grid grid-cols-1 gap-4">
+              {priceVsRevenue && (
+                <PriceVsRatingChart data={priceVsRevenue} />
               )}
             </div>
           </div>
 
-          {/* Top Rated Products Table */}
+          {/* Top Products Table */}
           <div className="flex-1 overflow-auto px-6 py-4 bg-white">
-            <h3 className="text-gray-900 font-semibold mb-4">Top Rated Products</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Top Products</h3>
             <Table>
               <TableHeader>
                 <TableRow className="border-gray-200 hover:bg-gray-50">
                   <TableHead className="text-gray-600">Tên sản phẩm</TableHead>
                   <TableHead className="text-gray-600">Rating</TableHead>
                   <TableHead className="text-gray-600">Số review</TableHead>
+                  <TableHead className="text-gray-600">Giá trung bình</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topRatedProducts?.data.map((product, index) => (
+                {topProducts?.map((product, index) => (
                   <TableRow key={index} className="border-gray-200 hover:bg-gray-50">
                     <TableCell className="text-gray-900">{product.product_name}</TableCell>
-                    <TableCell className="text-gray-700">{product.rating_avg?.toFixed(2)} ⭐</TableCell>
-                    <TableCell className="text-gray-700">{product.review_count}</TableCell>
+                    <TableCell className="text-gray-700">{product.avg_rating?.toFixed(2)} ⭐</TableCell>
+                    <TableCell className="text-gray-700">{product.total_reviews}</TableCell>
+                    <TableCell className="text-gray-700">{product.avg_price?.toLocaleString('vi-VN')} VND</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -25,30 +25,50 @@ export function PriceVsRatingChart({
   }
 
   // Calculate price ranges for visualization
-  const maxPrice = Math.max(...data.map(p => p.price));
+  const validData = data.filter(p => p.avg_price && p.avg_price > 0);
+  const maxPrice = validData.length > 0 ? Math.max(...validData.map(p => p.avg_price)) : 0;
   const maxRating = 5;
 
   // Group data into price segments
-  const priceSegments = [
+  const priceSegments = maxPrice > 0 ? [
     { label: 'Rẻ', min: 0, max: maxPrice * 0.25, color: 'bg-green-500' },
     { label: 'TB', min: maxPrice * 0.25, max: maxPrice * 0.5, color: 'bg-blue-500' },
     { label: 'Cao', min: maxPrice * 0.5, max: maxPrice * 0.75, color: 'bg-purple-500' },
     { label: 'Xa xỉ', min: maxPrice * 0.75, max: maxPrice, color: 'bg-amber-500' },
-  ];
+  ] : [];
 
   // Sample top 10 products for display
   const displayProducts = data.slice(0, 10);
 
   // Calculate correlation insight
-  const avgPriceHighRated = data
-    .filter(p => p.rating_avg >= 4)
-    .reduce((sum, p) => sum + p.price, 0) / data.filter(p => p.rating_avg >= 4).length || 0;
+  const highRatedProducts = data.filter(p => p.avg_rating !== null && p.avg_rating >= 4);
+  const lowRatedProducts = data.filter(p => p.avg_rating !== null && p.avg_rating < 4);
+  
+  console.log('Debug correlation:', {
+    totalProducts: data.length,
+    highRatedProducts: highRatedProducts.length,
+    lowRatedProducts: lowRatedProducts.length,
+    highRatedSample: highRatedProducts.slice(0, 3).map(p => ({ name: p.product_name, rating: p.avg_rating, price: p.avg_price })),
+    lowRatedSample: lowRatedProducts.slice(0, 3).map(p => ({ name: p.product_name, rating: p.avg_rating, price: p.avg_price }))
+  });
+  
+  const avgPriceHighRated = highRatedProducts.length > 0 
+    ? highRatedProducts.reduce((sum, p) => sum + p.avg_price, 0) / highRatedProducts.length 
+    : 0;
 
-  const avgPriceLowRated = data
-    .filter(p => p.rating_avg < 4)
-    .reduce((sum, p) => sum + p.price, 0) / data.filter(p => p.rating_avg < 4).length || 0;
+  const avgPriceLowRated = lowRatedProducts.length > 0 
+    ? lowRatedProducts.reduce((sum, p) => sum + p.avg_price, 0) / lowRatedProducts.length 
+    : 0;
 
-  const correlation = avgPriceHighRated > avgPriceLowRated ? 'positive' : 'negative';
+  const correlation = highRatedProducts.length > 0 && lowRatedProducts.length > 0 
+    ? (avgPriceHighRated > avgPriceLowRated ? 'positive' : 'negative') 
+    : 'unknown';
+
+  console.log('Correlation result:', {
+    avgPriceHighRated,
+    avgPriceLowRated,
+    correlation
+  });
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
@@ -63,19 +83,27 @@ export function PriceVsRatingChart({
       </div>
 
       {/* Correlation Insight */}
-      <div className={`mb-4 p-3 rounded-lg ${correlation === 'positive' ? 'bg-green-50' : 'bg-orange-50'}`}>
+      <div className={`mb-4 p-3 rounded-lg ${correlation === 'positive' ? 'bg-green-50' : correlation === 'negative' ? 'bg-orange-50' : 'bg-gray-50'}`}>
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className={`h-4 w-4 ${correlation === 'positive' ? 'text-green-600' : 'text-orange-600'}`} />
-          <span className={`text-sm font-medium ${correlation === 'positive' ? 'text-green-900' : 'text-orange-900'}`}>
-            Tương quan: {correlation === 'positive' ? 'Tích cực' : 'Tiêu cực'}
+          <TrendingUp className={`h-4 w-4 ${correlation === 'positive' ? 'text-green-600' : correlation === 'negative' ? 'text-orange-600' : 'text-gray-600'}`} />
+          <span className={`text-sm font-medium ${correlation === 'positive' ? 'text-green-900' : correlation === 'negative' ? 'text-orange-900' : 'text-gray-900'}`}>
+            Tương quan: {correlation === 'positive' ? 'Tích cực' : correlation === 'negative' ? 'Tiêu cực' : 'Không xác định'}
           </span>
         </div>
-        <p className="text-xs text-gray-600">
-          Sản phẩm giá cao (≥4⭐): {(avgPriceHighRated / 1000000).toFixed(1)}M ₫
-        </p>
-        <p className="text-xs text-gray-600">
-          Sản phẩm giá thấp (&lt;4⭐): {(avgPriceLowRated / 1000000).toFixed(1)}M ₫
-        </p>
+        {correlation !== 'unknown' ? (
+          <>
+            <p className="text-xs text-gray-600">
+              Sản phẩm giá cao (≥4⭐): {(avgPriceHighRated / 1000000).toFixed(1)}M ₫
+            </p>
+            <p className="text-xs text-gray-600">
+              Sản phẩm giá thấp (&lt;4⭐): {(avgPriceLowRated / 1000000).toFixed(1)}M ₫
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-gray-600">
+            Không đủ dữ liệu đánh giá để phân tích tương quan
+          </p>
+        )}
       </div>
 
       {/* Scatter Plot Visualization */}
@@ -111,9 +139,11 @@ export function PriceVsRatingChart({
           
           {/* Data points */}
           {displayProducts.map((product, index) => {
-            const x = 8 + ((product.price / maxPrice) * 90);
-            const y = 95 - ((product.rating_avg / 5) * 90);
-            const segment = priceSegments.find(s => product.price >= s.min && product.price <= s.max);
+            if (!product.avg_price || product.avg_price <= 0 || maxPrice <= 0) return null;
+            
+            const x = 8 + ((product.avg_price / maxPrice) * 90);
+            const y = product.avg_rating !== null ? 95 - ((product.avg_rating / 5) * 90) : 95;
+            const segment = priceSegments.find(s => product.avg_price >= s.min && product.avg_price <= s.max);
             const color = segment?.label === 'Rẻ' ? '#22c55e' :
                          segment?.label === 'TB' ? '#3b82f6' :
                          segment?.label === 'Cao' ? '#a855f7' : '#f59e0b';

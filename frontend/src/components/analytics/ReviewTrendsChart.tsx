@@ -1,8 +1,8 @@
 import { TrendingUp, Calendar, Star, MessageSquare } from 'lucide-react';
-import { ReviewTrendData } from '../../services/analyticsApi';
+import { OverviewTrendPoint } from '../../services/analyticsApi';
 
 interface ReviewTrendsChartProps {
-  data: ReviewTrendData[];
+  data: OverviewTrendPoint[];
   title?: string;
 }
 
@@ -27,7 +27,7 @@ export function ReviewTrendsChart({
   const latestData = data[data.length - 1] || data[0];
   const avgRating = latestData?.avg_rating || 0;
   const totalReviews = latestData?.total_reviews || 0;
-  const productsReviewed = latestData?.products_reviewed || 0;
+  const totalOrders = latestData?.total_orders || 0;
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
@@ -61,10 +61,10 @@ export function ReviewTrendsChart({
         <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="h-4 w-4 text-green-600" />
-            <span className="text-xs text-green-700 font-medium">Sản phẩm</span>
+            <span className="text-xs text-green-700 font-medium">Tổng đơn hàng</span>
           </div>
           <div className="text-2xl font-bold text-green-900">
-            {productsReviewed.toLocaleString('vi-VN')}
+            {totalOrders.toLocaleString('vi-VN')}
           </div>
         </div>
       </div>
@@ -132,7 +132,7 @@ export function ReviewTrendsChart({
             </div>
             <div className="flex items-center gap-3">
               <span className="text-gray-700">
-                {trend.products_reviewed.toLocaleString('vi-VN')} SP
+                {trend.total_orders.toLocaleString('vi-VN')} đơn
               </span>
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
