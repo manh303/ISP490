@@ -93,7 +93,7 @@ async def export_overview_report(
 
     sql = f"""
         SELECT
-            d.full_date,
+            d.date_value AS full_date,
             pl.platform_code,
             pl.platform_name,
             COUNT(DISTINCT f.product_sk)           AS product_count,
@@ -106,10 +106,10 @@ async def export_overview_report(
         JOIN dwh.dim_product   p  ON p.product_sk   = f.product_sk
         JOIN dwh.dim_platform  pl ON pl.platform_sk = f.platform_sk
         JOIN dwh.dim_date      d  ON d.date_sk      = f.date_sk
-        WHERE d.full_date BETWEEN $1 AND $2
+        WHERE d.date_value BETWEEN $1 AND $2
         {plat_filter}
-        GROUP BY d.full_date, pl.platform_code, pl.platform_name
-        ORDER BY d.full_date, pl.platform_code;
+        GROUP BY d.date_value, pl.platform_code, pl.platform_name
+        ORDER BY d.date_value, pl.platform_code;
     """
 
     try:
@@ -186,21 +186,21 @@ async def export_products_report(
             p.product_name,
             pl.platform_code,
             pl.platform_name,
-            COALESCE(b.brand_name, 'Unknown')      AS brand_name,
-            COALESCE(c.category_name, 'Unknown')   AS category_name,
-            {metric_expr}                          AS metric_value,
-            AVG(f.avg_price)                       AS avg_price,
-            MIN(f.min_price)                       AS min_price,
-            MAX(f.max_price)                       AS max_price,
-            SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
-            AVG(f.avg_rating)                      AS avg_rating
+            COALESCE(b.brand_name, 'Unknown')                 AS brand_name,
+            COALESCE(c.category_id::text, 'Unknown')          AS category_name,
+            {metric_expr}                                     AS metric_value,
+            AVG(f.avg_price)                                  AS avg_price,
+            MIN(f.min_price)                                  AS min_price,
+            MAX(f.max_price)                                  AS max_price,
+            SUM(COALESCE(f.total_review_count, 0))            AS total_reviews,
+            AVG(f.avg_rating)                                 AS avg_rating
         FROM dwh.fact_product_daily f
         JOIN dwh.dim_product   p  ON p.product_sk   = f.product_sk
         JOIN dwh.dim_platform  pl ON pl.platform_sk = f.platform_sk
         LEFT JOIN dwh.dim_brand     b ON b.brand_sk     = p.brand_sk
         LEFT JOIN dwh.dim_category  c ON c.category_sk  = p.category_sk
         JOIN dwh.dim_date      d  ON d.date_sk      = f.date_sk
-        WHERE d.full_date BETWEEN $1 AND $2
+        WHERE d.date_value BETWEEN $1 AND $2
         {plat_filter}
         GROUP BY
             p.product_key,
@@ -208,7 +208,7 @@ async def export_products_report(
             pl.platform_code,
             pl.platform_name,
             b.brand_name,
-            c.category_name
+            c.category_id
         ORDER BY metric_value DESC
         LIMIT {limit};
     """
