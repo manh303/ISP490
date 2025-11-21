@@ -12,24 +12,21 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { Button } from '../../components/ui/figma/button';
-import { Input } from '../../components/ui/figma/input';
 import {
-  getProductTimeseries,
-  getProductReviewSummary,
+  getProductReport,
   getPlatforms,
   getCategories,
-  type ProductTimeseries,
-  type ProductReviewSummary,
+  type ProductReport,
   type Platform,
   type Category,
-  type GetProductTimeseriesParams,
-  type GetProductReviewSummaryParams,
+  type GetProductReportParams,
 } from '../../services/analyticsApi';
 import { ProductTimeseriesChart } from '../../components/analytics/ProductTimeseriesChart';
 import { ReviewSummaryChart } from '../../components/analytics/ReviewSummaryChart';
 import { PlatformSelect } from '../../components/analytics/PlatformSelect';
 import { CategorySelect } from '../../components/analytics/CategorySelect';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
+import { ProductSearch } from '../../components/analytics/ProductSearch';
 
 export function ProductDetailAnalytics() {
   const [loading, setLoading] = useState(true);
@@ -41,16 +38,15 @@ export function ProductDetailAnalytics() {
   const [platformCode, setPlatformCode] = useState<string>('tiki'); // Default to tiki
   const [categoryKey, setCategoryKey] = useState<string>();
   const [productId, setProductId] = useState<string>('');
+  const [productName, setProductName] = useState<string>('');
 
   // Analytics data state
-  const [productTimeseries, setProductTimeseries] = useState<ProductTimeseries | null>(null);
-  const [reviewSummary, setReviewSummary] = useState<ProductReviewSummary | null>(null);
+  const [productReport, setProductReport] = useState<ProductReport | null>(null);
 
   // Load analytics data
   const loadAnalyticsData = async () => {
     if (!productId.trim()) {
-      setProductTimeseries(null);
-      setReviewSummary(null);
+      setProductReport(null);
       setLoading(false);
       return;
     }
@@ -62,30 +58,15 @@ export function ProductDetailAnalytics() {
       const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
       const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
 
-      const timeseriesParams: GetProductTimeseriesParams = {
+      const reportParams: GetProductReportParams = {
         product_key: productId,
         platform_code: platformCode || 'tiki',
         from_date: fromDateStr || '2025-10-22',
         to_date: toDateStr || '2025-11-21',
       };
 
-      const reviewParams: GetProductReviewSummaryParams = {
-        product_key: productId,
-        platform_code: platformCode || 'tiki',
-        from_date: fromDateStr || '2025-10-22',
-        to_date: toDateStr || '2025-11-21',
-      };
-
-      const [
-        timeseriesData,
-        reviewData,
-      ] = await Promise.all([
-        getProductTimeseries(timeseriesParams),
-        getProductReviewSummary(reviewParams),
-      ]);
-
-      setProductTimeseries(timeseriesData);
-      setReviewSummary(reviewData);
+      const reportData = await getProductReport(reportParams);
+      setProductReport(reportData);
     } catch (err) {
       console.error('Error loading product detail analytics data:', err);
       setError('Không thể tải dữ liệu chi tiết sản phẩm. Vui lòng thử lại.');
@@ -107,18 +88,13 @@ export function ProductDetailAnalytics() {
     if (fromDate && toDate && platformCode && productId) {
       loadAnalyticsData();
     } else if (!productId) {
-      setProductTimeseries(null);
-      setReviewSummary(null);
+      setProductReport(null);
       setLoading(false);
     }
-  }, [fromDate, toDate, platformCode, productId]);
+  }, [fromDate, toDate, platformCode, categoryKey, productId]);
 
   const handleRefresh = () => {
     window.location.reload();
-  };
-
-  const handleSearch = () => {
-    loadAnalyticsData();
   };
 
   if (loading) {
@@ -193,24 +169,32 @@ export function ProductDetailAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">ID sản phẩm:</label>
-                <Input
-                  type="text"
-                  placeholder="Nhập ID sản phẩm..."
-                  value={productId}
-                  onChange={(e) => setProductId(e.target.value)}
-                  className="w-48"
+                <label className="text-sm font-medium">Danh mục:</label>
+                <CategorySelect
+                  value={categoryKey}
+                  onValueChange={(value) => setCategoryKey(value || '')}
+                  platformCode={platformCode}
                 />
-                <Button onClick={handleSearch} size="sm">
-                  <Search className="h-4 w-4 mr-2" />
-                  Tìm kiếm
-                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Sản phẩm:</label>
+                <ProductSearch
+                  value={productName}
+                  onProductSelect={(productKey, productName) => {
+                    setProductId(productKey);
+                    setProductName(productName);
+                  }}
+                  platformCode={platformCode}
+                  categoryKey={categoryKey}
+                  placeholder="Tìm kiếm sản phẩm..."
+                  className="w-64"
+                />
               </div>
             </div>
           </div>
 
           {/* Product Summary */}
-          {reviewSummary && (
+          {productReport?.review_summary && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
               <h3 className="text-gray-900 font-semibold mb-3">Tóm Tắt Sản Phẩm</h3>
               <div className="grid grid-cols-4 gap-4">
@@ -220,7 +204,7 @@ export function ProductDetailAnalytics() {
                     <div className="text-sm text-gray-600">Đánh giá trung bình</div>
                   </div>
                   <div className="text-xl font-bold text-gray-900">
-                    {reviewSummary.avg_rating?.toFixed(1)}/5
+                    {productReport.review_summary.avg_rating?.toFixed(1)}/5
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
@@ -229,7 +213,7 @@ export function ProductDetailAnalytics() {
                     <div className="text-sm text-gray-600">Tổng đánh giá</div>
                   </div>
                   <div className="text-xl font-bold text-blue-600">
-                    {reviewSummary.total_reviews?.toLocaleString('vi-VN')}
+                    {productReport.review_summary.total_reviews?.toLocaleString('vi-VN')}
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
@@ -238,7 +222,7 @@ export function ProductDetailAnalytics() {
                     <div className="text-sm text-gray-600">Đánh giá trung bình</div>
                   </div>
                   <div className="text-xl font-bold text-purple-600">
-                    {reviewSummary.avg_rating?.toFixed(2)}
+                    {productReport.review_summary.avg_rating?.toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -250,22 +234,22 @@ export function ProductDetailAnalytics() {
             <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Chi Tiết Sản Phẩm</h3>
 
             <div className="grid grid-cols-1 gap-6">
-              {productTimeseries && productTimeseries.points && productTimeseries.points.length > 0 && (
-                <ProductTimeseriesChart data={productTimeseries.points} />
+              {productReport?.timeseries && productReport.timeseries.points && productReport.timeseries.points.length > 0 && (
+                <ProductTimeseriesChart data={productReport.timeseries.points} />
               )}
 
-              {reviewSummary && (
-                <ReviewSummaryChart data={reviewSummary} />
+              {productReport?.review_summary && (
+                <ReviewSummaryChart data={productReport.review_summary} />
               )}
 
               {!productId && (
                 <div className="text-center py-12 text-gray-500">
                   <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Vui lòng nhập ID sản phẩm để xem chi tiết phân tích</p>
+                  <p>Vui lòng chọn sản phẩm để xem chi tiết phân tích</p>
                 </div>
               )}
 
-              {productId && !productTimeseries && !reviewSummary && (
+              {productId && !productReport?.timeseries && !productReport?.review_summary && (
                 <div className="text-center py-12 text-gray-500">
                   <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p>Không tìm thấy dữ liệu cho sản phẩm này</p>

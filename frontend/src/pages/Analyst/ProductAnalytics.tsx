@@ -18,10 +18,13 @@ import {
 import {
   getTopProducts,
   getPriceVsRevenue,
+  getOverviewKPIs,
   type TopProduct,
   type PriceVsRevenueItem,
+  type OverviewKPIs,
   type GetTopProductsParams,
   type GetPriceVsRevenueParams,
+  type GetOverviewKPIsParams,
 } from '../../services/analyticsApi';
 import { PriceVsRatingChart } from '../../components/analytics/PriceVsRatingChart';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
@@ -36,6 +39,7 @@ export function ProductAnalytics() {
   // Analytics data state
   const [topProducts, setTopProducts] = useState<TopProduct[] | null>(null);
   const [priceVsRevenue, setPriceVsRevenue] = useState<PriceVsRevenueItem[] | null>(null);
+  const [overviewKPIs, setOverviewKPIs] = useState<OverviewKPIs | null>(null);
 
   // Filter state
   const [fromDate, setFromDate] = useState<Date | undefined>();
@@ -68,16 +72,26 @@ export function ProductAnalytics() {
         limit: 100,
       };
 
+      const kpisParams: GetOverviewKPIsParams = {
+        from_date: fromDateStr || '2025-10-22',
+        to_date: toDateStr || '2025-11-21',
+        platform_code: platformCode,
+        category_key: categoryKey,
+      };
+
       const [
         topProductsData,
         priceVsRevenueData,
+        kpisData,
       ] = await Promise.all([
         getTopProducts(topProductsParams),
         getPriceVsRevenue(priceVsRevenueParams),
+        getOverviewKPIs(kpisParams),
       ]);
 
       setTopProducts(topProductsData);
       setPriceVsRevenue(priceVsRevenueData);
+      setOverviewKPIs(kpisData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
       setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
@@ -193,6 +207,39 @@ export function ProductAnalytics() {
               </div>
             </div>
           </div>
+
+          {/* Overview KPIs */}
+          {overviewKPIs && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <h3 className="text-gray-900 font-semibold mb-3">Tổng Quan</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {overviewKPIs?.total_products?.toLocaleString('vi-VN')}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {overviewKPIs?.avg_rating?.toFixed(2)} ⭐
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(overviewKPIs?.total_reviews / 1000)?.toFixed(0)}K
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Giá trung bình</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {overviewKPIs?.avg_price?.toLocaleString('vi-VN')} VND
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Charts Section */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">

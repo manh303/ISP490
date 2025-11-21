@@ -9,9 +9,12 @@ import {
 import { Button } from '../../components/ui/figma/button';
 import {
   getCategoryShare,
+  getCategoryAnalytics,
   getPlatforms,
   getCategories,
   type CategoryShareItem,
+  type OverviewKPIs,
+  type OverviewTrends,
   type Platform,
   type Category,
   type GetCategoryShareParams,
@@ -34,6 +37,10 @@ export function CategoryAnalytics() {
 
   // Analytics data state
   const [categoryShare, setCategoryShare] = useState<CategoryShareItem[] | null>(null);
+  const [categoryAnalytics, setCategoryAnalytics] = useState<{
+    kpis: OverviewKPIs;
+    trends: OverviewTrends;
+  } | null>(null);
 
   // Load analytics data
   const loadAnalyticsData = async () => {
@@ -50,8 +57,20 @@ export function CategoryAnalytics() {
         platform_code: platformCode || 'tiki',
       };
 
-      const data = await getCategoryShare(params);
-      setCategoryShare(data);
+      // Load category share data
+      const categoryShareData = await getCategoryShare(params);
+      setCategoryShare(categoryShareData);
+
+      // Load specific category analytics if category is selected
+      if (selectedCategory) {
+        const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : '2025-10-22';
+        const toDateStr = toDate ? toDate.toISOString().split('T')[0] : '2025-11-21';
+        
+        const categoryData = await getCategoryAnalytics(selectedCategory, fromDateStr, toDateStr);
+        setCategoryAnalytics(categoryData);
+      } else {
+        setCategoryAnalytics(null);
+      }
     } catch (err) {
       console.error('Error loading category analytics data:', err);
       setError('Không thể tải dữ liệu phân tích danh mục. Vui lòng thử lại.');
@@ -180,6 +199,39 @@ export function CategoryAnalytics() {
               )}
             </div>
           </div>
+
+          {/* Selected Category Analytics */}
+          {categoryAnalytics && selectedCategory && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <h3 className="text-gray-900 font-semibold mb-3">Phân Tích Danh Mục Được Chọn</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {categoryAnalytics.kpis?.total_products?.toLocaleString('vi-VN')}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {categoryAnalytics.kpis?.avg_rating?.toFixed(2)} ⭐
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(categoryAnalytics.kpis?.total_reviews / 1000)?.toFixed(0)}K
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Giá trung bình</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {categoryAnalytics.kpis?.avg_price?.toLocaleString('vi-VN')} VND
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">

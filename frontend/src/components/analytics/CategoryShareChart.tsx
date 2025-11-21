@@ -55,6 +55,11 @@ export function CategoryShareChart({
     return null;
   };
 
+  const renderLabel = (props: any) => {
+    const { percent } = props;
+    return `${(percent * 100).toFixed(1)}%`;
+  };
+
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
       <div className="flex items-center gap-2 mb-6">
@@ -73,7 +78,7 @@ export function CategoryShareChart({
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ percentage }) => `${(percentage * 100).toFixed(1)}%`}
+                label={renderLabel}
                 labelLine={false}
               >
                 {chartData.map((entry, index) => (

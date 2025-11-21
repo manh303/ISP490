@@ -4,26 +4,41 @@ import { getCategories, type Category } from '../../services/analyticsApi';
 
 interface CategoryHierarchySelectorProps {
   platformCode?: string;
+  selectedCategoryKey?: string;
+  selectedParentKey?: string;
   onCategoryChange: (categoryKey: string | undefined, parentKey: string | undefined) => void;
   className?: string;
 }
 
 export function CategoryHierarchySelector({
   platformCode,
+  selectedCategoryKey,
+  selectedParentKey,
   onCategoryChange,
   className = "",
 }: CategoryHierarchySelectorProps) {
   const [parentCategories, setParentCategories] = useState<Category[]>([]);
   const [childCategories, setChildCategories] = useState<Category[]>([]);
-  const [selectedParent, setSelectedParent] = useState<string>('');
-  const [selectedChild, setSelectedChild] = useState<string>('');
+  const [selectedParent, setSelectedParent] = useState<string>(selectedParentKey || '');
+  const [selectedChild, setSelectedChild] = useState<string>(selectedCategoryKey || '');
   const [loading, setLoading] = useState(false);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+
+  // Sync state with props
+  useEffect(() => {
+    setSelectedParent(selectedParentKey || '');
+  }, [selectedParentKey]);
+
+  useEffect(() => {
+    setSelectedChild(selectedCategoryKey || '');
+  }, [selectedCategoryKey]);
 
   // Load parent categories (level 1)
   useEffect(() => {
     const loadParentCategories = async () => {
       try {
         setLoading(true);
+        setCategoriesLoaded(false);
         const params: any = {};
         if (platformCode) params.platform_code = platformCode;
 
@@ -31,15 +46,24 @@ export function CategoryHierarchySelector({
         // Filter for parent categories (level 1 or no parent)
         const parents = data.filter(cat => !cat.parent_key || cat.level === 1);
         setParentCategories(parents);
+
+        // Check if current selectedParent is still valid
+        if (selectedParent && !parents.find(cat => cat.category_key === selectedParent)) {
+          setSelectedParent('');
+          setSelectedChild('');
+        }
+
+        setCategoriesLoaded(true);
       } catch (error) {
         console.error('Error loading parent categories:', error);
+        setCategoriesLoaded(true); // Even on error, consider loaded to prevent hanging
       } finally {
         setLoading(false);
       }
     };
 
     loadParentCategories();
-  }, [platformCode]);
+  }, [platformCode]); // Remove selectedParent from dependencies
 
   // Load child categories when parent changes
   useEffect(() => {
@@ -47,7 +71,6 @@ export function CategoryHierarchySelector({
       if (!selectedParent) {
         setChildCategories([]);
         setSelectedChild('');
-        onCategoryChange(undefined, selectedParent || undefined);
         return;
       }
 
@@ -57,21 +80,39 @@ export function CategoryHierarchySelector({
 
         const data = await getCategories(params);
         setChildCategories(data);
-        setSelectedChild('');
-        onCategoryChange(undefined, selectedParent);
+        
+        // Reset selectedChild if it's not in the new data
+        if (selectedChild && !data.find(cat => cat.category_key === selectedChild)) {
+          setSelectedChild('');
+        }
       } catch (error) {
         console.error('Error loading child categories:', error);
       }
     };
 
     loadChildCategories();
-  }, [selectedParent, platformCode, onCategoryChange]);
+  }, [selectedParent, platformCode]); // Remove onCategoryChange from dependencies
 
   // Handle child category selection
   const handleChildChange = (childKey: string) => {
     setSelectedChild(childKey);
     onCategoryChange(childKey, selectedParent);
   };
+
+  // Notify parent component when selection changes
+  useEffect(() => {
+    if (!categoriesLoaded) return; // Don't notify until categories are loaded
+
+    console.log('CategoryHierarchySelector state:', {
+      selectedParent,
+      selectedChild,
+      categoryKey: selectedChild || undefined,
+      parentKey: selectedParent || undefined
+    });
+    const categoryKey = selectedChild || undefined;
+    const parentKey = selectedParent || undefined;
+    onCategoryChange(categoryKey, parentKey);
+  }, [selectedParent, selectedChild, categoriesLoaded]); // Remove onCategoryChange from dependencies
 
   return (
     <div className={`flex gap-2 ${className}`}>

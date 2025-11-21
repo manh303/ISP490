@@ -46,22 +46,22 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
               </span>
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                <span className="font-semibold text-gray-900">{product?.rating_avg?.toFixed(2)}</span>
+                <span className="font-semibold text-gray-900">{product?.avg_rating?.toFixed(2)}</span>
               </div>
             </div>
             <div className="relative h-3 bg-gray-100 rounded-lg overflow-hidden">
               <div
                 className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg transition-all duration-700 flex items-center justify-end pr-2"
-                style={{ width: `${(product.rating_avg / maxRating) * 100}%` }}
+                style={{ width: `${(product.avg_rating / maxRating) * 100}%` }}
               >
                 <span className="text-[10px] text-white font-bold opacity-80">
-                  {product?.rating_avg?.toFixed(1)}
+                  {product?.avg_rating?.toFixed(1)}
                 </span>
               </div>
             </div>
             <div className="flex justify-between text-xs text-gray-500">
-              <span>{product?.review_count?.toLocaleString('vi-VN')} đánh giá</span>
-              <span>{(product.price / 1000000).toFixed(1)}M ₫</span>
+              <span>{product?.total_reviews?.toLocaleString('vi-VN')} đánh giá</span>
+              <span>{product?.avg_price ? (product.avg_price / 1000000).toFixed(1) : 'N/A'}M ₫</span>
             </div>
           </div>
         ))}
