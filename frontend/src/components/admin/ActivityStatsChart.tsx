@@ -49,16 +49,16 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
     }
 
     // Prepare data for action chart
-    const actionChartData = Object.entries(stats.logs_by_action).map(([action, count]) => ({
+    const actionChartData = stats.logs_by_action ? Object.entries(stats.logs_by_action).map(([action, count]) => ({
         action,
         count
-    }));
+    })) : [];
 
     // Prepare data for day chart
-    const dayChartData = stats.logs_by_day.map(item => ({
+    const dayChartData = stats.logs_by_day ? stats.logs_by_day.map(item => ({
         date: new Date(item.date).toLocaleDateString(),
         count: item.count
-    }));
+    })) : [];
 
     return (
         <div className="activity-stats-chart space-y-6">
@@ -70,7 +70,7 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.total_logs.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">{(stats.total_logs || 0).toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
                             Last {days} days
                         </p>
@@ -83,7 +83,7 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{Object.keys(stats.logs_by_action).length}</div>
+                        <div className="text-2xl font-bold">{stats.logs_by_action ? Object.keys(stats.logs_by_action).length : 0}</div>
                         <p className="text-xs text-muted-foreground">
                             Different action types
                         </p>
@@ -97,7 +97,7 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {Math.round(stats.total_logs / days)}
+                            {Math.round((stats.total_logs || 0) / days)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Per day average
@@ -112,7 +112,7 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {stats.logs_by_day.length > 0 ? Math.max(...stats.logs_by_day.map(d => d.count)) : 0}
+                            {stats.logs_by_day && stats.logs_by_day.length > 0 ? Math.max(...stats.logs_by_day.map(d => d.count)) : 0}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Max logs in a day

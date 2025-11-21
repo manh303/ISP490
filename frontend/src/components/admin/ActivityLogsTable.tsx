@@ -11,7 +11,7 @@ import {
 } from '../../components/ui/figma/table';
 import { Search, X, Calendar } from 'lucide-react';
 import { Input } from '../../components/ui/figma/input';
-
+import { useAuth } from "../../contexts/AuthContext";
 interface ActivityLog {
     id: number;
     user_id: number;
@@ -26,6 +26,20 @@ interface ActivityLogsTableProps {
 }
 
 export default function ActivityLogsTable({}: ActivityLogsTableProps) {
+    const { user } = useAuth();
+    console.log('Current user in ActivityLogsTable:', user);
+    
+    // Default dates: last 7 days
+    const getDefaultStartDate = () => {
+        const date = new Date();
+        date.setDate(date.getDate() - 7);
+        return date.toISOString().split('T')[0];
+    };
+    
+    const getDefaultEndDate = () => {
+        return new Date().toISOString().split('T')[0];
+    };
+
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,8 +47,8 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
     // Filter states
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedAction, setSelectedAction] = useState<string>("all");
-    const [startDate, setStartDate] = useState<string>("");
-    const [endDate, setEndDate] = useState<string>("");
+    const [startDate, setStartDate] = useState<string>(getDefaultStartDate());
+    const [endDate, setEndDate] = useState<string>(getDefaultEndDate());
     const [availableActions, setAvailableActions] = useState<string[]>([]);
     
     // Pagination states
@@ -48,14 +62,23 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
         try {
             const params: any = {};
             if (selectedAction !== "all") params.action = selectedAction;
+            if (user?.user_id) {
+                const userIdNum = parseInt(String(user.user_id));
+                if (!isNaN(userIdNum)) {
+                    params.user_id = userIdNum;
+                }
+            }
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
             
+            console.log('API params:', params); // Debug log
+            
             const data = await getActivityLogs(params);
-            setLogs(data);
+            const logsArray = Array.isArray(data) ? data : data.logs || [];
+            setLogs(logsArray);
             
             // Extract unique actions
-            const actions = [...new Set(data.map((log: ActivityLog) => log.action))];
+            const actions = [...new Set(logsArray.map((log: ActivityLog) => log.action).filter(Boolean))].map(String);
             setAvailableActions(actions);
         } catch (err: any) {
             setError(err.message || 'Failed to fetch activity logs');
@@ -66,7 +89,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
 
     useEffect(() => {
         fetchLogs();
-    }, [selectedAction, startDate, endDate]);
+    }, [selectedAction, user?.user_id, startDate, endDate]);
 
     // Filtered logs based on search term
     const filteredLogs = useMemo(() => {
@@ -88,8 +111,8 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
     const clearFilters = () => {
         setSearchTerm("");
         setSelectedAction("all");
-        setStartDate("");
-        setEndDate("");
+        setStartDate(getDefaultStartDate());
+        setEndDate(getDefaultEndDate());
         setCurrentPage(1);
     };
 
@@ -103,13 +126,22 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
 
     return (
         <div className="activity-logs-table">
+            {/* Current User Info */}
+            {user && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-800">
+                        <strong>Filtering logs for user:</strong> {user.full_name} (ID: {user.user_id})
+                    </p>
+                </div>
+            )}
+            
             {/* Filters */}
             <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex-1 min-w-[200px]">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                            placeholder="Search logs..."
+                            placeholder="Search logs, email, action..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10"
