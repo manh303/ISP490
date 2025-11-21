@@ -76,6 +76,12 @@ export const userApi = {
     return res.data;
   },
 
+  // DELETE /api/v1/admin/users/{user_id}?confirm=true
+  deleteUser: async (userId: number) => {
+    const res = await api.delete(`/v1/admin/users/${userId}`, { params: { confirm: true } });
+    return res.data;
+  },
+
   // DELETE /api/v1/admin/users/{user_id}/permanent?confirm=true
   permanentDeleteUser: async (userId: number) => {
     const res = await api.delete(`/v1/admin/users/${userId}/permanent`, { params: { confirm: true } });

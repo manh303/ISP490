@@ -19,7 +19,8 @@ Output:
 import os
 import sys
 import glob
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
@@ -52,7 +53,7 @@ from pyspark.sql.functions import (
     row_number,
 )
 from pyspark.sql.window import Window
-from pyspark.sql.types import DoubleType, LongType, StringType
+from pyspark.sql.types import DoubleType, LongType, StringType, BooleanType
 from pyspark.sql.functions import udf
 
 try:
@@ -1464,13 +1465,106 @@ def add_review_time_features(df):
     print(" STEP 8.3: ADDING TIME FEATURES")
     print("=" * 60)
 
-    df_time = (
+    def _parse_relative_date(date_str: str):
+        """Convert 'X weeks/days ago' to actual date"""
+        from datetime import datetime, timedelta
+        import re
+        
+        if not date_str:
+            return None
+            
+        date_str = str(date_str).strip().lower()
+        
+        # Try standard formats first
+        if len(date_str) == 10 and date_str.count('-') == 2:
+            try:
+                return date_str  # Already YYYY-MM-DD
+            except:
+                pass
+        
+        if 'T' in date_str:
+            try:
+                return date_str[:10]  # Extract YYYY-MM-DD
+            except:
+                pass
+        
+        # Parse relative dates like "3 weeks ago", "2 days ago"
+        try:
+            match = re.search(r'(\d+)\s+(week|day|month|year)s?\s+ago', date_str)
+            if match:
+                num = int(match.group(1))
+                unit = match.group(2)
+                
+                if unit == 'week':
+                    delta = timedelta(weeks=num)
+                elif unit == 'day':
+                    delta = timedelta(days=num)
+                elif unit == 'month':
+                    delta = timedelta(days=num*30)  # Approximate
+                elif unit == 'year':
+                    delta = timedelta(days=num*365)  # Approximate
+                else:
+                    delta = timedelta(days=0)
+                
+                result_date = datetime.now() - delta
+                return result_date.strftime("%Y-%m-%d")
+        except:
+            pass
+        
+        # Fallback: return None (will use crawl_date)
+        return None
+    
+    parse_relative_udf = udf(_parse_relative_date, StringType())
+
+    # Apply parsing to convert relative dates
+    df_with_parsed = (
         df
-        .withColumn("review_date_fmt", to_date(col("review_date")))
-        .withColumn("review_year", year(col("review_date_fmt")))
-        .withColumn("review_month", month(col("review_date_fmt")))
-        .withColumn("review_day", dayofmonth(col("review_date_fmt")))
-        .withColumn("review_dow", dayofweek(col("review_date_fmt")))
+        .withColumn("review_date_parsed", parse_relative_udf(col("review_date")))
+    )
+
+    # Now use coalesce with parsed dates
+    def _safe_to_date(date_str: str):
+        """Safely convert date string to YYYY-MM-DD format"""
+        from datetime import datetime
+        if not date_str:
+            return None
+        date_str = str(date_str).strip()
+        
+        # Already YYYY-MM-DD
+        if len(date_str) == 10 and date_str.count('-') == 2:
+            try:
+                datetime.strptime(date_str, "%Y-%m-%d")
+                return date_str
+            except:
+                pass
+        
+        # Try ISO format
+        if 'T' in date_str:
+            try:
+                return date_str[:10]
+            except:
+                pass
+        
+        return None
+    
+    safe_to_date_udf = udf(_safe_to_date, StringType())
+    
+    df_time = (
+        df_with_parsed
+        .withColumn(
+            "review_date_fmt",
+            coalesce(
+                safe_to_date_udf(col("review_date_parsed")),
+                safe_to_date_udf(col("crawl_date")),
+                safe_to_date_udf(col("review_date")),
+                lit(None)
+            )
+        )
+        .withColumn("review_year", year(to_date(col("review_date_fmt"))))
+        .withColumn("review_month", month(to_date(col("review_date_fmt"))))
+        .withColumn("review_day", dayofmonth(to_date(col("review_date_fmt"))))
+        .withColumn("review_dow", dayofweek(to_date(col("review_date_fmt"))))
+        .drop("review_date_parsed")
     )
 
     print(f" ✓ Added time features")
@@ -1769,6 +1863,173 @@ def load_review_aggregation_to_dwh(agg_df):
 
 
 # ============================================================
+#  STEP 8.6.5 – Load Review Details to DWH
+# ============================================================
+def load_review_details_to_dwh(df):
+    print("\n" + "=" * 60)
+    print(" STEP 8.6.5: LOADING REVIEW DETAILS TO DWH")
+    print("=" * 60)
+
+    if df is None:
+        return
+
+    try:
+        import psycopg2
+        from psycopg2.extras import execute_batch
+        
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+        )
+        cur = conn.cursor()
+
+        table_full_name = f"{DWH_SCHEMA}.fact_reviews_detail"
+        
+        # Create table if not exists
+        create_table_sql = f"""
+            CREATE TABLE IF NOT EXISTS {table_full_name} (
+                review_id VARCHAR(100) NOT NULL,
+                global_product_id VARCHAR(100) NOT NULL,
+                source_platform_std VARCHAR(50),
+                reviewer_name VARCHAR(500),
+                rating DOUBLE PRECISION,
+                review_text TEXT,
+                review_date DATE,
+                helpful_count BIGINT DEFAULT 0,
+                verified_purchase BOOLEAN DEFAULT FALSE,
+                sentiment_score DOUBLE PRECISION DEFAULT 0.0,
+                sentiment_label VARCHAR(20),
+                review_quality_score DOUBLE PRECISION DEFAULT 0.75,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (review_id, source_platform_std)
+            );
+        """
+        cur.execute(create_table_sql)
+        conn.commit()
+        print(f"[INFO] Table {table_full_name} ready")
+
+        # Select relevant columns for detail fact table
+        select_cols = [
+            col("global_review_id").alias("review_id"),
+            col("global_product_id"),
+            col("source_platform_std"),
+            col("reviewer_name_std").alias("reviewer_name"),
+            col("rating_std").alias("rating"),
+            col("review_text_std").alias("review_text"),
+            col("review_date_fmt").alias("review_date"),
+            col("helpful_count"),
+            col("verified_purchase"),
+            col("sentiment_score"),
+            col("sentiment_label"),
+            col("review_quality_score"),
+        ]
+        
+        # Check which columns exist
+        available_cols = df.columns
+        final_cols = [c for c in select_cols if (isinstance(c, str) and c in available_cols) or 
+                      (hasattr(c, '_jc') and str(c).split()[0] in available_cols)]
+        
+        # Build column list more carefully
+        cols_to_select = []
+        col_mapping = {
+            "global_review_id": "review_id",
+            "global_product_id": "global_product_id", 
+            "source_platform_std": "source_platform_std",
+            "reviewer_name_std": "reviewer_name",
+            "rating_std": "rating",
+            "review_text_std": "review_text",
+            "review_date": "review_date",
+            "helpful_count": "helpful_count",
+            "verified_purchase": "verified_purchase",
+            "sentiment_score": "sentiment_score",
+            "sentiment_label": "sentiment_label",
+            "review_quality_score": "review_quality_score",
+        }
+        
+        for src_col, alias in col_mapping.items():
+            if src_col in available_cols:
+                cols_to_select.append(col(src_col).alias(alias))
+        
+        if not cols_to_select:
+            print(" ⚠ No compatible columns found for review detail table")
+            cur.close()
+            conn.close()
+            return
+            
+        df_detail = df.select(*cols_to_select)
+        
+        # Filter out rows with NULL or invalid review_date
+        # Valid dates must be YYYY-MM-DD format strings
+        def _is_valid_date(date_str):
+            """Check if date is in valid YYYY-MM-DD format"""
+            if not date_str:
+                return False
+            date_str = str(date_str).strip()
+            # Check for YYYY-MM-DD pattern (10 chars, dashes in correct places)
+            if len(date_str) == 10 and date_str[4] == '-' and date_str[7] == '-':
+                try:
+                    from datetime import datetime
+                    datetime.strptime(date_str, "%Y-%m-%d")
+                    return True
+                except:
+                    return False
+            return False
+        
+        is_valid_date_udf = udf(_is_valid_date, BooleanType())
+        
+        df_detail = (
+            df_detail
+            .withColumn("_date_valid", is_valid_date_udf(col("review_date")))
+            .filter(col("_date_valid") == True)
+            .drop("_date_valid")
+        )
+        
+        pandas_df = df_detail.toPandas()
+        
+        if pandas_df.empty:
+            print(" ⚠ No review data to insert")
+            cur.close()
+            conn.close()
+            return
+
+        columns = list(pandas_df.columns)
+        columns_str = ", ".join(columns)
+        placeholders = ", ".join(["%s"] * len(columns))
+
+        insert_query = f"""
+            INSERT INTO {table_full_name} ({columns_str})
+            VALUES ({placeholders})
+            ON CONFLICT (review_id, source_platform_std) DO UPDATE SET
+                rating = EXCLUDED.rating,
+                review_text = EXCLUDED.review_text,
+                review_date = EXCLUDED.review_date,
+                helpful_count = EXCLUDED.helpful_count,
+                sentiment_score = EXCLUDED.sentiment_score,
+                sentiment_label = EXCLUDED.sentiment_label,
+                review_quality_score = EXCLUDED.review_quality_score
+        """
+
+        rows = [tuple(row) for row in pandas_df.values]
+        execute_batch(cur, insert_query, rows, page_size=1000)
+        conn.commit()
+
+        print(f" ✓ Loaded {len(rows)} review details into: {table_full_name}")
+
+        cur.close()
+        conn.close()
+
+    except ImportError:
+        print("[WARN] psycopg2 not installed, skipping review detail load")
+    except Exception as e:
+        print(f" Error loading review details: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+# ============================================================
 #  STEP 8.7 – Aggregate Reviews by Product (Legacy)
 # ============================================================
 def aggregate_reviews_by_product(df):
@@ -1936,8 +2197,9 @@ def main():
             df_reviews_sentiment = analyze_sentiment(df_reviews_dedup)
             df_reviews_time = add_review_time_features(df_reviews_sentiment)
             
-            # Load review dimensions & fact table
+            # Load review dimensions, detail fact table & aggregates
             load_review_dimensions_to_dwh(df_reviews_dedup)
+            load_review_details_to_dwh(df_reviews_time)
             df_reviews_agg = aggregate_reviews_daily(df_reviews_time)
             load_review_aggregation_to_dwh(df_reviews_agg)
             

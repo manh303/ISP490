@@ -28,37 +28,37 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Data Engineering Dashboard",
-    path: "/dataengineer/dashboard",
-  },
-  {
-    icon: <TableIcon />,
-    name: "Data Pipeline",
-    subItems: [
-      { name: "ETL Processes", path: "/dataengineer/etl", pro: false },
-      { name: "Data Ingestion", path: "/dataengineer/ingestion", pro: false },
-      { name: "Data Transformation", path: "/dataengineer/transformation", pro: false },
-      { name: "Data Quality", path: "/dataengineer/quality", pro: false },
-    ],
+    name: "ML Insights Dashboard",
+    path: "/mli/dashboard",
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Data Storage",
+    name: "Machine Learning",
     subItems: [
-      { name: "Database Management", path: "/dataengineer/database", pro: false },
-      { name: "Data Warehouse", path: "/dataengineer/warehouse", pro: false },
-      { name: "Data Lakes", path: "/dataengineer/lakes", pro: false },
-      { name: "Backup & Recovery", path: "/dataengineer/backup", pro: false },
+      { name: "Models Management", path: "/ml/models", pro: false },
+      { name: "Price Prediction", path: "/ml/price-prediction", pro: false },
+      { name: "Recommendations", path: "/ml/recommendations", pro: false },
+      { name: "Sentiment Analysis", path: "/ml/sentiment", pro: false },
+      { name: "Status Overview", path: "/ml/status", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
-    name: "Data Monitoring",
+    name: "ML Analytics",
     subItems: [
-      { name: "Performance Metrics", path: "/dataengineer/metrics", pro: false },
-      { name: "Data Lineage", path: "/dataengineer/lineage", pro: false },
-      { name: "System Health", path: "/dataengineer/health", pro: false },
-      { name: "Error Logs", path: "/dataengineer/logs", pro: false },
+      { name: "ML Overview", path: "/mli/overview", pro: false },
+      { name: "Price Intelligence", path: "/mli/price-intelligence", pro: false },
+      { name: "Demand & Sales Forecasting", path: "/mli/demand-forecasting", pro: false },
+      { name: "Product ML Insights", path: "/mli/product-insights", pro: false },
+    ],
+  },
+  {
+    icon: <TableIcon />,
+    name: "Model Management",
+    subItems: [
+      { name: "Model Performance", path: "/mli/model-management", pro: false },
+      { name: "Training Data", path: "/mli/data-sets", pro: false },
+      { name: "Model Versions", path: "/mli/model-versions", pro: false },
     ],
   },
 ];
@@ -66,22 +66,21 @@ const navItems: NavItem[] = [
 const toolsItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
-    name: "Engineering Tools",
+    name: "ML Tools",
     subItems: [
-      { name: "SQL Editor", path: "/dataengineer/sql-editor", pro: false },
-      { name: "Data Connectors", path: "/dataengineer/connectors", pro: false },
-      { name: "API Management", path: "/dataengineer/api", pro: false },
-      { name: "Schema Designer", path: "/dataengineer/schema", pro: false },
+      { name: "Recommendation Engine", path: "/mli/recommendation-engine", pro: false },
+      { name: "Price Optimization", path: "/mli/price-optimization", pro: false },
+      { name: "Demand Forecast", path: "/mli/demand-forecast", pro: false },
+      { name: "Customer Segmentation", path: "/mli/customer-segmentation", pro: false },
     ],
   },
   {
     icon: <CalenderIcon />,
-    name: "Job Management",
+    name: "Predictions",
     subItems: [
-      { name: "Scheduled Jobs", path: "/dataengineer/jobs", pro: false },
-      { name: "Job Monitoring", path: "/dataengineer/job-monitor", pro: false },
-      { name: "Workflow Automation", path: "/dataengineer/workflow", pro: false },
-      { name: "Task Scheduling", path: "/dataengineer/tasks", pro: false },
+      { name: "Sales Forecast", path: "/mli/sales-forecast", pro: false },
+      { name: "Sales Trend", path: "/mli/sales-trend", pro: false },
+      { name: "Churn Prediction", path: "/mli/churn-prediction", pro: false },
     ],
   },
 ];
@@ -296,20 +295,20 @@ const MLISidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/dataengineer/dashboard">
+        <Link to="/mli/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
-                alt="Data Engineering Panel"
+                alt="ML Insights Panel"
                 width={150}
                 height={40}
               />
               <img
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
-                alt="Data Engineering Panel"
+                alt="ML Insights Panel"
                 width={150}
                 height={40}
               />
@@ -317,7 +316,7 @@ const MLISidebar: React.FC = () => {
           ) : (
             <img
               src="/images/logo/logo-icon.svg"
-              alt="Data Engineering"
+              alt="ML Insights"
               width={32}
               height={32}
             />
@@ -336,7 +335,7 @@ const MLISidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Data Engineering"
+                  "ML Dashboard"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -352,7 +351,7 @@ const MLISidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Engineering Tools"
+                  "ML Tools"
                 ) : (
                   <HorizontaLDots />
                 )}

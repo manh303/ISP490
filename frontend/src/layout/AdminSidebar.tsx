@@ -72,6 +72,8 @@ const settingsItems: NavItem[] = [
     name: "Logs & Monitoring",
     subItems: [
       { name: "System Logs", path: "/admin/logs", pro: false },
+      { name: "Activity Logs", path: "/admin/activity-logs", pro: false },
+      { name: "Activity Stats", path: "/admin/activity-stats", pro: false },
       { name: "Performance", path: "/admin/performance", pro: false },
       { name: "Error Reports", path: "/admin/errors", pro: false },
     ],

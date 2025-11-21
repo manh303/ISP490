@@ -47,6 +47,8 @@ import { ExplorePage } from "./pages/Publics/ExplorePage.js";
 import AdminPage from "./pages/Admin/AdminPage.js";
 import AdminUserManagement from "./pages/Admin/AdminUserManagement";
 import RoleManagement from "./pages/Admin/RoleManagement";
+import ActivityLogsPage from "./pages/Admin/ActivityLogsPage";
+import ActivityStatsPage from "./pages/Admin/ActivityStatsPage";
 import AnalystPage from "./pages/Analyst/AnalystPage.js";
 import CustomerPage from "./pages/Customer/CustomerPage.js";
 // import { Dashboard } from "./pages/Publics/Dashboard.js";
@@ -55,6 +57,27 @@ import { useParams } from "react-router-dom";
 import DeletedUsersList from "./components/admin/DeletedUsersList.js";
 import { AnalystWireframe } from "./pages/Analyst/AnalystWireframe.js";
 import { DataEngineerWireframe } from "./pages/DataEngineer/DataEngineerWireframe.js";
+import MLIPage from "./pages/MLInsights/MLIPage.js";
+import { AnalyticsDashboard } from "./pages/Analyst/AnalyticsDashboard.js";
+import { ProductAnalytics } from "./pages/Analyst/ProductAnalytics.js";
+import { ReviewAnalytics } from "./pages/Analyst/ReviewAnalytics.js";
+import { PlatformAnalytics } from "./pages/Analyst/PlatformAnalytics.js";
+import { CategoryAnalytics } from "./pages/Analyst/CategoryAnalytics.js";
+import { PricingAnalytics } from "./pages/Analyst/PricingAnalytics.js";
+import { ProductDetailAnalytics } from "./pages/Analyst/ProductDetailAnalytics.js";
+import MLOverview from "./pages/MLInsights/MLOverview.js";
+import PriceIntelligence from "./pages/MLInsights/PriceIntelligence.js";
+import DemandSalesForecasting from "./pages/MLInsights/DemandSalesForecasting.js";
+import ProductMLInsights from "./pages/MLInsights/ProductMLInsights.js";
+import {
+  ModelsListPage,
+  ModelDetailPage,
+  CreateModelPage,
+  PricePredictionPage,
+  RecommendationsPage,
+  SentimentAnalysisPage,
+  StatusOverviewPage
+} from "./pages/MachineLearning";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -149,6 +172,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="/admin/home" element={<AdminPage />} />
             <Route path="/admin/dashboard" element={<VietnamElectronicsDashboard />} />
             <Route path="/admin/users" element={<AdminUserManagement />} />
             <Route path="/admin/roles" element={<RoleManagement />} />
@@ -162,6 +186,8 @@ export default function App() {
             <Route path="/admin/settings/security" element={<Blank />} />
             <Route path="/admin/settings/permissions" element={<Blank />} />
             <Route path="/admin/logs" element={<Blank />} />
+            <Route path="/admin/activity-logs" element={<ActivityLogsPage />} />
+            <Route path="/admin/activity-stats" element={<ActivityStatsPage />} />
             <Route path="/admin/performance" element={<Blank />} />
             <Route path="/admin/errors" element={<Blank />} />
             <Route path="/admin/notifications" element={<Blank />} />
@@ -176,7 +202,15 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="/analyst/home" element={<AnalystPage />} />
             <Route path="/analyst/dashboard" element={<AnalystWireframe />} />
+            <Route path="/analyst/analytics-dashboard" element={<AnalyticsDashboard />} />
+            <Route path="/analyst/product-analytics" element={<ProductAnalytics />} />
+            <Route path="/analyst/review-analytics" element={<ReviewAnalytics />} />
+            <Route path="/analyst/platform-analytics" element={<PlatformAnalytics />} />
+            <Route path="/analyst/category-analytics" element={<CategoryAnalytics />} />
+            <Route path="/analyst/pricing-analytics" element={<PricingAnalytics />} />
+            <Route path="/analyst/product-detail-analytics" element={<ProductDetailAnalytics />} />
             <Route path="/analyst/sales" element={<BarChart />} />
             <Route path="/analyst/trends" element={<LineChart />} />
             <Route path="/analyst/customers" element={<DSSPage />} />
@@ -220,7 +254,22 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/mli/dashboard" element={<DSSPage />} />
+            {/* Machine Learning Pages */}
+            <Route path="/ml/models" element={<ModelsListPage />} />
+            <Route path="/ml/models/create" element={<CreateModelPage />} />
+            <Route path="/ml/models/:model_sk" element={<ModelDetailPage />} />
+            <Route path="/ml/models/:model_sk/edit" element={<ModelDetailPage />} />
+            <Route path="/ml/price-prediction" element={<PricePredictionPage />} />
+            <Route path="/ml/recommendations" element={<RecommendationsPage />} />
+            <Route path="/ml/sentiment" element={<SentimentAnalysisPage />} />
+            <Route path="/ml/status" element={<StatusOverviewPage />} />
+
+            {/* MLI Pages */}
+            <Route path="/mli/dashboard" element={<MLIPage />} />
+            <Route path="/mli/overview" element={<MLOverview />} />
+            <Route path="/mli/price-intelligence" element={<PriceIntelligence />} />
+            <Route path="/mli/demand-forecasting" element={<DemandSalesForecasting />} />
+            <Route path="/mli/product-insights" element={<ProductMLInsights />} />
             <Route path="/mli/price-optimization" element={<Blank />} />
             <Route path="/mli/demand-forecast" element={<Blank />} />
             <Route path="/mli/sales-forecast" element={<Blank />} />
@@ -240,6 +289,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="/customer" element={<CustomerPage />} />
             <Route path="/customer/dashboard" element={<VietnamElectronicsDashboard />} />
             <Route path="/customer/products/browse" element={<BasicTables />} />
             <Route path="/customer/products/favorites" element={<BasicTables />} />

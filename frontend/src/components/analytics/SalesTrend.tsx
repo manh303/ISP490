@@ -132,7 +132,7 @@ const SalesTrend: React.FC<SalesTrendProps> = ({ data, loading }) => {
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="text-sm text-blue-600 font-medium mb-1">Total Reviews</div>
           <div className="text-2xl font-bold text-blue-700">
-            {(latestTrend?.total_reviews || 0).toLocaleString()}
+            {latestTrend?.total_reviews.toLocaleString()}
           </div>
           <div className="text-xs text-blue-600 mt-1">Current month</div>
         </div>
@@ -195,7 +195,7 @@ const SalesTrend: React.FC<SalesTrendProps> = ({ data, loading }) => {
                   {item.period}
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-900">
-                  {(item.total_reviews || 0).toLocaleString()}
+                  {item?.total_reviews?.toLocaleString()}
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-900">
                   <span className="flex items-center">

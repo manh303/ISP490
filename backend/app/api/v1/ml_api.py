@@ -33,13 +33,29 @@ router = APIRouter(prefix="/ml", tags=["ML Models"])
 # CONFIGURATION & SETUP
 # ====================================
 
-# Get ML folder path (from backend/app/api/v1 -> project root)
-# backend/app/api/v1 -> parent: backend/app/api/v1
-#                    -> parent: backend/app/api
-#                    -> parent: backend/app
-#                    -> parent: backend
-#                    -> parent: project_root
-ml_folder = Path(__file__).resolve().parent.parent.parent.parent.parent / "ml"
+# Get ML folder path with fallback for Render deployment
+# Try multiple paths in order of likelihood
+possible_paths = [
+    # Render/Railway deployment
+    Path("/app/ml"),
+    Path("/opt/render/project/src/ml"),
+    Path("/opt/render/project/ml"),
+    # Local development
+    Path(__file__).resolve().parent.parent.parent.parent.parent / "ml",
+    # Environment variable
+    Path(os.getenv("ML_PATH", "/nonexistent")) if os.getenv("ML_PATH") else None,
+]
+
+ml_folder = None
+for path in possible_paths:
+    if path and path.exists():
+        ml_folder = path
+        break
+
+# Fallback to first path if nothing found (will use mock data)
+if ml_folder is None:
+    ml_folder = possible_paths[0]
+
 models_dir = ml_folder / "models" / "ml-models"
 data_dir = ml_folder / "data"
 

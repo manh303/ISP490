@@ -36,7 +36,15 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
                     description: data.description
                 });
             } catch (err: any) {
-                const errorMsg = err?.response?.data?.detail || "Không thể tải thông tin vai trò";
+                const detail = err?.response?.data?.detail;
+                let errorMsg = "Không thể tải thông tin vai trò";
+                if (typeof detail === 'string') {
+                    errorMsg = detail;
+                } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                    errorMsg = detail[0].msg;
+                } else if (detail?.msg) {
+                    errorMsg = detail.msg;
+                }
                 showToast(errorMsg, "error");
             } finally {
                 setIsLoading(false);
@@ -74,7 +82,15 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
             showToast(response.message || "Cập nhật vai trò thành công!", "success");
             onSuccess();
         } catch (err: any) {
-            const errorMsg = err?.response?.data?.detail || "Không thể cập nhật vai trò";
+            const detail = err?.response?.data?.detail;
+            let errorMsg = "Không thể cập nhật vai trò";
+            if (typeof detail === 'string') {
+                errorMsg = detail;
+            } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                errorMsg = detail[0].msg;
+            } else if (detail?.msg) {
+                errorMsg = detail.msg;
+            }
             showToast(errorMsg, "error");
         } finally {
             setIsSubmitting(false);

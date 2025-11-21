@@ -1,0 +1,895 @@
+GET
+/api/v1/analytics/filters/platforms
+List Platforms
+
+Parameters
+Cancel
+No parameters
+
+Execute
+Clear
+Responses
+Curl
+
+curl -X 'GET' \
+  'https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/platforms' \
+  -H 'accept: application/json'
+Request URL
+https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/platforms
+Server response
+Code	Details
+200	
+Response body
+Download
+[
+  {
+    "platform_code": "lazada",
+    "platform_name": "LAZADA"
+  },
+  {
+    "platform_code": "tiki",
+    "platform_name": "TIKI"
+  },
+  {
+    "platform_code": "tiki_mass_crawl",
+    "platform_name": "TIKI_MASS_CRAWL"
+  },
+  {
+    "platform_code": "unknown",
+    "platform_name": "UNKNOWN"
+  }
+] và GET
+/api/v1/analytics/filters/categories
+List Categories
+
+Parameters
+Cancel
+Name	Description
+platform_code
+(query)
+platform_code
+parent_category_key
+(query)
+parent_category_key
+Execute
+Clear
+Responses
+Curl
+
+curl -X 'GET' \
+  'https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/categories' \
+  -H 'accept: application/json'
+Request URL
+https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/categories
+Server response
+Code	Details
+200	
+Response body
+Download
+[
+  {
+    "category_key": "1",
+    "category_name": "1",
+    "level": null,
+    "parent_key": null,
+    "platform_code": null
+  },
+  {
+    "category_key": "2",
+    "category_name": "2",
+    "level": null,
+    "parent_key": null,
+    "platform_code": null
+  },
+  {
+    "category_key": "3",
+    "category_name": "3",
+    "level": null,
+    "parent_key": null,
+    "platform_code": null
+  }, và GET
+/api/v1/analytics/filters/products
+Search Products
+
+Parameters
+Cancel
+Name	Description
+q *
+string
+(query)
+Từ khóa tìm sản phẩm
+
+q
+platform_code
+(query)
+platform_code
+category_key
+(query)
+category_key
+limit
+integer
+(query)
+maximum: 50
+minimum: 1
+10
+Execute
+Clear
+Responses
+Curl
+
+curl -X 'GET' \
+  'https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/products?q=q&limit=10' \
+  -H 'accept: application/json'
+Request URL
+https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/products?q=q&limit=10
+Server response
+Code	Details
+200	
+Response body
+Download
+[
+  {
+    "product_key": "lazada_3128767225",
+    "product_name": "004 Quạt tản nhiệt cổng USB chuyên dụng cho PC LAPTOP NOTEBOOK MACBOOK",
+    "platform_code": "lazada",
+    "category_key": null
+  },
+  {
+    "product_key": "lazada_3237984702",
+    "product_name": "0Pp0 Reno 4Z Phone, 12Gb Ram / 256Gb, 2 Sim, Full Box, 4 Cameras, 120 Hz Screen, Smooth Gameplay for Lien Quan-Pubg-Free Fire.",
+    "platform_code": "lazada",
+    "category_key": null
+  },
+  {
+    "product_key": "lazada_3231269061",
+    "product_name": "100% Authentic Hirono Halloween Special Series Anime Hành động Búp bê Đồ chơi Dễ thương Hirono Hangtag Mô hình Desktop Decorate Quà tặng cho trẻ em Đồ chơi hộp mù ẩn hiếm",
+    "platform_code": "lazada",
+    "category_key": null
+  },
+  {
+    "product_key": "lazada_3102871677",
+    "product_name": "🔥👍【 100% Brand new + High Quality】🔥👍 New Kids Smart Watch SOS Antil-lost GPS Location Camera Sim Card Call IP67 Waterproof Smart Watch For Ios Android Kids Gift",
+    "platform_code": "lazada",
+    "category_key": null
+  }, và GET
+/api/v1/analytics/overview/kpis
+Get Overview Kpis
+
+Parameters
+Cancel
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+platform_code
+(query)
+platform_code
+category_key
+(query)
+category_key
+Please correct the following validation errors and try again.
+Required field is not provided
+Required field is not provided
+Execute
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "platform_code": "string",
+  "category_key": "string",
+  "total_revenue": 0,
+  "total_products": 0,
+  "total_reviews": 0,
+  "avg_price": 0,
+  "avg_rating": 0
+} và GET
+/api/v1/analytics/overview/trends
+Get Overview Trends
+
+Parameters
+Cancel
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+platform_code
+(query)
+platform_code
+category_key
+(query)
+category_key
+Execute
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "platform_code": "string",
+  "category_key": "string",
+  "points": [
+    {
+      "date": "2025-11-21",
+      "revenue": 0,
+      "total_orders": 0,
+      "avg_price": 0,
+      "avg_rating": 0,
+      "total_reviews": 0
+    }
+  ]
+} và GET
+/api/v1/analytics/platforms/comparison
+Compare Platforms
+
+Parameters
+Cancel
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+category_key
+(query)
+category_key
+Please correct the following validation errors and try again.
+Required field is not provided
+Required field is not provided
+Execute
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+[
+  {
+    "platform_code": "string",
+    "platform_name": "string",
+    "total_revenue": 0,
+    "total_products": 0,
+    "avg_price": 0,
+    "avg_rating": 0,
+    "total_reviews": 0
+  }
+] và GET
+/api/v1/analytics/platforms/category-share
+Get Category Share
+
+Parameters
+Try it out
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+platform_code *
+string
+(query)
+platform_code
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+[
+  {
+    "category_key": "string",
+    "category_name": "string",
+    "platform_code": "string",
+    "revenue": 0,
+    "revenue_share": 0
+  }
+] và GET
+/api/v1/analytics/products/top
+Get Top Products
+
+Parameters
+Try it out
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+metric
+string
+(query)
+revenue|review_count|avg_rating|price_growth
+
+Default value : revenue
+
+revenue
+platform_code
+(query)
+platform_code
+category_key
+(query)
+category_key
+limit
+integer
+(query)
+maximum: 100
+minimum: 1
+Default value : 20
+
+20
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+[
+  {
+    "product_key": "string",
+    "product_name": "string",
+    "platform_code": "string",
+    "category_key": "string",
+    "total_revenue": 0,
+    "total_reviews": 0,
+    "avg_rating": 0,
+    "avg_price": 0
+  }
+] và GET
+/api/v1/analytics/products/{product_key}/timeseries
+Get Product Timeseries
+
+Parameters
+Try it out
+Name	Description
+product_key *
+string
+(path)
+product_key
+platform_code *
+string
+(query)
+platform_code
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "product_key": "string",
+  "platform_code": "string",
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "points": [
+    {
+      "date": "2025-11-21",
+      "avg_price": 0,
+      "min_price": 0,
+      "max_price": 0,
+      "total_reviews": 0,
+      "avg_rating": 0,
+      "revenue": 0
+    }
+  ]
+} và GET
+/api/v1/analytics/products/{product_key}/reviews/summary
+Get Product Review Summary
+
+Parameters
+Try it out
+Name	Description
+product_key *
+string
+(path)
+product_key
+platform_code *
+string
+(query)
+platform_code
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+top_n
+integer
+(query)
+maximum: 20
+minimum: 1
+Default value : 5
+
+5
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "product_key": "string",
+  "platform_code": "string",
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "total_reviews": 0,
+  "avg_rating": 0,
+  "rating_breakdown": {
+    "by_rating": {
+      "additionalProp1": 0,
+      "additionalProp2": 0,
+      "additionalProp3": 0
+    }
+  },
+  "top_helpful_reviews": [
+    {
+      "additionalProp1": {}
+    }
+  ]
+} và GET
+/api/v1/analytics/pricing/price-distribution
+Get Price Distribution
+
+Parameters
+Try it out
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+platform_code *
+string
+(query)
+platform_code
+category_key
+(query)
+category_key
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "platform_code": "string",
+  "category_key": "string",
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "min_price": 0,
+  "p25_price": 0,
+  "median_price": 0,
+  "p75_price": 0,
+  "max_price": 0
+} và GET
+/api/v1/analytics/pricing/price-vs-revenue
+Get Price Vs Revenue
+
+Parameters
+Try it out
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+platform_code *
+string
+(query)
+platform_code
+category_key
+(query)
+category_key
+limit
+integer
+(query)
+maximum: 500
+minimum: 1
+Default value : 100
+
+100
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+[
+  {
+    "product_key": "string",
+    "product_name": "string",
+    "platform_code": "string",
+    "category_key": "string",
+    "avg_price": 0,
+    "total_revenue": 0,
+    "avg_rating": 0,
+    "total_reviews": 0
+  }
+] và GET
+/api/v1/analytics/report/overview
+Get Overview Report
+
+API gom tất cả dữ liệu cần cho 1 report tổng quan:
+
+KPIs
+Trend theo ngày
+So sánh giữa các platform
+Tỷ trọng category theo platform (nếu có platform_code)
+Parameters
+Try it out
+Name	Description
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+platform_code
+(query)
+tiki / lazada, nếu null thì tổng tất cả
+
+platform_code
+category_key
+(query)
+category_sk, lấy từ /filters/categories
+
+category_key
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "platform_code": "string",
+  "category_key": "string",
+  "kpis": {
+    "from_date": "2025-11-21",
+    "to_date": "2025-11-21",
+    "platform_code": "string",
+    "category_key": "string",
+    "total_revenue": 0,
+    "total_products": 0,
+    "total_reviews": 0,
+    "avg_price": 0,
+    "avg_rating": 0
+  },
+  "trends": {
+    "from_date": "2025-11-21",
+    "to_date": "2025-11-21",
+    "platform_code": "string",
+    "category_key": "string",
+    "points": [
+      {
+        "date": "2025-11-21",
+        "revenue": 0,
+        "total_orders": 0,
+        "avg_price": 0,
+        "avg_rating": 0,
+        "total_reviews": 0
+      }
+    ]
+  },
+  "platform_comparison": [
+    {
+      "platform_code": "string",
+      "platform_name": "string",
+      "total_revenue": 0,
+      "total_products": 0,
+      "avg_price": 0,
+      "avg_rating": 0,
+      "total_reviews": 0
+    }
+  ],
+  "category_share": [
+    {
+      "category_key": "string",
+      "category_name": "string",
+      "platform_code": "string",
+      "revenue": 0,
+      "revenue_share": 0
+    }
+  ]
+} và GET
+/api/v1/analytics/report/product
+Get Product Report
+
+Report chi tiết cho 1 product:
+
+Timeseries: giá / rating / review theo ngày
+Review summary: tổng số review, breakdown rating, top review UI có thể dùng report này cho màn product-detail report.
+Parameters
+Try it out
+Name	Description
+product_key *
+string
+(query)
+global product key, vd: tiki_123456
+
+product_key
+platform_code *
+string
+(query)
+tiki / lazada
+
+platform_code
+from_date *
+string($date)
+(query)
+from_date
+to_date *
+string($date)
+(query)
+to_date
+Responses
+Code	Description	Links
+200	
+Successful Response
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "product_key": "string",
+  "platform_code": "string",
+  "from_date": "2025-11-21",
+  "to_date": "2025-11-21",
+  "timeseries": {
+    "product_key": "string",
+    "platform_code": "string",
+    "from_date": "2025-11-21",
+    "to_date": "2025-11-21",
+    "points": [
+      {
+        "date": "2025-11-21",
+        "avg_price": 0,
+        "min_price": 0,
+        "max_price": 0,
+        "total_reviews": 0,
+        "avg_rating": 0,
+        "revenue": 0
+      }
+    ]
+  },
+  "review_summary": {
+    "product_key": "string",
+    "platform_code": "string",
+    "from_date": "2025-11-21",
+    "to_date": "2025-11-21",
+    "total_reviews": 0,
+    "avg_rating": 0,
+    "rating_breakdown": {
+      "by_rating": {
+        "additionalProp1": 0,
+        "additionalProp2": 0,
+        "additionalProp3": 0
+      }
+    },
+    "top_helpful_reviews": [
+      {
+        "additionalProp1": {}
+      }
+    ]
+  }
+}
+
+⭐ Trang 1 — Dashboard Overview
+Components:
+
+Date Range Picker
+
+Dropdown Platform
+
+Dropdown Category
+
+KPI Cards
+
+Revenue Trend Chart
+
+Platform Comparison Chart
+
+Category Share Pie Chart
+
+API cần dùng (gợi ý tối ưu → chỉ 1 API):
+
+✔ GET /analytics/report/overview
+→ lấy tất cả dữ liệu cùng lúc.
+
+Biểu đồ:
+
+Line chart (Trends)
+
+Bar chart (Platform Comparison)
+
+Pie chart (Category Share)
+
+⭐ Trang 2 — Product List / Top Products
+Components:
+
+Filters: Dates, Platform, Category
+
+Dropdown Sort/Metric
+
+Table top products
+
+Bar Chart Revenue / Rating / Review
+
+API:
+
+✔ GET /analytics/products/top
+
+Biểu đồ:
+
+Bar chart (top revenue)
+
+Column chart (top rating)
+
+⭐ Trang 3 — Product Detail Analytics
+Components:
+
+Product Info Header
+
+Price Trend Chart
+
+Rating Trend Chart
+
+Review Trend Chart
+
+Rating Breakdown Pie Chart
+
+Top Helpful Reviews List
+
+API tối ưu (1 API đủ):
+
+✔ GET /analytics/report/product
+
+Biểu đồ:
+
+Line chart price
+
+Line chart rating
+
+Line chart review count
+
+Pie chart rating breakdown
+
+⭐ Trang 4 — Pricing Analytics
+Components:
+
+Filters: Date, Platform, Category
+
+Box Plot Price Distribution
+
+Scatter Chart Price vs Revenue
+
+API:
+
+✔ GET /analytics/pricing/price-distribution
+✔ GET /analytics/pricing/price-vs-revenue
+
+Biểu đồ:
+
+Box plot
+
+Scatter chart
+
+⭐ Trang 5 — Category Analytics
+Components:
+
+Filter platform/date
+
+Bar chart category revenue
+
+Pie chart category share
+
+API:
+
+✔ GET /analytics/platforms/category-share
+
+⭐ Trang 6 — Filter Data (Global)
+
+Dùng chung cho tất cả trang.
+
+API:
+
+✔ GET /analytics/filters/platforms
+✔ GET /analytics/filters/categories
+✔ GET /analytics/filters/products
