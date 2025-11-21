@@ -67,6 +67,15 @@ import MLOverview from "./pages/MLInsights/MLOverview.js";
 import PriceIntelligence from "./pages/MLInsights/PriceIntelligence.js";
 import DemandSalesForecasting from "./pages/MLInsights/DemandSalesForecasting.js";
 import ProductMLInsights from "./pages/MLInsights/ProductMLInsights.js";
+import {
+  ModelsListPage,
+  ModelDetailPage,
+  CreateModelPage,
+  PricePredictionPage,
+  RecommendationsPage,
+  SentimentAnalysisPage,
+  StatusOverviewPage
+} from "./pages/MachineLearning";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -241,7 +250,17 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            {/* <Route path="/mli/dashboard" element={<DSSPage />} /> */}
+            {/* Machine Learning Pages */}
+            <Route path="/ml/models" element={<ModelsListPage />} />
+            <Route path="/ml/models/create" element={<CreateModelPage />} />
+            <Route path="/ml/models/:model_sk" element={<ModelDetailPage />} />
+            <Route path="/ml/models/:model_sk/edit" element={<ModelDetailPage />} />
+            <Route path="/ml/price-prediction" element={<PricePredictionPage />} />
+            <Route path="/ml/recommendations" element={<RecommendationsPage />} />
+            <Route path="/ml/sentiment" element={<SentimentAnalysisPage />} />
+            <Route path="/ml/status" element={<StatusOverviewPage />} />
+
+            {/* MLI Pages */}
             <Route path="/mli/dashboard" element={<MLIPage />} />
             <Route path="/mli/overview" element={<MLOverview />} />
             <Route path="/mli/price-intelligence" element={<PriceIntelligence />} />

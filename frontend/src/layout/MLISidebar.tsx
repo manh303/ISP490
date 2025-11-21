@@ -32,6 +32,17 @@ const navItems: NavItem[] = [
     path: "/mli/dashboard",
   },
   {
+    icon: <BoxCubeIcon />,
+    name: "Machine Learning",
+    subItems: [
+      { name: "Models Management", path: "/ml/models", pro: false },
+      { name: "Price Prediction", path: "/ml/price-prediction", pro: false },
+      { name: "Recommendations", path: "/ml/recommendations", pro: false },
+      { name: "Sentiment Analysis", path: "/ml/sentiment", pro: false },
+      { name: "Status Overview", path: "/ml/status", pro: false },
+    ],
+  },
+  {
     icon: <PieChartIcon />,
     name: "ML Analytics",
     subItems: [
@@ -324,7 +335,7 @@ const MLISidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "ML Insights"
+                  "ML Dashboard"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
