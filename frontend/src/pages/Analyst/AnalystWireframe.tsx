@@ -30,7 +30,9 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { ProductAnalytics } from './ProductAnalytics';
 import { ReviewAnalytics } from './ReviewAnalytics';
 import { PlatformAnalytics } from './PlatformAnalytics';
-
+import { CategoryAnalytics } from './CategoryAnalytics';
+import { PricingAnalytics } from './PricingAnalytics';
+import { ProductDetailAnalytics } from './ProductDetailAnalytics';
 export function AnalystWireframe() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -39,6 +41,9 @@ export function AnalystWireframe() {
     { id: 'product', label: 'Product Analytics', component: ProductAnalytics },
     { id: 'review', label: 'Review Analytics', component: ReviewAnalytics },
     { id: 'platform', label: 'Platform Analytics', component: PlatformAnalytics },
+    { id: 'pricing', label: 'Pricing Analytics', component: PricingAnalytics },
+    { id: 'category', label: 'Category Analytics', component: CategoryAnalytics },
+    { id: 'product_detail', label: 'Product Detail Analytics', component: ProductDetailAnalytics },
   ];
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AnalyticsDashboard;
