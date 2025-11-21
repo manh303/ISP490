@@ -47,6 +47,8 @@ import { ExplorePage } from "./pages/Publics/ExplorePage.js";
 import AdminPage from "./pages/Admin/AdminPage.js";
 import AdminUserManagement from "./pages/Admin/AdminUserManagement";
 import RoleManagement from "./pages/Admin/RoleManagement";
+import ActivityLogsPage from "./pages/Admin/ActivityLogsPage";
+import ActivityStatsPage from "./pages/Admin/ActivityStatsPage";
 import AnalystPage from "./pages/Analyst/AnalystPage.js";
 import CustomerPage from "./pages/Customer/CustomerPage.js";
 // import { Dashboard } from "./pages/Publics/Dashboard.js";
@@ -184,6 +186,8 @@ export default function App() {
             <Route path="/admin/settings/security" element={<Blank />} />
             <Route path="/admin/settings/permissions" element={<Blank />} />
             <Route path="/admin/logs" element={<Blank />} />
+            <Route path="/admin/activity-logs" element={<ActivityLogsPage />} />
+            <Route path="/admin/activity-stats" element={<ActivityStatsPage />} />
             <Route path="/admin/performance" element={<Blank />} />
             <Route path="/admin/errors" element={<Blank />} />
             <Route path="/admin/notifications" element={<Blank />} />
