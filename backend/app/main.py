@@ -10,16 +10,22 @@ import time
 import logging
 import secrets
 import hashlib
-import smtplib
 import bcrypt
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
 # Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger.info("✅ Loaded .env file")
+except ImportError:
+    logger.warning("python-dotenv not installed, using system environment variables")
 
 # Ensure parent directory of `app` is on sys.path
 parent_dir = os.path.dirname(os.path.dirname(__file__))
@@ -380,13 +386,19 @@ try:
 except ImportError as e:
     logger.warning(f"Dashboard API routes not available: {e}")
 
-# Include ML Serving API (v1)
+# Include ML API router
 try:
-    from api.v1.ml_serving import router as ml_serving_router
-    app.include_router(ml_serving_router, prefix=f"{settings.API_V1_PREFIX}/ml", tags=["ML Serving"])
-    logger.info("ML Serving API routes included")
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+
+    from api.v1.ml_router import router as ml_router
+    # ml_router nên có prefix = "/ml" bên trong, nên ở đây chỉ thêm API_V1_PREFIX
+    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["Machine Learning"] )
+    logger.info("✅ ML API routes included")
 except ImportError as e:
-    logger.warning(f"ML Serving API routes not available: {e}")
+    logger.warning(f"ML API routes not available: {e}")
+
 
 # Include Reports API (v1)
 try:
@@ -405,7 +417,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add activity logging middleware (only if available)
+# Add activity logging middleware (only if available and table exists)
+# Disabled for now - user_activity_logs table doesn't exist yet
 if ACTIVITY_AVAILABLE:
     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
     logger.info("Activity logging middleware enabled")
@@ -495,7 +508,7 @@ async def check_database_roles():
             await db_manager.connect()
         
         # Get all roles from database
-        query = "SELECT role_id, role_code, role_name, description FROM iam_role ORDER BY role_code"
+        query = "SELECT role_id, role_code, role_name, description FROM iam.iam_role ORDER BY role_code"
         roles = await db_manager.execute_query(query)
         
         return {
@@ -1053,40 +1066,38 @@ def create_access_token(user_data: dict, email: str):
     return create_jwt_token(user_data, email, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM, expire_hours)
 
 # ====================================
-# EMAIL SERVICE
+# EMAIL SERVICE (Mailjet)
 # ====================================
 try:
-    import aiosmtplib
+    import requests
     EMAIL_AVAILABLE = True
-    logger.info("Email service available")
+    logger.info("Email service available (Mailjet)")
 except ImportError:
     EMAIL_AVAILABLE = False
-    logger.warning("Email service not available: No module named 'aiosmtplib'")
+    logger.warning("Email service not available: No module named 'requests'")
 
 class EmailService:
-    """Simple email service for verification codes"""
+    """Email service using Mailjet HTTP API"""
 
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("manhndhe173383@fpt.edu.vn")
-        self.smtp_password = os.getenv("cvin xncb nmfi ogsa")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
+        self.api_key = os.getenv("MAILJET_API_KEY")
+        self.api_secret = os.getenv("MAILJET_API_SECRET")
+        self.from_email = os.getenv("EMAIL_FROM")
+        self.from_name = os.getenv("EMAIL_FROM_NAME", "E-commerce DSS")
+        self.mailjet_url = "https://api.mailjet.com/v3.1/send"
 
     def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
-        """Send email verification code"""
+        """Send email verification code using Mailjet API"""
         try:
-            # For development, just log the code
-            if not self.smtp_username or not self.smtp_password:
-                logger.info(f"DEV MODE: Verification code for {to_email}: {verification_code}")
+            # Nếu thiếu config thì bật dev mode, không gửi thật
+            if not self.api_key or not self.api_secret or not self.from_email:
+                logger.warning(
+                    f"DEV MODE (Mailjet): Missing MAILJET_API_KEY / MAILJET_API_SECRET / EMAIL_FROM. "
+                    f"Verification code for {to_email}: {verification_code}"
+                )
                 return True
 
-            msg = MIMEMultipart()
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = "Verify Your Email - E-commerce DSS"
-
-            html = f"""
+            html_content = f"""
             <html>
             <body>
                 <h2>Welcome to E-commerce DSS, {user_name}!</h2>
@@ -1100,18 +1111,47 @@ class EmailService:
             </html>
             """
 
-            msg.attach(MIMEText(html, 'html'))
+            payload = {
+                "Messages": [
+                    {
+                        "From": {
+                            "Email": self.from_email,
+                            "Name": self.from_name
+                        },
+                        "To": [
+                            {
+                                "Email": to_email,
+                                "Name": user_name or to_email
+                            }
+                        ],
+                        "Subject": "Verify Your Email - E-commerce DSS",
+                        "HTMLPart": html_content
+                    }
+                ]
+            }
 
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.smtp_username, self.smtp_password)
-            text = msg.as_string()
-            server.sendmail(self.from_email, to_email, text)
-            server.quit()
+            # Mailjet dùng Basic Auth
+            auth = (self.api_key, self.api_secret)
 
-            return True
+            response = requests.post(
+                self.mailjet_url,
+                json=payload,
+                auth=auth,
+                timeout=10
+            )
+
+            if 200 <= response.status_code < 300:
+                logger.info(f"[Mailjet] Verification email sent to {to_email}")
+                return True
+            else:
+                logger.error(
+                    f"[Mailjet] Failed to send email to {to_email}. "
+                    f"Status: {response.status_code}, Body: {response.text}"
+                )
+                return False
+
         except Exception as e:
-            logger.error(f"Failed to send verification email: {e}")
+            logger.error(f"[Mailjet] Exception while sending verification email: {e}")
             return False
 
 # Initialize email service
@@ -1152,7 +1192,7 @@ async def store_verification_token(db: DatabaseManager, email: str, token_hash: 
     # Nếu đã có token trước đó, upsert hoặc ghi đè
     await db.execute_query(
         """
-        INSERT INTO iam_email_verification (email, token_hash, created_at, expires_at, consumed)
+        INSERT INTO iam.iam_email_verification (email, token_hash, created_at, expires_at, consumed)
         VALUES ($1, $2, NOW(), NOW() + INTERVAL '15 minutes', false)
         ON CONFLICT (email) DO UPDATE
         SET token_hash = EXCLUDED.token_hash,
@@ -1168,7 +1208,7 @@ async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -
         return False
 
     query = """
-    SELECT token_id FROM iam_email_verification_token
+    SELECT token_id FROM iam.iam_email_verification_token
     WHERE email = $1 AND token_hash = $2 AND expires_at > NOW() AND used_at IS NULL
     """
     result = await db.execute_query(query, (email, token_hash))
@@ -1176,7 +1216,7 @@ async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -
     if result:
         # Mark token as used
         update_query = """
-        UPDATE iam_email_verification_token
+        UPDATE iam.iam_email_verification_token
         SET used_at = NOW()
         WHERE token_id = $1
         """
@@ -1289,21 +1329,25 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
         if not email:
             raise HTTPException(status_code=400, detail="Email is required")
 
-        # Check if email exists
-        email_exists = await check_email_exists(db, email)
+        # Check if email exists and get user info
+        user_query = "SELECT full_name FROM iam.iam_user WHERE email = $1"
+        user_result = await db.execute_query(user_query, (email,))
         
         # Always respond success (avoid user enumeration)
-        if not email_exists:
+        if not user_result:
             logger.info(f"Forgot password requested for non-existent email: {email}")
             return ForgotPasswordResponse(
                 success=True,
                 message="If this email exists, we've sent a reset code."
             )
+        
+        # Get user's full name
+        user_name = user_result[0].get('full_name', 'User') if user_result else 'User'
 
         # Use the new EmailService to send OTP
         if email_service_module:
             try:
-                result = await send_otp_email(email, name="User")
+                result = await send_otp_email(email, name=user_name)
                 if result['success']:
                     logger.info(f"✅ OTP sent to {email}")
                     return ForgotPasswordResponse(
@@ -1335,7 +1379,6 @@ async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = 
     except Exception as e:
         logger.error(f"Forgot-password error: {e}")
         raise HTTPException(status_code=500, detail="Forgot password failed")
-
 
 
 

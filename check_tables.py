@@ -1,32 +1,18 @@
-from utils.db_connector import DWHConnector
+import os
+import sys
+import asyncio
 
-conn = DWHConnector()
+# Add backend to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
-# Check fact_product_daily_agg columns
-print("=== fact_product_daily_agg columns ===")
-result = conn.query("""
-    SELECT column_name, data_type 
-    FROM information_schema.columns 
-    WHERE table_schema='dwh' AND table_name='fact_product_daily_agg'
-    ORDER BY ordinal_position
-""")
-if not result.empty:
-    for idx, row in result.iterrows():
-        print(f"  {row['column_name']}: {row['data_type']}")
-else:
-    print("  Table not found")
+from app.main import db_manager
 
-print("\n=== fact_review_daily_agg columns ===")
-result = conn.query("""
-    SELECT column_name, data_type 
-    FROM information_schema.columns 
-    WHERE table_schema='dwh' AND table_name='fact_review_daily_agg'
-    ORDER BY ordinal_position
-""")
-if not result.empty:
-    for idx, row in result.iterrows():
-        print(f"  {row['column_name']}: {row['data_type']}")
-else:
-    print("  Table not found")
+async def check_tables():
+    await db_manager.connect()
+    result = await db_manager.execute_query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name")
+    print("Available tables:")
+    for row in result:
+        print(f"  - {row['table_name']}")
 
-conn.close()
+if __name__ == "__main__":
+    asyncio.run(check_tables())
