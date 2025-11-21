@@ -19,14 +19,22 @@ import {
   getTopProducts,
   getPriceVsRevenue,
   getOverviewKPIs,
+  getProductTimeseries,
+  getProductReviewSummary,
   type TopProduct,
   type PriceVsRevenueItem,
   type OverviewKPIs,
+  type ProductTimeseries,
+  type ProductReviewSummary,
   type GetTopProductsParams,
   type GetPriceVsRevenueParams,
   type GetOverviewKPIsParams,
+  type GetProductTimeseriesParams,
+  type GetProductReviewSummaryParams,
 } from '../../services/analyticsApi';
 import { PriceVsRatingChart } from '../../components/analytics/PriceVsRatingChart';
+import { ProductTimeseriesChart } from '../../components/analytics/ProductTimeseriesChart';
+import { ReviewSummaryChart } from '../../components/analytics/ReviewSummaryChart';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
 import { PlatformSelect } from '../../components/analytics/PlatformSelect';
 import { CategorySelect } from '../../components/analytics/CategorySelect';
@@ -40,6 +48,11 @@ export function ProductAnalytics() {
   const [topProducts, setTopProducts] = useState<TopProduct[] | null>(null);
   const [priceVsRevenue, setPriceVsRevenue] = useState<PriceVsRevenueItem[] | null>(null);
   const [overviewKPIs, setOverviewKPIs] = useState<OverviewKPIs | null>(null);
+
+  // Selected product detail state
+  const [selectedProduct, setSelectedProduct] = useState<TopProduct | null>(null);
+  const [productTimeseries, setProductTimeseries] = useState<ProductTimeseries | null>(null);
+  const [productReviewSummary, setProductReviewSummary] = useState<ProductReviewSummary | null>(null);
 
   // Filter state
   const [fromDate, setFromDate] = useState<Date | undefined>();
@@ -117,6 +130,40 @@ export function ProductAnalytics() {
 
   const handleRefresh = () => {
     loadAnalyticsData();
+  };
+
+  // Load product detail when selected
+  const loadProductDetail = async (product: TopProduct) => {
+    try {
+      setSelectedProduct(product);
+
+      const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : '2025-10-22';
+      const toDateStr = toDate ? toDate.toISOString().split('T')[0] : '2025-11-21';
+
+      const timeseriesParams: GetProductTimeseriesParams = {
+        product_key: product.product_key,
+        platform_code: product.platform_code,
+        from_date: fromDateStr,
+        to_date: toDateStr,
+      };
+
+      const reviewParams: GetProductReviewSummaryParams = {
+        product_key: product.product_key,
+        platform_code: product.platform_code,
+        from_date: fromDateStr,
+        to_date: toDateStr,
+      };
+
+      const [timeseriesData, reviewData] = await Promise.all([
+        getProductTimeseries(timeseriesParams),
+        getProductReviewSummary(reviewParams),
+      ]);
+
+      setProductTimeseries(timeseriesData);
+      setProductReviewSummary(reviewData);
+    } catch (error) {
+      console.error('Error loading product detail:', error);
+    }
   };
 
   if (loading) {
@@ -268,7 +315,14 @@ export function ProductAnalytics() {
               <TableBody>
                 {topProducts?.map((product, index) => (
                   <TableRow key={index} className="border-gray-200 hover:bg-gray-50">
-                    <TableCell className="text-gray-900">{product.product_name}</TableCell>
+                    <TableCell className="text-gray-900">
+                      <button
+                        onClick={() => loadProductDetail(product)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline text-left"
+                      >
+                        {product.product_name}
+                      </button>
+                    </TableCell>
                     <TableCell className="text-gray-700">{product.avg_rating?.toFixed(2)} ⭐</TableCell>
                     <TableCell className="text-gray-700">{product.total_reviews}</TableCell>
                     <TableCell className="text-gray-700">{product.avg_price?.toLocaleString('vi-VN')} VND</TableCell>
@@ -277,6 +331,39 @@ export function ProductAnalytics() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Selected Product Detail */}
+          {selectedProduct && (
+            <div className="px-6 py-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-gray-900 font-semibold">
+                  Chi tiết sản phẩm: {selectedProduct.product_name}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedProduct(null);
+                    setProductTimeseries(null);
+                    setProductReviewSummary(null);
+                  }}
+                >
+                  Đóng
+                </Button>
+              </div>
+
+              {/* Product Detail Charts */}
+              <div className="grid grid-cols-1 gap-6">
+                {productTimeseries && productTimeseries.points && productTimeseries.points.length > 0 && (
+                  <ProductTimeseriesChart data={productTimeseries.points} />
+                )}
+
+                {productReviewSummary && (
+                  <ReviewSummaryChart data={productReviewSummary} />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">

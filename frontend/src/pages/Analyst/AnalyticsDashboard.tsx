@@ -24,7 +24,7 @@ import {
 } from '../../components/ui/figma/popover';
 import { format } from 'date-fns';
 import {
-  getOverviewReport,
+  getAllOverviewData,
   getTopProducts,
   getPlatforms,
   getCategories,
@@ -92,7 +92,7 @@ export function AnalyticsDashboard() {
         overviewData,
         topProductsData,
       ] = await Promise.all([
-        getOverviewReport(overviewParams),
+        getAllOverviewData(overviewParams),
         getTopProducts(topProductsParams),
       ]);
 

@@ -1,8 +1,8 @@
 import { BarChart3, Star, TrendingUp } from 'lucide-react';
-import { TopRatedProduct } from '../../services/analyticsApi';
+import { TopProduct } from '../../services/analyticsApi';
 
 interface TopRatedProductsChartProps {
-  data: TopRatedProduct[];
+  data: TopProduct[];
   title?: string;
 }
 
