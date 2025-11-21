@@ -60,6 +60,10 @@ import { AnalyticsDashboard } from "./pages/Analyst/AnalyticsDashboard.js";
 import { ProductAnalytics } from "./pages/Analyst/ProductAnalytics.js";
 import { ReviewAnalytics } from "./pages/Analyst/ReviewAnalytics.js";
 import { PlatformAnalytics } from "./pages/Analyst/PlatformAnalytics.js";
+import MLOverview from "./pages/MLInsights/MLOverview.js";
+import PriceIntelligence from "./pages/MLInsights/PriceIntelligence.js";
+import DemandSalesForecasting from "./pages/MLInsights/DemandSalesForecasting.js";
+import ProductMLInsights from "./pages/MLInsights/ProductMLInsights.js";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -233,6 +237,10 @@ export default function App() {
           >
             {/* <Route path="/mli/dashboard" element={<DSSPage />} /> */}
             <Route path="/mli/dashboard" element={<MLIPage />} />
+            <Route path="/mli/overview" element={<MLOverview />} />
+            <Route path="/mli/price-intelligence" element={<PriceIntelligence />} />
+            <Route path="/mli/demand-forecasting" element={<DemandSalesForecasting />} />
+            <Route path="/mli/product-insights" element={<ProductMLInsights />} />
             <Route path="/mli/price-optimization" element={<Blank />} />
             <Route path="/mli/demand-forecast" element={<Blank />} />
             <Route path="/mli/sales-forecast" element={<Blank />} />

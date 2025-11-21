@@ -1,74 +1,46 @@
-import { useState } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { DashboardHome } from './components/DashboardHome';
-import { ProductRecommendations } from './components/ProductRecommendations';
-import { PricePredictions } from './components/PricePredictions';
-import { DemandForecast } from './components/DemandForecast';
-import { CustomerSegments } from './components/CustomerSegments';
-import { Dimensions } from './components/Dimensions';
-import { Facts } from './components/Facts';
+import React, { useState } from 'react';
+import MLOverview from './MLOverview';
+import PriceIntelligence from './PriceIntelligence';
+import DemandSalesForecasting from './DemandSalesForecasting';
+import ProductMLInsights from './ProductMLInsights';
 
 export default function MLIPage() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const [darkMode, setDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'price' | 'demand' | 'product'>('overview');
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <DashboardHome />;
-      case 'product-recommendation':
-        return <ProductRecommendations />;
-      case 'price-prediction':
-        return <PricePredictions />;
-      case 'demand-forecast':
-        return <DemandForecast />;
-      case 'customer-segments':
-        return <CustomerSegments />;
-      case 'dimensions':
-        return <Dimensions />;
-      case 'facts':
-        return <Facts />;
-      default:
-        return <DashboardHome />;
-    }
-  };
+  const tabs = [
+    { id: 'overview', label: '📊 ML Overview', component: MLOverview },
+    { id: 'price', label: '🏷️ Price Intelligence', component: PriceIntelligence },
+    { id: 'demand', label: '📈 Demand & Sales Forecasting', component: DemandSalesForecasting },
+    { id: 'product', label: '📦 Product ML Insights', component: ProductMLInsights },
+  ];
 
-  const getPageTitle = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return 'ML Insights Dashboard';
-      case 'product-recommendation':
-        return 'Product Recommendations';
-      case 'price-prediction':
-        return 'Price Predictions';
-      case 'demand-forecast':
-        return 'Demand Forecast';
-      case 'customer-segments':
-        return 'Customer Segments';
-      case 'dimensions':
-        return 'Data Warehouse - Dimensions';
-      case 'facts':
-        return 'Data Warehouse - Facts';
-      default:
-        return 'ML Insights Dashboard';
-    }
-  };
+  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || MLOverview;
 
   return (
-    <div className="flex h-screen">
-      {/* <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} /> */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* <Header 
-          pageTitle={getPageTitle()} 
-          darkMode={darkMode} 
-        /> */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm p-6">
-            {renderPage()}
-          </div>
-        </main>
+    <div className="min-h-screen bg-gray-50">
+      {/* Tabs */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6">
+          <nav className="flex -mb-px overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
+
+      {/* Tab Content */}
+      <ActiveComponent />
     </div>
   );
 }
