@@ -4,7 +4,7 @@ from typing import Optional, List
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 import io
 import csv
 
@@ -65,7 +65,7 @@ def _rows_to_csv(rows: List[asyncpg.Record], filename: str) -> StreamingResponse
 
 
 # ===================================================================
-# 1) REPORT OVERVIEW: tổng quan theo ngày & platform (JSON / CSV)
+# 1) REPORT OVERVIEW: tổng quan theo ngày & platform (CSV)
 #    GET /api/v1/reports/overview
 # ===================================================================
 @router.get("/overview")
@@ -75,14 +75,11 @@ async def export_overview_report(
     platform_code: Optional[str] = Query(
         None, description="Lọc theo platform: tiki / lazada (optional)"
     ),
-    format: str = Query(
-        "json", pattern="^(json|csv)$", description="Định dạng trả về: json hoặc csv"
-    ),
     db=Depends(get_db),
 ):
     """
     Report tổng quan theo ngày & platform, dựa trên dwh.fact_product_daily.
-    - Gồm: số sản phẩm, avg_price, min_price, max_price, tổng review, avg_rating.
+    Trả về CSV.
     """
 
     params = [from_date, to_date]
@@ -93,7 +90,7 @@ async def export_overview_report(
 
     sql = f"""
         SELECT
-            d.full_date,
+            d.date_value AS full_date,
             pl.platform_code,
             pl.platform_name,
             COUNT(DISTINCT f.product_sk)           AS product_count,
@@ -106,10 +103,10 @@ async def export_overview_report(
         JOIN dwh.dim_product   p  ON p.product_sk   = f.product_sk
         JOIN dwh.dim_platform  pl ON pl.platform_sk = f.platform_sk
         JOIN dwh.dim_date      d  ON d.date_sk      = f.date_sk
-        WHERE d.full_date BETWEEN $1 AND $2
+        WHERE d.date_value BETWEEN $1 AND $2
         {plat_filter}
-        GROUP BY d.full_date, pl.platform_code, pl.platform_name
-        ORDER BY d.full_date, pl.platform_code;
+        GROUP BY d.date_value, pl.platform_code, pl.platform_name
+        ORDER BY d.date_value, pl.platform_code;
     """
 
     try:
@@ -117,24 +114,12 @@ async def export_overview_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
-    if format == "csv":
-        filename = f"overview_{from_date}_to_{to_date}.csv"
-        return _rows_to_csv(rows, filename)
-
-    # JSON
-    return JSONResponse(
-        {
-            "success": True,
-            "from_date": str(from_date),
-            "to_date": str(to_date),
-            "platform_code": platform_code,
-            "rows": [dict(r) for r in rows],
-        }
-    )
+    filename = f"overview_{from_date}_to_{to_date}.csv"
+    return _rows_to_csv(rows, filename)
 
 
 # ===================================================================
-# 2) REPORT PRODUCTS: top sản phẩm theo metric (JSON / CSV)
+# 2) REPORT PRODUCTS: top sản phẩm theo metric (CSV)
 #    GET /api/v1/reports/products
 # ===================================================================
 @router.get("/products")
@@ -149,11 +134,10 @@ async def export_products_report(
         description="revenue | reviews | rating | price",
     ),
     limit: int = Query(100, ge=1, le=1000),
-    format: str = Query("json", pattern="^(json|csv)$"),
     db=Depends(get_db),
 ):
     """
-    Report top sản phẩm theo metric:
+    Report top sản phẩm theo metric, trả về CSV:
     - revenue: giả lập = avg_price * total_review_count
     - reviews: tổng số review
     - rating: điểm rating trung bình
@@ -186,21 +170,21 @@ async def export_products_report(
             p.product_name,
             pl.platform_code,
             pl.platform_name,
-            COALESCE(b.brand_name, 'Unknown')      AS brand_name,
-            COALESCE(c.category_name, 'Unknown')   AS category_name,
-            {metric_expr}                          AS metric_value,
-            AVG(f.avg_price)                       AS avg_price,
-            MIN(f.min_price)                       AS min_price,
-            MAX(f.max_price)                       AS max_price,
-            SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
-            AVG(f.avg_rating)                      AS avg_rating
+            COALESCE(b.brand_name, 'Unknown')                 AS brand_name,
+            COALESCE(c.category_id::text, 'Unknown')          AS category_name,
+            {metric_expr}                                     AS metric_value,
+            AVG(f.avg_price)                                  AS avg_price,
+            MIN(f.min_price)                                  AS min_price,
+            MAX(f.max_price)                                  AS max_price,
+            SUM(COALESCE(f.total_review_count, 0))            AS total_reviews,
+            AVG(f.avg_rating)                                 AS avg_rating
         FROM dwh.fact_product_daily f
         JOIN dwh.dim_product   p  ON p.product_sk   = f.product_sk
         JOIN dwh.dim_platform  pl ON pl.platform_sk = f.platform_sk
         LEFT JOIN dwh.dim_brand     b ON b.brand_sk     = p.brand_sk
         LEFT JOIN dwh.dim_category  c ON c.category_sk  = p.category_sk
         JOIN dwh.dim_date      d  ON d.date_sk      = f.date_sk
-        WHERE d.full_date BETWEEN $1 AND $2
+        WHERE d.date_value BETWEEN $1 AND $2
         {plat_filter}
         GROUP BY
             p.product_key,
@@ -208,7 +192,7 @@ async def export_products_report(
             pl.platform_code,
             pl.platform_name,
             b.brand_name,
-            c.category_name
+            c.category_id
         ORDER BY metric_value DESC
         LIMIT {limit};
     """
@@ -218,18 +202,5 @@ async def export_products_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
-    if format == "csv":
-        filename = f"products_{metric}_{from_date}_to_{to_date}.csv"
-        return _rows_to_csv(rows, filename)
-
-    return JSONResponse(
-        {
-            "success": True,
-            "from_date": str(from_date),
-            "to_date": str(to_date),
-            "platform_code": platform_code,
-            "metric": metric,
-            "limit": limit,
-            "rows": [dict(r) for r in rows],
-        }
-    )
+    filename = f"products_{metric}_{from_date}_to_{to_date}.csv"
+    return _rows_to_csv(rows, filename)
