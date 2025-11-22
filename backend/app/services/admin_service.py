@@ -337,13 +337,13 @@ class AdminService:
         query = f"""
             SELECT log_id, user_id, email, action, resource, details, 
                    ip_address, status, created_at
-            FROM iam.user_activity_logs
+            FROM iam.iam.user_activity_logs
             {where_clause}
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
         """
         
-        count_query = f"SELECT COUNT(*) as total FROM iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
+        count_query = f"SELECT COUNT(*) as total FROM iam.iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
         
         logs = await self.db.execute_query(query, params)
         count_params = [user_id] if user_id else []

@@ -262,7 +262,6 @@ async def delete_user(
 @router.get("/activity-logs", dependencies=[Depends(require_role("ADMIN"))])
 async def get_activity_logs(
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
-    action: Optional[str] = Query(None, description="Filter by action"),
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     db=Depends(get_database)
@@ -274,7 +273,6 @@ async def get_activity_logs(
             page=1,
             limit=10000,
             user_id=user_id,
-            action=action,
             start_date=start_date,
             end_date=end_date
         )
