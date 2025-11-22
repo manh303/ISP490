@@ -93,22 +93,13 @@ class IAMService:
             logger.error(f"Update last login error: {e}")
 
 
-    async def check_permission(self, user_id: int, permission_code: str) -> bool:
-        """Check if user has specific permission"""
-        try:
-            query = """
-                SELECT 1 FROM iam.iam_permission p
-                JOIN iam.iam_role_permission rp ON p.perm_id = rp.perm_id
-                JOIN iam.iam_user_role ur ON rp.role_id = ur.role_id
-                WHERE ur.user_id = $1 AND p.perm_code = $2
-            """
-            result = await self.db.execute_query(query, (user_id, permission_code))
-
-            return bool(result)
-
-        except Exception as e:
-            logger.error(f"Check permission error: {e}")
-            return False
+    async def get_user_permissions(self, user_id: int) -> list[str]:
+        from app.services.admin_service import AdminService
+        admin_service = AdminService(self.db)
+        user = await admin_service.get_user_by_id(user_id)
+        if not user or 'permissions' not in user:
+            return []
+        return [p['perm_code'] for p in user['permissions']]
 
     # update_user_profile() removed - use AdminService.update_user() instead
 

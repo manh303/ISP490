@@ -177,7 +177,7 @@ class AdminService:
 
                 # Log activity
                 await conn.execute(
-                    "INSERT INTO iam.user_activity_logs (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
+                    "INSERT INTO iam.iam.user_activity_logs (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
                     user_id, "USER_CREATED", f"Admin created user: {email} with role: {role_code}"
                 )
 
@@ -337,13 +337,13 @@ class AdminService:
         query = f"""
             SELECT log_id, user_id, email, action, resource, details, 
                    ip_address, status, created_at
-            FROM iam.user_activity_logs
+            FROM iam.iam.user_activity_logs
             {where_clause}
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
         """
         
-        count_query = f"SELECT COUNT(*) as total FROM iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
+        count_query = f"SELECT COUNT(*) as total FROM iam.iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
         
         logs = await self.db.execute_query(query, params)
         count_params = [user_id] if user_id else []
@@ -352,45 +352,7 @@ class AdminService:
         
         return logs, total
 
-    async def get_activity_stats(self) -> Dict:
-        """Get activity statistics for dashboard"""
-        stats_query = """
-            SELECT 
-                COUNT(*) as total_activities,
-                COUNT(CASE WHEN status = 'success' THEN 1 END) as successful_activities,
-                COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_activities,
-                COUNT(DISTINCT user_id) as unique_users
-            FROM iam.user_activity_logs
-            WHERE created_at >= NOW() - INTERVAL '30 days'
-        """
-        
-        top_actions_query = """
-            SELECT action, COUNT(*) as count
-            FROM iam.user_activity_logs
-            WHERE created_at >= NOW() - INTERVAL '7 days'
-            GROUP BY action
-            ORDER BY count DESC
-            LIMIT 5
-        """
-        
-        recent_query = """
-            SELECT log_id, user_id, email, action, resource, details, 
-                   ip_address, status, created_at
-            FROM iam.user_activity_logs
-            ORDER BY created_at DESC
-            LIMIT 10
-        """
-        
-        stats = await self.db.execute_query(stats_query)
-        top_actions = await self.db.execute_query(top_actions_query)
-        recent = await self.db.execute_query(recent_query)
-        
-        return {
-            **(stats[0] if stats else {}),
-            "top_actions": top_actions,
-            "recent_activities": recent
-        }
-
+    
     # ==================== HELPER METHODS ====================
 
     async def _assign_role(self, user_id: int, role_code: str) -> None:
