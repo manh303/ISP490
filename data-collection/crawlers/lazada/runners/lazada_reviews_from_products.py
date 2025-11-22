@@ -9,20 +9,40 @@ import random
 import os
 import re
 import uuid
+import sys
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any
 
 try:
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 OUTPUT_DIR = os.environ.get("CRAWLER_OUTPUT_DIR", "/tmp/data/outputs")
-COOKIE_FILE = "/tmp/profiles/lazada/cookies.json"
+PROFILE_DIR = os.environ.get("LAZADA_PROFILE_DIR", "/app/data/.profiles/lazada")
+COOKIE_FILE = os.environ.get("LAZADA_COOKIE_FILE", str(Path(PROFILE_DIR) / "lazada_cookies.json"))
 CHECKPOINT_FILE = os.environ.get("CRAWLER_CHECKPOINT_DIR", "/tmp/crawler_checkpoints") + "/lazada_reviews_checkpoint.json"
 LOG_PREFIX = "[Lazada-Reviews]"
+
+# Flush logs immediately to see progress when running in Docker
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+
+
+def _build_canonical_url(product_url: str, product_id: str) -> str:
+    """Normalize product URL to avoid anti-bot redirect and malformed paths"""
+    # Lazada product ids usually appear as "i123456789". Extract the digits and build canonical URL.
+    pid_match = re.search(r"i(\d+)", product_url) or re.search(r"i(\d+)", product_id or "")
+    product_code = pid_match.group(1) if pid_match else None
+    if product_code:
+        return f"https://www.lazada.vn/products/i{product_code}.html"
+
+    cleaned = re.sub(r"(?<!:)//+", "/", product_url).split("?")[0]
+    if not cleaned.startswith("http"):
+        cleaned = "https://" + cleaned.lstrip("/")
+    return cleaned
 
 def load_checkpoint():
     """Load checkpoint to resume from last product"""
@@ -88,19 +108,72 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
     """Extract reviews from product detail page"""
     reviews = []
     
+    # Ensure we have a real product URL
+    if not product_url or not product_url.startswith("http"):
+        print(f"{LOG_PREFIX} Skip - invalid product URL: {product_url}")
+        return reviews
+    
+    canonical_url = _build_canonical_url(product_url, product_id)
+    
     try:
         print(f"{LOG_PREFIX} Loading: {product_name[:50]}...")
-        page.goto(product_url, wait_until='domcontentloaded', timeout=90000)
+        try:
+            page.goto(canonical_url, wait_until="domcontentloaded", timeout=45000, referer="https://www.lazada.vn/")
+
+        except PlaywrightTimeoutError:
+            print(f"{LOG_PREFIX} Timeout loading product URL. Skipping: {canonical_url}")
+            return reviews
+        print(f"{LOG_PREFIX} Landed on: {page.url}")
+        
+        # Detect punish/anti-bot redirect and retry once with canonical URL
+        if "punish" in page.url or "x5sec" in page.url or "__" in page.url:
+            print(f"{LOG_PREFIX} Detected anti-bot redirect. Retrying canonical URL: {canonical_url}")
+            try:
+                page.goto(canonical_url, wait_until="domcontentloaded", timeout=45000, referer="https://www.lazada.vn/")
+
+            except PlaywrightTimeoutError:
+                print(f"{LOG_PREFIX} Timeout on retry. Skipping product.")
+                return reviews
+            print(f"{LOG_PREFIX} After retry landed on: {page.url}")
+            if "punish" in page.url or "x5sec" in page.url or "__" in page.url:
+                print(f"{LOG_PREFIX} Still hitting anti-bot. Skipping product.")
+                return reviews
+
         page.wait_for_timeout(5000)
         
-        # Scroll to reviews
-        for _ in range(3):
+        # Scroll to reviews; Lazada loads review block near bottom
+        for _ in range(4):
             page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(1500)
         
-        # Extract reviews
-        review_items = page.query_selector_all('div.mod-reviews div.item')
-        print(f"{LOG_PREFIX} Found {len(review_items)} review items")
+        # Prefer real structure from product_detail.html
+        review_items = []
+        mod_reviews = page.query_selector('div.mod-reviews')
+        if mod_reviews:
+            review_items = mod_reviews.query_selector_all('div.item')
+            print(f"{LOG_PREFIX} Found {len(review_items)} review items in mod-reviews")
+        
+        # Fallback selectors if structure changes
+        if not review_items:
+            review_selectors = [
+                '[data-qa-locator="review-item"]',
+                '.pdp-review-item',
+                '.review-list .item',
+                '.ugc-review-item',
+                'div.review-item',
+                '[class*="review"]'
+            ]
+            for selector in review_selectors:
+                try:
+                    review_items = page.query_selector_all(selector)
+                    if review_items:
+                        print(f"{LOG_PREFIX} Found {len(review_items)} review items (selector: {selector})")
+                        break
+                except Exception:
+                    continue
+
+        if not review_items:
+            print(f"{LOG_PREFIX} Found 0 review items with known selectors")
         
         for i, item in enumerate(review_items[:max_reviews]):
             try:
@@ -122,8 +195,25 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
                 
                 rating = 0
                 try:
+                    # Real structure: div.container-star.review-star > img.star
                     stars = item.query_selector_all('div.container-star img.star')
                     rating = len(stars)
+
+                    # Fallback: look for rating text or aria-label on any star/rating element
+                    if rating == 0:
+                        rating_elem = item.query_selector('[class*="star"], [class*="rating"]')
+                        if rating_elem:
+                            text = rating_elem.inner_text()
+                            match = re.search(r'([0-5](?:\\.\\d)?)', text)
+                            if match:
+                                rating = float(match.group(1))
+                    if rating == 0:
+                        # Sometimes rating is in aria-label of icons
+                        icon = item.query_selector('[aria-label*="out of"]')
+                        if icon:
+                            match = re.search(r'([0-5](?:\\.\\d)?)', icon.get_attribute('aria-label') or '')
+                            if match:
+                                rating = float(match.group(1))
                 except:
                     pass
                 
@@ -132,13 +222,18 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
                     review_elem = item.query_selector('div.item-content-main-content-reviews-item span')
                     if review_elem:
                         review_text = review_elem.inner_text().strip()
+                    if not review_text:
+                        # Fallback: grab visible text of review card
+                        review_text = item.inner_text().strip()
                 except:
                     pass
                 
                 sku_info = ""
                 try:
                     sku_elems = item.query_selector_all('div.skuInfo-item')
-                    sku_parts = [sku.inner_text().strip() for sku in sku_elems]
+                    sku_parts = []
+                    for sku in sku_elems:
+                        sku_parts.append(sku.inner_text().strip())
                     sku_info = ", ".join(sku_parts)
                 except:
                     pass
@@ -197,26 +292,46 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
      print(f"{LOG_PREFIX} Resuming from product {start_idx}/{max_idx}")
      
      with sync_playwright() as p:
-         browser = p.chromium.launch(
-             headless=True,
-             args=['--no-sandbox', '--disable-dev-shm-usage']
-         )
+        HEADLESS = os.getenv("LAZADA_HEADLESS", "1") == "1"
+        USER_AGENTS = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0'
+        ]
+        ua = random.choice(USER_AGENTS)
+        context = p.chromium.launch_persistent_context(
+            user_data_dir=PROFILE_DIR,
+            headless=HEADLESS,
+            viewport={'width': 1920, 'height': 1080},
+            user_agent=ua,
+            args=['--no-sandbox', '--disable-dev-shm-usage'],
+            extra_http_headers={
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+                "sec-ch-ua": '"Google Chrome";v="120", "Not=A?Brand";v="24", "Chromium";v="120"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "none",
+                "sec-fetch-user": "?1",
+            },
+        )
+
+        if os.path.exists(COOKIE_FILE):
+            with open(COOKIE_FILE, 'r') as f:
+                context.add_cookies(json.load(f))
+            print(f"{LOG_PREFIX} Cookies loaded from {COOKIE_FILE}")
+        else:
+            print(f"{LOG_PREFIX} Cookie file not found at {COOKIE_FILE} (running without login cookies)")
+
+        page = context.new_page()
+        page.set_default_navigation_timeout(120000)
+        # warm-up để thiết lập cookie trên domain
+        page.goto("https://www.lazada.vn/", wait_until="domcontentloaded", timeout=45000)
          
-         context = browser.new_context(
-             viewport={'width': 1920, 'height': 1080},
-             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-         )
-         
-         # Load cookies if available
-         if os.path.exists(COOKIE_FILE):
-             with open(COOKIE_FILE, 'r') as f:
-                 cookies = json.load(f)
-                 context.add_cookies(cookies)
-             print(f"{LOG_PREFIX} Cookies loaded")
-         
-         page = context.new_page()
-         
-         try:
+        try:
              for i in range(start_idx, max_idx):
                  product = products[i]
                  progress = i + 1
@@ -243,9 +358,8 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
                      save_checkpoint(i + 1, total_reviews_saved)
                      continue
              
-         finally:
+        finally:
              context.close()
-             browser.close()
      
      return all_reviews
 
