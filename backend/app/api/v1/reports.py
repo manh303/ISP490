@@ -158,9 +158,19 @@ async def export_products_report(
         params.append(platform_code)
 
     sql = f"""
+        WITH latest_snapshot AS (
         SELECT
-            p.product_key,
-            p.product_name,
+            fpd.product_sk,
+            MAX(d.date_value) AS latest_date
+        FROM dwh.fact_product_daily fpd
+        JOIN dwh.dim_date d ON d.date_sk = fpd.date_sk
+        WHERE d.date_value BETWEEN $from_date AND $to_date
+        GROUP BY fpd.product_sk
+        ),
+        product_daily AS (
+        SELECT
+            fpd.*,
+            d.date_value,
             pl.platform_code,
             pl.platform_name,
             COALESCE(b.brand_name, 'Unknown')              AS brand_name,
@@ -182,8 +192,6 @@ async def export_products_report(
         GROUP BY
             p.product_key,
             p.product_name,
-            pl.platform_code,
-            pl.platform_name,
             b.brand_name,
             c.category_id
         ORDER BY metric_value DESC
