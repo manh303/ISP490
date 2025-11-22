@@ -58,7 +58,9 @@ dag = DAG(
 # Configuration
 # ===========================
 
-ML_PROJECT_PATH = '/app/ml'  # Path to ML project
+# Use /opt/airflow for directories that Airflow user needs to write to
+# /app/ml is read-only for Airflow container
+ML_PROJECT_PATH = '/app/ml'  # Path to ML project (Airflow writable)
 MODELS_OUTPUT_DIR = '/app/ml/models/ml-models'
 DATA_DIR = '/app/ml/data'
 LOGS_DIR = '/app/ml/logs'

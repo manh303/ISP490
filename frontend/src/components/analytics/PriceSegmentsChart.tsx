@@ -46,7 +46,7 @@ export function PriceSegmentsChart({
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {data.map((segment) => {
           const percentage = ((segment.product_count / totalProducts) * 100).toFixed(1);
           const barWidth = (segment.product_count / maxCount) * 100;
@@ -54,7 +54,7 @@ export function PriceSegmentsChart({
           const colors = segmentColors[segment.price_segment] || segmentColors['Mid-range (100K-500K)'];
 
           return (
-            <div key={segment.price_segment} className="space-y-2">
+            <div key={segment.price_segment} className="space-y-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${colors.badge}`}>
@@ -68,30 +68,29 @@ export function PriceSegmentsChart({
                 <span className="text-sm font-semibold text-gray-900">{percentage}%</span>
               </div>
 
-              <div className="space-y-1">
-                {/* Total products bar */}
-                <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={`absolute h-full bg-gradient-to-r ${colors.gradient} rounded-full transition-all duration-500`}
-                    style={{ width: `${barWidth}%` }}
-                  />
-                </div>
-
-                {/* High rated products bar (stacked) */}
-                <div className="relative h-2 bg-gray-50 rounded-full overflow-hidden">
-                  <div
-                    className="absolute h-full bg-yellow-400 rounded-full transition-all duration-500"
-                    style={{ width: `${(segment.high_rated / maxCount) * 100}%` }}
-                  />
+              {/* Main bar with value inside */}
+              <div className="relative h-4 bg-gray-100 rounded-lg overflow-hidden">
+                <div
+                  className={`absolute h-full bg-gradient-to-r ${colors.gradient} rounded-lg transition-all duration-700 flex items-center justify-end pr-2`}
+                  style={{ width: `${barWidth}%` }}
+                >
+                  <span className="text-xs text-white font-bold opacity-90">
+                    {(segment.product_count || 0).toLocaleString('vi-VN')}
+                  </span>
                 </div>
               </div>
 
+              {/* Secondary bar for high rated */}
+              <div className="relative h-1.5 bg-gray-50 rounded-full overflow-hidden">
+                <div
+                  className="absolute h-full bg-yellow-400 rounded-full transition-all duration-700"
+                  style={{ width: `${(segment.high_rated / maxCount) * 100}%` }}
+                />
+              </div>
+
               <div className="flex justify-between text-xs text-gray-500">
-                <span>
-                  {(segment.product_count || 0).toLocaleString('vi-VN')} SP • 
-                  <span className="text-yellow-600 ml-1">
-                    {segment.high_rated} chất lượng cao ({highRatedPercentage}%)
-                  </span>
+                <span className="text-yellow-600">
+                  {segment.high_rated} chất lượng cao ({highRatedPercentage}%)
                 </span>
                 <span>{(segment.total_reviews || 0).toLocaleString('vi-VN')} đánh giá</span>
               </div>

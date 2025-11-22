@@ -147,7 +147,7 @@ class MassCrawler:
                     for product in products:
                         try:
                             processed = {
-                                "source": "tiki_mass_crawl",
+                                "source": "tiki",
                                 "category": category,
                                 "product_id": str(product.get('id', '')),
                                 "product_name": product.get('name', ''),

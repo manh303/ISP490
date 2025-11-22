@@ -1,213 +1,189 @@
-# ML Pipeline Configuration
-# ===========================
-
-# Database Connection
-database:
-  host: dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com
-  port: 5432
-  database: ecommerce_dss
-  user: dss_user
-  password: IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
-  driver: org.postgresql.Driver
-
-# Data Extraction
 data_extraction:
-  # Demand Prediction
   demand:
-    lookback_days: 180  # Last 6 months for training
-    target_table: fact_product_daily_agg
     dim_tables:
-      - dim_product
-      - dim_date
-      - dim_category
+    - dim_product
+    - dim_date
+    - dim_category
     features:
-      - price_current
-      - discount_pct
-      - rating_avg
-      - review_count
-      - sold_count
-    target_variable: sold_count
-    min_data_points: 30  # Min rows per product
+    - price_current
+    - discount_pct
+    - rating_avg
+    - review_count
+    - sold_count
+    lookback_days: 180
+    min_data_points: 30
     output_dir: data/demand_prediction
-
-  # Product Recommendation
-  recommendation:
-    lookback_days: 90
-    target_table: fact_review_summary_agg
-    features:
-      - rating_avg
-      - review_count
-      - sentiment_score
-      - category_sk
-    output_dir: data/product_recommendation
-    min_interactions: 5  # Min reviews per product
-  
-  # Sentiment Analysis (Classification)
-  sentiment:
-    lookback_days: 90
-    target_table: dim_review
-    output_dir: data/sentiment_analysis
-    min_review_length: 10
-    batch_size: 5000
-  
-  # Product Clustering
+    target_table: fact_product_daily_agg
+    target_variable: sold_count
   product_clustering:
-    lookback_days: 90
-    target_table: fact_review_daily_agg
-    output_dir: data/product_clustering
-    min_active_days: 7
     batch_size: 5000
-
-# Data Preparation
+    lookback_days: 90
+    min_active_days: 7
+    output_dir: data/product_clustering
+    target_table: fact_review_daily_agg
+  recommendation:
+    features:
+    - rating_avg
+    - review_count
+    - sentiment_score
+    - category_sk
+    lookback_days: 90
+    min_interactions: 5
+    output_dir: data/product_recommendation
+    target_table: fact_review_summary_agg
+  sentiment:
+    batch_size: 5000
+    lookback_days: 90
+    min_review_length: 10
+    output_dir: data/sentiment_analysis
+    target_table: dim_review
+    # Text-based sentiment analysis configuration
+    text_sentiment:
+      enabled: true
+      library: textblob  # Options: textblob, vader
+      rating_weight: 0.6  # Weight for rating-based labeling
+      text_weight: 0.4    # Weight for text-based labeling
+      neutral_threshold: 0.1  # Threshold for neutral classification
+    # Synthetic data generation for balancing
+    synthetic_data:
+      enabled: true
+      negative_ratio: 0.3  # Target ratio of negative samples
+      neutral_ratio: 0.2   # Target ratio of neutral samples
+      positive_ratio: 0.5  # Target ratio of positive samples
+      min_samples_per_class: 100  # Minimum samples per sentiment class
 data_preparation:
-  train_test_split: 0.8
-  validation_split: 0.1
+  handle_missing: mean
+  outlier_method: iqr
   random_state: 42
-  
-  # Feature Engineering
-  scaling: StandardScaler  # StandardScaler|MinMaxScaler|RobustScaler
-  handle_missing: mean  # mean|median|forward_fill
   remove_outliers: true
-  outlier_method: iqr  # iqr|zscore
-  
-  # Temporal split for time-series
+  scaling: StandardScaler
   temporal_split: false
   test_days_forward: 30
-
-# Model Training
-model_training:
-  # Demand Prediction Models
-  demand_models:
-    - XGBRegressor:
-        n_estimators: 100
-        max_depth: 6
-        learning_rate: 0.1
-        random_state: 42
-    - RandomForestRegressor:
-        n_estimators: 100
-        max_depth: 10
-        random_state: 42
-    - LGBMRegressor:
-        n_estimators: 100
-        num_leaves: 31
-        learning_rate: 0.1
-        random_state: 42
-    - LinearRegression: {}
-    - Ridge:
-        alpha: 1.0
-
-  # Product Recommendation Models
-  recommendation_models:
-    - KMeans:
-        n_clusters: 5
-        random_state: 42
-    - NearestNeighbors:
-        n_neighbors: 5
-        metric: cosine
-    - CollaborativeFiltering:
-        method: als
-        factors: 50
-        iterations: 10
-  
-  # Sentiment Classification Models
-  sentiment_models:
-    - RandomForestClassifier:
-        n_estimators: 100
-        max_depth: 20
-        random_state: 42
-    - GradientBoostingClassifier:
-        n_estimators: 100
-        learning_rate: 0.1
-        random_state: 42
-    - LogisticRegression:
-        max_iter: 1000
-        random_state: 42
-  
-  # Product Clustering Models
-  clustering_models:
-    - KMeans:
-        n_clusters_range: [2, 10]  # Will find optimal
-        random_state: 42
-        n_init: 10
-
-  # Training config
-  n_jobs: -1  # Use all cores
-  verbose: 1
-  cv_folds: 5
-
-# Model Evaluation
+  train_test_split: 0.8
+  validation_split: 0.1
+database:
+  database: ecommerce_dss
+  driver: org.postgresql.Driver
+  host: dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com
+  password: IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+  port: 5432
+  user: dss_user
+logging:
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  level: INFO
+  log_file: logs/ml_pipeline.log
 model_evaluation:
-  demand_metrics:
-    - mae
-    - rmse
-    - mape
-    - r2
-  
-  recommendation_metrics:
-    - silhouette_score
-    - davies_bouldin_score
-    - precision_at_k
-    - recall_at_k
-  
-  sentiment_metrics:
-    - accuracy
-    - precision
-    - recall
-    - f1_score
-    - roc_auc
-  
   clustering_metrics:
-    - silhouette_score
-    - davies_bouldin_index
-    - inertia
-  
-  k_value: 5  # For precision@k, recall@k
-
-# Model Serving
-models:
-  output_dir: models/ml-models/
-  save_format: joblib  # joblib|pickle|onnx
-  version_control: true
-  
+  - silhouette_score
+  - davies_bouldin_index
+  - inertia
+  demand_metrics:
+  - mae
+  - rmse
+  - mape
+  - r2
+  k_value: 5
+  recommendation_metrics:
+  - silhouette_score
+  - davies_bouldin_score
+  - precision_at_k
+  - recall_at_k
+  sentiment_metrics:
+  - accuracy
+  - precision
+  - recall
+  - f1_score
+  - roc_auc
 model_serving:
-  model_registry: models/ml-models/
-  save_format: joblib  # joblib|pickle|onnx
-  version_control: true
-  
-  # API Configuration
   api:
     host: 0.0.0.0
     port: 5000
-    workers: 4
     timeout: 30
-
-# Monitoring & Validation
+    workers: 4
+  async_loading: true
+  health_check_interval: 60
+  max_concurrent_predictions: 10
+  model_cache_ttl: 3600
+  model_registry: models/ml-models/
+  prediction_timeout: 30
+  preload_model_types:
+  - sentiment_classification
+  - price_optimization
+  - product_clustering
+  preload_models: true
+  save_format: joblib
+  version_control: true
+model_training:
+  clustering_models:
+  - KMeans:
+      n_clusters_range:
+      - 2
+      - 10
+      n_init: 10
+      random_state: 42
+  cv_folds: 5
+  demand_models:
+  - XGBRegressor:
+      learning_rate: 0.1
+      max_depth: 6
+      n_estimators: 100
+      random_state: 42
+  - RandomForestRegressor:
+      max_depth: 10
+      n_estimators: 100
+      random_state: 42
+  - LGBMRegressor:
+      learning_rate: 0.1
+      n_estimators: 100
+      num_leaves: 31
+      random_state: 42
+  - LinearRegression: {}
+  - Ridge:
+      alpha: 1.0
+  n_jobs: -1
+  recommendation_models:
+  - KMeans:
+      n_clusters: 5
+      random_state: 42
+  - NearestNeighbors:
+      metric: cosine
+      n_neighbors: 5
+  - CollaborativeFiltering:
+      factors: 50
+      iterations: 10
+      method: als
+  sentiment_models:
+  - RandomForestClassifier:
+      max_depth: 20
+      n_estimators: 100
+      random_state: 42
+  - GradientBoostingClassifier:
+      learning_rate: 0.1
+      n_estimators: 100
+      random_state: 42
+  - LogisticRegression:
+      max_iter: 1000
+      random_state: 42
+  verbose: 1
+models:
+  output_dir: models/ml-models/
+  save_format: joblib
+  version_control: true
 monitoring:
-  enable_drift_detection: true
   drift_threshold: 0.05
-  
-  # Data validation
-  validation:
-    check_missing_values: true
-    missing_threshold: 0.3
-    check_data_types: true
-    check_value_ranges: true
-  
-  # Performance monitoring
+  enable_drift_detection: true
   performance:
-    log_predictions: true
-    log_interval_hours: 24
     alert_threshold_mae: 100
     alert_threshold_rmse: 150
-
-# Logging & Output
-logging:
-  level: INFO
-  log_file: logs/ml_pipeline.log
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
+    log_interval_hours: 24
+    log_predictions: true
+  validation:
+    check_data_types: true
+    check_missing_values: true
+    check_value_ranges: true
+    missing_threshold: 0.3
 output:
-  models_dir: models/ml-models/
   metrics_dir: logs/metrics/
-  predictions_dir: data/predictions/
+  models_dir: models/ml-models/
   plots_dir: logs/plots/
+  predictions_dir: data/predictions/

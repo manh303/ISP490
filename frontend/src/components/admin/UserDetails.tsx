@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { userApi } from "../../services/userApi";
+import { getAllRoles } from "../../services/roleApi";
 import { Button } from '../../components/ui/figma/button';
 import { Badge } from '../../components/ui/figma/badge';
 import { useToast } from "../../contexts/ToastContext";
@@ -20,13 +21,6 @@ interface UserDetailsProps {
   editMode?: boolean;
 }
 
-const ROLE_OPTIONS = [
-  { code: "ADMIN", name: "Admin" },
-  { code: "ANALYST", name: "Analyst" },
-  { code: "CUSTOMER", name: "Customer" },
-  { code: "MANAGER", name: "Manager" },
-];
-
 export default function UserDetails(props: UserDetailsProps) {
   const { userId, onBack, editMode } = props;
   const { showToast } = useToast();
@@ -40,6 +34,7 @@ export default function UserDetails(props: UserDetailsProps) {
   const [passwordError, setPasswordError] = useState<string>("");
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<Array<{ role_code: string; role_name: string }>>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -53,8 +48,33 @@ export default function UserDetails(props: UserDetailsProps) {
           role_code: user.role_code || "CUSTOMER"
         });
       })
-      .catch((err) => setError(err?.response?.data?.detail || "Lỗi không xác định"))
+      .catch((err) => {
+        const detail = err?.response?.data?.detail;
+        let errorMsg = "Lỗi không xác định";
+        if (typeof detail === 'string') {
+          errorMsg = detail;
+        } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+          errorMsg = detail[0].msg;
+        } else if (detail?.msg) {
+          errorMsg = detail.msg;
+        }
+        setError(errorMsg);
+      })
       .finally(() => setLoading(false));
+
+    // Fetch roles
+    getAllRoles({ page: 1, limit: 100 })
+      .then((rolesData) => {
+        if (rolesData.success) {
+          setAvailableRoles(rolesData.data.map(role => ({
+            role_code: role.role_code,
+            role_name: role.role_name
+          })));
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching roles:", err);
+      });
   }, [userId]);
 
   const handleUpdate = async () => {
@@ -68,7 +88,16 @@ export default function UserDetails(props: UserDetailsProps) {
       setEditModeState(false);
       showToast('✓ Cập nhật thông tin người dùng thành công!', 'success');
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Cập nhật thất bại";
+      console.error(" Error updating user:", err);
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Cập nhật thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -105,7 +134,15 @@ export default function UserDetails(props: UserDetailsProps) {
       setShowPasswordForm(false);
       showToast('✓ Cập nhật mật khẩu thành công!', 'success');
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Cập nhật mật khẩu thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Cập nhật mật khẩu thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setPasswordError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -127,7 +164,15 @@ export default function UserDetails(props: UserDetailsProps) {
       showToast('✓ Vô hiệu hóa tài khoản thành công!', 'success');
       onBack();
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Vô hiệu hóa thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Vô hiệu hóa thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -142,7 +187,15 @@ export default function UserDetails(props: UserDetailsProps) {
       showToast('✓ Khôi phục tài khoản thành công!', 'success');
       onBack();
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Khôi phục thất bại";
+      const detail = err?.response?.data?.detail;
+      let errorMsg = "Khôi phục thất bại";
+      if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+        errorMsg = detail[0].msg;
+      } else if (detail?.msg) {
+        errorMsg = detail.msg;
+      }
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -163,7 +216,7 @@ export default function UserDetails(props: UserDetailsProps) {
   // };
 
   if (loading) return <div className="text-gray-500 text-center py-8">Đang tải dữ liệu người dùng...</div>;
-  if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
+  if (error) return <div className="text-red-500 text-center py-8">{error}<button onClick={() => setError(null)} className="ml-4 text-blue-600 underline">Thử lại</button></div>;
   if (!user) return null;
 
   // Show password change form
@@ -293,24 +346,24 @@ export default function UserDetails(props: UserDetailsProps) {
                   onClick={() => setShowRoleDropdown(v => !v)}
                 >
                   <span className="text-gray-900">
-                    {ROLE_OPTIONS.find(opt => opt.code === form.role_code)?.name || "Chọn vai trò"}
+                    {availableRoles.find(opt => opt.role_code === form.role_code)?.role_name || "Chọn vai trò"}
                   </span>
                   <span className={`ml-2 text-gray-400 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`}>▼</span>
                 </button>
                 {showRoleDropdown && (
                   <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-60 overflow-auto">
-                    {ROLE_OPTIONS.map(opt => (
+                    {availableRoles.map(opt => (
                       <li
-                        key={opt.code}
+                        key={opt.role_code}
                         className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${
-                          form.role_code === opt.code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
+                          form.role_code === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
                         }`}
                         onClick={() => { 
-                          setForm(f => ({ ...f, role_code: opt.code })); 
+                          setForm(f => ({ ...f, role_code: opt.role_code })); 
                           setShowRoleDropdown(false); 
                         }}
                       >
-                        {opt.name}
+                        {opt.role_name}
                       </li>
                     ))}
                   </ul>

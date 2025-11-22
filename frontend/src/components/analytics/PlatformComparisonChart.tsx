@@ -1,8 +1,8 @@
 import { GitCompare, BarChart3, Star, ShoppingBag, TrendingUp } from 'lucide-react';
-import { PlatformComparisonData } from '../../services/analyticsApi';
+import { PlatformComparisonItem } from '../../services/analyticsApi';
 
 interface PlatformComparisonChartProps {
-  data: PlatformComparisonData[];
+  data: PlatformComparisonItem[];
   title?: string;
 }
 
@@ -31,7 +31,7 @@ export function PlatformComparisonChart({
     'sendo': '📦',
   };
 
-  const maxProductCount = Math.max(...data.map(p => p.product_count));
+  const maxProductCount = Math.max(...data.map(p => p.total_products));
   const maxReviews = Math.max(...data.map(p => p.total_reviews));
 
   return (
@@ -41,91 +41,86 @@ export function PlatformComparisonChart({
         <h3 className="font-semibold text-gray-900">{title}</h3>
       </div>
 
+      {/* Grouped Bar Chart */}
       <div className="space-y-4">
-        {data.map((platform, index) => {
-          const productPercentage = (platform.product_count / maxProductCount) * 100;
+        {data.map((platform) => {
+          const productPercentage = (platform.total_products / maxProductCount) * 100;
           const reviewPercentage = (platform.total_reviews / maxReviews) * 100;
+          const ratingPercentage = ((platform.avg_rating || 0) / 5) * 100;
 
           return (
-            <div key={platform.platform} className="space-y-2">
+            <div key={platform.platform_code} className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{platformIcons[platform.platform.toLowerCase()] || '🏬'}</span>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 capitalize">
-                      {platform.platform}
-                    </h4>
-                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                      <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                      <span>{platform.avg_rating.toFixed(2)}</span>
-                    </div>
-                  </div>
+                  <span className="text-xl">{platformIcons[platform.platform_code.toLowerCase()] || '🏬'}</span>
+                  <span className="font-semibold text-gray-900 capitalize text-sm">
+                    {platform.platform_name}
+                  </span>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-gray-900">
-                    {platform.product_count.toLocaleString('vi-VN')}
-                  </div>
-                  <div className="text-xs text-gray-500">sản phẩm</div>
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                  <span className="font-bold text-gray-900 text-sm">{(platform.avg_rating || 0).toFixed(2)}</span>
                 </div>
               </div>
 
-              {/* Product Count Bar */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-gray-600">
-                  <span className="flex items-center gap-1">
+              {/* Three grouped bars */}
+              <div className="space-y-1.5">
+                {/* Product Count */}
+                <div className="flex items-center gap-2">
+                  <div className="w-16 text-xs text-gray-600 flex items-center gap-1">
                     <ShoppingBag className="h-3 w-3" />
-                    Số lượng SP
+                    <span>SP</span>
+                  </div>
+                  <div className="flex-1 relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-700"
+                      style={{ width: `${productPercentage}%` }}
+                    />
+                  </div>
+                  <span className="w-16 text-xs font-medium text-gray-900 text-right">
+                    {platform.total_products.toLocaleString('vi-VN')}
                   </span>
-                  <span>{productPercentage.toFixed(0)}%</span>
                 </div>
-                <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="absolute h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500"
-                    style={{ width: `${productPercentage}%` }}
-                  />
-                </div>
-              </div>
 
-              {/* Reviews Bar */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-gray-600">
-                  <span className="flex items-center gap-1">
+                {/* Reviews */}
+                <div className="flex items-center gap-2">
+                  <div className="w-16 text-xs text-gray-600 flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
-                    Đánh giá
-                  </span>
-                  <span>{(platform.total_reviews / 1000).toFixed(0)}K</span>
-                </div>
-                <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="absolute h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all duration-500"
-                    style={{ width: `${reviewPercentage}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                <div className="bg-blue-50 rounded p-2 text-center">
-                  <div className="text-xs text-blue-700 font-medium">Giá TB</div>
-                  <div className="text-sm font-bold text-blue-900">
-                    {(platform.avg_price / 1000000).toFixed(1)}M ₫
+                    <span>ĐG</span>
                   </div>
-                </div>
-                <div className="bg-green-50 rounded p-2 text-center">
-                  <div className="text-xs text-green-700 font-medium">Chất lượng</div>
-                  <div className="text-sm font-bold text-green-900">
-                    {platform.high_rated_count}
+                  <div className="flex-1 relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="absolute h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all duration-700"
+                      style={{ width: `${reviewPercentage}%` }}
+                    />
                   </div>
-                </div>
-                <div className="bg-purple-50 rounded p-2 text-center">
-                  <div className="text-xs text-purple-700 font-medium">Tổng ĐG</div>
-                  <div className="text-sm font-bold text-purple-900">
+                  <span className="w-16 text-xs font-medium text-gray-900 text-right">
                     {(platform.total_reviews / 1000).toFixed(0)}K
+                  </span>
+                </div>
+
+                {/* Rating */}
+                <div className="flex items-center gap-2">
+                  <div className="w-16 text-xs text-gray-600 flex items-center gap-1">
+                    <Star className="h-3 w-3" />
+                    <span>Rating</span>
                   </div>
+                  <div className="flex-1 relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="absolute h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-700"
+                      style={{ width: `${ratingPercentage}%` }}
+                    />
+                  </div>
+                  <span className="w-16 text-xs font-medium text-gray-900 text-right">
+                    {(platform.avg_rating || 0).toFixed(2)}
+                  </span>
                 </div>
               </div>
 
-              {index < data.length - 1 && <div className="border-t border-gray-200 mt-3" />}
+              <div className="flex justify-between text-xs text-gray-500 pt-1">
+                <span>Giá TB: {((platform.avg_price || 0) / 1000000).toFixed(1)}M ₫</span>
+                <span>Doanh thu: {((platform.total_revenue || 0) / 1000000000).toFixed(1)}B ₫</span>
+              </div>
             </div>
           );
         })}
@@ -136,7 +131,7 @@ export function PlatformComparisonChart({
         <div className="mt-4 pt-3 border-t border-gray-200">
           <div className="text-xs text-gray-600">
             <BarChart3 className="h-4 w-4 inline mr-1" />
-            Tổng: {data.reduce((sum, p) => sum + p.product_count, 0).toLocaleString('vi-VN')} sản phẩm
+            Tổng: {data.reduce((sum, p) => sum + p.total_products, 0).toLocaleString('vi-VN')} sản phẩm
           </div>
         </div>
       )}

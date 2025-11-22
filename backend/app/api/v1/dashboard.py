@@ -19,7 +19,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Database configurations
-MONGO_URL = os.getenv('MONGO_URL', 'mongodb://admin:admin_password@localhost:27017/')
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com'),
     'port': os.getenv('DB_PORT', '5432'),
@@ -46,13 +45,6 @@ class TopProduct(BaseModel):
 
 class DashboardService:
     """Service for dashboard data"""
-
-    def __init__(self):
-        try:
-            self.mongo_client = pymongo.MongoClient(MONGO_URL)
-            self.mongo_db = self.mongo_client['ecommerce_dss']
-        except Exception as e:
-            logger.error(f"Failed to initialize dashboard service: {e}")
 
     def get_key_metrics(self) -> Dict[str, Any]:
         """Get key metrics for dashboard"""

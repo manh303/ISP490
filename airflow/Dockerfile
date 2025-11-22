@@ -41,6 +41,16 @@ ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 ENV DISPLAY=:99
 
+<<<<<<< HEAD
+# Allow pip to run as root for base image (Airflow requirement)
+ENV PIP_USER=false
+
+# -------------------------------
+# 2) Python requirements as airflow user (Airflow requirement)
+# -------------------------------
+USER airflow
+
+=======
 # -------------------------------
 # 2) Back to airflow user
 # -------------------------------
@@ -49,14 +59,23 @@ USER airflow
 # -------------------------------
 # 3) Python requirements
 # -------------------------------
+>>>>>>> f990657e46599176c49ea15f7f4ba09c3ad15e5a
 COPY requirements.txt /opt/airflow/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /opt/airflow/requirements.txt
 
+<<<<<<< HEAD
+# Install playwright browsers (needs root access for system libs)
+USER root
+RUN python -m playwright install --with-deps chromium
+
+# Back to airflow user for runtime
+=======
 # Install playwright browsers as root (needs sudo access)
 USER root
 RUN python -m playwright install --with-deps chromium
+>>>>>>> f990657e46599176c49ea15f7f4ba09c3ad15e5a
 USER airflow
 
 # -------------------------------

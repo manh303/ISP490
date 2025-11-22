@@ -45,6 +45,12 @@ export LAZADA_HEADLESS="${{LAZADA_HEADLESS:-1}}"
         task_id="crawl_lazada",
         bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/lazada/runners/lazada_with_cookies.py"
+RUN_DATE=$(date +%F)
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/lazada/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Lazada raw already exists for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
 pip install -q playwright 2>/dev/null || true
 playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
@@ -57,6 +63,12 @@ python -u "$SCRIPT"
         task_id="crawl_lazada_reviews",
         bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_from_products.py"
+RUN_DATE=$(date +%F)
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/lazada_reviews/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Lazada reviews already exist for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
 pip install -q playwright 2>/dev/null || true
 playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
@@ -69,7 +81,13 @@ python -u "$SCRIPT"
         task_id="crawl_tiki",
         bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/tiki/tiki_crawler.py"
-[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+RUN_DATE=$(date +%F)
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Tiki raw already exists for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
+[ -f "$SCRIPT" ] || { echo "? Kh?ng t?m th?y $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
 """
@@ -79,7 +97,13 @@ python -u "$SCRIPT"
         task_id="crawl_tiki_reviews",
         bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/tiki/tiki_review_crawler.py"
-[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+RUN_DATE=$(date +%F)
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki_reviews/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Tiki reviews already exist for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
+[ -f "$SCRIPT" ] || { echo "? Kh?ng t?m th?y $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
 """

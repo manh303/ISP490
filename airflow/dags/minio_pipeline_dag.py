@@ -21,8 +21,19 @@ default_args = {
 
 
 def upload_to_minio(**context):
-    from minio import Minio
     from pathlib import Path
+    try:
+        from minio import Minio
+    except ImportError:
+        # Try to install at runtime to avoid task failure when dependency missing
+        import subprocess, sys
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "minio", "--quiet"], check=True)
+            from minio import Minio
+            print("Installed 'minio' package at runtime.")
+        except Exception as e:
+            print(f"Failed to import/install minio: {e}. Skipping upload_to_minio.")
+            return
 
     client = Minio("minio:9000", "minioadmin", "minioadmin123", secure=False)
     bucket = "crawler-data"
@@ -44,9 +55,7 @@ def upload_to_minio(**context):
 
 
 def _raw_ready(**context):
-    from datetime import datetime as dt
-
-    run_date = dt.now().strftime("%Y-%m-%d")
+    run_date = context["ds"]
     need = [
         Path(CRAWLER_OUTPUT_DIR) / "lazada" / f"date={run_date}",
         Path(CRAWLER_OUTPUT_DIR) / "tiki" / f"date={run_date}",
@@ -60,9 +69,7 @@ def _raw_ready(**context):
 
 
 def _reviews_ready(**context):
-    from datetime import datetime as dt
-
-    run_date = dt.now().strftime("%Y-%m-%d")
+    run_date = context["ds"]
     lazada_reviews = Path(CRAWLER_OUTPUT_DIR) / "lazada_reviews" / f"date={run_date}"
     tiki_reviews = Path(CRAWLER_OUTPUT_DIR) / "tiki_reviews" / f"date={run_date}"
 
@@ -110,9 +117,14 @@ export LAZADA_HEADLESS="${{LAZADA_HEADLESS:-1}}"
     # =========================
     crawl_lazada = BashOperator(
         task_id="crawl_lazada",
-        bash_command=PREAMBLE
-        + r"""
+        bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/lazada/runners/lazada_with_cookies.py"
+RUN_DATE="{{ ds }}"
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/lazada/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Lazada raw already exists for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
 pip install -q playwright 2>/dev/null || true
 playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
@@ -123,9 +135,14 @@ python -u "$SCRIPT"
 
     crawl_lazada_reviews = BashOperator(
         task_id="crawl_lazada_reviews",
-        bash_command=PREAMBLE
-        + r"""
+        bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_from_products.py"
+RUN_DATE="{{ ds }}"
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/lazada_reviews/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Lazada reviews already exist for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
 pip install -q playwright 2>/dev/null || true
 playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
@@ -136,10 +153,15 @@ python -u "$SCRIPT"
 
     crawl_tiki = BashOperator(
         task_id="crawl_tiki",
-        bash_command=PREAMBLE
-        + r"""
+        bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/tiki/tiki_crawler.py"
-[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+RUN_DATE="{{ ds }}"
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Tiki raw already exists for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
+[ -f "$SCRIPT" ] || { echo "? Kh?ng t?m th?y $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
 """
@@ -147,10 +169,15 @@ python -u "$SCRIPT"
 
     crawl_tiki_reviews = BashOperator(
         task_id="crawl_tiki_reviews",
-        bash_command=PREAMBLE
-        + r"""
+        bash_command=PREAMBLE + r"""
 SCRIPT="/app/crawlers/tiki/tiki_review_crawler.py"
-[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+RUN_DATE="{{ ds }}"
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki_reviews/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Tiki reviews already exist for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
+[ -f "$SCRIPT" ] || { echo "? Kh?ng t?m th?y $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
 """
