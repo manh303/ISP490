@@ -66,36 +66,79 @@ class AnalyticsService:
         parent_category_key: Optional[str] = None,
     ) -> List[CategoryFilterItem]:
         """
-        Trả về list category cho filter.
+        Trả về list category cho filter Analyst.
 
-        Theo hint từ DB:
-          - dim_category có category_id, category_sk
-        → Ta dùng:
-          - API category_key = category_sk (chuỗi)
-          - category_name hiển thị = category_id (ép sang string)
+        dim_category:
+          - category_sk      : surrogate key
+          - category_id      : 1..15
+          - category_lvl1    : vd 'Electronics' / 'OTHER'
+          - category_lvl2    : vd 'Mobile Phones', 'Computers', 'Cameras'...
+          - category_lvl3    : vd 'Smartphones', 'Laptops'...
+          - category_std_key : leaf chuẩn (thường trùng với lvl3)
+
+        API:
+          - category_key  = category_sk (string)
+          - category_name = full path: 'Electronics > Computers > Laptops'
+          - level         = 1 / 2 / 3
+          - parent_key    = null (chưa có parent_sk)
+          - platform_code = null (dim_category chưa lưu platform)
         """
+        _ = platform_code
+        _ = parent_category_key
+
         sql = """
             SELECT
                 category_sk,
-                category_id
+                category_id,
+                category_lvl1,
+                category_lvl2,
+                category_lvl3,
+                category_std_key
             FROM dwh.dim_category
             ORDER BY category_id
         """
         rows = await self.db.fetch(sql)
+
         result: List[CategoryFilterItem] = []
         for r in rows:
-            category_id = r["category_id"]
-            category_name = str(category_id) if category_id is not None else ""
+            lvl1 = r["category_lvl1"]
+            lvl2 = r["category_lvl2"]
+            lvl3 = r["category_lvl3"]
+            std  = r["category_std_key"]
+
+            # build full path
+            parts = []
+            if lvl1:
+                parts.append(lvl1)
+            if lvl2:
+                parts.append(lvl2)
+            if lvl3:
+                parts.append(lvl3)
+            else:
+                # không có lvl3: dùng std_key nếu khác với các level trước
+                if std and std not in parts:
+                    parts.append(std)
+
+            display_name = " > ".join(parts) if parts else (std or "")
+
+            # xác định level
+            if lvl3:
+                level = 3
+            elif lvl2:
+                level = 2
+            else:
+                level = 1
 
             result.append(
                 CategoryFilterItem(
                     category_key=str(r["category_sk"]),
-                    category_name=category_name,  # 👈 luôn là string
-                    level=None,
+                    category_name=display_name,
+                    level=level,
                     parent_key=None,
                     platform_code=None,
                 )
             )
+
         return result
 
 
