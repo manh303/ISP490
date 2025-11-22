@@ -5,6 +5,7 @@ from typing import List, Optional
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.db_config import DATABASE_URL
 from app.schemas.ml import (
     MLModelCreate,
     MLModelUpdate,
@@ -22,18 +23,6 @@ from app.services.ml_service import MLService
 
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
-# ==========================
-# DB CONFIG (dùng asyncpg)
-# ==========================
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "ecommerce_dss"),
-    "user": os.getenv("DB_USER", "dss_user"),
-    "password": os.getenv("DB_PASSWORD", "IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4"),
-}
-
-
 # --------- DB dependency (asyncpg connection) ---------
 
 async def get_db():
@@ -41,7 +30,7 @@ async def get_db():
     Tạo 1 kết nối asyncpg cho mỗi request ML.
     MLService đang dùng self.db.fetch / fetchrow / execute theo style asyncpg.
     """
-    conn = await asyncpg.connect(**DB_CONFIG)
+    conn = await asyncpg.connect(dsn=DATABASE_URL)
     try:
         yield conn
     finally:

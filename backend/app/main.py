@@ -362,14 +362,6 @@ try:
 except ImportError as e:
     logger.warning(f"Role Management routes not available: {e}")
 
-# Include Unified ML Insights & Predictions router
-try:
-    from api.v1.ml_insights import router as ml_unified_router
-    app.include_router(ml_unified_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("✅ ML Unified (Insights & Predictions) routes included")
-except ImportError as e:
-    logger.warning(f"ML Unified routes not available: {e}")
-
 # Include Analytics router
 try:
     from api.v1.analytics import router as analytics_router
@@ -403,11 +395,15 @@ except ImportError as e:
 # Include Reports API (v1)
 try:
     from api.v1.reports import router as reports_router
-    app.include_router(reports_router, prefix=f"{settings.API_V1_PREFIX}/reports", tags=["Reports"])
+    app.include_router(
+        reports_router,
+        prefix=f"{settings.API_V1_PREFIX}/reports",
+        tags=["Reports"],
+    )
     logger.info("Reports API routes included")
 except ImportError as e:
     logger.warning(f"Reports API routes not available: {e}")
-
+    
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
