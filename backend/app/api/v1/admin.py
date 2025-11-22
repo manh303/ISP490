@@ -219,22 +219,20 @@ async def delete_user(
     admin_service: AdminService = Depends(get_admin_service)
 ):
     """
-    Permanently delete user and all related data
-    
-    **Deleted data includes:**
-    - Account information
-    - Roles and permissions
-    - Activity logs
-    - Authentication tokens
-    
-    **Usage**: Add `?confirm=true` to URL
-    **Example**: `DELETE /api/v1/admin/users/123?confirm=true`
+    Xóa vĩnh viễn người dùng và tất cả dữ liệu liên quan
+
+    **Dữ liệu đã xóa bao gồm:**
+    - Thông tin tài khoản
+    - Vai trò và quyền
+    - Nhật ký hoạt động
+    - Mã thông báo xác thực
+
     """
     try:
         if not confirm:
             raise HTTPException(
                 status_code=400, 
-                detail="⚠️ Permanent deletion requires confirmation. Add ?confirm=true to URL"
+                detail="⚠️ Xóa vĩnh viễn yêu cầu xác nhận. Thêm ?confirm=true vào URL"
             )
         
         user = await admin_service.get_user_by_id(user_id)
