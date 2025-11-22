@@ -30,16 +30,9 @@ wheels/
 .installed.cfg
 *.egg
 
-<<<<<<< HEAD
-# Logs (except ML metrics)
-logs/
-*.log
-!ml/logs/metrics/*.json
-=======
 # Logs
 logs/
 *.log
->>>>>>> f990657e46599176c49ea15f7f4ba09c3ad15e5a
 
 # Node modules
 node_modules/
@@ -54,3 +47,4 @@ data-collection/outputs/fixed_lazada_multi_category_full.csv
 data-collection/outputs/fixed_lazada_multi_category_full.json 
 ml/models/ml-models/clustering_features.pkl
 *.pkl
+
