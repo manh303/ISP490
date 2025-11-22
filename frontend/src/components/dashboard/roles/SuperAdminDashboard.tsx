@@ -51,14 +51,14 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <PageMeta title="Super Admin Dashboard" />
+      {/* <PageMeta title="Super Admin Dashboard" />
       <PageBreadcrumb
         title="Super Administrator Dashboard"
         items={[
           { name: "Home", href: "/" },
           { name: "Dashboard", href: "/dashboard" }
         ]}
-      />
+      /> */}
 
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white">

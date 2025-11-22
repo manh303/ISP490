@@ -1,6 +1,8 @@
 
 # Ignore pickle files
 *.pkl
+ml/models/
+models/ml-models/
 # Or specific: clv_model.pkl, data/clv_model.pkl
 # Credentials
 
@@ -30,16 +32,9 @@ wheels/
 .installed.cfg
 *.egg
 
-<<<<<<< HEAD
-# Logs (except ML metrics)
-logs/
-*.log
-!ml/logs/metrics/*.json
-=======
 # Logs
 logs/
 *.log
->>>>>>> f990657e46599176c49ea15f7f4ba09c3ad15e5a
 
 # Node modules
 node_modules/
