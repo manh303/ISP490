@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Dict, Any
 import logging
-
+from app.api.dependencies import require_role
 # Import models and services
 from models.role import (
     RoleResponse, RoleDetailResponse, RoleCreateRequest, 
@@ -53,7 +53,7 @@ async def get_role_service(db = Depends(get_database)) -> RoleService:
 
 @router.get("/", response_model=RoleListResponse, 
            summary="Get All Roles",
-           description="Get paginated list of all roles in the system")
+           description="Get paginated list of all roles in the system",dependencies=[Depends(require_role("Admin"))])
 async def get_roles(
     active_only: bool = Query(False, description="Show only active roles"),
     role_service: RoleService = Depends(get_role_service)
@@ -85,7 +85,7 @@ async def get_roles(
 
 @router.get("/{role_id}", response_model=RoleDetailResponse,
            summary="🔍 Get Role Details",
-           description="Get detailed information about a specific role")
+           description="Get detailed information about a specific role",dependencies=[Depends(require_role("Admin"))])
 async def get_role_detail(
     role_id: int,
     role_service: RoleService = Depends(get_role_service)
@@ -123,7 +123,7 @@ async def get_role_detail(
 
 @router.post("/", response_model=RoleActionResponse,
            summary="➕ Create New Role",
-           description="Create a new role in the system")
+           description="Create a new role in the system",dependencies=[Depends(require_role("Admin"))])
 async def create_role(
     role_data: RoleCreateRequest,
     role_service: RoleService = Depends(get_role_service)
@@ -146,7 +146,7 @@ async def create_role(
 
 @router.put("/{role_id}", response_model=RoleActionResponse,
            summary="✏️ Update Role",
-           description="Update role information")
+           description="Update role information",dependencies=[Depends(require_role("Admin"))])
 async def update_role(
     role_id: int,
     role_data: RoleUpdateRequest,
@@ -170,7 +170,7 @@ async def update_role(
 
 @router.patch("/{role_id}/deactivate", response_model=RoleActionResponse,
             summary="🚫 Deactivate Role",
-            description="Deactivate a role (users keep role but it becomes inactive)")
+            description="Deactivate a role (users keep role but it becomes inactive)",dependencies=[Depends(require_role("Admin"))])
 async def deactivate_role(
     role_id: int,
     role_service: RoleService = Depends(get_role_service)
@@ -193,7 +193,7 @@ async def deactivate_role(
 
 @router.get("/users/{role_id}",
            summary="👥 Get Role Users",
-           description="Get list of users assigned to a specific role")
+           description="Get list of users assigned to a specific role",dependencies=[Depends(require_role("Admin"))])
 async def get_role_users(
     role_id: int,
     page: int = Query(1, ge=1, description="Page number"),
@@ -220,7 +220,7 @@ async def get_role_users(
 
 @router.patch("/{role_id}/activate", response_model=RoleActionResponse,
             summary="✅ Activate Role",
-            description="Activate a deactivated role")
+            description="Activate a deactivated role",dependencies=[Depends(require_role("Admin"))])
 async def activate_role(
     role_id: int,
     role_service: RoleService = Depends(get_role_service)
@@ -243,7 +243,7 @@ async def activate_role(
 
 @router.delete("/{role_id}", response_model=RoleActionResponse,
              summary="🗑️ Delete Role",
-             description="Delete role if no users are assigned to it")
+             description="Delete role if no users are assigned to it",dependencies=[Depends(require_role("Admin"))])
 async def delete_role(
     role_id: int,
     role_service: RoleService = Depends(get_role_service)
