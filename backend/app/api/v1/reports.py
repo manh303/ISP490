@@ -4,34 +4,23 @@ from typing import Optional, List
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 import io
 import csv
 
+from app.db_config import DATABASE_URL
+
 router = APIRouter()
-
-# =========================
-# DB CONFIG (dùng asyncpg)
-# =========================
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "ecommerce_dss"),
-    "user": os.getenv("DB_USER", "dss_user"),
-    "password": os.getenv("DB_PASSWORD", "IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4"),
-}
-
 
 async def get_db():
     """
     Dependency mở 1 connection asyncpg, dùng xong thì đóng.
     """
-    conn = await asyncpg.connect(**DB_CONFIG)
+    conn = await asyncpg.connect(dsn=DATABASE_URL)
     try:
         yield conn
     finally:
         await conn.close()
-
 
 # =========================
 #  HELPER: build CSV
@@ -65,7 +54,7 @@ def _rows_to_csv(rows: List[asyncpg.Record], filename: str) -> StreamingResponse
 
 
 # ===================================================================
-# 1) REPORT OVERVIEW: tổng quan theo ngày & platform (JSON / CSV)
+# 1) REPORT OVERVIEW: tổng quan theo ngày & platform (CSV)
 #    GET /api/v1/reports/overview
 # ===================================================================
 @router.get("/overview")
@@ -75,14 +64,11 @@ async def export_overview_report(
     platform_code: Optional[str] = Query(
         None, description="Lọc theo platform: tiki / lazada (optional)"
     ),
-    format: str = Query(
-        "json", pattern="^(json|csv)$", description="Định dạng trả về: json hoặc csv"
-    ),
     db=Depends(get_db),
 ):
     """
     Report tổng quan theo ngày & platform, dựa trên dwh.fact_product_daily.
-    - Gồm: số sản phẩm, avg_price, min_price, max_price, tổng review, avg_rating.
+    Trả về CSV.
     """
 
     params = [from_date, to_date]
@@ -117,24 +103,12 @@ async def export_overview_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
-    if format == "csv":
-        filename = f"overview_{from_date}_to_{to_date}.csv"
-        return _rows_to_csv(rows, filename)
-
-    # JSON
-    return JSONResponse(
-        {
-            "success": True,
-            "from_date": str(from_date),
-            "to_date": str(to_date),
-            "platform_code": platform_code,
-            "rows": [dict(r) for r in rows],
-        }
-    )
+    filename = f"overview_{from_date}_to_{to_date}.csv"
+    return _rows_to_csv(rows, filename)
 
 
 # ===================================================================
-# 2) REPORT PRODUCTS: top sản phẩm theo metric (JSON / CSV)
+# 2) REPORT PRODUCTS: top sản phẩm theo metric (CSV)
 #    GET /api/v1/reports/products
 # ===================================================================
 @router.get("/products")
@@ -149,11 +123,10 @@ async def export_products_report(
         description="revenue | reviews | rating | price",
     ),
     limit: int = Query(100, ge=1, le=1000),
-    format: str = Query("json", pattern="^(json|csv)$"),
     db=Depends(get_db),
 ):
     """
-    Report top sản phẩm theo metric:
+    Report top sản phẩm theo metric, trả về CSV:
     - revenue: giả lập = avg_price * total_review_count
     - reviews: tổng số review
     - rating: điểm rating trung bình
@@ -218,18 +191,5 @@ async def export_products_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
-    if format == "csv":
-        filename = f"products_{metric}_{from_date}_to_{to_date}.csv"
-        return _rows_to_csv(rows, filename)
-
-    return JSONResponse(
-        {
-            "success": True,
-            "from_date": str(from_date),
-            "to_date": str(to_date),
-            "platform_code": platform_code,
-            "metric": metric,
-            "limit": limit,
-            "rows": [dict(r) for r in rows],
-        }
-    )
+    filename = f"products_{metric}_{from_date}_to_{to_date}.csv"
+    return _rows_to_csv(rows, filename)
