@@ -56,7 +56,6 @@ def _rows_to_csv(rows: List[asyncpg.Record], filename: str) -> StreamingResponse
 
 # ===================================================================
 # 1) REPORT OVERVIEW: tổng quan theo ngày & platform (CSV)
-# 1) REPORT OVERVIEW: tổng quan theo ngày & platform (CSV)
 #    GET /api/v1/reports/overview
 # ===================================================================
 @router.get("/overview")
@@ -71,7 +70,6 @@ async def export_overview_report(
     """
     Report tổng quan theo ngày & platform, dựa trên dwh.fact_product_daily.
     Trả về CSV.
-    Trả về CSV.
     """
 
     params = [from_date, to_date]
@@ -82,25 +80,21 @@ async def export_overview_report(
 
     sql = f"""
         SELECT
-            d.date_value AS full_date,
-            d.date_value AS full_date,
+            d.date_value                              AS full_date,
             pl.platform_code,
             pl.platform_name,
-            COUNT(DISTINCT f.product_sk)           AS product_count,
-            AVG(f.avg_price)                       AS avg_price,
-            MIN(f.min_price)                       AS min_price,
-            MAX(f.max_price)                       AS max_price,
-            SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
-            AVG(f.avg_rating)                      AS avg_rating
+            COUNT(DISTINCT f.product_sk)              AS product_count,
+            AVG(f.avg_price)                          AS avg_price,
+            MIN(f.min_price)                          AS min_price,
+            MAX(f.max_price)                          AS max_price,
+            SUM(COALESCE(f.total_review_count, 0))    AS total_reviews,
+            AVG(f.avg_rating)                         AS avg_rating
         FROM dwh.fact_product_daily f
         JOIN dwh.dim_product   p  ON p.product_sk   = f.product_sk
         JOIN dwh.dim_platform  pl ON pl.platform_sk = f.platform_sk
         JOIN dwh.dim_date      d  ON d.date_sk      = f.date_sk
         WHERE d.date_value BETWEEN $1 AND $2
-        WHERE d.date_value BETWEEN $1 AND $2
         {plat_filter}
-        GROUP BY d.date_value, pl.platform_code, pl.platform_name
-        ORDER BY d.date_value, pl.platform_code;
         GROUP BY d.date_value, pl.platform_code, pl.platform_name
         ORDER BY d.date_value, pl.platform_code;
     """
@@ -112,12 +106,9 @@ async def export_overview_report(
 
     filename = f"overview_{from_date}_to_{to_date}.csv"
     return _rows_to_csv(rows, filename)
-    filename = f"overview_{from_date}_to_{to_date}.csv"
-    return _rows_to_csv(rows, filename)
 
 
 # ===================================================================
-# 2) REPORT PRODUCTS: top sản phẩm theo metric (CSV)
 # 2) REPORT PRODUCTS: top sản phẩm theo metric (CSV)
 #    GET /api/v1/reports/products
 # ===================================================================
@@ -137,7 +128,6 @@ async def export_products_report(
 ):
     """
     Report top sản phẩm theo metric, trả về CSV:
-    Report top sản phẩm theo metric, trả về CSV:
     - revenue: giả lập = avg_price * total_review_count
     - reviews: tổng số review
     - rating: điểm rating trung bình
@@ -146,7 +136,10 @@ async def export_products_report(
 
     metric = metric.lower()
     if metric not in {"revenue", "reviews", "rating", "price"}:
-        raise HTTPException(status_code=400, detail="metric phải là revenue|reviews|rating|price")
+        raise HTTPException(
+            status_code=400,
+            detail="metric phải là 1 trong: revenue | reviews | rating | price",
+        )
 
     # mapping metric -> biểu thức
     if metric == "revenue":
@@ -165,46 +158,63 @@ async def export_products_report(
         params.append(platform_code)
 
     sql = f"""
+        WITH latest_snapshot AS (
         SELECT
+            fpd.product_sk,
+            MAX(d.date_value) AS latest_date
+        FROM dwh.fact_product_daily fpd
+        JOIN dwh.dim_date d ON d.date_sk = fpd.date_sk
+        WHERE d.date_value BETWEEN $from_date AND $to_date
+        GROUP BY fpd.product_sk
+        ),
+        product_daily AS (
+        SELECT
+            fpd.*,
+            d.date_value,
+            pl.platform_code,
             p.product_key,
             p.product_name,
-            pl.platform_code,
-            pl.platform_name,
-            COALESCE(b.brand_name, 'Unknown')                 AS brand_name,
-            COALESCE(c.category_id::text, 'Unknown')          AS category_name,
-            {metric_expr}                                     AS metric_value,
-            AVG(f.avg_price)                                  AS avg_price,
-            MIN(f.min_price)                                  AS min_price,
-            MAX(f.max_price)                                  AS max_price,
-            SUM(COALESCE(f.total_review_count, 0))            AS total_reviews,
-            AVG(f.avg_rating)                                 AS avg_rating
-            COALESCE(b.brand_name, 'Unknown')                 AS brand_name,
-            COALESCE(c.category_id::text, 'Unknown')          AS category_name,
-            {metric_expr}                                     AS metric_value,
-            AVG(f.avg_price)                                  AS avg_price,
-            MIN(f.min_price)                                  AS min_price,
-            MAX(f.max_price)                                  AS max_price,
-            SUM(COALESCE(f.total_review_count, 0))            AS total_reviews,
-            AVG(f.avg_rating)                                 AS avg_rating
-        FROM dwh.fact_product_daily f
-        JOIN dwh.dim_product   p  ON p.product_sk   = f.product_sk
-        JOIN dwh.dim_platform  pl ON pl.platform_sk = f.platform_sk
-        LEFT JOIN dwh.dim_brand     b ON b.brand_sk     = p.brand_sk
-        LEFT JOIN dwh.dim_category  c ON c.category_sk  = p.category_sk
-        JOIN dwh.dim_date      d  ON d.date_sk      = f.date_sk
-        WHERE d.date_value BETWEEN $1 AND $2
-        WHERE d.date_value BETWEEN $1 AND $2
-        {plat_filter}
-        GROUP BY
-            p.product_key,
-            p.product_name,
-            pl.platform_code,
-            pl.platform_name,
             b.brand_name,
-            c.category_id
-            c.category_id
-        ORDER BY metric_value DESC
-        LIMIT {limit};
+            c.category_name
+        FROM dwh.fact_product_daily fpd
+        JOIN dwh.dim_date d        ON d.date_sk        = fpd.date_sk
+        JOIN dwh.dim_product p     ON p.product_sk     = fpd.product_sk
+        JOIN dwh.dim_platform pl   ON pl.platform_sk   = fpd.platform_sk
+        LEFT JOIN dwh.dim_brand b  ON b.brand_sk       = p.brand_sk
+        LEFT JOIN dwh.dim_category c ON c.category_sk  = p.category_sk
+        WHERE d.date_value BETWEEN $from_date AND $to_date
+        )
+        SELECT
+        pd.product_key,
+        pd.product_name,
+        pd.platform_code,
+        pd.platform_name,
+        pd.brand_name,
+        pd.category_name,
+        -- ví dụ metric_value là doanh thu
+        SUM(pd.revenue)                       AS metric_value,
+        AVG(pd.avg_price)                     AS avg_price,
+        MIN(pd.min_price)                     AS min_price,
+        MAX(pd.max_price)                     AS max_price,
+        -- lấy snapshot mới nhất cho reviews/rating
+        MAX(
+            CASE WHEN pd.date_value = ls.latest_date
+                THEN pd.total_review_count
+            END
+        ) AS total_reviews,
+        MAX(
+            CASE WHEN pd.date_value = ls.latest_date
+                THEN pd.avg_rating
+            END
+        ) AS avg_rating
+        FROM product_daily pd
+        JOIN latest_snapshot ls
+        ON ls.product_sk = pd.product_sk
+        GROUP BY
+        pd.product_key, pd.product_name,
+        pd.platform_code, pd.platform_name,
+        pd.brand_name, pd.category_name;
+
     """
 
     try:

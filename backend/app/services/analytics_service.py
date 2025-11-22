@@ -14,6 +14,9 @@ from schemas.analytics import (
     ProductTimeseriesResponse,
     ProductTimeseriesPoint,
     ReviewSummaryResponse,
+    ReviewRatingBreakdown,
+    PriceDistributionResponse,
+    PriceVsRevenueItem,
 )
 
 
@@ -380,17 +383,24 @@ class AnalyticsService:
         self,
         from_date: date,
         to_date: date,
-        metric: str,
+        metric: str = "revenue",
         platform_code: Optional[str] = None,
         category_key: Optional[str] = None,
         limit: int = 20,
     ) -> List[TopProductItem]:
-        metric_column = {
+        """
+        Lấy danh sách top products theo 1 metric:
+        - revenue
+        - review_count
+        - avg_rating
+        - price_growth (tạm thời cũng sort theo revenue hoặc avg_price tùy em)
+        """
+        metric_column_map = {
             "revenue": "SUM(f.avg_price * f.total_review_count)",
-            "total_review_count": "SUM(f.total_review_count)",
+            "review_count": "SUM(f.total_review_count)",
             "avg_rating": "AVG(f.avg_rating)",
-            "price_growth": "AVG(f.avg_price)",  # placeholder
-        }.get(metric, "SUM(f.avg_price * f.total_review_count)")
+        }
+        metric_column = metric_column_map.get(metric, metric_column_map["revenue"])
 
         conditions = ["d.date_value BETWEEN $1 AND $2"]
         params: List[Any] = [from_date, to_date]
@@ -413,35 +423,40 @@ class AnalyticsService:
                 p.product_key,
                 p.product_name,
                 pl.platform_code,
-                {metric_column} AS metric_value,
-                SUM(f.total_review_count) AS total_reviews,
-                AVG(f.avg_price) AS avg_price,
-                AVG(f.avg_rating) AS avg_rating
+                p.category_sk AS category_key,
+                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
+                COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
+                AVG(f.avg_rating) AS avg_rating,
+                AVG(f.avg_price) AS avg_price
             FROM dwh.fact_product_daily f
             JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
             JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
             JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
             {where_clause}
-            GROUP BY p.product_key, p.product_name, pl.platform_code
-            ORDER BY metric_value DESC
+            GROUP BY
+                p.product_key,
+                p.product_name,
+                pl.platform_code,
+                p.category_sk
+            ORDER BY {metric_column} DESC
             LIMIT {limit}
         """
         rows = await self.db.fetch(sql, *params)
 
-        result: List[TopProductItem] = []
-        for r in rows:
-            result.append(
-                TopProductItem(
-                    product_key=r["product_key"],
-                    product_name=r["product_name"],
-                    platform_code=r["platform_code"],
-                    metric_value=_safe_float(r["metric_value"]) or 0.0,
-                    total_reviews=int(r["total_reviews"] or 0),
-                    avg_price=_safe_float(r["avg_price"]),
-                    avg_rating=_safe_float(r["avg_rating"]),
-                )
+        return [
+            TopProductItem(
+                product_key=r["product_key"],
+                product_name=r["product_name"],
+                platform_code=r["platform_code"],
+                category_key=str(r["category_key"]) if r["category_key"] is not None else None,
+                total_revenue=float(r["total_revenue"] or 0),
+                total_reviews=int(r["total_reviews"] or 0),
+                avg_rating=_safe_float(r["avg_rating"]),
+                avg_price=_safe_float(r["avg_price"]),
             )
-        return result
+            for r in rows
+        ]
+
 
     # =========================
     # PRODUCT TIMESERIES & REVIEW SUMMARY
@@ -450,44 +465,41 @@ class AnalyticsService:
     async def get_product_timeseries(
         self,
         product_key: str,
+        platform_code: str,
         from_date: date,
         to_date: date,
     ) -> ProductTimeseriesResponse:
-        """
-        Lấy timeseries theo ngày cho một product.
-        product_key là key trong dim_product (ví dụ tiki_12345, lazada_abc).
-        """
-        # tìm product_sk từ product_key
-        sql_product = """
+        # map product_key -> product_sk
+        prod_sql = """
             SELECT product_sk
             FROM dwh.dim_product
             WHERE product_key = $1
         """
-        row = await self.db.fetchrow(sql_product, product_key)
-        if not row:
+        prod_row = await self.db.fetchrow(prod_sql, product_key)
+        if not prod_row:
             return ProductTimeseriesResponse(
                 product_key=product_key,
+                platform_code=platform_code,
                 from_date=from_date,
                 to_date=to_date,
                 points=[],
             )
-        product_sk = row["product_sk"]
+        product_sk = prod_row["product_sk"]
 
         sql = """
             SELECT
-                d.date_value,
-                f.min_price,
-                f.max_price,
-                f.avg_price,
-                f.median_price,
-                f.price_stddev,
-                f.total_review_count,
-                f.avg_rating
+                d.date_value AS date,
+                AVG(f.avg_price) AS avg_price,
+                MIN(f.min_price) AS min_price,
+                MAX(f.max_price) AS max_price,
+                COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
+                AVG(f.avg_rating) AS avg_rating,
+                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS revenue
             FROM dwh.fact_product_daily f
             JOIN dwh.dim_date d ON d.date_sk = f.date_sk
-            WHERE
-                f.product_sk = $1
-                AND d.date_value BETWEEN $2 AND $3
+            WHERE f.product_sk = $1
+              AND d.date_value BETWEEN $2 AND $3
+            GROUP BY d.date_value
             ORDER BY d.date_value
         """
         rows = await self.db.fetch(sql, product_sk, from_date, to_date)
@@ -496,70 +508,119 @@ class AnalyticsService:
         for r in rows:
             points.append(
                 ProductTimeseriesPoint(
-                    date=r["date_value"],
+                    date=r["date"],
+                    avg_price=_safe_float(r["avg_price"]),
                     min_price=_safe_float(r["min_price"]),
                     max_price=_safe_float(r["max_price"]),
-                    avg_price=_safe_float(r["avg_price"]),
-                    median_price=_safe_float(r["median_price"]),
-                    price_stddev=_safe_float(r["price_stddev"]),
-                    total_reviews=int(r["total_review_count"] or 0),
+                    total_reviews=int(r["total_reviews"] or 0),
                     avg_rating=_safe_float(r["avg_rating"]),
+                    revenue=float(r["revenue"] or 0),
                 )
             )
 
         return ProductTimeseriesResponse(
             product_key=product_key,
+            platform_code=platform_code,
             from_date=from_date,
             to_date=to_date,
             points=points,
         )
 
+
     async def get_review_summary(
         self,
         product_key: str,
+        platform_code: str,
         from_date: date,
         to_date: date,
+        top_n: int = 5,
     ) -> ReviewSummaryResponse:
-        """
-        Tóm tắt review cho một product (sử dụng fact_review nếu có).
-        """
-        # tìm product_sk từ product_key
-        sql_product = """
+        # map product_key -> product_sk
+        prod_sql = """
             SELECT product_sk
             FROM dwh.dim_product
             WHERE product_key = $1
         """
-        row = await self.db.fetchrow(sql_product, product_key)
-        if not row:
+        prod_row = await self.db.fetchrow(prod_sql, product_key)
+        if not prod_row:
             return ReviewSummaryResponse(
                 product_key=product_key,
+                platform_code=platform_code,
                 from_date=from_date,
                 to_date=to_date,
                 total_reviews=0,
                 avg_rating=None,
+                rating_breakdown=ReviewRatingBreakdown(by_rating={}),
+                top_helpful_reviews=[],
             )
-        product_sk = row["product_sk"]
+        product_sk = prod_row["product_sk"]
 
-        sql = """
+        # tổng quan + breakdown
+        summary_sql = """
             SELECT
-                COALESCE(SUM(fr.review_count), 0) AS total_reviews,
-                AVG(fr.rating) AS avg_rating
-            FROM dwh.fact_review fr
-            JOIN dwh.dim_date d ON d.date_sk = fr.date_sk
-            WHERE
-                fr.product_sk = $1
-                AND d.date_value BETWEEN $2 AND $3
+                COUNT(*) AS total_reviews,
+                AVG(r.rating) AS avg_rating,
+                COUNT(*) FILTER (WHERE r.rating = 5) AS rating_5,
+                COUNT(*) FILTER (WHERE r.rating = 4) AS rating_4,
+                COUNT(*) FILTER (WHERE r.rating = 3) AS rating_3,
+                COUNT(*) FILTER (WHERE r.rating = 2) AS rating_2,
+                COUNT(*) FILTER (WHERE r.rating = 1) AS rating_1
+            FROM dwh.fact_review r
+            JOIN dwh.dim_date d ON d.date_sk = r.date_sk
+            WHERE r.product_sk = $1
+              AND d.date_value BETWEEN $2 AND $3
         """
-        row = await self.db.fetchrow(sql, product_sk, from_date, to_date)
+        summary_row = await self.db.fetchrow(summary_sql, product_sk, from_date, to_date)
+        total_reviews = int(summary_row["total_reviews"] or 0)
+
+        breakdown = {
+            5: int(summary_row["rating_5"] or 0),
+            4: int(summary_row["rating_4"] or 0),
+            3: int(summary_row["rating_3"] or 0),
+            2: int(summary_row["rating_2"] or 0),
+            1: int(summary_row["rating_1"] or 0),
+        }
+
+        # top helpful reviews
+        top_sql = """
+            SELECT
+                r.review_sk AS review_id,
+                r.rating,
+                r.helpful_votes,
+                r.review_body,
+                d.date_value AS review_date
+            FROM dwh.fact_review r
+            JOIN dwh.dim_date d ON d.date_sk = r.date_sk
+            WHERE r.product_sk = $1
+              AND d.date_value BETWEEN $2 AND $3
+            ORDER BY r.helpful_votes DESC, d.date_value DESC
+            LIMIT $4
+        """
+        top_rows = await self.db.fetch(top_sql, product_sk, from_date, to_date, top_n)
+        top_reviews: List[Dict[str, Any]] = []
+        for r in top_rows:
+            top_reviews.append(
+                {
+                    "review_id": r["review_id"],
+                    "rating": r["rating"],
+                    "helpful_votes": r["helpful_votes"],
+                    "review_body": r["review_body"],
+                    "review_date": r["review_date"],
+                }
+            )
 
         return ReviewSummaryResponse(
             product_key=product_key,
+            platform_code=platform_code,
             from_date=from_date,
             to_date=to_date,
-            total_reviews=int(row["total_reviews"] or 0),
-            avg_rating=_safe_float(row["avg_rating"]),
+            total_reviews=total_reviews,
+            avg_rating=_safe_float(summary_row["avg_rating"]),
+            rating_breakdown=ReviewRatingBreakdown(by_rating=breakdown),
+            top_helpful_reviews=top_reviews,
         )
 
+    
     # =========================
     # PRODUCT SEARCH (CHO ANALYST)
     # =========================
@@ -624,3 +685,114 @@ class AnalyticsService:
                 )
             )
         return result
+
+
+  # =========================
+    # PRICING ANALYTICS
+    # =========================
+
+    async def get_price_distribution(
+        self,
+        from_date: date,
+        to_date: date,
+        platform_code: str,
+        category_key: Optional[str] = None,
+    ) -> PriceDistributionResponse:
+        conditions = [
+            "d.date_value BETWEEN $1 AND $2",
+            "pl.platform_code = $3",
+        ]
+        params: List[Any] = [from_date, to_date, platform_code]
+        param_index = 4
+
+        if category_key:
+            conditions.append(f"p.category_sk = ${param_index}")
+            params.append(int(category_key))
+            param_index += 1
+
+        where_clause = "WHERE " + " AND ".join(conditions)
+
+        sql = f"""
+            SELECT
+                MIN(f.min_price) AS min_price,
+                PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY f.avg_price) AS p25_price,
+                PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY f.avg_price) AS median_price,
+                PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY f.avg_price) AS p75_price,
+                MAX(f.max_price) AS max_price
+            FROM dwh.fact_product_daily f
+            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
+            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
+            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+            {where_clause}
+        """
+        row = await self.db.fetchrow(sql, *params)
+
+        return PriceDistributionResponse(
+            platform_code=platform_code,
+            category_key=category_key,
+            from_date=from_date,
+            to_date=to_date,
+            min_price=_safe_float(row["min_price"]),
+            p25_price=_safe_float(row["p25_price"]),
+            median_price=_safe_float(row["median_price"]),
+            p75_price=_safe_float(row["p75_price"]),
+            max_price=_safe_float(row["max_price"]),
+        )
+
+    async def get_price_vs_revenue(
+        self,
+        from_date: date,
+        to_date: date,
+        platform_code: str,
+        category_key: Optional[str] = None,
+        limit: int = 100,
+    ) -> List[PriceVsRevenueItem]:
+        conditions = [
+            "d.date_value BETWEEN $1 AND $2",
+            "pl.platform_code = $3",
+        ]
+        params: List[Any] = [from_date, to_date, platform_code]
+        param_index = 4
+
+        if category_key:
+            conditions.append(f"p.category_sk = ${param_index}")
+            params.append(int(category_key))
+            param_index += 1
+
+        where_clause = "WHERE " + " AND ".join(conditions)
+
+        sql = f"""
+            SELECT
+                p.product_key,
+                p.product_name,
+                p.category_sk AS category_key,
+                pl.platform_code,
+                AVG(f.avg_price) AS avg_price,
+                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
+                AVG(f.avg_rating) AS avg_rating,
+                COALESCE(SUM(f.total_review_count), 0) AS total_reviews
+            FROM dwh.fact_product_daily f
+            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
+            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
+            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+            {where_clause}
+            GROUP BY p.product_key, p.product_name, p.category_sk, pl.platform_code
+            ORDER BY total_revenue DESC
+            LIMIT {limit}
+        """
+        rows = await self.db.fetch(sql, *params)
+
+        return [
+            PriceVsRevenueItem(
+                product_key=r["product_key"],
+                product_name=r["product_name"],
+                platform_code=r["platform_code"],
+                category_key=str(r.get("category_key")) if r.get("category_key") is not None else None,
+                avg_price=_safe_float(r["avg_price"]),
+                total_revenue=float(r["total_revenue"] or 0),
+                avg_rating=_safe_float(r["avg_rating"]),
+                total_reviews=int(r["total_reviews"] or 0),
+            )
+            for r in rows
+        ]
+    
