@@ -34,8 +34,8 @@ if parent_dir not in sys.path:
 
 # Now import after path setup
 try:
-        from .middleware.activity_middleware import ActivityLoggingMiddleware
-        from .services.activity_logger import ActivityLogger
+        from app.middleware.activity_middleware import ActivityLoggingMiddleware
+        from app.services.activity_logger import ActivityLogger
         ACTIVITY_AVAILABLE = True
 except ImportError:
         ACTIVITY_AVAILABLE = False
@@ -96,7 +96,7 @@ except ImportError:
 
 # Import email service
 try:
-    from .email_service import EmailService, send_otp_email, verify_otp
+    from services.email_service import EmailService, send_otp_email, verify_otp
     email_service_module = True
     print("Email service imported successfully")
 except ImportError:
@@ -104,7 +104,7 @@ except ImportError:
         import sys
         import os
         sys.path.append(os.path.dirname(__file__))
-        from email_service import EmailService, send_otp_email, verify_otp
+        from services.email_service import EmailService, send_otp_email, verify_otp
         email_service_module = True
         print("Email service imported successfully (alternative path)")
     except ImportError as e2:

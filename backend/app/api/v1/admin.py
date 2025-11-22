@@ -5,7 +5,7 @@ Handles user CRUD operations, activity logs, and statistics
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
 import logging
-
+from datetime import datetime
 from app.services.activity_logger import ActivityLogger
 from app.services.admin_service import AdminService
 from models.admin import (
@@ -266,6 +266,8 @@ async def get_activity_logs(
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     db=Depends(get_database)
 ):
+    start = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+    end = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
     """Get all activity logs with optional filters"""
     try:
         activity_logger = ActivityLogger(db)
@@ -273,8 +275,8 @@ async def get_activity_logs(
             page=1,
             limit=10000,
             user_id=user_id,
-            start_date=start_date,
-            end_date=end_date
+            start_date=start,
+            end_date=end
         )
         return {"success": True, "data": result}
     except Exception as e:
