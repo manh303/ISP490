@@ -56,7 +56,16 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
             showToast(response.message || "Tạo vai trò thành công!", "success");
             onSuccess();
         } catch (err: any) {
-            const errorMsg = err?.response?.data?.detail || "Không thể tạo vai trò";
+            console.error("Error creating role:", err);
+            const detail = err?.response?.data?.detail;
+            let errorMsg = "Không thể tạo vai trò";
+            if (typeof detail === 'string') {
+                errorMsg = detail;
+            } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                errorMsg = detail[0].msg;
+            } else if (detail?.msg) {
+                errorMsg = detail.msg;
+            }
             showToast(errorMsg, "error");
         } finally {
             setIsSubmitting(false);

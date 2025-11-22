@@ -12,6 +12,8 @@ services:
       cd backend &&
       uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
+      - key: ML_PATH
+        value: /app/ml
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: SECRET_KEY

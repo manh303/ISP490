@@ -26,7 +26,7 @@ export function DataEngineerWireframe() {
     <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm" style={{ height: '800px' }}>
       <div className="flex h-full">
         {/* Sidebar */}
-        <div className="w-64 bg-gray-50 border-r border-gray-200 p-4">
+        {/* <div className="w-64 bg-gray-50 border-r border-gray-200 p-4">
           <div className="mb-8">
             <h2 className="text-gray-900 mb-6">Tên hệ thống</h2>
           </div>
@@ -57,12 +57,12 @@ export function DataEngineerWireframe() {
               Settings
             </div>
           </nav>
-        </div>
+        </div> */}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col bg-white">
           {/* Header */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          {/* <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-gray-600">thông báo</span>
             </div>
@@ -72,7 +72,7 @@ export function DataEngineerWireframe() {
                 log out
               </Button>
             </div>
-          </div>
+          </div> */}
 
           {/* Main Dashboard Area - Full Width */}
           <div className="flex-1 p-6 bg-white">

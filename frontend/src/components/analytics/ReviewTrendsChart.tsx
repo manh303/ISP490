@@ -1,8 +1,8 @@
 import { TrendingUp, Calendar, Star, MessageSquare } from 'lucide-react';
-import { ReviewTrendData } from '../../services/analyticsApi';
+import { OverviewTrendPoint } from '../../services/analyticsApi';
 
 interface ReviewTrendsChartProps {
-  data: ReviewTrendData[];
+  data: OverviewTrendPoint[];
   title?: string;
 }
 
@@ -25,9 +25,9 @@ export function ReviewTrendsChart({
   }
 
   const latestData = data[data.length - 1] || data[0];
-  const avgRating = (latestData?.avg_rating ?? 0);
-  const totalReviews = (latestData?.total_reviews ?? 0);
-  const productsReviewed = (latestData?.products_reviewed ?? 0);
+  const avgRating = latestData?.avg_rating || 0;
+  const totalReviews = latestData?.total_reviews || 0;
+  const totalOrders = latestData?.total_orders || 0;
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
@@ -54,45 +54,89 @@ export function ReviewTrendsChart({
             <span className="text-xs text-purple-700 font-medium">Tổng đánh giá</span>
           </div>
           <div className="text-2xl font-bold text-purple-900">
-            {(totalReviews || 0).toLocaleString('vi-VN')}
+            {totalReviews.toLocaleString('vi-VN')}
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="h-4 w-4 text-green-600" />
-            <span className="text-xs text-green-700 font-medium">Sản phẩm</span>
+            <span className="text-xs text-green-700 font-medium">Tổng đơn hàng</span>
           </div>
           <div className="text-2xl font-bold text-green-900">
-            {(productsReviewed || 0).toLocaleString('vi-VN')}
+            {totalOrders.toLocaleString('vi-VN')}
           </div>
         </div>
       </div>
 
-      {/* Timeline */}
-      <div className="space-y-3">
-        {data.map((trend, index) => (
-          <div key={index} className="flex items-center gap-3">
-            <div className="text-xs text-gray-500 w-24 flex-shrink-0">
-              {new Date(trend.date).toLocaleDateString('vi-VN')}
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">
-                  {((trend.products_reviewed || 0) || 0).toLocaleString('vi-VN')} sản phẩm
-                </span>
-                <div className="flex items-center gap-2">
-                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                  <span className="font-semibold text-gray-900">
-                    {(trend.avg_rating || 0).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-              <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
-                  style={{ width: `${(trend.avg_rating / 5) * 100}%` }}
+      {/* Line Chart */}
+      <div className="relative h-32 mb-4">
+        <svg width="100%" height="100%" className="overflow-visible">
+          {/* Grid lines */}
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <line
+              key={i}
+              x1="0"
+              y1={`${(i / 5) * 100}%`}
+              x2="100%"
+              y2={`${(i / 5) * 100}%`}
+              stroke="#e5e7eb"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+            />
+          ))}
+          
+          {/* Line path */}
+          <polyline
+            points={data.map((trend, index) => {
+              const x = (index / (data.length - 1)) * 100;
+              const y = 100 - (trend.avg_rating / 5) * 100;
+              return `${x}%,${y}%`;
+            }).join(' ')}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          
+          {/* Data points */}
+          {data.map((trend, index) => {
+            const x = (index / (data.length - 1)) * 100;
+            const y = 100 - (trend.avg_rating / 5) * 100;
+            return (
+              <g key={index}>
+                <circle
+                  cx={`${x}%`}
+                  cy={`${y}%`}
+                  r="4"
+                  fill="#3b82f6"
+                  stroke="white"
+                  strokeWidth="2"
                 />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Timeline labels */}
+      <div className="space-y-2">
+        {data.map((trend, index) => (
+          <div key={index} className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-gray-600">
+                {new Date(trend.date).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-gray-700">
+                {trend.total_orders.toLocaleString('vi-VN')} đơn
+              </span>
+              <div className="flex items-center gap-1">
+                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                <span className="font-semibold text-gray-900">{trend?.avg_rating?.toFixed(2)}</span>
               </div>
             </div>
           </div>

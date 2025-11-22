@@ -35,52 +35,87 @@ export function RatingDistributionChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-sm text-gray-600">
-          {totalProducts.toLocaleString('vi-VN')} sản phẩm
+          {totalProducts.toLocaleString('vi-VN')} SP
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Donut Chart */}
+      <div className="flex justify-center mb-4">
+        <div className="relative w-40 h-40">
+          <svg viewBox="0 0 100 100" className="transform -rotate-90">
+            {data.reduce((acc, item) => {
+              const percentage = (item.product_count / totalProducts) * 100;
+              const startAngle = acc.currentAngle;
+              const angleSize = (percentage / 100) * 360;
+              const endAngle = startAngle + angleSize;
+              
+              const x1 = 50 + 40 * Math.cos((Math.PI * startAngle) / 180);
+              const y1 = 50 + 40 * Math.sin((Math.PI * startAngle) / 180);
+              const x2 = 50 + 40 * Math.cos((Math.PI * endAngle) / 180);
+              const y2 = 50 + 40 * Math.sin((Math.PI * endAngle) / 180);
+              
+              const largeArcFlag = angleSize > 180 ? 1 : 0;
+              
+              const pathData = [
+                `M 50 50`,
+                `L ${x1} ${y1}`,
+                `A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                `Z`
+              ].join(' ');
+              
+              const color = item.rating_bucket >= 4 ? '#22c55e' :
+                           item.rating_bucket >= 3 ? '#3b82f6' :
+                           item.rating_bucket >= 2 ? '#eab308' : '#9ca3af';
+              
+              acc.currentAngle = endAngle;
+              acc.paths.push(
+                <path key={item.rating_bucket} d={pathData} fill={color} opacity={0.9} stroke="white" strokeWidth="1" />
+              );
+              return acc;
+            }, { currentAngle: 0, paths: [] as React.ReactElement[] }).paths}
+            {/* Inner circle for donut */}
+            <circle cx="50" cy="50" r="25" fill="white" />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-xl font-bold text-gray-900">{totalProducts}</div>
+              <div className="text-[10px] text-gray-500">Sản phẩm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legend with bars */}
+      <div className="space-y-2">
         {data.map((item) => {
           const percentage = ((item.product_count / totalProducts) * 100).toFixed(1);
           const barWidth = (item.product_count / maxCount) * 100;
 
           return (
             <div key={item.rating_bucket} className="space-y-1">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 w-16">
-                    {item.rating_bucket > 0 ? (
-                      <>
-                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium text-gray-900">{item.rating_bucket}</span>
-                      </>
-                    ) : (
-                      <span className="font-medium text-gray-500">Chưa đánh giá</span>
-                    )}
-                  </div>
-                  <span className="text-gray-600">
-                    {item.product_count.toLocaleString('vi-VN')} SP
-                  </span>
+                  {item.rating_bucket > 0 ? (
+                    <>
+                      <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                      <span className="font-medium text-gray-900">{item.rating_bucket}⭐</span>
+                    </>
+                  ) : (
+                    <span className="font-medium text-gray-500">Chưa ĐG</span>
+                  )}
+                  <span className="text-gray-600">{item.product_count.toLocaleString('vi-VN')}</span>
                 </div>
                 <span className="font-semibold text-gray-900">{percentage}%</span>
               </div>
-              <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="relative h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className={`absolute h-full rounded-full transition-all duration-500 ${
-                    item.rating_bucket >= 4
-                      ? 'bg-gradient-to-r from-green-500 to-green-600'
-                      : item.rating_bucket >= 3
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600'
-                      : item.rating_bucket >= 2
-                      ? 'bg-gradient-to-r from-yellow-500 to-yellow-600'
-                      : 'bg-gradient-to-r from-gray-400 to-gray-500'
+                    item.rating_bucket >= 4 ? 'bg-green-500' :
+                    item.rating_bucket >= 3 ? 'bg-blue-500' :
+                    item.rating_bucket >= 2 ? 'bg-yellow-500' : 'bg-gray-400'
                   }`}
                   style={{ width: `${barWidth}%` }}
                 />
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Giá TB: {item.avg_price ? item.avg_price.toLocaleString("vi-VN") : "N/A"} ₫</span>
-                <span>{(item.total_reviews || 0).toLocaleString('vi-VN')} đánh giá</span>
               </div>
             </div>
           );

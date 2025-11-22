@@ -17,7 +17,7 @@
 // };
 
 // // Example 2: Protected Route with Layout
-// import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+// import { ProtectedRoute } from '../../components/ui/figma/auth/ProtectedRoute';
 // import Layout from '@/layout/Layout';
 
 // export const ProtectedMLInsightsRoute = () => {

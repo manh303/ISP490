@@ -28,354 +28,455 @@ api.interceptors.request.use(
 
 /* ------------------------- Type Definitions ------------------------- */
 
-export interface ChartDataPoint {
-  [key: string]: any;
+// Filters
+export interface Platform {
+  platform_code: string;
+  platform_name: string;
 }
 
-export interface BaseChartResponse {
-  chart_type: string;
-  title: string;
-  x_axis?: string;
-  y_axis?: string | string[];
-  y_axes?: string[];
-  data: ChartDataPoint[];
+export interface Category {
+  category_key: string;
+  category_name: string;
+  level: number | null;
+  parent_key: string | null;
+  platform_code: string | null;
 }
 
-// Top Rated Products
-export interface TopRatedProduct {
+export interface Product {
+  product_key: string;
   product_name: string;
-  rating_avg: number;
-  review_count: number;
-  price: number;
-  category: string;
+  platform_code: string;
+  category_key: string | null;
 }
 
-export interface TopRatedProductsResponse extends BaseChartResponse {
-  chart_type: 'bar';
-  x_axis: 'product_name';
-  y_axis: 'rating_avg';
-  data: TopRatedProduct[];
+export interface GetCategoriesParams {
+  platform_code?: string;
+  parent_category_key?: string;
 }
 
-export interface GetTopRatedProductsParams {
-  limit?: number; // 1-100, default 20
+export interface GetProductsParams {
+  q: string;
+  platform_code?: string;
+  category_key?: string;
+  limit?: number;
 }
 
-// Rating Distribution
-export interface RatingDistributionData {
-  rating_bucket: number;
-  product_count: number;
-  avg_price: number;
+// Overview
+export interface OverviewKPIs {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
+  total_revenue: number;
+  total_products: number;
   total_reviews: number;
+  avg_price: number;
+  avg_rating: number;
 }
 
-export interface RatingDistributionResponse extends BaseChartResponse {
-  chart_type: 'histogram';
-  x_axis: 'rating_bucket';
-  y_axis: 'product_count';
-  data: RatingDistributionData[];
+export interface GetOverviewKPIsParams {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
 }
 
-export interface GetRatingDistributionParams {
-  category?: string;
-}
-
-// Review Trends
-export interface ReviewTrendData {
+export interface OverviewTrendPoint {
   date: string;
-  products_reviewed: number;
+  revenue: number;
+  total_orders: number;
+  avg_price: number;
   avg_rating: number;
   total_reviews: number;
 }
 
-export interface ReviewTrendsResponse extends BaseChartResponse {
-  chart_type: 'line';
-  x_axis: 'date';
-  y_axis: ['avg_rating', 'total_reviews'];
-  data: ReviewTrendData[];
+export interface OverviewTrends {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
+  points: OverviewTrendPoint[];
 }
 
-export interface GetReviewTrendsParams {
-  days?: number; // 7-365, default 30
+export interface GetOverviewTrendsParams {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
 }
 
-// Price vs Rating
-export interface PriceVsRatingData {
+// Platforms
+export interface PlatformComparisonItem {
+  platform_code: string;
+  platform_name: string;
+  total_revenue: number;
+  total_products: number;
+  avg_price: number;
+  avg_rating: number;
+  total_reviews: number;
+}
+
+export interface GetPlatformComparisonParams {
+  from_date: string;
+  to_date: string;
+  category_key?: string;
+}
+
+export interface CategoryShareItem {
+  category_key: string;
+  category_name: string;
+  platform_code: string;
+  revenue: number;
+  revenue_share: number;
+}
+
+export interface GetCategoryShareParams {
+  from_date: string;
+  to_date: string;
+  platform_code: string;
+}
+
+// Products
+export interface TopProduct {
+  product_key: string;
   product_name: string;
-  price: number;
-  rating_avg: number;
-  review_count: number;
-  category: string;
+  platform_code: string;
+  category_key: string;
+  total_revenue: number;
+  total_reviews: number;
+  avg_rating: number;
+  avg_price: number;
 }
 
-export interface PriceVsRatingResponse extends BaseChartResponse {
-  chart_type: 'scatter';
-  x_axis: 'price';
-  y_axis: 'rating_avg';
-  size: 'review_count';
-  data: PriceVsRatingData[];
+export interface GetTopProductsParams {
+  from_date: string;
+  to_date: string;
+  metric?: 'revenue' | 'review_count' | 'avg_rating' | 'price_growth';
+  platform_code?: string;
+  category_key?: string;
+  limit?: number;
 }
 
-export interface GetPriceVsRatingParams {
-  category?: string;
+export interface ProductTimeseriesPoint {
+  date: string;
+  avg_price: number;
+  min_price: number;
+  max_price: number;
+  total_reviews: number;
+  avg_rating: number;
+  revenue: number;
 }
 
-// Category Performance
+export interface ProductTimeseries {
+  product_key: string;
+  platform_code: string;
+  from_date: string;
+  to_date: string;
+  points: ProductTimeseriesPoint[];
+}
+
+export interface GetProductTimeseriesParams {
+  product_key: string;
+  platform_code: string;
+  from_date: string;
+  to_date: string;
+}
+
+export interface ProductReviewSummary {
+  product_key: string;
+  platform_code: string;
+  from_date: string;
+  to_date: string;
+  total_reviews: number;
+  avg_rating: number;
+  rating_breakdown: {
+    by_rating: { [key: string]: number };
+  };
+  top_helpful_reviews: any[]; // Adjust based on actual structure
+}
+
+export interface GetProductReviewSummaryParams {
+  product_key: string;
+  platform_code: string;
+  from_date: string;
+  to_date: string;
+  top_n?: number;
+}
+
+// Pricing
+export interface PriceDistribution {
+  platform_code: string;
+  category_key?: string;
+  from_date: string;
+  to_date: string;
+  min_price: number;
+  p25_price: number;
+  median_price: number;
+  p75_price: number;
+  max_price: number;
+}
+
+export interface GetPriceDistributionParams {
+  from_date: string;
+  to_date: string;
+  platform_code: string;
+  category_key?: string;
+}
+
+export interface PriceVsRevenueItem {
+  product_key: string;
+  product_name: string;
+  platform_code: string;
+  category_key: string;
+  avg_price: number;
+  total_revenue: number;
+  avg_rating: number;
+  total_reviews: number;
+}
+
+export interface GetPriceVsRevenueParams {
+  from_date: string;
+  to_date: string;
+  platform_code: string;
+  category_key?: string;
+  limit?: number;
+}
+
+export interface PriceVsRatingData {
+  product_key: string;
+  product_name: string;
+  platform_code: string;
+  category_key: string | null;
+  avg_price: number;
+  total_revenue: number;
+  avg_rating: number | null;
+  total_reviews: number;
+}
+
 export interface CategoryPerformanceData {
   category: string;
   product_count: number;
   avg_rating: number;
-  avg_price: number;
-  total_reviews: number;
   high_rated_count: number;
-}
-
-export interface CategoryPerformanceResponse extends BaseChartResponse {
-  chart_type: 'grouped_bar';
-  x_axis: 'category';
-  y_axes: ['avg_rating', 'product_count', 'avg_price'];
-  data: CategoryPerformanceData[];
-}
-
-// Sentiment Distribution
-export interface SentimentDistributionData {
-  sentiment: string;
-  product_count: number;
-  review_count: number;
-}
-
-export interface SentimentDistributionResponse extends BaseChartResponse {
-  chart_type: 'pie';
-  label: 'sentiment';
-  value: 'product_count';
-  data: SentimentDistributionData[];
-}
-
-// Price Segments
-export interface PriceSegmentData {
-  price_segment: string;
-  product_count: number;
-  avg_rating: number;
   total_reviews: number;
-  high_rated: number;
 }
 
-export interface PriceSegmentsResponse extends BaseChartResponse {
-  chart_type: 'stacked_bar';
-  x_axis: 'price_segment';
-  y_axes: ['product_count', 'high_rated'];
-  data: PriceSegmentData[];
+// Reports
+export interface OverviewReport {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
+  kpis: OverviewKPIs;
+  trends: OverviewTrends;
+  platform_comparison: PlatformComparisonItem[];
+  category_share: CategoryShareItem[];
 }
 
-// Platform Comparison
-export interface PlatformComparisonData {
-  platform: string;
-  product_count: number;
-  avg_rating: number;
-  avg_price: number;
-  total_reviews: number;
-  high_rated_count: number;
+export interface GetOverviewReportParams {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
 }
 
-export interface PlatformComparisonResponse extends BaseChartResponse {
-  chart_type: 'grouped_bar';
-  x_axis: 'platform';
-  y_axes: ['product_count', 'avg_rating', 'total_reviews'];
-  data: PlatformComparisonData[];
+export interface ProductReport {
+  product_key: string;
+  platform_code: string;
+  from_date: string;
+  to_date: string;
+  timeseries: ProductTimeseries;
+  review_summary: ProductReviewSummary;
 }
 
-// Platform Price Comparison
-export interface PlatformPriceComparisonData {
-  platform: string;
-  category: string;
-  avg_price: number;
-  min_price: number;
-  max_price: number;
-  product_count: number;
-}
-
-export interface PlatformPriceComparisonResponse extends BaseChartResponse {
-  chart_type: 'grouped_bar';
-  x_axis: 'category';
-  y_axis: 'avg_price';
-  group_by: 'platform';
-  data: PlatformPriceComparisonData[];
-}
-
-export interface GetPlatformPriceComparisonParams {
-  category?: string;
-}
-
-// Dashboard Summary
-export interface DashboardSummary {
-  total_products: number;
-  overall_avg_rating: number;
-  total_reviews: number;
-  avg_price: number;
-  total_categories: number;
-  high_rated_products: number;
-  popular_products: number;
-  total_platforms: number;
-}
-
-export interface DashboardSummaryResponse {
-  summary: DashboardSummary;
-  timestamp: string;
+export interface GetProductReportParams {
+  product_key: string;
+  platform_code: string;
+  from_date: string;
+  to_date: string;
 }
 
 /* ------------------------- API Functions ------------------------- */
 
 /**
- * Get Top Rated Products
- * Top products by rating - Bar Chart
- * @param params - Query parameters (limit: 1-100, default 20)
+ * Get Platforms
+ * List Platforms
  */
-export const getTopRatedProducts = async (
-  params?: GetTopRatedProductsParams
-): Promise<TopRatedProductsResponse> => {
-  const response = await api.get('/v1/analytics/products/top-rated', { params });
+export const getPlatforms = async (): Promise<Platform[]> => {
+  const response = await api.get('/v1/analytics/filters/platforms');
   return response.data;
 };
 
 /**
- * Get Rating Distribution
- * Rating distribution histogram
- * @param params - Query parameters (category: optional)
+ * Get Categories
+ * List Categories
+ * @param params - Query parameters
  */
-export const getRatingDistribution = async (
-  params?: GetRatingDistributionParams
-): Promise<RatingDistributionResponse> => {
-  const response = await api.get('/v1/analytics/products/rating-distribution', { params });
+export const getCategories = async (
+  params?: GetCategoriesParams
+): Promise<Category[]> => {
+  const response = await api.get('/v1/analytics/filters/categories', { params });
   return response.data;
 };
 
 /**
- * Get Review Trends
- * Review trends over time - Line Chart
- * @param params - Query parameters (days: 7-365, default 30)
+ * Search Products
+ * Search Products
+ * @param params - Query parameters
  */
-export const getReviewTrends = async (
-  params?: GetReviewTrendsParams
-): Promise<ReviewTrendsResponse> => {
-  const response = await api.get('/v1/analytics/reviews/trends', { params });
+export const getProducts = async (
+  params: GetProductsParams
+): Promise<Product[]> => {
+  const response = await api.get('/v1/analytics/filters/products', { params });
   return response.data;
 };
 
 /**
- * Get Price vs Rating
- * Price vs Rating correlation - Scatter Plot
- * @param params - Query parameters (category: optional)
+ * Get Overview KPIs
+ * Get Overview Kpis
+ * @param params - Query parameters
  */
-export const getPriceVsRating = async (
-  params?: GetPriceVsRatingParams
-): Promise<PriceVsRatingResponse> => {
-  const response = await api.get('/v1/analytics/products/price-vs-rating', { params });
+export const getOverviewKPIs = async (
+  params: GetOverviewKPIsParams
+): Promise<OverviewKPIs> => {
+  const response = await api.get('/v1/analytics/overview/kpis', { params });
   return response.data;
 };
 
 /**
- * Get Category Performance
- * Category performance comparison - Grouped Bar Chart
+ * Get Overview Trends
+ * Get Overview Trends
+ * @param params - Query parameters
  */
-export const getCategoryPerformance = async (): Promise<CategoryPerformanceResponse> => {
-  const response = await api.get('/v1/analytics/products/category-performance');
+export const getOverviewTrends = async (
+  params: GetOverviewTrendsParams
+): Promise<OverviewTrends> => {
+  const response = await api.get('/v1/analytics/overview/trends', { params });
   return response.data;
 };
 
 /**
- * Get Sentiment Distribution
- * Review sentiment distribution - Pie Chart
+ * Compare Platforms
+ * Compare Platforms
+ * @param params - Query parameters
  */
-export const getSentimentDistribution = async (): Promise<SentimentDistributionResponse> => {
-  const response = await api.get('/v1/analytics/reviews/sentiment-distribution');
+export const getPlatformComparison = async (
+  params: GetPlatformComparisonParams
+): Promise<PlatformComparisonItem[]> => {
+  const response = await api.get('/v1/analytics/platforms/comparison', { params });
   return response.data;
 };
 
 /**
- * Get Price Segments
- * Price segment analysis - Stacked Bar Chart
+ * Get Category Share
+ * Get Category Share
+ * @param params - Query parameters
  */
-export const getPriceSegments = async (): Promise<PriceSegmentsResponse> => {
-  const response = await api.get('/v1/analytics/products/price-segments');
+export const getCategoryShare = async (
+  params: GetCategoryShareParams
+): Promise<CategoryShareItem[]> => {
+  const response = await api.get('/v1/analytics/platforms/category-share', { params });
   return response.data;
 };
 
 /**
- * Get Platform Comparison
- * Platform comparison - Tiki vs Lazada - Grouped Bar Chart
+ * Get Top Products
+ * Get Top Products
+ * @param params - Query parameters
  */
-export const getPlatformComparison = async (): Promise<PlatformComparisonResponse> => {
-  const response = await api.get('/v1/analytics/platforms/comparison');
+export const getTopProducts = async (
+  params: GetTopProductsParams
+): Promise<TopProduct[]> => {
+  const response = await api.get('/v1/analytics/products/top', { params });
   return response.data;
 };
 
 /**
- * Get Platform Price Comparison
- * Platform price comparison by category - Box Plot data
- * @param params - Query parameters (category: optional)
+ * Get Product Timeseries
+ * Get Product Timeseries
+ * @param params - Query parameters
  */
-export const getPlatformPriceComparison = async (
-  params?: GetPlatformPriceComparisonParams
-): Promise<PlatformPriceComparisonResponse> => {
-  const response = await api.get('/v1/analytics/platforms/price-comparison', { params });
+export const getProductTimeseries = async (
+  params: GetProductTimeseriesParams
+): Promise<ProductTimeseries> => {
+  const { product_key, ...queryParams } = params;
+  const response = await api.get(`/v1/analytics/products/${product_key}/timeseries`, { params: queryParams });
   return response.data;
 };
 
 /**
- * Get Dashboard Summary
- * Dashboard summary metrics
+ * Get Product Review Summary
+ * Get Product Review Summary
+ * @param params - Query parameters
  */
-export const getDashboardSummary = async (): Promise<DashboardSummaryResponse> => {
-  const response = await api.get('/v1/analytics/dashboard/summary');
+export const getProductReviewSummary = async (
+  params: GetProductReviewSummaryParams
+): Promise<ProductReviewSummary> => {
+  const { product_key, ...queryParams } = params;
+  const response = await api.get(`/v1/analytics/products/${product_key}/reviews/summary`, { params: queryParams });
+  return response.data;
+};
+
+/**
+ * Get Price Distribution
+ * Get Price Distribution
+ * @param params - Query parameters
+ */
+export const getPriceDistribution = async (
+  params: GetPriceDistributionParams
+): Promise<PriceDistribution> => {
+  const response = await api.get('/v1/analytics/pricing/price-distribution', { params });
+  return response.data;
+};
+
+/**
+ * Get Price Vs Revenue
+ * Get Price Vs Revenue
+ * @param params - Query parameters
+ */
+export const getPriceVsRevenue = async (
+  params: GetPriceVsRevenueParams
+): Promise<PriceVsRevenueItem[]> => {
+  const response = await api.get('/v1/analytics/pricing/price-vs-revenue', { params });
+  return response.data;
+};
+
+/**
+ * Get Overview Report
+ * Get Overview Report
+ * @param params - Query parameters
+ */
+export const getOverviewReport = async (
+  params: GetOverviewReportParams
+): Promise<OverviewReport> => {
+  const response = await api.get('/v1/analytics/report/overview', { params });
+  return response.data;
+};
+
+/**
+ * Get Product Report
+ * Get Product Report
+ * @param params - Query parameters
+ */
+export const getProductReport = async (
+  params: GetProductReportParams
+): Promise<ProductReport> => {
+  const response = await api.get('/v1/analytics/report/product', { params });
   return response.data;
 };
 
 /* ------------------------- Helper Functions ------------------------- */
 
 /**
- * Get all analytics data at once
+ * Get all overview data at once
  * Useful for initial dashboard load
  */
-export const getAllAnalytics = async () => {
+export const getAllOverviewData = async (params: GetOverviewReportParams) => {
   try {
-    const [
-      summary,
-      topRated,
-      ratingDist,
-      reviewTrends,
-      priceVsRating,
-      categoryPerf,
-      sentiment,
-      priceSegments,
-      platformComp,
-      platformPrice,
-    ] = await Promise.all([
-      getDashboardSummary(),
-      getTopRatedProducts({ limit: 20 }),
-      getRatingDistribution(),
-      getReviewTrends({ days: 30 }),
-      getPriceVsRating(),
-      getCategoryPerformance(),
-      getSentimentDistribution(),
-      getPriceSegments(),
-      getPlatformComparison(),
-      getPlatformPriceComparison(),
-    ]);
-
-    return {
-      summary,
-      topRated,
-      ratingDistribution: ratingDist,
-      reviewTrends,
-      priceVsRating,
-      categoryPerformance: categoryPerf,
-      sentimentDistribution: sentiment,
-      priceSegments,
-      platformComparison: platformComp,
-      platformPriceComparison: platformPrice,
-    };
+    const report = await getOverviewReport(params);
+    return report;
   } catch (error) {
-    console.error('Error fetching all analytics:', error);
+    console.error('Error fetching overview data:', error);
     throw error;
   }
 };
@@ -383,21 +484,19 @@ export const getAllAnalytics = async () => {
 /**
  * Get analytics for a specific category
  */
-export const getCategoryAnalytics = async (category: string) => {
+export const getCategoryAnalytics = async (categoryKey: string, fromDate: string, toDate: string) => {
   try {
-    const [ratingDist, priceVsRating, platformPrice] = await Promise.all([
-      getRatingDistribution({ category }),
-      getPriceVsRating({ category }),
-      getPlatformPriceComparison({ category }),
+    const [kpis, trends] = await Promise.all([
+      getOverviewKPIs({ from_date: fromDate, to_date: toDate, category_key: categoryKey }),
+      getOverviewTrends({ from_date: fromDate, to_date: toDate, category_key: categoryKey }),
     ]);
 
     return {
-      ratingDistribution: ratingDist,
-      priceVsRating,
-      platformPriceComparison: platformPrice,
+      kpis,
+      trends,
     };
   } catch (error) {
-    console.error(`Error fetching analytics for category ${category}:`, error);
+    console.error(`Error fetching analytics for category ${categoryKey}:`, error);
     throw error;
   }
 };

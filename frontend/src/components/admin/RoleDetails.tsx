@@ -25,7 +25,16 @@ export default function RoleDetails({ roleId, onClose, onEdit }: RoleDetailsProp
                 const data = await getRoleDetails(roleId);
                 setRole(data);
             } catch (err: any) {
-                const errorMsg = err?.response?.data?.detail || "Không thể tải thông tin vai trò";
+                console.error('Error fetching role details:', err);
+                let errorMsg = "Không thể tải thông tin vai trò";
+                const detail = err?.response?.data?.detail;
+                if (typeof detail === 'string') {
+                    errorMsg = detail;
+                } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                    errorMsg = detail[0].msg;
+                } else if (detail?.msg) {
+                    errorMsg = detail.msg;
+                }
                 setError(errorMsg);
                 showToast(errorMsg, "error");
             } finally {

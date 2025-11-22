@@ -56,10 +56,11 @@ def extract_sentiment_training_data():
             ELSE 'neutral'
         END as sentiment_label,
         created_at
-    FROM dwh.dim_review
+    FROM dwh.fact_reviews_detail
     WHERE review_text IS NOT NULL 
     AND review_text != ''
     AND LENGTH(review_text) > 10
+    AND rating IS NOT NULL
     LIMIT 5000
     """
     
