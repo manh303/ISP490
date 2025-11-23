@@ -113,13 +113,21 @@ class AnalyticsService:
 
             display_name = " > ".join(parts) if parts else (std or "")
 
-            # xác định level
+            # CHỈ LẤY TÊN Ở LEVEL CUỐI
             if lvl3:
-                level = 3
+                display_name = lvl3
+                level = 3          # vd: Smartphones
             elif lvl2:
-                level = 2
+                display_name = lvl2
+                level = 2         
+            elif lvl1:
+                display_name = lvl1
+                level = 1         
+            elif std:
+                display_name = std           
             else:
-                level = 1
+                display_name = ""
+          
 
             result.append(
                 CategoryFilterItem(
