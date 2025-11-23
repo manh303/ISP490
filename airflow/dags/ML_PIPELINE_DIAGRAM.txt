@@ -1,0 +1,246 @@
+================================================================================
+    ML TRAINING & INFERENCE PIPELINE - FLOW DIAGRAM
+================================================================================
+
+DAG: ml_training_inference_pipeline
+Schedule: 0 3 * * * (Daily at 3:00 AM, sau khi DWH pipeline chạy xong)
+Owner: ml_team
+
+================================================================================
+PHASE 0: SETUP & VALIDATION
+================================================================================
+
+    START
+      |
+      v
+  ┌─────────────────────┐
+  │ setup_directories   │
+  │ - Create /models    │
+  │ - Create /logs      │
+  └─────────────────────┘
+      |
+      v
+  ┌─────────────────────────────┐
+  │ check_dwh_data              │
+  │ - fact_review (min 100)     │
+  │ - dim_product (min 50)      │
+  │ - fact_product_daily (100)  │
+  └─────────────────────────────┘
+      |
+      v
+================================================================================
+PHASE 1: MODEL TRAINING (PARALLEL)
+================================================================================
+
+      ┌─────────────────┬──────────────────┬─────────────────┐
+      v                 v                  v
+┌──────────────┐  ┌──────────────┐  ┌─────────────┐
+│ SENTIMENT    │  │ RECOMMENDER  │  │ PRICE       │
+│ ANALYSIS     │  │ MODEL        │  │ PREDICTION  │
+└──────────────┘  └──────────────┘  └─────────────┘
+      │                 │                  │
+      │  train_         │  train_          │  train_
+      │  sentiment_     │  recommender.py  │  price_
+      │  model.py       │                  │  model.py
+      │                 │                  │
+      │  Model:         │  Model:          │  Model:
+      │  TF-IDF +       │  TF-IDF +        │  Random Forest
+      │  Logistic       │  KNN             │  Regressor
+      │  Regression     │  (Content-based) │
+      │                 │                  │
+      │  Input:         │  Input:          │  Input:
+      │  - fact_review  │  - dim_product   │  - fact_product_
+      │  - review_body  │  - dim_brand     │    daily
+      │  - rating       │  - dim_category  │  - avg_price
+      │                 │                  │  - rating
+      │                 │                  │  - review_count
+      │  Output:        │  Output:         │  Output:
+      │  sentiment_     │  content_        │  price_
+      │  tfidf_         │  recommender_    │  forecast_rf_
+      │  logreg_        │  tfidf_          │  v1.0.pkl
+      │  v1.0.pkl       │  v1.0.pkl        │
+      │                 │                  │
+      │  Classes:       │  Vocab:          │  Features:
+      │  - positive     │  ~5000 terms     │  - min_price
+      │  - negative     │                  │  - max_price
+      │  - neutral      │                  │  - review_count
+      │                 │                  │  - rating
+      │  Metrics:       │  Metrics:        │  Metrics:
+      │  - Accuracy     │  - Vocab size    │  - MAE
+      │  - F1 Score     │                  │  - RMSE
+      │                 │                  │
+      └────────┬────────┴──────────────────┴────────┘
+               v
+       ┌───────────────────┐
+       │ validate_models   │
+       │ - Check .pkl files│
+       │ - Check file size │
+       └───────────────────┘
+               |
+               v
+================================================================================
+PHASE 2: BATCH INFERENCE (PARALLEL)
+================================================================================
+
+      ┌─────────────────┬──────────────────┬─────────────────┐
+      v                 v                  v
+┌──────────────┐  ┌──────────────┐  ┌─────────────┐
+│ SENTIMENT    │  │ PRODUCT      │  │ PRICE       │
+│ SCORING      │  │ RECOMMEND    │  │ FORECAST    │
+└──────────────┘  └──────────────┘  └─────────────┘
+      │                 │                  │
+      │  run_           │  run_            │  run_
+      │  sentiment_     │  recommendations │  price_
+      │  batch.py       │  .py             │  predictions.py
+      │                 │                  │
+      │  Process:       │  Process:        │  Process:
+      │  1. Load model  │  1. Load model   │  1. Load model
+      │  2. Fetch       │  2. Fetch all    │  2. Fetch recent
+      │     unscored    │     products     │     product data
+      │     reviews     │  3. Build        │  3. Extract
+      │  3. Predict     │     TF-IDF       │     features
+      │     sentiment   │     vectors      │  4. Predict
+      │  4. Write to DB │  4. Compute      │     prices
+      │                 │     similarity   │  5. Write to DB
+      │                 │     (KNN)        │
+      │                 │  5. Generate     │
+      │                 │     top-10       │
+      │                 │     per product  │
+      │                 │  6. Write to DB  │
+      │                 │                  │
+      │  Output:        │  Output:         │  Output:
+      │  ml.fact_       │  ml.fact_        │  ml.fact_
+      │  review_        │  product_        │  price_
+      │  sentiment      │  recommendation  │  prediction
+      │                 │                  │
+      │  Fields:        │  Fields:         │  Fields:
+      │  - review_id    │  - source_       │  - date_sk
+      │  - sentiment_   │    product_sk    │  - product_sk
+      │    label        │  - recommended_  │  - predicted_
+      │  - sentiment_   │    product_sk    │    price
+      │    score        │  - rank          │  - ci_lower
+      │  - model_sk     │  - similarity_   │  - ci_upper
+      │                 │    score         │  - model_sk
+      │                 │  - model_sk      │
+      │                 │                  │
+      │  Expected:      │  Expected:       │  Expected:
+      │  ~N reviews     │  ~N×10 recs      │  ~N prices
+      │                 │                  │
+      └────────┬────────┴──────────────────┴────────┘
+               v
+       ┌───────────────────────┐
+       │ validate_ml_results   │
+       │ - Check dim_ml_model  │
+       │ - Check fact tables   │
+       │ - Count records       │
+       └───────────────────────┘
+               |
+               v
+================================================================================
+PHASE 3: NOTIFICATION
+================================================================================
+
+       ┌───────────────────┐
+       │ notify_completion │
+       │ - Save JSON log   │
+       │ - Send alert      │
+       └───────────────────┘
+               |
+               v
+             END
+
+================================================================================
+DATABASE SCHEMA
+================================================================================
+
+ML Schema (ml.*)
+├── dim_ml_model
+│   ├── model_sk (PK)
+│   ├── model_name
+│   ├── model_type (sentiment/recommendation/price)
+│   ├── model_version
+│   ├── trained_at
+│   └── metrics (JSON)
+│
+├── fact_review_sentiment
+│   ├── review_id → dwh.fact_review.review_sk
+│   ├── product_sk → dwh.dim_product.product_sk
+│   ├── sentiment_label (positive/negative/neutral)
+│   ├── sentiment_score (0.0-1.0)
+│   └── model_sk → dim_ml_model.model_sk
+│
+├── fact_product_recommendation
+│   ├── source_product_sk → dwh.dim_product.product_sk
+│   ├── recommended_product_sk → dwh.dim_product.product_sk
+│   ├── rank (1-10)
+│   ├── similarity_score (0.0-1.0)
+│   ├── recommendation_type (content_based_tfidf)
+│   └── model_sk → dim_ml_model.model_sk
+│
+└── fact_price_prediction
+    ├── date_sk → dwh.dim_date.date_sk
+    ├── product_sk → dwh.dim_product.product_sk
+    ├── predicted_price (VND)
+    ├── ci_lower (confidence interval lower)
+    ├── ci_upper (confidence interval upper)
+    ├── run_id
+    └── model_sk → dim_ml_model.model_sk
+
+================================================================================
+TIMING & RESOURCES
+================================================================================
+
+Total Duration: ~15-30 minutes (depending on data volume)
+
+Phase 1 (Training):         5-10 minutes
+  - Sentiment model:         2-3 min   (depends on review count)
+  - Recommender model:       1-2 min   (depends on product count)
+  - Price model:             2-5 min   (depends on price history)
+
+Phase 2 (Inference):        10-20 minutes
+  - Sentiment batch:         5-10 min  (depends on unscored reviews)
+  - Recommendations:         3-5 min   (depends on product count)
+  - Price predictions:       2-5 min   (depends on active products)
+
+Phase 3 (Validation):       <1 minute
+
+Resources:
+  - CPU: 2-4 cores
+  - Memory: 4-8 GB
+  - Disk: 100 MB (models)
+  - Database: 10-20 connections
+
+================================================================================
+ENVIRONMENT VARIABLES
+================================================================================
+
+Required:
+  DATABASE_URL              PostgreSQL connection string
+  ML_MODEL_DIR              Path to save/load models (/app/ml/models)
+  PYTHONPATH                Python path (/app/ml)
+
+Optional:
+  AIRFLOW__SCHEDULER__JOB_HEARTBEAT_SEC=30
+  AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=10
+
+================================================================================
+MONITORING
+================================================================================
+
+Logs:
+  docker logs airflow-scheduler -f | grep "ml_training"
+
+Model Files:
+  ls -lh /app/ml/models/*.pkl
+
+Database:
+  SELECT * FROM ml.dim_ml_model;
+  SELECT COUNT(*) FROM ml.fact_review_sentiment;
+  SELECT COUNT(*) FROM ml.fact_product_recommendation;
+  SELECT COUNT(*) FROM ml.fact_price_prediction;
+
+Airflow UI:
+  http://localhost:8080/dags/ml_training_inference_pipeline/graph
+
+================================================================================
+

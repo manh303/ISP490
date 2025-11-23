@@ -1,0 +1,447 @@
+1. Tổng quan dự án
+
+Dự án là một E-commerce Decision Support System (DSS) cho các sàn thương mại điện tử Việt Nam (ví dụ Tiki, Lazada).
+Mục tiêu:
+
+Thu thập dữ liệu sản phẩm, giá, đánh giá từ nhiều nền tảng.
+
+Chuẩn hoá và xây dựng Data Warehouse dạng star schema.
+
+Huấn luyện các mô hình Machine Learning:
+
+Gợi ý sản phẩm tương tự.
+
+Dự đoán/khuyến nghị giá.
+
+Phân tích đánh giá/sentiment.
+
+Cung cấp màn hình DSS cho Analyst, Admin và các bên liên quan để ra quyết định.
+
+Dự án gồm 4 “khối lớn”:
+
+Data Layer: Crawler → MinIO → Staging → ODS → DWH → bảng ML output.
+
+ML Layer: Training + Serving model, ghi kết quả ra bảng ml_*.
+
+Backend Layer (FastAPI): API cho từng role.
+
+Frontend Layer (Vercel): Dashboard cho Admin, Data Engineer, ML Engineer, Analyst, Customer.
+
+2. Kiến trúc dữ liệu & hệ thống
+2.1. Dòng dữ liệu
+
+Crawler & Raw Zone
+
+Crawler lấy dữ liệu sản phẩm & review từ Tiki, Lazada.
+
+Lưu file dạng JSONL vào local → upload lên MinIO (bucket crawler-data).
+
+Airflow DAG minio_ecommerce_dwh_pipeline quản lý pipeline này.
+
+Staging & ODS
+
+Staging: lưu dữ liệu thô gần nguyên bản.
+
+ODS: làm sạch, chuẩn hóa (price, text, category, mã hóa tiếng Việt…), tách thành:
+
+ods_product
+
+ods_price_point
+
+ods_review
+
+ods_shop, ods_category, …
+
+Data Warehouse (DWH – Star Schema)
+
+Dimension:
+
+dwh_dim_product
+
+dwh_dim_platform
+
+dwh_dim_category
+
+dwh_dim_brand
+
+dwh_dim_date
+
+dwh_dim_shop
+
+Fact:
+
+dwh_fact_product_daily
+
+dwh_fact_price
+
+dwh_fact_review
+
+DWH được build bởi Spark script (trước đây là load_cleaned_from_minio.py, đã tách thành pipeline sản phẩm + review).
+
+ML Output
+
+Bảng lưu kết quả mô hình:
+
+ml_product_recommendations
+
+ml_price_predictions
+
+(Có thể thêm: ml_demand_forecast, ml_customer_segment…)
+
+ML training được chạy bởi DAG ml_training_pipeline.
+
+Monitoring & Meta
+
+Schema meta:
+
+meta.etl_job, meta.etl_run, meta.etl_log: theo dõi pipeline.
+
+meta.table_stats: volume, freshness theo bảng.
+
+meta.data_quality_issue: log lỗi chất lượng dữ liệu.
+
+IAM & Backend
+
+Schema iam:
+
+iam_user, iam_role, iam_permission, iam_user_role, iam_role_permission, iam_audit_log…
+
+Backend FastAPI:
+
+Module auth, admin, analytics, ml, data_engineer.
+
+3. Các role và nhiệm vụ chi tiết
+3.1. Super Admin / Admin
+
+Mục tiêu: Quản lý hệ thống, user, role, phân quyền.
+
+Nhiệm vụ chính:
+
+Tạo và quản lý user:
+
+Tạo mới tài khoản cho Data Engineer, ML Engineer, Analyst, Customer.
+
+Gán role, reset mật khẩu, khóa/mở khóa tài khoản.
+
+Quản lý role & permission:
+
+Định nghĩa role: ADMIN, DATA_ENGINEER, ML_ENGINEER, ANALYST, CUSTOMER.
+
+Thêm/xóa quyền tương ứng với từng API/feature.
+
+Theo dõi audit log:
+
+Xem lịch sử đăng nhập, hành động nhạy cảm (tạo user, thay đổi role, đổi cấu hình…).
+
+API chính Admin sử dụng:
+
+Auth / IAM
+
+POST /api/v1/auth/signin – đăng nhập.
+
+POST /api/v1/auth/signup (tuỳ thiết kế) – tạo user cơ bản.
+
+User & Role
+
+GET /api/v1/admin/users – danh sách user.
+
+POST /api/v1/admin/users – tạo user mới (Admin tạo user cho role khác).
+
+PUT /api/v1/admin/users/{user_id} – cập nhật thông tin, trạng thái.
+
+DELETE /api/v1/admin/users/{user_id} – vô hiệu hóa user (soft delete).
+
+GET /api/v1/admin/roles – danh sách role.
+
+POST /api/v1/admin/roles – tạo role mới.
+
+GET /api/v1/admin/permissions – danh sách permission.
+
+POST /api/v1/admin/roles/{role_id}/permissions – gán quyền cho role.
+
+Audit
+
+GET /api/v1/admin/audit-logs – xem audit log (lọc theo user, action, thời gian).
+
+3.2. Data Engineer
+
+Mục tiêu: Đảm bảo data pipeline chạy ổn, dữ liệu sạch, đầy đủ, kịp thời.
+
+Nhiệm vụ chính:
+
+Theo dõi tình trạng DAG:
+
+Crawl có chạy không? DWH build có lỗi không?
+
+Theo dõi volume/freshness:
+
+Ngày hôm nay đã load bao nhiêu record vào staging/ods/dwh?
+
+Theo dõi data quality:
+
+Bao nhiêu bản ghi bị lỗi (null price, negative price, invalid date…)?
+
+Những issue nào đang OPEN/RESOLVED?
+
+Trigger lại pipeline khi fail (nếu được phép).
+
+Tối ưu hiệu năng ETL, chỉnh schema khi cần.
+
+API chính Data Engineer sử dụng (monitoring từ schema meta):
+
+ETL Overview
+
+GET /api/v1/data/etl/overview?date=YYYY-MM-DD
+→ Tổng quan các job trong ngày: status, start/end, duration, rows_read, rows_written…
+
+ETL Runs & Logs
+
+GET /api/v1/data/etl/runs?job_code=...&from_date=...&to_date=...
+→ Danh sách các lần chạy của một job (ví dụ MINIO_ECOMMERCE_DWH_PIPELINE, ML_TRAINING_PIPELINE).
+
+GET /api/v1/data/etl/runs/{run_id}
+→ Chi tiết 1 run (status, error_message…).
+
+GET /api/v1/data/etl/logs?run_id=...
+→ Log chi tiết theo run.
+
+Data Volume & Freshness
+
+GET /api/v1/data/volume/snapshot?date=YYYY-MM-DD
+→ Row_count + last_loaded_at của từng bảng theo layer: staging, ods, dwh.
+
+GET /api/v1/data/volume/history?schema=dwh&table=fact_product_daily&from_date=...&to_date=...
+→ Dùng để vẽ chart row_count theo ngày.
+
+Data Quality
+
+GET /api/v1/data/quality/issues?status=OPEN&layer=ods
+→ Danh sách data quality issue chưa xử lý.
+
+GET /api/v1/data/quality/issues/{issue_id}
+→ Chi tiết issue (affected_rows, sample_rows).
+
+PATCH /api/v1/data/quality/issues/{issue_id}
+→ Cập nhật status OPEN → RESOLVED.
+
+(Optional) Trigger job
+
+POST /api/v1/data/etl/jobs/{job_code}/trigger
+→ Gọi Airflow trigger DAG tương ứng (nếu bạn cho phép làm từ UI).
+
+3.3. ML Engineer
+
+Mục tiêu: Xây dựng, huấn luyện, triển khai và giám sát các mô hình ML.
+
+Nhiệm vụ chính:
+
+Lấy dữ liệu training từ DWH.
+
+Huấn luyện các mô hình:
+
+Sentiment classification từ review.
+
+Product clustering / similarity.
+
+Price prediction/optimization.
+
+Lưu model + metadata (ml.models_storage) + log metrics.
+
+Chạy pipeline training định kỳ (Airflow DAG ml_training_pipeline).
+
+Cung cấp API cho backend để:
+
+Lấy danh sách model, version, metrics.
+
+Gọi prediction online/offline.
+
+Xem status training jobs.
+
+Bảng chính:
+
+ml.models_storage – registry model.
+
+ml.model_metrics – lưu độ chính xác, MAPE, RMSE…
+
+ml_price_predictions, ml_product_recommendations – output cho DSS.
+
+API chính ML Engineer sử dụng:
+
+Model Registry
+
+GET /api/v1/ml/models
+→ Danh sách model (name, type, version, status).
+
+GET /api/v1/ml/models/{model_id}
+→ Chi tiết 1 model (hyperparams, metrics, created_at…).
+
+POST /api/v1/ml/models/register
+→ Đăng ký model mới vào registry (khi training xong).
+
+Training Jobs
+
+GET /api/v1/ml/training-jobs
+→ Lịch sử các lần training (giống meta.etl_run nhưng cho ML).
+
+POST /api/v1/ml/training-jobs/{job_code}/trigger
+→ Trigger lại training (gọi tới DAG ml_training_pipeline).
+
+Prediction APIs (cho FE/Analyst/Customer dùng)
+
+POST /api/v1/ml/predict/price
+→ Input: product_id/platform/time → Output: predicted_price, confidence_interval.
+
+GET /api/v1/ml/recommendations/products?product_id=...
+→ Trả về danh sách sản phẩm tương tự từ ml_product_recommendations.
+
+(Nếu có sentiment API):
+POST /api/v1/ml/sentiment → Input: text review → Output: label, score.
+
+3.4. Analyst
+
+Mục tiêu: Sử dụng dữ liệu & ML output để phân tích và ra báo cáo cho business.
+
+Nhiệm vụ chính:
+
+Xem dashboard tổng quan:
+
+Số lượng sản phẩm, doanh thu (nếu có), rating, phân bổ giá theo platform/category.
+
+So sánh giữa các platform (Tiki vs Lazada):
+
+Giá trung bình, rating, số sản phẩm theo category.
+
+Đào sâu theo category, brand:
+
+Phân tích xu hướng giá, deal/discount, stock.
+
+Xem insight từ ML:
+
+Giá đề xuất so với giá hiện tại.
+
+Gợi ý sản phẩm tương tự/cross-sell.
+
+Sentiment theo category/brand/platform theo thời gian.
+
+Xuất dữ liệu ra Excel/PDF để làm report.
+
+API chính Analyst sử dụng (đọc từ dwh_* và ml_*):
+
+Dashboard tổng quan
+
+GET /api/v1/analytics/overview?from_date=...&to_date=...
+→ Tổng sản phẩm, tổng lượt review, giá trung bình, số platform, top category…
+
+So sánh platform
+
+GET /api/v1/analytics/platforms/comparison?from_date=...&to_date=...
+→ So sánh KPI giữa Tiki, Lazada: avg_price, avg_rating, product_count, review_count…
+
+Phân tích category/brand
+
+GET /api/v1/analytics/categories/trend?category_id=...&from_date=...&to_date=...
+
+GET /api/v1/analytics/brands/trend?brand_id=...&from_date=...&to_date=...
+→ Dùng dwh_fact_product_daily + dwh_dim_category/brand.
+
+Phân phối giá
+
+GET /api/v1/analytics/prices/distribution?category_id=...&platform_id=...
+→ Dùng dwh_fact_price.
+
+Review & Sentiment
+
+GET /api/v1/analytics/reviews/summary?platform_id=...&from_date=...&to_date=...
+→ Dùng dwh_fact_review + sentiment (nếu đã load).
+
+GET /api/v1/analytics/reviews/daily?product_id=...
+→ Trend sentiment / rating theo ngày.
+
+ML Insights
+
+GET /api/v1/analytics/ml/price-optimization?product_id=...
+→ So sánh giá hiện tại vs predicted_price (từ ml_price_predictions).
+
+GET /api/v1/analytics/ml/recommendations?product_id=...
+→ Dùng ml_product_recommendations.
+
+Export
+
+GET /api/v1/analytics/overview/export?format=excel
+
+GET /api/v1/analytics/platforms/comparison/export?format=pdf
+
+3.5. Customer (người dùng cuối)
+
+Mục tiêu: Tham khảo giá, xem gợi ý sản phẩm, chọn nơi mua phù hợp.
+
+Nhiệm vụ chính:
+
+Tìm kiếm sản phẩm theo tên, category, brand.
+
+Xem chi tiết sản phẩm:
+
+Thông tin tổng hợp từ nhiều platform.
+
+So sánh giá theo từng sàn.
+
+Nhận gợi ý sản phẩm tương tự/cùng phân khúc.
+
+(Nếu tích hợp) xem giá dự đoán trong tương lai / giá khuyến nghị.
+
+API chính Customer sử dụng:
+
+Product Catalog
+
+GET /api/v1/products/search?q=...&category_id=...&platform_id=...&page=...
+→ Dùng dwh_dim_product + dwh_fact_product_daily.
+
+GET /api/v1/products/{product_id}
+→ Chi tiết sản phẩm từ DWH.
+
+Price & Comparison
+
+GET /api/v1/products/{product_id}/platforms
+→ Danh sách giá theo từng sàn (Tiki, Lazada…) từ dwh_fact_price.
+
+GET /api/v1/products/{product_id}/price-history?from_date=...&to_date=...
+
+Recommendations
+
+GET /api/v1/products/{product_id}/recommendations
+→ Dùng bảng ml_product_recommendations.
+
+Reviews
+
+GET /api/v1/products/{product_id}/reviews?limit=...
+→ Dùng dwh_fact_review.
+
+4. Tóm tắt mối quan hệ giữa các role
+
+Admin:
+
+Tạo và phân quyền cho Data Engineer, ML Engineer, Analyst, Customer.
+
+Quản lý IAM, đảm bảo ai được gọi API nào.
+
+Data Engineer:
+
+Xây dựng & giám sát pipeline: Crawler → MinIO → Staging → ODS → DWH.
+
+Sử dụng API /api/v1/data/... để xem ETL runs, volume, data quality.
+
+ML Engineer:
+
+Dùng dữ liệu từ DWH để train model.
+
+Dùng DAG ml_training_pipeline và API /api/v1/ml/... để quản lý model & training.
+
+Analyst:
+
+Đọc data đã được xử lý từ DWH và bảng ML output.
+
+Sử dụng API /api/v1/analytics/... để build dashboard & report.
+
+Customer:
+
+Tương tác với hệ thống qua UI, dùng API /api/v1/products/..., /api/v1/products/.../recommendations, /api/v1/products/.../price-history để tham khảo.

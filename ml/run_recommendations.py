@@ -12,7 +12,7 @@ from load_ml_results_to_db import get_conn, load_recommendations
 MODEL_DIR = os.getenv("ML_MODEL_DIR", "./models")
 MODEL_NAME = "content_recommender_tfidf"
 MODEL_VERSION = "v1.0"
-TOP_K = 10  # mỗi sản phẩm gợi ý tối đa TOP_K sản phẩm
+TOP_K = 5  # Reduced from 10 to 5 for faster processing with n_jobs=1
 
 
 def fetch_products(conn) -> pd.DataFrame:
@@ -71,12 +71,19 @@ def build_recommendations_for_platform(
 
     # fit KNN trên chính X
     n_neighbors = min(top_k + 1, df_platform.shape[0])  # +1 để bao gồm cả chính nó
-    knn = NearestNeighbors(metric="cosine", n_neighbors=n_neighbors, n_jobs=-1)
+    knn = NearestNeighbors(metric="cosine", n_neighbors=n_neighbors, n_jobs=1)  # Set to 1 for Airflow container
     knn.fit(X)
 
     recs: List[Dict[str, Any]] = []
+    total_products = df_platform.shape[0]
+    
+    print(f"[INFO] Processing {total_products} products for recommendations...")
 
-    for i in range(df_platform.shape[0]):
+    for i in range(total_products):
+        # Progress logging every 500 products
+        if (i + 1) % 500 == 0:
+            print(f"[PROGRESS] Processed {i+1}/{total_products} products ({(i+1)/total_products*100:.1f}%)")
+        
         distances, indices = knn.kneighbors(X[i], n_neighbors=n_neighbors)
         distances = distances[0]
         indices = indices[0]
@@ -105,7 +112,8 @@ def build_recommendations_for_platform(
                 }
             )
             rank += 1
-
+    
+    print(f"[INFO] Completed! Generated {len(recs)} recommendations from {total_products} products")
     return recs
 
 
