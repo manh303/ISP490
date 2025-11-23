@@ -49,5 +49,4 @@ data-collection/outputs/fixed_lazada_multi_category_full.csv
 data-collection/outputs/fixed_lazada_multi_category_full.json 
 ml/models/ml-models/clustering_features.pkl
 *.pkl
-
-
+ml/models/price_forecast_rf_v1.0.pkl

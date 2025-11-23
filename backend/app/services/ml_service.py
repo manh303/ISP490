@@ -337,8 +337,8 @@ class MLService:
         limit: int = 10,
     ) -> Optional[RecommendationResponse]:
         """
-        Đọc recommendation từ ml.fact_product_recommendation + join dim_product, dim_date, fact_product_daily.
-        Platform_code lấy từ prefix của product_key (vd: 'tiki', 'lazada').
+        Đọc recommendation từ ml.fact_product_recommendation + join dim_product, dim_date.
+        Lấy thêm min_price, avg_rating snapshot mới nhất từ dwh.fact_product_daily (LATERAL).
         """
 
         query = """
@@ -352,21 +352,28 @@ class MLService:
                 rec_dp.product_key AS recommended_product_key,
                 rec_dp.product_name AS recommended_product_name,
                 rnk.similarity_score,
-                fpd.min_price,
-                fpd.avg_rating
+                fpd_snap.min_price,
+                fpd_snap.avg_rating
             FROM ml.fact_product_recommendation rnk
             JOIN ml.dim_ml_model m ON m.model_sk = rnk.model_sk
             JOIN dwh.dim_date d ON d.date_sk = rnk.date_sk
             JOIN dwh.dim_product src_dp ON src_dp.product_sk = rnk.source_product_sk
             JOIN dwh.dim_product rec_dp ON rec_dp.product_sk = rnk.recommended_product_sk
-            LEFT JOIN dwh.fact_product_daily fpd
-                ON fpd.product_sk = rnk.recommended_product_sk
-               AND fpd.date_sk = rnk.date_sk
+            -- lấy snapshot mới nhất trong fact_product_daily cho sản phẩm được recommend
+            LEFT JOIN LATERAL (
+                SELECT
+                    fpd.min_price,
+                    fpd.avg_rating
+                FROM dwh.fact_product_daily fpd
+                WHERE fpd.product_sk = rnk.recommended_product_sk
+                ORDER BY fpd.date_sk DESC
+                LIMIT 1
+            ) AS fpd_snap ON TRUE
             WHERE src_dp.product_key = $1
               AND split_part(src_dp.product_key, '_', 1) = $2
         """
 
-        params = [source_product_key, platform_code]
+        params: List[Any] = [source_product_key, platform_code]
 
         if model_name:
             query += f" AND m.model_name = ${len(params) + 1}"
@@ -408,6 +415,7 @@ class MLService:
             date=first["date"],
             recommendations=rec_items,
         )
+
     
     # ------------------------------------------------------------------
     # SENTIMENT SUMMARY (batch, từ bảng ml.fact_review_sentiment)
