@@ -94,22 +94,6 @@ except ImportError:
         IAM_AVAILABLE = False
         print(f"WARNING: IAM system not available: {e2}")
 
-# Import email service
-try:
-    from services.email_service import EmailService, send_otp_email, verify_otp
-    email_service_module = True
-    print("Email service imported successfully")
-except ImportError:
-    try:
-        import sys
-        import os
-        sys.path.append(os.path.dirname(__file__))
-        from services.email_service import EmailService, send_otp_email, verify_otp
-        email_service_module = True
-        print("Email service imported successfully (alternative path)")
-    except ImportError as e2:
-        email_service_module = False
-        print(f"WARNING: Email service not available: {e2}")
 
 # ====================================
 # CONFIGURATION
