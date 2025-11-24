@@ -255,6 +255,7 @@ export default function App() {
             }
           >
             {/* Machine Learning Pages */}
+             <Route path="/ml/dashboard" element={<StatusOverviewPage />} />
             <Route path="/ml/models" element={<ModelsListPage />} />
             <Route path="/ml/models/create" element={<CreateModelPage />} />
             <Route path="/ml/models/:model_sk" element={<ModelDetailPage />} />

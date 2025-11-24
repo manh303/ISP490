@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "ML Insights Dashboard",
-    path: "/mli/dashboard",
+    path: "/ml/dashboard",
   },
   {
     icon: <BoxCubeIcon />,
