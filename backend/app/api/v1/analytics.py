@@ -22,6 +22,12 @@ from schemas.analytics import (
     ProductReportResponse,
 )
 from app.services.analytics_service import AnalyticsService
+try:
+    from app.services.cached_analytics_service import CachedAnalyticsService
+    USE_CACHE = True
+except ImportError:
+    CachedAnalyticsService = AnalyticsService
+    USE_CACHE = False
 import os
 
 router = APIRouter(prefix="/analytics", tags=["Analytics / Analyst"])
@@ -48,6 +54,8 @@ async def get_db():
 
 
 async def get_analytics_service(db=Depends(get_db)) -> AnalyticsService:
+    if USE_CACHE:
+        return CachedAnalyticsService(db)
     return AnalyticsService(db)
 
 
