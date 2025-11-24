@@ -3,7 +3,7 @@ from datetime import date
 from typing import Optional, List
 
 import asyncpg
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 
 from schemas.analytics import (
     PlatformFilterItem,
@@ -317,3 +317,140 @@ async def get_product_report(
         timeseries=timeseries,
         review_summary=review_summary,
     )
+
+
+# ====== PRODUCTS BY CATEGORY ======
+
+@router.get("/products/by-category")
+async def get_products_by_category_platform(
+    platform_code: str = Query(..., description="Platform code: tiki / lazada"),
+    category_id: Optional[int] = Query(
+        None, description="Lọc theo category_sk (optional)"
+    ),
+    limit: int = Query(
+        100,
+        ge=1,
+        le=10000,
+        description="Giới hạn số sản phẩm (default 100)",
+    ),
+    db=Depends(get_db),
+):
+    """
+    Get products grouped by category for a specific platform.
+    Returns list of products with category information.
+    """
+    params = [platform_code]
+    category_filter = ""
+    if category_id:
+        category_filter = " AND c.category_sk = $2"
+        params.append(category_id)
+
+    sql = f"""
+        SELECT
+            pl.platform_code,
+            pl.platform_name,
+            c.category_sk AS category_id,
+            p.product_key,
+            p.product_name,
+            COALESCE(b.brand_name, 'Unknown') AS brand_name,
+            AVG(f.avg_price) AS avg_price,
+            MIN(f.min_price) AS min_price,
+            MAX(f.max_price) AS max_price,
+            SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
+            AVG(f.avg_rating) AS avg_rating,
+            COUNT(DISTINCT f.date_sk) AS days_tracked
+        FROM dwh.fact_product_daily f
+        JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+        JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+        LEFT JOIN dwh.dim_brand b ON b.brand_sk = p.brand_sk
+        LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
+        JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+        WHERE pl.platform_code = $1
+        {category_filter}
+        GROUP BY
+            pl.platform_code,
+            pl.platform_name,
+            c.category_sk,
+            p.product_key,
+            p.product_name,
+            b.brand_name
+        ORDER BY
+            c.category_sk,
+            total_reviews DESC,
+            avg_rating DESC
+        LIMIT {limit};
+    """
+
+    try:
+        rows = await db.fetch(sql, *params)
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+
+
+@router.get("/products/by-category-all-platforms")
+async def get_products_by_category_all_platforms(
+    category_id: Optional[int] = Query(
+        None, description="Lọc theo category_sk (optional)"
+    ),
+    limit: int = Query(
+        1000,
+        ge=1,
+        le=50000,
+        description="Giới hạn số sản phẩm (default 1000)",
+    ),
+    db=Depends(get_db),
+):
+    """
+    Get products grouped by category across all platforms.
+    Returns list of products with platform and category information.
+    Useful for comparing products across different platforms.
+    """
+    params = []
+    category_filter = ""
+    if category_id:
+        category_filter = " WHERE c.category_sk = $1"
+        params.append(category_id)
+
+    sql = f"""
+        SELECT
+            pl.platform_code,
+            pl.platform_name,
+            c.category_sk AS category_id,
+            p.product_key,
+            p.product_name,
+            COALESCE(b.brand_name, 'Unknown') AS brand_name,
+            AVG(f.avg_price) AS avg_price,
+            MIN(f.min_price) AS min_price,
+            MAX(f.max_price) AS max_price,
+            SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
+            AVG(f.avg_rating) AS avg_rating,
+            COUNT(DISTINCT f.date_sk) AS days_tracked
+        FROM dwh.fact_product_daily f
+        JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+        JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+        LEFT JOIN dwh.dim_brand b ON b.brand_sk = p.brand_sk
+        LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
+        JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+        {category_filter}
+        GROUP BY
+            pl.platform_code,
+            pl.platform_name,
+            c.category_sk,
+            p.product_key,
+            p.product_name,
+            b.brand_name
+        ORDER BY
+            c.category_sk,
+            pl.platform_code,
+            total_reviews DESC,
+            avg_rating DESC
+        LIMIT {limit};
+    """
+
+    try:
+        rows = await db.fetch(sql, *params)
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+

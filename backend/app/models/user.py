@@ -1,7 +1,7 @@
 """
 User Profile Management Pydantic Models
 """
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from models.shared import UserResponse, BaseUserRequest
 
@@ -9,6 +9,7 @@ from models.shared import UserResponse, BaseUserRequest
 ProfileResponse = UserResponse
 
 class ProfileUpdateRequest(BaseUserRequest):
+    """Profile update request"""
     email: Optional[EmailStr] = Field(None, description="Email address")
 
 class ProfileActionResponse(BaseModel):
@@ -16,3 +17,12 @@ class ProfileActionResponse(BaseModel):
     success: bool
     message: str
     user_id: Optional[int] = None
+
+class EmailChangeRequestIn(BaseModel):
+    """Email change request"""
+    new_email: EmailStr
+
+class EmailChangeConfirmIn(BaseModel):
+    """Email change confirmation"""
+    request_id: str
+    otp: str

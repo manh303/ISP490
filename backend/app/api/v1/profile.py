@@ -2,13 +2,17 @@
 Profile Management API
 """
 from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any
 import logging
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-
-from models.user import ProfileResponse, ProfileUpdateRequest
+from app.api.dependencies import get_current_user
+from models.user import (
+    EmailChangeConfirmIn, 
+    EmailChangeRequestIn,
+    ProfileResponse, 
+    ProfileUpdateRequest
+)
 from app.services.admin_service import AdminService, UserActionResponse
 
 class ProfileActionResponse(UserActionResponse):
@@ -115,3 +119,21 @@ async def update_my_profile(
     except Exception as e:
         logger.error(f"Update profile error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update profile")
+    
+@router.post("/email/change-request")
+async def request_email_change(
+    data: EmailChangeRequestIn,
+    current_user = Depends(get_current_user),
+    service = Depends(get_user_service),
+):
+    return await service.request_email_change(current_user.user_id, data.new_email)
+
+@router.post("/email/confirm")
+async def confirm_email_change(
+    data: EmailChangeConfirmIn,
+    current_user = Depends(get_current_user),
+    service = Depends(get_user_service),
+):
+    return await service.confirm_email_change(
+        current_user.user_id, data.request_id, data.otp
+    )
