@@ -9,6 +9,7 @@ from schemas.analytics import (
     OverviewTrendResponse,
     OverviewTrendPoint,
     PlatformComparisonItem,
+    PlatformComparisonResponse,
     CategoryShareItem,
     TopProductItem,
     ProductTimeseriesResponse,
@@ -260,11 +261,24 @@ class AnalyticsService:
                 )
             )
 
+        # Get category name if category_key is provided
+        category_name = None
+        if category_key:
+            cat_sql = """
+                SELECT COALESCE(full_path, category_std_key, category_lvl1, 'UNKNOWN') AS category_name
+                FROM dwh.dim_category
+                WHERE category_sk = $1
+            """
+            cat_row = await self.db.fetchrow(cat_sql, int(category_key))
+            if cat_row:
+                category_name = cat_row["category_name"]
+
         return OverviewTrendResponse(
             from_date=from_date,
             to_date=to_date,
             platform_code=platform_code,
             category_key=category_key,
+            category_name=category_name,
             points=points,
         )
 
@@ -279,7 +293,7 @@ class AnalyticsService:
         from_date: date,
         to_date: date,
         category_key: Optional[str] = None,  # category_sk
-    ) -> List[PlatformComparisonItem]:
+    ) -> PlatformComparisonResponse:
         conditions = ["d.date_value BETWEEN $1 AND $2"]
         params: List[Any] = [from_date, to_date]
         param_index = 3
@@ -309,9 +323,9 @@ class AnalyticsService:
         """
         rows = await self.db.fetch(sql, *params)
 
-        result: List[PlatformComparisonItem] = []
+        platforms: List[PlatformComparisonItem] = []
         for r in rows:
-            result.append(
+            platforms.append(
                 PlatformComparisonItem(
                     platform_code=r["platform_code"],
                     total_revenue=float(r["total_revenue"] or 0),
@@ -321,7 +335,26 @@ class AnalyticsService:
                     avg_rating=_safe_float(r["avg_rating"]),
                 )
             )
-        return result
+
+        # Get category name if category_key is provided
+        category_name = None
+        if category_key:
+            cat_sql = """
+                SELECT COALESCE(full_path, category_std_key, category_lvl1, 'UNKNOWN') AS category_name
+                FROM dwh.dim_category
+                WHERE category_sk = $1
+            """
+            cat_row = await self.db.fetchrow(cat_sql, int(category_key))
+            if cat_row:
+                category_name = cat_row["category_name"]
+
+        return PlatformComparisonResponse(
+            from_date=from_date,
+            to_date=to_date,
+            category_key=category_key,
+            category_name=category_name,
+            platforms=platforms,
+        )
 
     # =========================
     # CATEGORY SHARE
@@ -657,19 +690,19 @@ class AnalyticsService:
         - category_key trong API = category_sk trong DB
         """
         # điều kiện cơ bản: search theo tên (case-insensitive)
-        conditions = ["LOWER(product_name) LIKE $" + str(1)]
+        conditions = ["LOWER(p.product_name) LIKE $" + str(1)]
         params: List[Any] = [f"%{q.lower()}%"]
         param_index = 2
 
         # filter theo platform_code nếu có (tiki, lazada) bằng prefix của product_key
         if platform_code:
-            conditions.append(f"split_part(product_key, '_', 1) = ${param_index}")
+            conditions.append(f"split_part(p.product_key, '_', 1) = ${param_index}")
             params.append(platform_code)
             param_index += 1
 
         # filter theo category_key (category_sk)
         if category_key:
-            conditions.append(f"category_sk = ${param_index}")
+            conditions.append(f"p.category_sk = ${param_index}")
             params.append(int(category_key))
             param_index += 1
 
@@ -677,12 +710,14 @@ class AnalyticsService:
 
         sql = f"""
             SELECT
-                product_key,
-                product_name,
-                category_sk
-            FROM dwh.dim_product
+                p.product_key,
+                p.product_name,
+                p.category_sk,
+                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name
+            FROM dwh.dim_product p
+            LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
-            ORDER BY product_name
+            ORDER BY p.product_name
             LIMIT {limit}
         """
         rows = await self.db.fetch(sql, *params)
@@ -699,6 +734,7 @@ class AnalyticsService:
                     product_name=r["product_name"],
                     platform_code=plat,
                     category_key=str(r.get("category_sk")) if r.get("category_sk") is not None else None,
+                    category_name=r.get("category_name"),
                 )
             )
         return result
