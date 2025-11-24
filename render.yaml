@@ -1,4 +1,10 @@
 services:
+  # Redis Cache (for performance)
+  - type: redis
+    name: ecommerce-dss-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
   # Backend API Service
   - type: web
     name: ecommerce-dss-backend
@@ -12,6 +18,23 @@ services:
       cd backend &&
       uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
+      - key: REDIS_URL
+        fromService:
+          name: ecommerce-dss-redis
+          type: redis
+          property: connectionString
+      - key: DATABASE_URL
+        value: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+      - key: DB_HOST
+        value: dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: ecommerce_dss
+      - key: DB_USER
+        value: dss_user
+      - key: DB_PASSWORD
+        value: IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
       - key: ML_PATH
         value: /app/ml
       - key: PYTHON_VERSION
