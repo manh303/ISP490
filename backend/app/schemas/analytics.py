@@ -33,6 +33,7 @@ class OverviewKPIResponse(BaseModel):
     to_date: date
     platform_code: Optional[str] = None
     category_key: Optional[str] = None
+    category_name: Optional[str] = None
 
     total_revenue: float
     total_products: int
@@ -86,6 +87,7 @@ class TopProductItem(BaseModel):
     product_name: str
     platform_code: str
     category_key: Optional[str] = None
+    category_name: Optional[str] = None  # Add category name
 
     total_revenue: float
     total_reviews: int
@@ -134,13 +136,14 @@ class ReviewSummaryResponse(BaseModel):
 class PriceDistributionResponse(BaseModel):
     platform_code: str
     category_key: Optional[str] = None
+    category_name: Optional[str] = None
     from_date: date
     to_date: date
 
     min_price: Optional[float]
-    p25_price: Optional[float]
-    median_price: Optional[float]
-    p75_price: Optional[float]
+    p25_price: Optional[float]  # 25% products are cheaper than this price (Q1)
+    median_price: Optional[float]  # 50% products are cheaper (median)
+    p75_price: Optional[float]  # 75% products are cheaper than this price (Q3)
     max_price: Optional[float]
 
 

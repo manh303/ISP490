@@ -134,7 +134,21 @@ def cached(prefix: str, ttl: int = 300):
             cached_result = cache.get(cache_key)
             if cached_result is not None:
                 logger.debug(f"Cache HIT: {cache_key}")
-                return cached_result
+                # Try to reconstruct pydantic model from dict
+                try:
+                    # Get the return type annotation from the function
+                    return_type = func.__annotations__.get('return')
+                    if return_type and hasattr(return_type, '__origin__'):
+                        # Handle List[Model] types
+                        return cached_result
+                    elif return_type and hasattr(return_type, 'parse_obj'):
+                        # Reconstruct pydantic model
+                        return return_type.parse_obj(cached_result)
+                    else:
+                        return cached_result
+                except:
+                    # If reconstruction fails, return as-is
+                    return cached_result
             
             # Cache miss - call function
             logger.debug(f"Cache MISS: {cache_key}")
