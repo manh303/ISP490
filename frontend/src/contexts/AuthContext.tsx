@@ -126,18 +126,20 @@ function convertV1ProfileToUserProfile(profileData: any): UserProfile {
             { perm_id: '6', perm_code: 'reports.generate',perm_name: 'Generate Reports',      module: 'reports',  action: 'generate' },
             { perm_id: '5', perm_code: 'dss.dashboard',   perm_name: 'DSS Dashboard',         module: 'dss',      action: 'read' }
           ]
-        : roleCode === 'DATAENGINEER'
+        : roleCode === 'DATA_ENGINEER'
         ? [
             { perm_id: '10', perm_code: 'data.pipeline',  perm_name: 'Data Pipeline',         module: 'data',     action: 'pipeline' },
             { perm_id: '11', perm_code: 'etl.manage',     perm_name: 'ETL Management',        module: 'etl',      action: 'manage' },
             { perm_id: '3', perm_code: 'data.write',      perm_name: 'Write Data',            module: 'data',     action: 'write' },
             { perm_id: '12', perm_code: 'system.monitor', perm_name: 'System Monitoring',     module: 'system',   action: 'monitor' }
           ]
-        : [
+        : roleCode === 'CUSTOMER'
+        ? [
             { perm_id: '7', perm_code: 'profile.view',    perm_name: 'View Profile',          module: 'profile',  action: 'view' },
             { perm_id: '8', perm_code: 'orders.create',   perm_name: 'Create Orders',         module: 'orders',   action: 'create' },
             { perm_id: '9', perm_code: 'data.read_own',   perm_name: 'Read Own Data',         module: 'data',     action: 'read_own' }
           ]
+        : []
   };
 }
 
@@ -420,7 +422,7 @@ interface ProtectedRouteProps {
   children: ReactNode;
   requireAuth?: boolean;
   requiredPermission?: string;
-  requiredRole?: string;
+  requiredRole?: string | string[];
   fallback?: ReactNode;
 }
 
@@ -467,16 +469,20 @@ export function ProtectedRoute({
     );
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
-    return fallback || (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
-          <p className="text-gray-600">You don't have the required role to access this page.</p>
-          <p className="text-sm text-gray-500 mt-2">Required role: {requiredRole}</p>
+  if (requiredRole) {
+    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    const hasRequiredRole = roles.some(role => hasRole(role));
+    if (!hasRequiredRole) {
+      return fallback || (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+            <p className="text-gray-600">You don't have the required role to access this page.</p>
+            <p className="text-sm text-gray-500 mt-2">Required roles: {roles.join(', ')}</p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return <>{children}</>;

@@ -167,7 +167,7 @@ export default function App() {
           {/* Admin Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="ADMIN">
                 <AdminLayout />
               </ProtectedRoute>
             }
@@ -197,7 +197,7 @@ export default function App() {
           {/* Analyst Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="ANALYST">
                 <AnalystLayout />
               </ProtectedRoute>
             }
@@ -232,7 +232,7 @@ export default function App() {
           {/* DataEngineerSidebar Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="DATA_ENGINEER">
                 <DataEngineerLayout/>
               </ProtectedRoute>
             }
@@ -249,7 +249,7 @@ export default function App() {
           {/* MLISidebar Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole={["ANALYST", "DATA_ENGINEER"]}>
                 <MLILayout/>
               </ProtectedRoute>
             }
@@ -285,7 +285,7 @@ export default function App() {
           {/* Customer Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="CUSTOMER">
                 <CustomerLayout />
               </ProtectedRoute>
             }

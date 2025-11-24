@@ -15,150 +15,128 @@ interface ActivityStatsChartProps {
 }
 
 export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps) {
-    const [stats, setStats] = useState<ActivityStats | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    // Temporarily disable API call since it's not working
+    // const [stats, setStats] = useState<ActivityStats | null>(null);
+    // const [loading, setLoading] = useState(false);
+    // const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const data = await getActivityStats({ days });
-                setStats(data);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch activity stats');
-            } finally {
-                setLoading(false);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchStats = async () => {
+    //         setLoading(true);
+    //         setError(null);
+    //         try {
+    //             const data = await getActivityStats({ days });
+    //             setStats(data);
+    //         } catch (err: any) {
+    //             setError(err.message || 'Failed to fetch activity stats');
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
 
-        fetchStats();
-    }, [days]);
-
-    if (loading) {
-        return <div className="text-center py-8">Loading activity statistics...</div>;
-    }
-
-    if (error) {
-        return <div className="text-center py-8 text-red-500">Error: {error}</div>;
-    }
-
-    if (!stats) {
-        return <div className="text-center py-8">No data available</div>;
-    }
-
-    // Prepare data for action chart
-    const actionChartData = Object.entries(stats.logs_by_action).map(([action, count]) => ({
-        action,
-        count
-    }));
-
-    // Prepare data for day chart
-    const dayChartData = stats.logs_by_day.map(item => ({
-        date: new Date(item.date).toLocaleDateString(),
-        count: item.count
-    }));
+    //     fetchStats();
+    // }, [days]);
 
     return (
         <div className="activity-stats-chart space-y-6">
-            {/* Stats Cards */}
+            {/* Coming Soon Message */}
+            <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                    <div className="mb-4">
+                        <Activity className="h-16 w-16 text-gray-400 mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        Tính năng thống kê hoạt động
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                        Tính năng này đang được phát triển và sẽ được cập nhật trong tương lai gần.
+                    </p>
+                    <p className="text-sm text-gray-500">
+                        Vui lòng quay lại sau để xem thống kê chi tiết về hoạt động của hệ thống.
+                    </p>
+                </div>
+            </div>
+
+            {/* Placeholder Cards - commented out for now */}
+            {/*
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
+                        <CardTitle className="text-sm font-medium">Tổng số nhật ký</CardTitle>
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.total_logs.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Last {days} days
+                            Trong {days} ngày qua
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Unique Actions</CardTitle>
+                        <CardTitle className="text-sm font-medium">Hành động duy nhất</CardTitle>
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{Object.keys(stats.logs_by_action).length}</div>
+                        <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Different action types
+                            Các loại hành động khác nhau
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Avg Daily Logs</CardTitle>
+                        <CardTitle className="text-sm font-medium">Trung bình nhật ký/ngày</CardTitle>
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
-                            {Math.round(stats.total_logs / days)}
-                        </div>
+                        <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Per day average
+                            Trung bình mỗi ngày
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Most Active Day</CardTitle>
+                        <CardTitle className="text-sm font-medium">Ngày hoạt động nhiều nhất</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
-                            {stats.logs_by_day.length > 0 ? Math.max(...stats.logs_by_day.map(d => d.count)) : 0}
-                        </div>
+                        <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Max logs in a day
+                            Số nhật ký tối đa trong một ngày
                         </p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Logs by Action */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Activity by Action Type</CardTitle>
+                        <CardTitle>Hoạt động theo loại hành động</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={actionChartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="action" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="#3b82f6" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="h-[300px] flex items-center justify-center text-gray-500">
+                            Dữ liệu sẽ được hiển thị khi tính năng hoạt động
+                        </div>
                     </CardContent>
                 </Card>
 
-                {/* Logs by Day */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Daily Activity Trend</CardTitle>
+                        <CardTitle>Xu hướng hoạt động hàng ngày</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={dayChartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <Tooltip />
-                                <Line type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        <div className="h-[300px] flex items-center justify-center text-gray-500">
+                            Dữ liệu sẽ được hiển thị khi tính năng hoạt động
+                        </div>
                     </CardContent>
                 </Card>
             </div>
+            */}
         </div>
     );
 }
