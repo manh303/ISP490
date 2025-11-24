@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getModel, updateModel, MLModel, UpdateModelRequest } from '../../services/machineLearningApi';
 import Button from '../../components/ui/button/Button';
-import Form from '../../components/form/Form';
 import Input from '../../components/form/input/InputField';
 import Select from '../../components/form/Select';
 
