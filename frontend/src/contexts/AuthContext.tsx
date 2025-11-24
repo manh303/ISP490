@@ -139,6 +139,15 @@ function convertV1ProfileToUserProfile(profileData: any): UserProfile {
             { perm_id: '8', perm_code: 'orders.create',   perm_name: 'Create Orders',         module: 'orders',   action: 'create' },
             { perm_id: '9', perm_code: 'data.read_own',   perm_name: 'Read Own Data',         module: 'data',     action: 'read_own' }
           ]
+        : roleCode === 'ML' || roleCode === 'MLI'
+        ? [
+            { perm_id: '13', perm_code: 'ml.model.manage', perm_name: 'ML Model Management',   module: 'ml',       action: 'manage' },
+            { perm_id: '14', perm_code: 'ml.train',        perm_name: 'ML Training',           module: 'ml',       action: 'train' },
+            { perm_id: '15', perm_code: 'ml.predict',      perm_name: 'ML Prediction',         module: 'ml',       action: 'predict' },
+            { perm_id: '16', perm_code: 'ml.insights',    perm_name: 'ML Insights',           module: 'ml',       action: 'insights' },
+            { perm_id: '3', perm_code: 'data.read',       perm_name: 'Read Data',             module: 'data',     action: 'read' },
+            { perm_id: '4', perm_code: 'analytics.view',  perm_name: 'View Analytics',        module: 'analytics',action: 'view' }
+          ]
         : []
   };
 }

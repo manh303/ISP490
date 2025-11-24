@@ -249,7 +249,7 @@ export default function App() {
           {/* MLISidebar Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute requiredRole={["ANALYST", "DATA_ENGINEER"]}>
+              <ProtectedRoute requiredRole={["ANALYST", "DATA_ENGINEER", "ML", "MLI"]}>
                 <MLILayout/>
               </ProtectedRoute>
             }
