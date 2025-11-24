@@ -61,7 +61,13 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
             </div>
             <div className="flex justify-between text-xs text-gray-500">
               <span>{product?.total_reviews?.toLocaleString('vi-VN')} đánh giá</span>
-              <span>{product?.avg_price ? (product.avg_price / 1000000).toFixed(1) : 'N/A'}M ₫</span>
+              <span>
+                {product?.avg_price
+                  ? product.avg_price < 1_000_000
+                    ? `${Math.round(product.avg_price / 1000)}k ₫`
+                    : `${(product.avg_price / 1_000_000).toFixed(1)}M ₫`
+                  : 'N/A'}
+              </span>
             </div>
           </div>
         ))}
