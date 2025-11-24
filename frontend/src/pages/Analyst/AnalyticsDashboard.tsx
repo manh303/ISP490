@@ -37,7 +37,7 @@ import {
 } from '../../services/analyticsApi';
 import { TopRatedProductsChart } from '../../components/analytics/TopRatedProductsChart';
 import { CategoryPerformanceChart } from '../../components/analytics/CategoryPerformanceChart';
-import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
+// import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
 import { PlatformSelect } from '../../components/analytics/PlatformSelect';
 import { CategoryHierarchySelector } from '../../components/analytics/CategoryHierarchySelector';
