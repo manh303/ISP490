@@ -18,6 +18,13 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    open: true
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'https://ecommerce-dss-backend.onrender.com',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   }
 });
