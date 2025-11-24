@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from pathlib import Path
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -8,6 +7,10 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.python import PythonSensor
+
+# ============================================================
+#  CẤU HÌNH CƠ BẢN
+# ============================================================
 
 CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
 CHECKPOINT_DIR = os.getenv("CRAWLER_CHECKPOINT_DIR", "/tmp/crawler_checkpoints")
@@ -19,17 +22,214 @@ default_args = {
     "depends_on_past": False,
 }
 
+# ============================================================
+#      PHẦN A – ETL META LOGGING (schema meta.*)
+# ============================================================
+
+PIPELINE_JOB_CODE = "MINIO_ECOMMERCE_DWH_PIPELINE"
+PIPELINE_JOB_NAME = "Ecommerce DSS - Full DWH (Star Schema)"
+
+
+def _get_pg_conn():
+    """
+    Kết nối Postgres từ DATABASE_URL.
+    Nếu không có hoặc lỗi -> trả về None và bỏ qua logging (không làm fail DAG).
+    """
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        print("[META] DATABASE_URL not set, skip ETL meta logging.")
+        return None
+
+    try:
+        import psycopg2  # type: ignore
+    except ImportError:
+        print("[META] psycopg2 not installed, skip ETL meta logging.")
+        return None
+
+    try:
+        conn = psycopg2.connect(db_url)
+        return conn
+    except Exception as e:
+        print(f"[META] Failed to connect to Postgres: {e}")
+        return None
+
+
+def _ensure_etl_job(conn):
+    """
+    Đảm bảo meta.etl_job có dòng cho PIPELINE_JOB_CODE.
+    Trả về job_id hoặc None.
+    """
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO meta.etl_job (job_code, job_name, description)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (job_code) DO NOTHING;
+        """,
+            (
+                PIPELINE_JOB_CODE,
+                PIPELINE_JOB_NAME,
+                "Full DWH pipeline: crawl -> MinIO -> Spark build star schema (products + reviews) -> ML",
+            ),
+        )
+        conn.commit()
+
+        cur.execute(
+            "SELECT job_id FROM meta.etl_job WHERE job_code = %s;",
+            (PIPELINE_JOB_CODE,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            print("[META] Cannot find or create etl_job for pipeline.")
+            return None
+        return row[0]
+    except Exception as e:
+        print(f"[META] Error ensuring etl_job: {e}")
+        return None
+
+
+def start_etl_run(job_code, run_date, airflow_run_id=None):
+    """
+    Tạo 1 dòng meta.etl_run với status=RUNNING.
+    Trả về run_id hoặc None.
+    """
+    conn = _get_pg_conn()
+    if conn is None:
+        return None
+
+    try:
+        job_id = _ensure_etl_job(conn)
+        if job_id is None:
+            conn.close()
+            return None
+
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO meta.etl_run (
+                job_id, run_date, started_at, status, airflow_run_id
+            )
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING run_id;
+        """,
+            (job_id, run_date, datetime.utcnow(), "RUNNING", airflow_run_id),
+        )
+        run_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[META] Created etl_run id={run_id} for job_code={job_code}")
+        return run_id
+    except Exception as e:
+        print(f"[META] Error creating etl_run: {e}")
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return None
+
+
+def finish_etl_run(run_id, status, rows_read=None, rows_written=None, error_message=None):
+    """
+    Update meta.etl_run khi DAG kết thúc.
+    """
+    if run_id is None:
+        print("[META] finish_etl_run called with run_id=None, skip.")
+        return
+
+    conn = _get_pg_conn()
+    if conn is None:
+        return
+
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE meta.etl_run
+            SET finished_at = %s,
+                status = %s,
+                rows_read = COALESCE(%s, rows_read),
+                rows_written = COALESCE(%s, rows_written),
+                error_message = COALESCE(%s, error_message)
+            WHERE run_id = %s;
+        """,
+            (datetime.utcnow(), status, rows_read, rows_written, error_message, run_id),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[META] Finished etl_run id={run_id} with status={status}")
+    except Exception as e:
+        print(f"[META] Error updating etl_run: {e}")
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def etl_run_start(**context):
+    """
+    Task PythonOperator: bắt đầu pipeline run.
+    Trả về run_id để lưu vào XCom.
+    """
+    run_date = context["ds"]  # 'YYYY-MM-DD'
+    airflow_run_id = context.get("run_id")
+    run_id = start_etl_run(
+        job_code=PIPELINE_JOB_CODE, run_date=run_date, airflow_run_id=airflow_run_id
+    )
+    return run_id
+
+
+def etl_run_finish(**context):
+    """
+    Task PythonOperator: kết thúc pipeline run.
+    Đọc run_id từ XCom, check trạng thái DagRun để set SUCCESS/FAILED.
+    """
+    ti = context["ti"]
+    dag_run = context.get("dag_run")
+
+    run_id = ti.xcom_pull(task_ids="etl_run_start")
+    if not run_id:
+        print("[META] No run_id from XCom, skip finish_etl_run.")
+        return
+
+    dag_state = None
+    try:
+        if dag_run is not None:
+            dag_state = getattr(dag_run, "state", None)
+    except Exception:
+        dag_state = None
+
+    status = "SUCCESS"
+    if dag_state and str(dag_state).lower() == "failed":
+        status = "FAILED"
+
+    finish_etl_run(run_id=run_id, status=status)
+
+
+# ============================================================
+#      PHẦN B – HÀM PHỤ CRAWLER & SENSOR
+# ============================================================
 
 def upload_to_minio(**context):
+    """
+    Upload tất cả file jsonl theo date=ds lên MinIO bucket crawler-data.
+    """
     from pathlib import Path
+
     try:
         from minio import Minio
     except ImportError:
-        # Try to install at runtime to avoid task failure when dependency missing
         import subprocess, sys
+
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "minio", "--quiet"], check=True)
-            from minio import Minio
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "minio", "--quiet"],
+                check=True,
+            )
+            from minio import Minio  # type: ignore
             print("Installed 'minio' package at runtime.")
         except Exception as e:
             print(f"Failed to import/install minio: {e}. Skipping upload_to_minio.")
@@ -45,7 +245,6 @@ def upload_to_minio(**context):
     date = context["ds"]
     uploaded = 0
 
-    # upload tất cả jsonl trong các folder có pattern date=YYYY-MM-DD (products + reviews)
     for jsonl_file in output_dir.rglob(f"**/date={date}/*.jsonl"):
         relative = jsonl_file.relative_to(output_dir)
         client.fput_object(bucket, str(relative).replace("\\", "/"), str(jsonl_file))
@@ -55,6 +254,11 @@ def upload_to_minio(**context):
 
 
 def _raw_ready(**context):
+    """
+    Kiểm tra đã có dữ liệu raw (products) cho cả tiki & lazada hay chưa.
+    """
+    from pathlib import Path
+
     run_date = context["ds"]
     need = [
         Path(CRAWLER_OUTPUT_DIR) / "lazada" / f"date={run_date}",
@@ -69,8 +273,16 @@ def _raw_ready(**context):
 
 
 def _reviews_ready(**context):
+    """
+    Kiểm tra đã có dữ liệu reviews cho tiki hoặc lazada chưa.
+    (chỉ cần 1 trong 2 để pipeline không bị chặn).
+    """
+    from pathlib import Path
+
     run_date = context["ds"]
-    lazada_reviews = Path(CRAWLER_OUTPUT_DIR) / "lazada_reviews" / f"date={run_date}"
+    lazada_reviews = (
+        Path(CRAWLER_OUTPUT_DIR) / "lazada_reviews" / f"date={run_date}"
+    )
     tiki_reviews = Path(CRAWLER_OUTPUT_DIR) / "tiki_reviews" / f"date={run_date}"
 
     has_lazada = lazada_reviews.exists() and any(
@@ -80,20 +292,39 @@ def _reviews_ready(**context):
         p.suffix == ".jsonl" for p in tiki_reviews.rglob("*.jsonl")
     )
 
-    # chỉ cần có review của 1 trong 2 là cho qua để không chặn pipeline
     return has_lazada or has_tiki
 
 
+# ============================================================
+#                         DAG
+# ============================================================
+
 with DAG(
-    dag_id="minio_ecommerce_pipeline",
+    dag_id="minio_ecommerce_dwh_pipeline",
     start_date=datetime(2025, 11, 1),
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 2 * * *",  # chạy mỗi ngày 2h sáng
     catchup=False,
     default_args=default_args,
-    tags=["minio", "s3", "dss"],
+    tags=["minio", "dwh", "spark", "dss"],
 ) as dag:
 
+    # --------------------------------------------------------
+    # PHẦN 0 – START & GHI LOG ETL
+    # --------------------------------------------------------
     start = EmptyOperator(task_id="start")
+
+    etl_run_start_task = PythonOperator(
+        task_id="etl_run_start",
+        python_callable=etl_run_start,
+    )
+
+    # --------------------------------------------------------
+    # PHẦN 1 – CRAWLERS & RAW → MINIO
+    #   1.1 Cấu hình chung
+    #   1.2 Crawl Tiki/Lazada products + reviews
+    #   1.3 Sensor chờ dữ liệu đầy đủ
+    #   1.4 Upload JSONL lên MinIO (bucket crawler-data)
+    # --------------------------------------------------------
 
     PREAMBLE = rf"""
 set -euo pipefail
@@ -112,12 +343,11 @@ export TIKI_PROFILE_DIR="${{TIKI_PROFILE_DIR:-/app/data/.profiles/tiki}}"
 export LAZADA_HEADLESS="${{LAZADA_HEADLESS:-1}}"
 """
 
-    # =========================
-    #       CRAWLERS (GIỮ NGUYÊN)
-    # =========================
+    # 1.2 Crawl products
     crawl_lazada = BashOperator(
         task_id="crawl_lazada",
-        bash_command=PREAMBLE + r"""
+        bash_command=PREAMBLE
+        + r"""
 SCRIPT="/app/crawlers/lazada/runners/lazada_with_cookies.py"
 RUN_DATE="{{ ds }}"
 OUT_DIR="${CRAWLER_OUTPUT_DIR}/lazada/date=${RUN_DATE}"
@@ -130,12 +360,31 @@ playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
-"""
+""",
     )
 
+    crawl_tiki = BashOperator(
+        task_id="crawl_tiki",
+        bash_command=PREAMBLE
+        + r"""
+SCRIPT="/app/crawlers/tiki/tiki_crawler.py"
+RUN_DATE="{{ ds }}"
+OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki/date=${RUN_DATE}"
+if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
+  echo "Tiki raw already exists for ${RUN_DATE}, skipping crawl."
+  exit 0
+fi
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
+cd "$(dirname "$SCRIPT")"
+python -u "$SCRIPT"
+""",
+    )
+
+    # 1.2 Crawl reviews
     crawl_lazada_reviews = BashOperator(
         task_id="crawl_lazada_reviews",
-        bash_command=PREAMBLE + r"""
+        bash_command=PREAMBLE
+        + r"""
 SCRIPT="/app/crawlers/lazada/runners/lazada_reviews_from_products.py"
 RUN_DATE="{{ ds }}"
 OUT_DIR="${CRAWLER_OUTPUT_DIR}/lazada_reviews/date=${RUN_DATE}"
@@ -148,28 +397,13 @@ playwright install chromium 2>/dev/null || true
 [ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
-"""
-    )
-
-    crawl_tiki = BashOperator(
-        task_id="crawl_tiki",
-        bash_command=PREAMBLE + r"""
-SCRIPT="/app/crawlers/tiki/tiki_crawler.py"
-RUN_DATE="{{ ds }}"
-OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki/date=${RUN_DATE}"
-if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | grep -q .; then
-  echo "Tiki raw already exists for ${RUN_DATE}, skipping crawl."
-  exit 0
-fi
-[ -f "$SCRIPT" ] || { echo "? Kh?ng t?m th?y $SCRIPT"; exit 1; }
-cd "$(dirname "$SCRIPT")"
-python -u "$SCRIPT"
-"""
+""",
     )
 
     crawl_tiki_reviews = BashOperator(
         task_id="crawl_tiki_reviews",
-        bash_command=PREAMBLE + r"""
+        bash_command=PREAMBLE
+        + r"""
 SCRIPT="/app/crawlers/tiki/tiki_review_crawler.py"
 RUN_DATE="{{ ds }}"
 OUT_DIR="${CRAWLER_OUTPUT_DIR}/tiki_reviews/date=${RUN_DATE}"
@@ -177,13 +411,13 @@ if [ -d "$OUT_DIR" ] && find "$OUT_DIR" -type f -name '*.jsonl' -print -quit | g
   echo "Tiki reviews already exist for ${RUN_DATE}, skipping crawl."
   exit 0
 fi
-[ -f "$SCRIPT" ] || { echo "? Kh?ng t?m th?y $SCRIPT"; exit 1; }
+[ -f "$SCRIPT" ] || { echo "❌ Không tìm thấy $SCRIPT"; exit 1; }
 cd "$(dirname "$SCRIPT")"
 python -u "$SCRIPT"
-"""
+""",
     )
 
-    # Sensors chờ dữ liệu raw + reviews
+    # 1.3 Sensors
     wait_raw_ready = PythonSensor(
         task_id="wait_raw_ready",
         python_callable=_raw_ready,
@@ -200,49 +434,69 @@ python -u "$SCRIPT"
         mode="reschedule",
     )
 
-    # Upload to MinIO (Staging - Raw Data)
+    # 1.4 Upload raw JSONL lên MinIO
     upload_minio = PythonOperator(
-        task_id="upload_to_minio", python_callable=upload_to_minio
+        task_id="upload_to_minio",
+        python_callable=upload_to_minio,
     )
 
-    # =========================
-    #   DATA STANDARDIZATION TOOL (MỚI)
-    # =========================
-    # Job Spark 1: clean + standardize + category mapping + sync id + dedup + technical metadata + cleaned parquet → MinIO
-    data_cleaning = BashOperator(
-        task_id="data_cleaning",
-        bash_command="""
-spark-submit --master spark://spark-master:7077 \
-  /app/src/spark_jobs/clean_standardize_syncid.py
-""",
-    )
+    # --------------------------------------------------------
+    # PHẦN 2 – SPARK BUILD STAR DWH (products + reviews)
+    #
+    #  Dựa vào file load_cleaned_from_minio.py đã có:
+    #   - STEP 1  : load_raw_data
+    #   - STEP 2  : clean_data
+    #   - STEP 2.5: map_categories
+    #   - STEP 2.8: standardize_data
+    #   - STEP 2.9: synchronize_identifiers
+    #   - STEP 3  : deduplicate_data
+    #   - STEP 4  : validate_data
+    #   - STEP 5.x: ensure_star_schema + load_dimensions + fact_product_daily
+    #   - STEP 8.x: review pipeline + fact_review + fact_review_daily
+    # --------------------------------------------------------
 
-    # Job Spark 2: aggregation → DWH (Postgres) + technical metadata
-    build_dwh = BashOperator(
-        task_id="build_data_warehouse",
+    spark_build_star_dwh = BashOperator(
+        task_id="spark_build_star_dwh",
         bash_command="""
-spark-submit --master spark://spark-master:7077 \
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 1536m \
+  --driver-memory 3g \
+  --conf spark.sql.session.timeZone=UTC \
+  --conf spark.sql.shuffle.partitions=100 \
+  --conf spark.dynamicAllocation.enabled=false \
+  --conf spark.driver.maxResultSize=1g \
+  --conf spark.memory.fraction=0.8 \
+  --conf spark.memory.storageFraction=0.3 \
+  --conf spark.executor.memoryOverhead=512m \
+  --conf spark.driver.memoryOverhead=512m \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/spark_jobs/aggregate_to_dwh.py
+  /app/src/spark_jobs/load_cleaned_from_minio.py
 """,
-        env={"TARGET_DATE": "{{ ds }}"},  # cho script biết ngày chạy để filter aggregation nếu cần
+        execution_timeout=timedelta(hours=2),  # Tăng timeout cho Spark job
+        pool="spark_jobs",  # Sử dụng pool riêng để kiểm soát concurrency
     )
 
-    # Analytical Infrastructure – Data Mart (giữ nguyên, dùng fact trong DWH)
-    build_datamart = BashOperator(
-        task_id="build_datamart",
-        bash_command="""
-spark-submit --master spark://spark-master:7077 \
-  --jars /opt/spark/jars/postgresql-42.7.1.jar \
-  /app/src/spark_jobs/datamart_build.py
-""",
-    )
+    # --------------------------------------------------------
+    # PHẦN 3 – ML MODELS (OPTIONAL)
+    #   Các job Spark/ML dùng DWH làm input.
+    #   Nếu sau này bạn muốn dùng Python + scikit-learn tách riêng,
+    #   có thể xoá hoặc thay đổi phần này.
+    # --------------------------------------------------------
 
-    # Intelligence DSS System - ML Models (giữ nguyên)
     ml_price_optimization = BashOperator(
         task_id="ml_price_optimization",
         bash_command="""
-spark-submit --master spark://spark-master:7077 \
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 1g \
+  --driver-memory 512m \
   /app/src/ml_models/price_optimization.py
 """,
     )
@@ -250,7 +504,13 @@ spark-submit --master spark://spark-master:7077 \
     ml_inventory_recommendation = BashOperator(
         task_id="ml_inventory_recommendation",
         bash_command="""
-spark-submit --master spark://spark-master:7077 \
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 1g \
+  --driver-memory 512m \
   /app/src/ml_models/demand_forecasting.py
 """,
     )
@@ -258,9 +518,25 @@ spark-submit --master spark://spark-master:7077 \
     ml_customer_segment = BashOperator(
         task_id="ml_customer_segment",
         bash_command="""
-spark-submit --master spark://spark-master:7077 \
-  /app/src/ml_models/customer_segmentation.py
+docker exec spark-master spark-submit \
+  --master spark://spark-master:7077 \
+  --deploy-mode client \
+  --num-executors 2 \
+  --executor-cores 1 \
+  --executor-memory 1g \
+  --driver-memory 512m \
+  /app/src/ml_models/product_recommendation.py
 """,
+    )
+
+    # --------------------------------------------------------
+    # PHẦN 4 – KẾT THÚC & GHI LOG
+    # --------------------------------------------------------
+
+    etl_run_finish_task = PythonOperator(
+        task_id="etl_run_finish",
+        python_callable=etl_run_finish,
+        trigger_rule="all_done",  # chạy dù upstream success hay fail
     )
 
     end = EmptyOperator(task_id="end")
@@ -269,21 +545,32 @@ spark-submit --master spark://spark-master:7077 \
     #       PIPELINE FLOW
     # =========================
 
-    # Crawl song song (GIỮ NGUYÊN)
-    start >> [crawl_lazada, crawl_tiki]
+    # START → ghi log START
+    start >> etl_run_start_task
+
+    # Crawl song song
+    etl_run_start_task >> [crawl_lazada, crawl_tiki]
+
+    # Crawl reviews phụ thuộc từng platform
     crawl_lazada >> crawl_lazada_reviews
     crawl_tiki >> crawl_tiki_reviews
 
+    # Sensor chờ raw + reviews
     [crawl_lazada, crawl_tiki] >> wait_raw_ready
     [crawl_lazada_reviews, crawl_tiki_reviews] >> wait_reviews_ready
 
-    # Chỉ upload lên MinIO khi cả raw + (ít nhất một) reviews đã sẵn sàng
+    # Khi đủ data → upload MinIO (raw zone)
     [wait_raw_ready, wait_reviews_ready] >> upload_minio
 
-    # Sau đó mới tới chuẩn hoá dữ liệu, DWH, Datamart, ML
-    upload_minio >> data_cleaning >> build_dwh >> build_datamart
-    build_datamart >> [
+    # Sau đó Spark job build full star DWH (products + reviews)
+    upload_minio >> spark_build_star_dwh
+
+    # Khi DWH xong → ML jobs (nếu muốn)
+    spark_build_star_dwh >> [
         ml_price_optimization,
         ml_inventory_recommendation,
         ml_customer_segment,
-    ] >> end
+    ]
+
+    # Khi tất cả ML (hoặc chỉ DWH nếu bạn bỏ ML) xong → ghi log FINISH → end
+    [ml_price_optimization, ml_inventory_recommendation, ml_customer_segment] >> etl_run_finish_task >> end

@@ -97,54 +97,106 @@ JDBC_URL = f"jdbc:postgresql://{DB_HOST}:{DB_PORT}/{DB_NAME}"
 #  Category mapping config
 # ============================================================
 CATEGORY_MAPPINGS = [
+    # Headphones & Earphones
     ("headphones", "Electronics|Audio|Headphones"),
     ("tai nghe", "Electronics|Audio|Headphones"),
     ("tai nghe không dây", "Electronics|Audio|Headphones"),
+    ("earphone", "Electronics|Audio|Headphones"),
+    ("wireless earbuds", "Electronics|Audio|Headphones"),
+    ("true wireless", "Electronics|Audio|Headphones"),
+    ("airpods", "Electronics|Audio|Headphones"),
+    
+    # Speakers
     ("bluetooth speaker", "Electronics|Audio|Speakers"),
     ("speaker", "Electronics|Audio|Speakers"),
     ("loa", "Electronics|Audio|Speakers"),
     ("loa bluetooth", "Electronics|Audio|Speakers"),
+    
+    # Laptops
     ("notebook", "Electronics|Computers|Laptops"),
     ("máy tính xách tay", "Electronics|Computers|Laptops"),
     ("laptop", "Electronics|Computers|Laptops"),
+    ("macbook", "Electronics|Computers|Laptops"),
+    ("ultrabook", "Electronics|Computers|Laptops"),
+    
+    # Smartwatches
     ("đồng hồ thông minh", "Electronics|Wearables|Smartwatches"),
     ("smartwatch", "Electronics|Wearables|Smartwatches"),
     ("smart watch", "Electronics|Wearables|Smartwatches"),
-    ("earphone", "Electronics|Audio|Earphones"),
-    ("wireless earbuds", "Electronics|Audio|Earphones"),
+    ("apple watch", "Electronics|Wearables|Smartwatches"),
+    ("galaxy watch", "Electronics|Wearables|Smartwatches"),
+    
+    # Tablets
     ("ipad", "Electronics|Tablets"),
     ("tablet", "Electronics|Tablets"),
     ("máy tính bảng", "Electronics|Tablets"),
+    ("galaxy tab", "Electronics|Tablets"),
+    
+    # Keyboards
     ("keyboard", "Electronics|Computers|Accessories|Keyboard"),
     ("mechanical keyboard", "Electronics|Computers|Accessories|Keyboard"),
     ("bàn phím", "Electronics|Computers|Accessories|Keyboard"),
     ("bàn phím cơ", "Electronics|Computers|Accessories|Keyboard"),
+    ("gaming keyboard", "Electronics|Computers|Accessories|Keyboard"),
+    
+    # Mouse
     ("mouse", "Electronics|Computers|Accessories|Mouse"),
     ("chuột máy tính", "Electronics|Computers|Accessories|Mouse"),
+    ("gaming mouse", "Electronics|Computers|Accessories|Mouse"),
+    ("wireless mouse", "Electronics|Computers|Accessories|Mouse"),
+    
+    # Monitors
     ("màn hình máy tính", "Electronics|Computers|Monitors"),
     ("monitor", "Electronics|Computers|Monitors"),
     ("display", "Electronics|Computers|Monitors"),
+    ("gaming monitor", "Electronics|Computers|Monitors"),
+    
+    # Cameras
     ("máy ảnh", "Electronics|Cameras"),
     ("máy ảnh kỹ thuật số", "Electronics|Cameras"),
     ("camera", "Electronics|Cameras"),
     ("digital camera", "Electronics|Cameras"),
+    ("dslr", "Electronics|Cameras"),
+    ("mirrorless", "Electronics|Cameras"),
+    ("action camera", "Electronics|Cameras"),
+    ("gopro", "Electronics|Cameras"),
+    
+    # Printers
     ("máy in", "Electronics|Computers|Printers"),
     ("printer", "Electronics|Computers|Printers"),
+    ("laser printer", "Electronics|Computers|Printers"),
+    ("inkjet", "Electronics|Computers|Printers"),
+    
+    # Desktop PCs
     ("máy tính để bàn", "Electronics|Computers|Desktop"),
     ("pc", "Electronics|Computers|Desktop"),
     ("desktop", "Electronics|Computers|Desktop"),
-    ("mobile phone", "Electronics|Mobile Phones|Smartphones"),
-    ("phone", "Electronics|Mobile Phones|Smartphones"),
-    ("smartphone", "Electronics|Mobile Phones|Smartphones"),
+    ("gaming pc", "Electronics|Computers|Desktop"),
+    
+    # Smartphones (place after specific keywords to avoid false positives)
     ("điện thoại", "Electronics|Mobile Phones|Smartphones"),
     ("điện thoại thông minh", "Electronics|Mobile Phones|Smartphones"),
+    ("mobile phone", "Electronics|Mobile Phones|Smartphones"),
+    ("smartphone", "Electronics|Mobile Phones|Smartphones"),
+    ("iphone", "Electronics|Mobile Phones|Smartphones"),
+    ("samsung galaxy", "Electronics|Mobile Phones|Smartphones"),
+    ("xiaomi", "Electronics|Mobile Phones|Smartphones"),
+    ("oppo", "Electronics|Mobile Phones|Smartphones"),
+    ("vivo", "Electronics|Mobile Phones|Smartphones"),
+    ("realme", "Electronics|Mobile Phones|Smartphones"),
+    
+    # Networking
     ("router wifi", "Electronics|Networking|Router"),
+    ("router", "Electronics|Networking|Router"),
     ("modem", "Electronics|Networking|Modem"),
     ("access point", "Electronics|Networking|Access Points"),
+    
+    # TVs
     ("smart tv", "Electronics|TVs|Smart TVs"),
     ("television", "Electronics|TVs|Smart TVs"),
     ("tivi", "Electronics|TVs|Smart TVs"),
     ("tivi smart", "Electronics|TVs|Smart TVs"),
+    ("android tv", "Electronics|TVs|Smart TVs"),
 ]
 
 # ============================================================
@@ -615,30 +667,55 @@ def map_categories(df):
     print(" STEP 2.5: CATEGORY MAPPING (using mapping table)")
     print("=" * 60)
 
+    # DEBUG: Check sample categories before mapping
+    print("\n[DEBUG] Sample raw categories (first 20):")
+    sample_cats = df.select("category", "product_name").distinct().limit(20).collect()
+    for i, row in enumerate(sample_cats[:20], 1):
+        cat = row["category"] if row["category"] else "NULL"
+        name = row["product_name"][:50] if row["product_name"] else "NULL"
+        print(f"  {i}. Category: '{cat}' | Product: '{name}'")
+
     mapping_dict = {k.lower(): v for (k, v) in CATEGORY_MAPPINGS}
 
-    def _map_category(text: str):
-        if not text:
+    def _map_category_enhanced(category_text: str, product_name: str):
+        """
+        Try to map using category first, then fallback to product_name
+        """
+        if not category_text and not product_name:
             return None
-        t = text.lower()
-        for key, path in mapping_dict.items():
-            if key in t:
-                return path
+        
+        # Try category text first
+        if category_text:
+            t = category_text.lower()
+            for key, path in mapping_dict.items():
+                if key in t:
+                    return path
+        
+        # Fallback to product name if category didn't match
+        if product_name:
+            p = product_name.lower()
+            for key, path in mapping_dict.items():
+                if key in p:
+                    return path
+        
         return None
 
-    map_category_udf = udf(_map_category, StringType())
+    map_category_udf = udf(_map_category_enhanced, StringType())
 
-    # BẮT ĐẦU TỪ df, không phải df_mapped
+    # Prepare both category and product_name for mapping
     df_mapped = df.withColumn(
         "category_text",
-        lower(trim(col("category"))),
+        lower(trim(coalesce(col("category"), lit(""))))
+    ).withColumn(
+        "product_name_lower",
+        lower(trim(coalesce(col("product_name"), lit(""))))
     )
 
-    # map sang path chuẩn
+    # Map using both category and product_name
     df_mapped = df_mapped.withColumn(
         "category_path",
-        map_category_udf(col("category_text")),
-    )
+        map_category_udf(col("category_text"), col("product_name_lower")),
+    ).drop("product_name_lower")
 
     # tách thành các level
     df_mapped = df_mapped.withColumn(
@@ -1050,7 +1127,9 @@ def load_dimensions(df_dedup, conn):
 
     # ========== DIM_PRODUCT ==========
     print("[INFO] Loading dim_product...")
-    prod_pdf = (
+    
+    # Get distinct products as Spark DataFrame (don't convert to pandas yet)
+    prod_df = (
         df_dedup.select(
             "global_product_id_synced",
             "product_master_id",
@@ -1060,8 +1139,10 @@ def load_dimensions(df_dedup, conn):
         )
         .where(F.col("global_product_id_synced").isNotNull())
         .distinct()
-        .toPandas()
     )
+    
+    total_products = prod_df.count()
+    print(f"[INFO] Processing {total_products} products in batches...")
 
     insert_product_sql = f"""
         INSERT INTO {DWH_SCHEMA}.dim_product (
@@ -1081,40 +1162,56 @@ def load_dimensions(df_dedup, conn):
             category_sk       = COALESCE(EXCLUDED.category_sk,       {DWH_SCHEMA}.dim_product.category_sk)
     """
 
-    prod_rows = []
-    for _, r in prod_pdf.iterrows():
-        product_key = str(r["global_product_id_synced"])[:100]
+    # Process using collect() which is more memory efficient than toPandas()
+    # Collect returns list of Row objects
+    prod_rows_all = prod_df.collect()
+    
+    print(f"[INFO] Collected {len(prod_rows_all)} product rows, now inserting in batches...")
+    
+    # Process in batches to avoid memory issues
+    BATCH_SIZE = 5000
+    total_loaded = 0
+    
+    for i in range(0, len(prod_rows_all), BATCH_SIZE):
+        batch = prod_rows_all[i:i+BATCH_SIZE]
+        
+        prod_rows = []
+        for r in batch:
+            product_key = str(r["global_product_id_synced"])[:100]
 
-        master_id_raw = r.get("product_master_id")
-        product_name_raw = r.get("product_name_std")
-        brand_name = r.get("brand_std")
-        cat_key = r.get("category_std")
+            master_id_raw = r["product_master_id"] if "product_master_id" in r else None
+            product_name_raw = r["product_name_std"] if "product_name_std" in r else None
+            brand_name = r["brand_std"] if "brand_std" in r else None
+            cat_key = r["category_std"] if "category_std" in r else None
 
-        brand_sk = brand_map.get(brand_name)
-        category_sk = category_map.get(cat_key)
+            brand_sk = brand_map.get(brand_name)
+            category_sk = category_map.get(cat_key)
 
-        # slug + truncate theo giới hạn cột trong DB
-        product_slug_raw = make_slug(product_name_raw)
+            # slug + truncate theo giới hạn cột trong DB
+            product_slug_raw = make_slug(product_name_raw)
 
-        master_id = truncate_str(master_id_raw, 256)       # nếu cột product_master_id là varchar(256)
-        product_name = truncate_str(product_name_raw, 500) # product_name varchar(500)
-        product_slug = truncate_str(product_slug_raw, 500) # product_slug varchar(500)
+            master_id = truncate_str(master_id_raw, 256)
+            product_name = truncate_str(product_name_raw, 500)
+            product_slug = truncate_str(product_slug_raw, 500)
 
-        prod_rows.append(
-            (
-                product_key,
-                master_id,
-                product_name,
-                product_slug,
-                brand_sk,
-                category_sk,
+            prod_rows.append(
+                (
+                    product_key,
+                    master_id,
+                    product_name,
+                    product_slug,
+                    brand_sk,
+                    category_sk,
+                )
             )
-        )
 
-    if prod_rows:
-        execute_batch(cur, insert_product_sql, prod_rows, page_size=1000)
-        conn.commit()
-        print(f"  ✅ Loaded/ensured {len(prod_rows)} products")
+        if prod_rows:
+            execute_batch(cur, insert_product_sql, prod_rows, page_size=1000)
+            conn.commit()
+            total_loaded += len(prod_rows)
+            print(f"  [PROGRESS] Loaded {total_loaded}/{len(prod_rows_all)} products ({total_loaded/len(prod_rows_all)*100:.1f}%)")
+
+    print(f"  ✅ Loaded/ensured {total_loaded} products total")
 
     cur.execute(f"SELECT product_sk, product_key FROM {DWH_SCHEMA}.dim_product")
     product_map = {row[1]: row[0] for row in cur.fetchall()}
@@ -1243,9 +1340,18 @@ def load_fact_product_daily(df_dedup, conn, mappings):
         print("  ⚠ Không có rows nào để insert vào fact_product_daily")
         return
 
+    # ✅ Tối ưu: commit theo batch nhỏ hơn để tránh long-running transaction
     cur = conn.cursor()
-    execute_batch(cur, insert_fact_sql, rows, page_size=1000)
-    conn.commit()
+    batch_size = 1000
+    total_rows = len(rows)
+    
+    for i in range(0, total_rows, batch_size):
+        batch = rows[i:i+batch_size]
+        execute_batch(cur, insert_fact_sql, batch, page_size=500)
+        conn.commit()  # Commit từng batch để giải phóng connection
+        if (i + batch_size) % 5000 == 0:
+            print(f"  [PROGRESS] Loaded {min(i+batch_size, total_rows)}/{total_rows} rows...")
+    
     cur.close()
 
     print(f"  ✅ Loaded/updated {len(rows)} rows into fact_product_daily")

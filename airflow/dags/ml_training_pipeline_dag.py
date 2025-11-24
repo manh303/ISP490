@@ -1,28 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-ML Training Pipeline DAG
-Tự động train 3 mô hình ML hàng ngày:
-1. Sentiment Classification Model
-2. Product Clustering Model  
-3. Demand Prediction Model (tuỳ chọn)
+ML Training & Inference Pipeline DAG
+Tự động train và run inference cho 3 mô hình ML:
+1. Sentiment Analysis Model (TF-IDF + Logistic Regression)
+2. Product Recommendation Model (Content-based TF-IDF)
+3. Price Prediction Model (Random Forest Regressor)
+
+Flow:
+- Phase 1: Train 3 models song song
+- Phase 2: Run batch inference/predictions song song
+- Phase 3: Validate và thông báo
 """
 
 import os
-import sys
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from airflow import DAG
-from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.models import Variable
+from airflow.operators.empty import EmptyOperator
 from airflow.exceptions import AirflowException
-from airflow.utils.task_group import TaskGroup
-from airflow.decorators import dag, task
-from airflow.operators.dummy import DummyOperator
 
 import logging
 
@@ -36,82 +35,88 @@ default_args = {
     'owner': 'ml_team',
     'depends_on_past': False,
     'start_date': datetime(2025, 1, 1),
-    'email_on_failure': True,
+    'email_on_failure': False,
     'email_on_retry': False,
-    'email': ['admin@ecommerce.com'],
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
-    'execution_timeout': timedelta(hours=3),
+    'execution_timeout': timedelta(hours=4),
 }
 
-dag = DAG(
-    'ml_training_pipeline',
-    default_args=default_args,
-    description='Automated ML Model Training Pipeline - Daily',
-    schedule_interval='0 1 * * *',  # Run at 1:00 AM daily
-    catchup=False,
-    tags=['ml', 'training', 'daily'],
-    max_active_runs=1,
-)
-
 # ===========================
-# Configuration
+# Path Configuration
 # ===========================
 
-# Use /opt/airflow for directories that Airflow user needs to write to
-# /app/ml is read-only for Airflow container
-ML_PROJECT_PATH = '/app/ml'  # Path to ML project (Airflow writable)
-MODELS_OUTPUT_DIR = '/app/ml/models/ml-models'
-DATA_DIR = '/app/ml/data'
+ML_PROJECT_PATH = '/app/ml'
+MODELS_OUTPUT_DIR = '/app/ml/models'
 LOGS_DIR = '/app/ml/logs'
+
+# ===========================
+# Python Helper Functions
+# ===========================
 
 def setup_directories(**context):
     """Create necessary directories at runtime"""
     os.makedirs(MODELS_OUTPUT_DIR, exist_ok=True)
-    os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(LOGS_DIR, exist_ok=True)
     logger.info("✅ Directories created successfully")
 
-# ===========================
-# Python Functions
-# ===========================
 
-def check_data_extraction(**context):
-    """Check if data extraction was successful"""
-    logger.info("🔍 Checking data extraction status...")
+def check_dwh_data(**context):
+    """Check if DWH has sufficient data for training"""
+    logger.info("🔍 Checking DWH data availability...")
     
     try:
-        # Check if data files exist
-        sentiment_data = Path(DATA_DIR) / 'sentiment_analysis' / 'raw_sentiment_data.csv'
-        clustering_data = Path(DATA_DIR) / 'product_clustering' / 'raw_clustering_data.csv'
+        import psycopg2
+        db_url = os.getenv("DATABASE_URL")
+        if not db_url:
+            raise AirflowException("DATABASE_URL not set")
         
-        if not sentiment_data.exists():
-            logger.error(f"❌ Sentiment data not found: {sentiment_data}")
-            return False
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
         
-        if not clustering_data.exists():
-            logger.error(f"❌ Clustering data not found: {clustering_data}")
-            return False
+        # Check fact_review for sentiment training
+        cur.execute("SELECT COUNT(*) FROM dwh.fact_review WHERE review_body IS NOT NULL")
+        review_count = cur.fetchone()[0]
+        logger.info(f"  Reviews available: {review_count}")
         
-        logger.info("✅ All data files exist")
+        # Check dim_product for recommendations
+        cur.execute("SELECT COUNT(*) FROM dwh.dim_product WHERE product_key IS NOT NULL")
+        product_count = cur.fetchone()[0]
+        logger.info(f"  Products available: {product_count}")
+        
+        # Check fact_product_daily for price training
+        cur.execute("SELECT COUNT(*) FROM dwh.fact_product_daily WHERE avg_price IS NOT NULL")
+        price_records = cur.fetchone()[0]
+        logger.info(f"  Price records available: {price_records}")
+        
+        cur.close()
+        conn.close()
+        
+        # Minimum thresholds
+        if review_count < 100:
+            raise AirflowException(f"Insufficient reviews: {review_count} < 100")
+        if product_count < 50:
+            raise AirflowException(f"Insufficient products: {product_count} < 50")
+        if price_records < 100:
+            raise AirflowException(f"Insufficient price records: {price_records} < 100")
+        
+        logger.info("✅ DWH data check passed")
         return True
-    
+        
     except Exception as e:
-        logger.error(f"❌ Data check failed: {e}")
-        raise AirflowException(f"Data extraction check failed: {e}")
+        logger.error(f"❌ DWH data check failed: {e}")
+        raise
 
 
 def validate_trained_models(**context):
-    """Validate all trained models"""
+    """Validate all trained models exist"""
     logger.info("🔍 Validating trained models...")
     
     try:
         required_models = [
-            'sentiment_classifier.pkl',
-            'sentiment_tfidf_vectorizer.pkl',
-            'sentiment_label_encoder.pkl',
-            'recommendation_kmeans.pkl',
-            'clustering_scaler.pkl',
+            'sentiment_tfidf_logreg_v1.0.pkl',
+            'content_recommender_tfidf_v1.0.pkl',
+            'price_forecast_rf_v1.0.pkl',
         ]
         
         models_dir = Path(MODELS_OUTPUT_DIR)
@@ -127,48 +132,58 @@ def validate_trained_models(**context):
                 logger.info(f"✅ {model_file} ({size_mb:.2f} MB)")
         
         if missing_models:
-            logger.error(f"❌ Missing models: {missing_models}")
-            return False
+            raise AirflowException(f"Missing models: {missing_models}")
         
         logger.info("✅ All models validated successfully")
         return True
     
     except Exception as e:
         logger.error(f"❌ Model validation failed: {e}")
-        raise AirflowException(f"Model validation failed: {e}")
+        raise
 
 
-def get_model_metrics(**context):
-    """Get metrics from trained models"""
-    logger.info("📊 Retrieving model metrics...")
+def validate_ml_results(**context):
+    """Validate ML results in database"""
+    logger.info("🔍 Validating ML results in database...")
     
     try:
-        metrics_dir = Path(LOGS_DIR) / 'metrics'
-        metrics_data = {}
+        import psycopg2
+        db_url = os.getenv("DATABASE_URL")
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
         
-        # Read sentiment metrics
-        sentiment_metrics_file = metrics_dir / 'sentiment_metrics.json'
-        if sentiment_metrics_file.exists():
-            with open(sentiment_metrics_file, 'r') as f:
-                metrics_data['sentiment'] = json.load(f)
-                logger.info(f"✅ Sentiment metrics: {metrics_data['sentiment']}")
+        # Check dim_ml_model
+        cur.execute("SELECT COUNT(*) FROM ml.dim_ml_model")
+        model_count = cur.fetchone()[0]
+        logger.info(f"  Models registered: {model_count}")
         
-        # Read clustering metrics
-        clustering_metrics_file = metrics_dir / 'clustering_metrics.json'
-        if clustering_metrics_file.exists():
-            with open(clustering_metrics_file, 'r') as f:
-                metrics_data['clustering'] = json.load(f)
-                logger.info(f"✅ Clustering metrics: {metrics_data['clustering']}")
+        # Check fact_review_sentiment
+        cur.execute("SELECT COUNT(*) FROM ml.fact_review_sentiment")
+        sentiment_count = cur.fetchone()[0]
+        logger.info(f"  Sentiment predictions: {sentiment_count}")
         
-        # Push metrics to XCom for downstream tasks
-        context['task_instance'].xcom_push(key='model_metrics', value=metrics_data)
+        # Check fact_product_recommendation
+        cur.execute("SELECT COUNT(*) FROM ml.fact_product_recommendation")
+        rec_count = cur.fetchone()[0]
+        logger.info(f"  Recommendations: {rec_count}")
         
-        logger.info(f"✅ Metrics retrieved: {metrics_data}")
-        return metrics_data
-    
+        # Check fact_price_prediction
+        cur.execute("SELECT COUNT(*) FROM ml.fact_price_prediction")
+        price_count = cur.fetchone()[0]
+        logger.info(f"  Price predictions: {price_count}")
+        
+        cur.close()
+        conn.close()
+        
+        if model_count < 3:
+            logger.warning(f"⚠️  Expected 3 models, found {model_count}")
+        
+        logger.info("✅ ML results validation completed")
+        return True
+        
     except Exception as e:
-        logger.error(f"❌ Failed to get metrics: {e}")
-        raise AirflowException(f"Metrics retrieval failed: {e}")
+        logger.error(f"❌ ML results validation failed: {e}")
+        raise
 
 
 def notify_completion(**context):
@@ -176,172 +191,171 @@ def notify_completion(**context):
     logger.info("📧 Sending completion notification...")
     
     try:
-        task_instance = context['task_instance']
         dag_run = context['dag_run']
-        
-        metrics = task_instance.xcom_pull(task_ids='get_model_metrics', key='model_metrics')
         
         notification = {
             'status': 'success',
             'dag_run_id': dag_run.run_id,
             'execution_date': context['execution_date'].isoformat(),
-            'models_trained': 2,
-            'metrics': metrics,
+            'models_trained': 3,
             'timestamp': datetime.now().isoformat()
         }
         
         # Save notification
-        notification_file = Path(LOGS_DIR) / f"training_complete_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        os.makedirs(LOGS_DIR, exist_ok=True)
+        notification_file = Path(LOGS_DIR) / f"ml_pipeline_complete_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(notification_file, 'w') as f:
             json.dump(notification, f, indent=2)
         
-        logger.info(f"✅ Completion notification saved: {notification_file}")
-        
-        # In production, send email/slack notification
-        # send_email(recipients=['admin@ecommerce.com'], subject=f"ML Training Complete - {dag_run.run_id}", ...)
-        
+        logger.info(f"✅ Notification saved: {notification_file}")
         return notification
     
     except Exception as e:
-        logger.error(f"❌ Failed to send notification: {e}")
-        # Don't fail the DAG for notification errors
+        logger.error(f"⚠️  Notification failed: {e}")
         return {'status': 'notification_failed', 'error': str(e)}
 
 
-def handle_failure(**context):
-    """Handle pipeline failure"""
-    logger.error("❌ ML Training Pipeline Failed!")
+# ===========================
+# DAG Definition
+# ===========================
+
+with DAG(
+    dag_id='ml_training_inference_pipeline',
+    default_args=default_args,
+    description='ML Training & Inference Pipeline - 3 Models (Sentiment, Recommendation, Price)',
+    schedule_interval='0 3 * * *',  # Run at 3:00 AM daily (after DWH pipeline at 2:00 AM)
+    catchup=False,
+    tags=['ml', 'training', 'inference', 'daily'],
+    max_active_runs=1,
+) as dag:
+
+    # ===========================
+    # PHASE 0: Setup & Validation
+    # ===========================
     
-    try:
-        dag_run = context['dag_run']
-        exception = context.get('exception')
-        
-        error_log = {
-            'status': 'failed',
-            'dag_run_id': dag_run.run_id,
-            'execution_date': context['execution_date'].isoformat(),
-            'error': str(exception),
-            'timestamp': datetime.now().isoformat()
-        }
-        
-        # Save error log
-        error_file = Path(LOGS_DIR) / f"training_error_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(error_file, 'w') as f:
-            json.dump(error_log, f, indent=2)
-        
-        logger.error(f"Error log saved: {error_file}")
-        
-    except Exception as e:
-        logger.error(f"Failed to handle error: {e}")
-
-
-# ===========================
-# DAG Tasks
-# ===========================
-
-# Start task
-start = DummyOperator(
-    task_id='start',
-    dag=dag,
-)
-
-# Task 0: Setup directories
-setup_task = PythonOperator(
-    task_id='setup_directories',
-    python_callable=setup_directories,
-    dag=dag,
-)
-
-# Task 1: Data Extraction
-extract_data = BashOperator(
-    task_id='extract_data',
-    bash_command=f'cd {ML_PROJECT_PATH} && python 1_data_extraction.py',
-    env={
-        'PYTHONPATH': ML_PROJECT_PATH,
-    },
-    dag=dag,
-)
-
-# Task 2: Check data extraction
-check_data = PythonOperator(
-    task_id='check_data',
-    python_callable=check_data_extraction,
-    dag=dag,
-)
-
-# Task 3: Train Sentiment Classifier
-train_sentiment = BashOperator(
-    task_id='train_sentiment_classifier',
-    bash_command=f'cd {ML_PROJECT_PATH} && python train_sentiment_classifier.py',
-    env={
-        'PYTHONPATH': ML_PROJECT_PATH,
-    },
-    dag=dag,
-)
-
-# Task 4: Train Product Clustering
-train_clustering = BashOperator(
-    task_id='train_product_clustering',
-    bash_command=f'cd {ML_PROJECT_PATH} && python train_product_clustering.py',
-    env={
-        'PYTHONPATH': ML_PROJECT_PATH,
-    },
-    dag=dag,
-)
-
-# Task 5: Test Models
-test_models = BashOperator(
-    task_id='test_models',
-    bash_command=f'cd {ML_PROJECT_PATH} && python test_models.py',
-    env={
-        'PYTHONPATH': ML_PROJECT_PATH,
-    },
-    dag=dag,
-)
-
-# Task 6: Validate Models
-validate_models = PythonOperator(
-    task_id='validate_models',
-    python_callable=validate_trained_models,
-    dag=dag,
-)
-
-# Task 7: Get Model Metrics
-get_metrics = PythonOperator(
-    task_id='get_model_metrics',
-    python_callable=get_model_metrics,
-    dag=dag,
-)
-
-# Task 8: Notify Completion
-notify = PythonOperator(
-    task_id='notify_completion',
-    python_callable=notify_completion,
-    on_failure_callback=handle_failure,
-    dag=dag,
-)
-
-# End task
-end = DummyOperator(
-    task_id='end',
-    dag=dag,
-)
-
-# ===========================
-# DAG Dependencies
-# ===========================
-
-# Linear pipeline: sequential execution
-start >> setup_task >> extract_data >> check_data
-
-# Parallel training: both models train simultaneously
-check_data >> [train_sentiment, train_clustering]
-
-# After both models are trained
-[train_sentiment, train_clustering] >> test_models >> validate_models
-
-# Get metrics and notify
-validate_models >> get_metrics >> notify >> end
+    start = EmptyOperator(task_id='start')
+    
+    setup_task = PythonOperator(
+        task_id='setup_directories',
+        python_callable=setup_directories,
+    )
+    
+    check_dwh = PythonOperator(
+        task_id='check_dwh_data',
+        python_callable=check_dwh_data,
+    )
+    
+    # ===========================
+    # PHASE 1: Model Training (Parallel)
+    # ===========================
+    
+    train_sentiment = BashOperator(
+        task_id='train_sentiment_model',
+        bash_command=f'cd {ML_PROJECT_PATH} && python train_sentiment_model.py',
+        env={
+            'PYTHONPATH': ML_PROJECT_PATH,
+            'ML_MODEL_DIR': MODELS_OUTPUT_DIR,
+            'DATABASE_URL': os.getenv('DATABASE_URL', ''),
+        },
+    )
+    
+    train_recommender = BashOperator(
+        task_id='train_recommender_model',
+        bash_command=f'cd {ML_PROJECT_PATH} && python train_recommender.py',
+        env={
+            'PYTHONPATH': ML_PROJECT_PATH,
+            'ML_MODEL_DIR': MODELS_OUTPUT_DIR,
+            'DATABASE_URL': os.getenv('DATABASE_URL', ''),
+        },
+    )
+    
+    train_price = BashOperator(
+        task_id='train_price_model',
+        bash_command=f'cd {ML_PROJECT_PATH} && python train_price_model.py',
+        env={
+            'PYTHONPATH': ML_PROJECT_PATH,
+            'ML_MODEL_DIR': MODELS_OUTPUT_DIR,
+            'DATABASE_URL': os.getenv('DATABASE_URL', ''),
+        },
+    )
+    
+    validate_models = PythonOperator(
+        task_id='validate_trained_models',
+        python_callable=validate_trained_models,
+    )
+    
+    # ===========================
+    # PHASE 2: Batch Inference (Parallel)
+    # ===========================
+    
+    run_sentiment_batch = BashOperator(
+        task_id='run_sentiment_batch',
+        bash_command=f'cd {ML_PROJECT_PATH} && python run_sentiment_batch.py',
+        env={
+            'PYTHONPATH': ML_PROJECT_PATH,
+            'ML_MODEL_DIR': MODELS_OUTPUT_DIR,
+            'DATABASE_URL': os.getenv('DATABASE_URL', ''),
+        },
+        execution_timeout=timedelta(minutes=30),  # Allow 30 min for sentiment scoring
+    )
+    
+    run_recommendations = BashOperator(
+        task_id='run_recommendations',
+        bash_command=f'cd {ML_PROJECT_PATH} && python run_recommendations.py',
+        env={
+            'PYTHONPATH': ML_PROJECT_PATH,
+            'ML_MODEL_DIR': MODELS_OUTPUT_DIR,
+            'DATABASE_URL': os.getenv('DATABASE_URL', ''),
+        },
+        execution_timeout=timedelta(hours=1),  # Allow 1 hour for recommendations (CPU intensive with n_jobs=1)
+    )
+    
+    run_price_predictions = BashOperator(
+        task_id='run_price_predictions',
+        bash_command=f'cd {ML_PROJECT_PATH} && python run_price_predictions.py',
+        env={
+            'PYTHONPATH': ML_PROJECT_PATH,
+            'ML_MODEL_DIR': MODELS_OUTPUT_DIR,
+            'DATABASE_URL': os.getenv('DATABASE_URL', ''),
+        },
+        execution_timeout=timedelta(minutes=20),  # Allow 20 min for price predictions
+    )
+    
+    # ===========================
+    # PHASE 3: Validation & Notification
+    # ===========================
+    
+    validate_results = PythonOperator(
+        task_id='validate_ml_results',
+        python_callable=validate_ml_results,
+    )
+    
+    notify = PythonOperator(
+        task_id='notify_completion',
+        python_callable=notify_completion,
+        trigger_rule='all_done',
+    )
+    
+    end = EmptyOperator(task_id='end')
+    
+    # ===========================
+    # DAG Flow
+    # ===========================
+    
+    # Phase 0: Setup & validation
+    start >> setup_task >> check_dwh
+    
+    # Phase 1: Train 3 models in parallel
+    check_dwh >> [train_sentiment, train_recommender, train_price]
+    
+    # Validate all models trained
+    [train_sentiment, train_recommender, train_price] >> validate_models
+    
+    # Phase 2: Run batch inference in parallel
+    validate_models >> [run_sentiment_batch, run_recommendations, run_price_predictions]
+    
+    # Phase 3: Validate results and notify
+    [run_sentiment_batch, run_recommendations, run_price_predictions] >> validate_results >> notify >> end
 
 # ===========================
 # DAG Documentation
