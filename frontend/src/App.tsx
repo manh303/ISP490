@@ -167,7 +167,7 @@ export default function App() {
           {/* Admin Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="ADMIN">
                 <AdminLayout />
               </ProtectedRoute>
             }
@@ -191,13 +191,13 @@ export default function App() {
             <Route path="/admin/performance" element={<Blank />} />
             <Route path="/admin/errors" element={<Blank />} />
             <Route path="/admin/notifications" element={<Blank />} />
-            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/admin/profile" element={<UserProfiles />} />
           </Route>
 
           {/* Analyst Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="ANALYST">
                 <AnalystLayout />
               </ProtectedRoute>
             }
@@ -227,12 +227,12 @@ export default function App() {
             <Route path="/analyst/schedule" element={<Calendar />} />
             <Route path="/analyst/refresh" element={<Blank />} />
             <Route path="/analyst/alerts" element={<Alerts />} />
-            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/analyst/profile" element={<UserProfiles />} />
           </Route>
           {/* DataEngineerSidebar Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="DATA_ENGINEER">
                 <DataEngineerLayout/>
               </ProtectedRoute>
             }
@@ -244,17 +244,18 @@ export default function App() {
             <Route path="/dataengineer/monitoring" element={<Alerts />} />
             <Route path="/dataengineer/logs" element={<Blank />} />
             <Route path="/dataengineer/settings" element={<Blank />} />
-            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/dataengineer/profile" element={<UserProfiles />} />
           </Route>  
           {/* MLISidebar Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole={["ANALYST", "DATA_ENGINEER", "ML", "MLI"]}>
                 <MLILayout/>
               </ProtectedRoute>
             }
           >
             {/* Machine Learning Pages */}
+             <Route path="/ml/dashboard" element={<StatusOverviewPage />} />
             <Route path="/ml/models" element={<ModelsListPage />} />
             <Route path="/ml/models/create" element={<CreateModelPage />} />
             <Route path="/ml/models/:model_sk" element={<ModelDetailPage />} />
@@ -279,12 +280,12 @@ export default function App() {
             <Route path="/mli/recommendation-engine" element={<Blank />} />
             <Route path="/mli/model-management" element={<Blank />} />
             <Route path="/mli/data-sets" element={<Blank />} />
-            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/mli/profile" element={<UserProfiles />} />
           </Route> 
           {/* Customer Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="CUSTOMER">
                 <CustomerLayout />
               </ProtectedRoute>
             }

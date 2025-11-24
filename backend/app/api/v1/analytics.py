@@ -12,6 +12,7 @@ from schemas.analytics import (
     OverviewKPIResponse,
     OverviewTrendResponse,
     PlatformComparisonItem,
+    PlatformComparisonResponse,
     CategoryShareItem,
     TopProductItem,
     ProductTimeseriesResponse,
@@ -22,6 +23,12 @@ from schemas.analytics import (
     ProductReportResponse,
 )
 from app.services.analytics_service import AnalyticsService
+try:
+    from app.services.cached_analytics_service import CachedAnalyticsService
+    USE_CACHE = True
+except ImportError:
+    CachedAnalyticsService = AnalyticsService
+    USE_CACHE = False
 import os
 
 router = APIRouter(prefix="/analytics", tags=["Analytics / Analyst"])
@@ -48,6 +55,8 @@ async def get_db():
 
 
 async def get_analytics_service(db=Depends(get_db)) -> AnalyticsService:
+    if USE_CACHE:
+        return CachedAnalyticsService(db)
     return AnalyticsService(db)
 
 
@@ -106,7 +115,7 @@ async def get_overview_trends(
 
 # ====== PLATFORM COMPARISON ======
 
-@router.get("/platforms/comparison", response_model=List[PlatformComparisonItem])
+@router.get("/platforms/comparison", response_model=PlatformComparisonResponse)
 async def compare_platforms(
     from_date: date = Query(...),
     to_date: date = Query(...),

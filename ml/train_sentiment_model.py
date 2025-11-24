@@ -93,7 +93,7 @@ def train_and_save_model() -> None:
     # Logistic Regression multi-class
     clf = LogisticRegression(
         max_iter=1000,
-        n_jobs=-1,
+        n_jobs=1,  # Set to 1 for Airflow container compatibility
         multi_class="auto",
     )
     clf.fit(X_train, y_train)

@@ -37,7 +37,7 @@ import {
 } from '../../services/analyticsApi';
 import { TopRatedProductsChart } from '../../components/analytics/TopRatedProductsChart';
 import { CategoryPerformanceChart } from '../../components/analytics/CategoryPerformanceChart';
-import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
+// import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
 import { PlatformSelect } from '../../components/analytics/PlatformSelect';
 import { CategoryHierarchySelector } from '../../components/analytics/CategoryHierarchySelector';
@@ -52,12 +52,13 @@ export function AnalyticsDashboard() {
   const [platformCode, setPlatformCode] = useState<string>();
   const [categoryKey, setCategoryKey] = useState<string>();
   const [parentCategoryKey, setParentCategoryKey] = useState<string>();
+  const [metric, setMetric] = useState<'revenue' | 'review_count' | 'avg_rating' | 'price_growth'>('revenue');
 
   // Analytics data state
   const [overviewReport, setOverviewReport] = useState<OverviewReport | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[] | null>(null);
 
-  // Load analytics data
+  // Load all overview data (chỉ gọi khi khởi tạo hoặc đổi filter tổng quan)
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
@@ -73,34 +74,46 @@ export function AnalyticsDashboard() {
         category_key: categoryKey,
       };
 
-      console.log('API Params:', {
-        overviewParams,
-        categoryKey,
-        parentCategoryKey,
-        platformCode
-      });
+      // console.log('API Params:', {
+      //   overviewParams,
+      //   categoryKey,
+      //   parentCategoryKey,
+      //   platformCode
+      // });
+
+      const overviewData = await getAllOverviewData(overviewParams);
+      setOverviewReport(overviewData);
+    } catch (err) {
+      console.error('Error loading analytics data:', err);
+      setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chỉ filter lại getTopProducts khi đổi filter
+  const loadTopProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
+      const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
 
       const topProductsParams: GetTopProductsParams = {
         from_date: fromDateStr || '2025-10-22',
         to_date: toDateStr || '2025-11-21',
         platform_code: platformCode,
         category_key: categoryKey,
+        metric,
         limit: 10,
       };
 
-      const [
-        overviewData,
-        topProductsData,
-      ] = await Promise.all([
-        getAllOverviewData(overviewParams),
-        getTopProducts(topProductsParams),
-      ]);
-
-      setOverviewReport(overviewData);
+      const topProductsData = await getTopProducts(topProductsParams);
       setTopProducts(topProductsData);
     } catch (err) {
-      console.error('Error loading analytics data:', err);
-      setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+      console.error('Error loading top products:', err);
+      setError('Không thể tải dữ liệu top sản phẩm. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -115,12 +128,20 @@ export function AnalyticsDashboard() {
     setToDate(now);
   }, []);
 
+  // Chỉ load tổng quan khi đổi các filter tổng quan
   useEffect(() => {
     if (fromDate && toDate) {
       console.log('Loading analytics data with:', { platformCode, categoryKey, parentCategoryKey });
       loadAnalyticsData();
     }
   }, [fromDate, toDate, platformCode, categoryKey]);
+
+  // Chỉ filter lại top products khi đổi filter hoặc metric
+  useEffect(() => {
+    if (fromDate && toDate) {
+      loadTopProducts();
+    }
+  }, [fromDate, toDate, platformCode, categoryKey, metric]);
 
   const handleRefresh = () => {
     window.location.reload();
@@ -209,6 +230,20 @@ export function AnalyticsDashboard() {
                     setParentCategoryKey(parentKey);
                   }}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Tiêu chí:</label>
+                <Select value={metric} onValueChange={v => setMetric(v as 'revenue' | 'review_count' | 'avg_rating' | 'price_growth')}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Chọn tiêu chí" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="revenue">Doanh thu</SelectItem>
+                    <SelectItem value="review_count">Số đánh giá</SelectItem>
+                    <SelectItem value="avg_rating">Đánh giá TB</SelectItem>
+                    <SelectItem value="price_growth">Tăng giá</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

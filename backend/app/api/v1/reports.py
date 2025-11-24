@@ -157,23 +157,13 @@ async def export_products_report(
         params.append(platform_code)
 
     sql = f"""
-        WITH latest_snapshot AS (
         SELECT
-            fpd.product_sk,
-            MAX(d.date_value) AS latest_date
-        FROM dwh.fact_product_daily fpd
-        JOIN dwh.dim_date d ON d.date_sk = fpd.date_sk
-        WHERE d.date_value BETWEEN $from_date AND $to_date
-        GROUP BY fpd.product_sk
-        ),
-        product_daily AS (
-        SELECT
-            fpd.*,
-            d.date_value,
+            p.product_key,
+            p.product_name,
             pl.platform_code,
             pl.platform_name,
             COALESCE(b.brand_name, 'Unknown')              AS brand_name,
-            COALESCE(c.category_id::text, 'Unknown')       AS category_name,
+            COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'Unknown') AS category_name,
             {metric_expr}                                  AS metric_value,
             AVG(f.avg_price)                               AS avg_price,
             MIN(f.min_price)                               AS min_price,
@@ -191,10 +181,14 @@ async def export_products_report(
         GROUP BY
             p.product_key,
             p.product_name,
+            pl.platform_code,
+            pl.platform_name,
             b.brand_name,
-            c.category_id
+            c.full_path,
+            c.category_std_key,
+            c.category_lvl1
         ORDER BY metric_value DESC
-        LIMIT {limit};
+        LIMIT {limit}
     """
 
     try:

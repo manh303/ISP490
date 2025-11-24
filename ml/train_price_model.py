@@ -70,7 +70,7 @@ def train_and_save_model():
         n_estimators=200,
         max_depth=10,
         random_state=42,
-        n_jobs=-1,
+        n_jobs=1,  # Set to 1 for Airflow container compatibility
     )
     model.fit(X_train, y_train)
 

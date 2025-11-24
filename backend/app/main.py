@@ -383,6 +383,17 @@ try:
 except ImportError as e:
     logger.warning(f"ML API routes not available: {e}")
 
+# Include Data Engineer API router
+try:
+    from api.v1.data_engineer import router as data_engineer_router
+    app.include_router(
+        data_engineer_router,
+        prefix=f"{settings.API_V1_PREFIX}",
+        tags=["Data Engineer"]
+    )
+    logger.info("✅ Data Engineer API routes included")
+except ImportError as e:
+    logger.warning(f"⚠️  Data Engineer API routes not available: {e}")
 
 # Include Reports API (v1)
 try:

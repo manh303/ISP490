@@ -8,6 +8,12 @@ x-airflow-common-env:
   LAZADA_HEADLESS: "1"
   LAZADA_PAGES_PER_RUN: "5"
   TZ: Asia/Bangkok
+  DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+  DB_HOST: dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com
+  DB_PORT: "5432"
+  DB_NAME: ecommerce_dss
+  DB_USER: dss_user
+  DB_PASSWORD: IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
 
   # Airflow core
   AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -142,6 +148,12 @@ services:
       - SPARK_MASTER_PORT=7077
       - SPARK_MASTER_WEBUI_PORT=8080
       - SPARK_CONF_DIR=/opt/bitnami/spark/conf
+    deploy:
+      resources:
+        limits:
+          memory: 6G  # Increase memory limit for Spark master
+        reservations:
+          memory: 4G
     ports:
       - "7077:7077" # Spark Master
       - "8081:8080" # Spark Master WebUI
@@ -351,7 +363,9 @@ services:
    command: webserver
    ports:
       - "8080:8080"
-   environment: *airflow-common-env
+   environment:
+      <<: *airflow-common-env
+      DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
    volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -382,7 +396,9 @@ services:
     build: ./airflow
     user: "50000:0"
     command: scheduler
-    environment: *airflow-common-env
+    environment:
+      <<: *airflow-common-env
+      DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
     volumes:
       - ./data/logs_app:/app/logs  
       - ./airflow/dags:/opt/airflow/dags
@@ -407,7 +423,9 @@ services:
     build: ./airflow
     user: "50000:0"
     command: celery worker
-    environment: *airflow-common-env
+    environment:
+      <<: *airflow-common-env
+      DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
     volumes:
       - ./data/logs_app:/app/logs  
       - ./airflow/dags:/opt/airflow/dags
