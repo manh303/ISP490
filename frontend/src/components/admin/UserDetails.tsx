@@ -28,7 +28,7 @@ export default function UserDetails(props: UserDetailsProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editModeState, setEditModeState] = useState<boolean>(!!editMode);
-  const [form, setForm] = useState({ full_name: "", phone: "", role_code: "CUSTOMER" });
+  const [form, setForm] = useState({ full_name: "", phone: "", role: "CUSTOMER" });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string>("");
@@ -45,7 +45,7 @@ export default function UserDetails(props: UserDetailsProps) {
         setForm({
           full_name: user.full_name || "",
           phone: user.phone || "",
-          role_code: user.role_code || "CUSTOMER"
+          role: user.role_code || "CUSTOMER"
         });
       })
       .catch((err) => {
@@ -83,7 +83,16 @@ export default function UserDetails(props: UserDetailsProps) {
       await userApi.updateUser(userId, {
         full_name: form.full_name,
         phone: form.phone,
-        role_code: form.role_code
+        role: form.role,
+        status: user!.status
+      });
+      // Fetch lại thông tin user sau khi cập nhật
+      const updatedUser = await userApi.getUser(userId);
+      setUser(updatedUser);
+      setForm({
+        full_name: updatedUser.full_name || "",
+        phone: updatedUser.phone || "",
+        role: updatedUser.role_code || "CUSTOMER"
       });
       setEditModeState(false);
       showToast('✓ Cập nhật thông tin người dùng thành công!', 'success');
@@ -346,7 +355,7 @@ export default function UserDetails(props: UserDetailsProps) {
                   onClick={() => setShowRoleDropdown(v => !v)}
                 >
                   <span className="text-gray-900">
-                    {availableRoles.find(opt => opt.role_code === form.role_code)?.role_name || "Chọn vai trò"}
+                    {availableRoles.find(opt => opt.role_code === form.role)?.role_name || "Chọn vai trò"}
                   </span>
                   <span className={`ml-2 text-gray-400 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`}>▼</span>
                 </button>
@@ -356,10 +365,10 @@ export default function UserDetails(props: UserDetailsProps) {
                       <li
                         key={opt.role_code}
                         className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${
-                          form.role_code === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
+                          form.role === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
                         }`}
                         onClick={() => { 
-                          setForm(f => ({ ...f, role_code: opt.role_code })); 
+                          setForm(f => ({ ...f, role: opt.role_code })); 
                           setShowRoleDropdown(false); 
                         }}
                       >
