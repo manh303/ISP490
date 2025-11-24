@@ -59,6 +59,26 @@
 - ✅ Added comments explaining p25_price (Q1) and p75_price (Q3)
 - Status: **RESOLVED**
 
+### **Issue 11: Product Filter Missing Category Name**
+- ✅ Added `category_name` field to `ProductFilterItem` schema
+- ✅ Added LEFT JOIN `dwh.dim_category` in search_products query
+- ✅ Updated WHERE clause to use table alias `p.`
+- ✅ Now returns category names in product search results
+- Status: **RESOLVED**
+
+### **Issue 12: Overview Trends Missing Category Name**
+- ✅ Added `category_name` field to `OverviewTrendResponse` schema
+- ✅ Added separate query to fetch category name when category_key is provided
+- ✅ Now returns "Smartphones" in response metadata (not in each point)
+- Status: **RESOLVED**
+
+### **Issue 13: Platform Comparison Missing Category Name**
+- ✅ Created new `PlatformComparisonResponse` wrapper schema
+- ✅ Moved from `List[PlatformComparisonItem]` to structured response
+- ✅ Added `category_key` and `category_name` to response metadata
+- ✅ Now returns "Smartphones" when filtering by category
+- Status: **RESOLVED**
+
 ---
 
 ## 📊 FINAL RESULTS
@@ -72,6 +92,9 @@
 | `/analytics/report/product` | Syntax error + empty reviews | ✅ **Fixed** |
 | `/analytics/overview/kpis` | Missing category_name | ✅ **Fixed** |
 | `/analytics/pricing/price-distribution` | Missing category_name | ✅ **Fixed** |
+| `/analytics/filters/products` | Missing category_name | ✅ **Fixed** |
+| `/analytics/overview/trends` | Missing category_name | ✅ **Fixed** |
+| `/analytics/platforms/comparison` | Missing category_name + structure | ✅ **Fixed** |
 | `/reports/products` | Syntax error (`$from_date`) | ✅ **Fixed** |
 
 ### **Data Quality:**

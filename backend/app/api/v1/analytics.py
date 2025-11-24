@@ -12,6 +12,7 @@ from schemas.analytics import (
     OverviewKPIResponse,
     OverviewTrendResponse,
     PlatformComparisonItem,
+    PlatformComparisonResponse,
     CategoryShareItem,
     TopProductItem,
     ProductTimeseriesResponse,
@@ -114,7 +115,7 @@ async def get_overview_trends(
 
 # ====== PLATFORM COMPARISON ======
 
-@router.get("/platforms/comparison", response_model=List[PlatformComparisonItem])
+@router.get("/platforms/comparison", response_model=PlatformComparisonResponse)
 async def compare_platforms(
     from_date: date = Query(...),
     to_date: date = Query(...),

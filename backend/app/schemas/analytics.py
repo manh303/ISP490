@@ -24,6 +24,7 @@ class ProductFilterItem(BaseModel):
     product_name: str
     platform_code: str
     category_key: Optional[str] = None
+    category_name: Optional[str] = None
 
 
 # ====== OVERVIEW KPI & TRENDS ======
@@ -56,6 +57,7 @@ class OverviewTrendResponse(BaseModel):
     to_date: date
     platform_code: Optional[str] = None
     category_key: Optional[str] = None
+    category_name: Optional[str] = None
     points: List[OverviewTrendPoint]
 
 
@@ -70,6 +72,14 @@ class PlatformComparisonItem(BaseModel):
     avg_price: Optional[float] = None
     avg_rating: Optional[float] = None
     total_reviews: int
+
+
+class PlatformComparisonResponse(BaseModel):
+    from_date: date
+    to_date: date
+    category_key: Optional[str] = None
+    category_name: Optional[str] = None
+    platforms: List[PlatformComparisonItem]
 
 
 class CategoryShareItem(BaseModel):
