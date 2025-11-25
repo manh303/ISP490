@@ -1023,11 +1023,11 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
         # Update last login time
         try:
             try:
-                from app.services.admin_service import AdminService
+                from app.services.iam_service import IAMService
             except ImportError:
-                from services.admin_service import AdminService
-            admin_service = AdminService(db)
-            await admin_service.update_last_login(user_data["user_id"])
+                from services.iam_service import IAMService
+            iam_service = IAMService(db)
+            await iam_service.update_last_login(user_data["user_id"])
         except Exception as e:
             logger.error(f"Failed to update last login: {e}")
 
@@ -1038,10 +1038,10 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
             activity_logger = ActivityLogger(db)
             await activity_logger.log_activity(
                 user_id=user_data["user_id"],
-                email=user_data["email"],
+                email=user_data.get("email", request.email),
                 action="USER_SIGNIN",
                 resource="/api/v1/auth/signin",
-                details={"role": user_data["role"], "method": "password"},
+                details={"role": user_data.get("role", "unknown"), "method": "password"},
                 status="success"
             )
         except Exception as e:

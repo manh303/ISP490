@@ -84,7 +84,7 @@ class IAMService:
 
     async def update_last_login(self, user_id: int):
         """Update user's last login timestamp
-        Note: AdminService also has this method - use either one
+
         """
         try:
             query = "UPDATE iam.iam_user SET last_login_at = $1, updated_at = $2 WHERE user_id = $3"
