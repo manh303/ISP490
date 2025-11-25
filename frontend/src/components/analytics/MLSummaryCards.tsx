@@ -74,7 +74,7 @@ const MLSummaryCards: React.FC<MLSummaryCardsProps> = ({ data, loading }) => {
         </div>
         <div className="flex flex-col items-center justify-center h-24">
           <p className="text-4xl font-bold text-orange-600 mb-2">
-            {data.total_products_analyzed.toLocaleString()}
+            {data?.total_products_analyzed?.toLocaleString()}
           </p>
           <p className="text-sm text-gray-600">Products Analyzed</p>
         </div>

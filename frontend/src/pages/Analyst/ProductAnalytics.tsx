@@ -320,12 +320,12 @@ export function ProductAnalytics() {
                         onClick={() => loadProductDetail(product)}
                         className="text-blue-600 hover:text-blue-800 hover:underline text-left"
                       >
-                        {product.product_name}
+                        {product?.product_name}
                       </button>
                     </TableCell>
-                    <TableCell className="text-gray-700">{product.avg_rating?.toFixed(2)} ⭐</TableCell>
-                    <TableCell className="text-gray-700">{product.total_reviews}</TableCell>
-                    <TableCell className="text-gray-700">{product.avg_price?.toLocaleString('vi-VN')} VND</TableCell>
+                    <TableCell className="text-gray-700">{product?.avg_rating?.toFixed(2)} ⭐</TableCell>
+                    <TableCell className="text-gray-700">{product?.total_reviews}</TableCell>
+                    <TableCell className="text-gray-700">{product?.avg_price?.toLocaleString('vi-VN')} VND</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
