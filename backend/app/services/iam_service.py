@@ -3,9 +3,8 @@ IAM (Identity & Access Management) Service
 Handles authentication, authorization, and user management using PostgreSQL IAM schema
 """
 
-import hashlib
-import secrets
-import datetime
+
+from datetime import datetime
 from typing import Optional, Dict, List, Any
 import bcrypt
 # JWT removed
@@ -84,11 +83,12 @@ class IAMService:
 
     async def update_last_login(self, user_id: int):
         """Update user's last login timestamp
-        Note: AdminService also has this method - use either one
+
         """
         try:
-            query = "UPDATE iam_user SET last_login_at = $1, updated_at = $2 WHERE user_id = $3"
-            await self.db.execute_query(query, (datetime.datetime.utcnow(), datetime.datetime.utcnow(), user_id))
+            query = "UPDATE iam.iam_user SET last_login_at = $1, updated_at = $2 WHERE user_id = $3"
+            now = datetime.datetime.utcnow()
+            await self.db.execute_query(query, (now, now, user_id))
         except Exception as e:
             logger.error(f"Update last login error: {e}")
 
@@ -124,7 +124,7 @@ class IAMService:
                 SET password_hash = $1, updated_at = $2
                 WHERE user_id = $3
             """
-            await self.db.execute_query(query, (new_password_hash, datetime.datetime.utcnow(), user_id))
+            await self.db.execute_query(query, (new_password_hash, datetime.datetime.now(datetime.timezone.utc), user_id))
 
         except Exception as e:
             logger.error(f"Change password error: {e}")
@@ -141,6 +141,6 @@ class IAMService:
                 INSERT INTO iam.iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
                 VALUES ($1, $2, $3, $4, $5, $6)
             """
-            await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.datetime.utcnow()))
+            await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.datetime.now(datetime.timezone.utc)))
         except Exception as e:
             logger.error(f"Log user action error: {e}")

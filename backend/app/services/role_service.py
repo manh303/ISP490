@@ -120,11 +120,23 @@ class RoleService:
         if not role:
             raise ValueError("Role not found")
         
+        user_count_query = """
+        SELECT COUNT(*) as user_count
+        FROM iam.iam_user_role
+        WHERE role_id = $1
+        """
+        user_count_result = await self.db.execute_query(user_count_query, (role_id,))
+        user_count = user_count_result[0]['user_count'] if user_count_result else 0
+        
+        if user_count > 0:
+            raise ValueError(f"Cannot deactivate role '{role['role_code']}'. {user_count} users are assigned to this role.")
+        
         update_query = """
         UPDATE iam.iam_role 
         SET is_active = false
         WHERE role_id = $1
         """
+        
         
         await self.db.execute_query(update_query, (role_id,))
         return role['role_code']

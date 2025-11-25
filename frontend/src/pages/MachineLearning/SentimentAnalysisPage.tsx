@@ -1,4 +1,11 @@
 import React, { useState } from 'react';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import DatePicker from 'react-datepicker';
+import { FaRegCalendarAlt } from 'react-icons/fa';
+import 'react-datepicker/dist/react-datepicker.css';
+import { vi } from 'date-fns/locale';
 import { getSentimentSummary, onlineSentiment, SentimentSummary, OnlineSentimentRequest, OnlineSentimentResponse } from '../../services/machineLearningApi';
 import Button from '../../components/ui/button/Button';
 import Form from '../../components/form/Form';
@@ -13,14 +20,20 @@ const SentimentAnalysisPage: React.FC = () => {
   const [onlineLoading, setOnlineLoading] = useState(false);
 
   // Form states
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   const [summaryForm, setSummaryForm] = useState({
     product_key: '',
     platform_code: '',
-    from_date: '',
-    to_date: '',
+    from_date: '', // ISO string
+    to_date: '',   // ISO string
     model_name: '',
     model_version: ''
   });
+
+  // Date objects for DatePicker
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
 
   const [onlineForm, setOnlineForm] = useState<OnlineSentimentRequest>({
     platform_code: '',
@@ -78,95 +91,151 @@ const SentimentAnalysisPage: React.FC = () => {
     }
   };
 
+  const getSentimentLabel = (sentiment: string) => {
+    switch (sentiment.toLowerCase()) {
+      case 'positive': return 'TÍCH CỰC';
+      case 'negative': return 'TIÊU CỰC';
+      case 'neutral': return 'TRUNG LẬP';
+      default: return sentiment.toUpperCase();
+    }
+  };
+
+  // Custom input cho DatePicker để đồng bộ UI
+  const CustomDateInput = React.forwardRef<HTMLButtonElement, any>(({ value, onClick, placeholder, onChange }, ref) => (
+    <button
+      type="button"
+      onClick={onClick}
+      ref={ref}
+      className="w-full flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white hover:border-blue-400 focus:border-blue-500 focus:outline-none transition-colors duration-150 shadow-sm"
+      style={{ minHeight: 40 }}
+    >
+      <span className={`flex-1 text-left ${!value ? 'text-gray-400' : 'text-gray-900'}`}>{value || placeholder}</span>
+      <FaRegCalendarAlt className="ml-2 text-blue-500 text-lg" />
+    </button>
+  ));
+  CustomDateInput.displayName = 'CustomDateInput';
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Sentiment Analysis</h1>
+      <h1 className="text-2xl font-bold mb-6">Phân tích Cảm xúc</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Summary Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Sentiment Summary</h2>
+          <h2 className="text-xl font-semibold mb-4">Tóm tắt Cảm xúc</h2>
 
           <Form onSubmit={handleSummarySubmit}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Key *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Sản phẩm *</label>
                 <Input
                   type="text"
                   value={summaryForm.product_key}
                   onChange={(e) => handleSummaryChange('product_key', e.target.value)}
-                  placeholder="e.g., tiki_123456"
+                  placeholder="vd: tiki_123456"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Nền tảng *</label>
                 <Select
                   options={platformOptions}
                   defaultValue={summaryForm.platform_code}
                   onChange={(value) => handleSummaryChange('platform_code', value)}
-                  placeholder="Select platform"
+                  placeholder="Chọn nền tảng"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
-                <Input
-                  type="date"
-                  value={summaryForm.from_date}
-                  onChange={(e) => handleSummaryChange('from_date', e.target.value)}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Từ ngày *</label>
+                <DatePicker
+                  selected={fromDate}
+                  onChange={(date: Date | null) => {
+                    setFromDate(date);
+                    handleSummaryChange('from_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Chọn ngày bắt đầu"
+                  maxDate={toDate || undefined}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  locale={vi}
+                  customInput={<CustomDateInput />}
+                  popperClassName="z-50"
+                  calendarClassName="rounded-lg shadow-lg border border-gray-200"
+                  dayClassName={date =>
+                    'text-sm rounded-full transition-colors duration-100 ' +
+                    (dayjs(date).isSame(fromDate, 'date') ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
+                  }
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">To Date *</label>
-                <Input
-                  type="date"
-                  value={summaryForm.to_date}
-                  onChange={(e) => handleSummaryChange('to_date', e.target.value)}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Đến ngày *</label>
+                <DatePicker
+                  selected={toDate}
+                  onChange={(date: Date | null) => {
+                    setToDate(date);
+                    handleSummaryChange('to_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Chọn ngày kết thúc"
+                  minDate={fromDate || undefined}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  locale={vi}
+                  customInput={<CustomDateInput />}
+                  popperClassName="z-50"
+                  calendarClassName="rounded-lg shadow-lg border border-gray-200"
+                  dayClassName={date =>
+                    'text-sm rounded-full transition-colors duration-100 ' +
+                    (dayjs(date).isSame(toDate, 'date') ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
+                  }
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tên Mô hình</label>
                 <Input
                   type="text"
                   value={summaryForm.model_name}
                   onChange={(e) => handleSummaryChange('model_name', e.target.value)}
-                  placeholder="Optional"
+                  placeholder="Tùy chọn"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phiên bản Mô hình</label>
                 <Input
                   type="text"
                   value={summaryForm.model_version}
                   onChange={(e) => handleSummaryChange('model_version', e.target.value)}
-                  placeholder="Optional"
+                  placeholder="Tùy chọn"
                 />
               </div>
             </div>
 
             <Button disabled={loading}>
-              {loading ? 'Loading...' : 'Get Summary'}
+              {loading ? 'Đang tải...' : 'Lấy Tóm tắt'}
             </Button>
           </Form>
 
           {/* Summary Results */}
           {summary && (
             <div className="mt-6">
-              <h3 className="text-lg font-medium mb-3">Sentiment Summary for {summary.product_key}</h3>
+              <h3 className="text-lg font-medium mb-3">Tóm tắt Cảm xúc cho {summary.product_key}</h3>
               <div className="overflow-x-auto">
                 <Table>
                   <thead>
                     <tr>
-                      <th className="px-4 py-2 text-left">Date</th>
-                      <th className="px-4 py-2 text-left">Total Reviews</th>
-                      <th className="px-4 py-2 text-left">Positive</th>
-                      <th className="px-4 py-2 text-left">Negative</th>
-                      <th className="px-4 py-2 text-left">Neutral</th>
-                      <th className="px-4 py-2 text-left">Positive Ratio</th>
+                      <th className="px-4 py-2 text-left">Ngày</th>
+                      <th className="px-4 py-2 text-left">Tổng Đánh giá</th>
+                      <th className="px-4 py-2 text-left">Tích cực</th>
+                      <th className="px-4 py-2 text-left">Tiêu cực</th>
+                      <th className="px-4 py-2 text-left">Trung lập</th>
+                      <th className="px-4 py-2 text-left">Tỷ lệ Tích cực</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -189,44 +258,44 @@ const SentimentAnalysisPage: React.FC = () => {
 
         {/* Online Analysis Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Online Sentiment Analysis</h2>
+          <h2 className="text-xl font-semibold mb-4">Phân tích Cảm xúc Trực tuyến</h2>
 
           <Form onSubmit={handleOnlineSubmit}>
             <div className="space-y-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Nền tảng *</label>
                 <Select
                   options={platformOptions}
                   defaultValue={onlineForm.platform_code}
                   onChange={(value) => handleOnlineChange('platform_code', value)}
-                  placeholder="Select platform"
+                  placeholder="Chọn nền tảng"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Key *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Sản phẩm *</label>
                 <Input
                   type="text"
                   value={onlineForm.product_key}
                   onChange={(e) => handleOnlineChange('product_key', e.target.value)}
-                  placeholder="e.g., tiki_123456"
+                  placeholder="vd: tiki_123456"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Review Text *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung Đánh giá *</label>
                 <textarea
                   className="w-full p-2 border rounded"
                   rows={4}
                   value={onlineForm.review_text}
                   onChange={(e) => handleOnlineChange('review_text', e.target.value)}
                   required
-                  placeholder="Enter review text to analyze sentiment..."
+                  placeholder="Nhập nội dung đánh giá để phân tích cảm xúc..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tên Mô hình</label>
                 <Input
                   type="text"
                   value={onlineForm.model_name}
@@ -235,7 +304,7 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phiên bản Mô hình</label>
                 <Input
                   type="text"
                   value={onlineForm.model_version}
@@ -245,33 +314,33 @@ const SentimentAnalysisPage: React.FC = () => {
             </div>
 
             <Button disabled={onlineLoading}>
-              {onlineLoading ? 'Analyzing...' : 'Analyze Sentiment'}
+              {onlineLoading ? 'Đang phân tích...' : 'Phân tích Cảm xúc'}
             </Button>
           </Form>
 
           {/* Online Analysis Result */}
           {onlineResult && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-lg font-medium mb-3">Analysis Result</h3>
+              <h3 className="text-lg font-medium mb-3">Kết quả Phân tích</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="font-medium">Sentiment:</span>
+                  <span className="font-medium">Cảm xúc:</span>
                   <div className={`text-2xl font-bold ${getSentimentColor(onlineResult.label)}`}>
-                    {onlineResult.label.toUpperCase()}
+                    {getSentimentLabel(onlineResult.label)}
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">Confidence Score:</span>
+                  <span className="font-medium">Điểm Tin cậy:</span>
                   <div className="text-2xl font-bold text-blue-600">
                     {(onlineResult.score * 100).toFixed(1)}%
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">Model:</span>
+                  <span className="font-medium">Mô hình:</span>
                   <div>{onlineResult.model_name} ({onlineResult.model_version})</div>
                 </div>
                 <div>
-                  <span className="font-medium">Latency:</span>
+                  <span className="font-medium">Độ trễ:</span>
                   <div>{onlineResult.latency_ms}ms</div>
                 </div>
               </div>

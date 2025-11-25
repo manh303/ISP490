@@ -364,7 +364,11 @@ export const getPlatformComparison = async (
   params: GetPlatformComparisonParams
 ): Promise<PlatformComparisonItem[]> => {
   const response = await api.get('/v1/analytics/platforms/comparison', { params });
-  return response.data;
+  const result = response.data;
+  if (Array.isArray(result)) return result;
+  if (result.data && Array.isArray(result.data)) return result.data;
+  if (result.platforms && Array.isArray(result.platforms)) return result.platforms;
+  return [];
 };
 
 /**

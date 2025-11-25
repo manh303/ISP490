@@ -31,8 +31,8 @@ export function PlatformComparisonChart({
     'sendo': '📦',
   };
 
-  const maxProductCount = Math.max(...data.map(p => p.total_products));
-  const maxReviews = Math.max(...data.map(p => p.total_reviews));
+  const maxProductCount = Math.max(...data.map(p => p?.total_products));
+  const maxReviews = Math.max(...data.map(p => p?.total_reviews));
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 bg-white">
@@ -44,9 +44,9 @@ export function PlatformComparisonChart({
       {/* Grouped Bar Chart */}
       <div className="space-y-4">
         {data.map((platform) => {
-          const productPercentage = (platform.total_products / maxProductCount) * 100;
-          const reviewPercentage = (platform.total_reviews / maxReviews) * 100;
-          const ratingPercentage = ((platform.avg_rating || 0) / 5) * 100;
+          const productPercentage = (platform?.total_products / maxProductCount) * 100;
+          const reviewPercentage = (platform?.total_reviews / maxReviews) * 100;
+          const ratingPercentage = ((platform?.avg_rating || 0) / 5) * 100;
 
           return (
             <div key={platform.platform_code} className="space-y-2">

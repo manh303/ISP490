@@ -4,7 +4,7 @@ import { Button } from '../ui/figma/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/figma/popover';
 import { Calendar as CalendarComponent } from '../ui/figma/calendar';
 import { format } from 'date-fns';
-
+import { vi } from 'date-fns/locale';
 interface DateRangePickerProps {
   fromDate: Date | undefined;
   toDate: Date | undefined;
@@ -34,7 +34,7 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
           <ChevronDown className="ml-auto h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 bg-white" align="start">
         <div className="p-3">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -44,6 +44,8 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
                 selected={fromDate}
                 onSelect={onFromDateChange}
                 initialFocus
+                locale={vi}
+                weekStartsOn={1}
               />
             </div>
             <div>
@@ -53,6 +55,8 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
                 selected={toDate}
                 onSelect={onToDateChange}
                 initialFocus
+                locale={vi}
+                weekStartsOn={1}
               />
             </div>
           </div>
@@ -67,7 +71,9 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
             >
               Xóa
             </Button>
-            <Button size="sm" onClick={() => setIsOpen(false)}>
+            <Button
+              size="sm"
+              onClick={() => setIsOpen(false)}>
               Áp dụng
             </Button>
           </div>

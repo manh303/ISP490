@@ -245,7 +245,8 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
                         Hủy
                     </Button>
                     <Button 
-                        type="submit" 
+                        type="submit"
+                        variant="outline" 
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật vai trò'}

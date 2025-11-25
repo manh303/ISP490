@@ -13,6 +13,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
   const [email, setEmail] = useState("");
   const [roleCode, setRoleCode] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,18 +46,26 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
     setLoading(true);
     setError(null);
     setSuccess(null);
+
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp");
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await userApi.createUser({
         email,
         password,
+        re_enter_password: confirmPassword,
         full_name: fullName,
         phone,
-        role_code: roleCode,
+        role: roleCode,
       });
       if (!data.success) throw new Error(data.message || "Không thể tạo người dùng mới");
       setSuccess("Tạo người dùng thành công!");
       showToast("Tạo người dùng thành công!", 'success');
-      setFullName(""); setEmail(""); setRoleCode(availableRoles.length > 0 ? availableRoles[0].role_code : ""); setPassword(""); setPhone("");
+      setFullName(""); setEmail(""); setRoleCode(availableRoles.length > 0 ? availableRoles[0].role_code : ""); setPassword(""); setConfirmPassword(""); setPhone("");
       onCreated();
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
@@ -130,6 +139,10 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
       <div className="mb-6">
         <label className="block text-gray-700 mb-1">Mật khẩu</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+      </div>
+      <div className="mb-6">
+        <label className="block text-gray-700 mb-1">Xác nhận mật khẩu</label>
+        <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
       </div>
       <Button className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" type="submit" disabled={loading}>
         {loading ? "Đang tạo..." : "Tạo người dùng"}

@@ -1,7 +1,7 @@
 import os
 from datetime import date
 from typing import List, Optional
-
+from app.api.dependencies import require_role
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -43,7 +43,7 @@ async def get_ml_service(db=Depends(get_db)) -> MLService:
 
 # --------- MODEL REGISTRY ENDPOINTS ---------
 
-@router.get("/models", response_model=List[MLModelResponse])
+@router.get("/models", response_model=List[MLModelResponse],dependencies=[Depends(require_role("ML"))])
 async def list_models(
     model_type: Optional[str] = Query(None, alias="type"),
     status: Optional[str] = None,
@@ -52,7 +52,7 @@ async def list_models(
     return await service.list_models(model_type=model_type, status=status)
 
 
-@router.post("/models", response_model=MLModelResponse)
+@router.post("/models", response_model=MLModelResponse,dependencies=[Depends(require_role("ML"))])
 async def create_model(
     payload: MLModelCreate,
     service: MLService = Depends(get_ml_service),
@@ -60,7 +60,7 @@ async def create_model(
     return await service.create_model(payload)
 
 
-@router.get("/models/{model_sk}", response_model=MLModelResponse)
+@router.get("/models/{model_sk}", response_model=MLModelResponse,dependencies=[Depends(require_role("ML"))])
 async def get_model(
     model_sk: int,
     service: MLService = Depends(get_ml_service),
@@ -71,7 +71,7 @@ async def get_model(
     return model
 
 
-@router.patch("/models/{model_sk}", response_model=MLModelResponse)
+@router.patch("/models/{model_sk}", response_model=MLModelResponse,dependencies=[Depends(require_role("ML"))])
 async def update_model(
     model_sk: int,
     payload: MLModelUpdate,
@@ -85,7 +85,7 @@ async def update_model(
 
 # --------- PRICE PREDICTIONS ---------
 
-@router.get("/price-predictions/history", response_model=PricePredictionHistoryResponse)
+@router.get("/price-predictions/history", response_model=PricePredictionHistoryResponse,dependencies=[Depends(require_role("ML"))])
 async def get_price_prediction_history(
     product_key: str = Query(..., description="global_product_id_synced / product_key"),
     platform_code: str = Query(..., description="tiki / lazada"),
@@ -105,7 +105,7 @@ async def get_price_prediction_history(
     )
 
 
-@router.post("/price-predictions/online", response_model=OnlinePricePredictionResponse)
+@router.post("/price-predictions/online", response_model=OnlinePricePredictionResponse,dependencies=[Depends(require_role("ML"))])
 async def online_price_prediction(
     payload: OnlinePricePredictionRequest,
     service: MLService = Depends(get_ml_service),
@@ -115,7 +115,7 @@ async def online_price_prediction(
 
 # --------- RECOMMENDATIONS ---------
 
-@router.get("/recommendations", response_model=RecommendationResponse)
+@router.get("/recommendations", response_model=RecommendationResponse,dependencies=[Depends(require_role("ML"))])
 async def get_recommendations(
     source_product_key: str = Query(..., description="VD: 'tiki_123456'"),
     platform_code: str = Query(..., description="tiki hoặc lazada"),
@@ -137,7 +137,7 @@ async def get_recommendations(
 
 # --------- SENTIMENT (CLASSIFICATION) ---------
 
-@router.get("/sentiment/summary", response_model=SentimentSummaryResponse)
+@router.get("/sentiment/summary", response_model=SentimentSummaryResponse,dependencies=[Depends(require_role("ML"))])
 async def get_sentiment_summary(
     product_key: str = Query(...),
     platform_code: str = Query(...),
@@ -160,7 +160,7 @@ async def get_sentiment_summary(
     return result
 
 
-@router.post("/sentiment/online", response_model=OnlineSentimentResponse)
+@router.post("/sentiment/online", response_model=OnlineSentimentResponse,dependencies=[Depends(require_role("ML"))])
 async def online_sentiment(
     payload: OnlineSentimentRequest,
     service: MLService = Depends(get_ml_service),
@@ -171,7 +171,7 @@ async def online_sentiment(
 
 # --------- STATUS SUMMARY ---------
 
-@router.get("/status/summary", response_model=MLStatusSummary)
+@router.get("/status/summary", response_model=MLStatusSummary,dependencies=[Depends(require_role("ML"))])
 async def get_status_summary(
     service: MLService = Depends(get_ml_service),
 ):

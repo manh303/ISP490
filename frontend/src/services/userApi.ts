@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ecommerce-dss-back
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: import.meta.env.DEV ? '/api' : `${API_BASE_URL}/api`,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });

@@ -18,6 +18,8 @@ export function Header() {
       navigate('/analyst/dashboard');
     } else if (hasRole('dataengineer')) {
       navigate('/dataengineer/dashboard');
+    } else if (hasRole('ML')) {
+      navigate('/ml/dashboard');
     } else {
       // Default fallback dashboard
       navigate('/dashboard');
@@ -31,6 +33,8 @@ export function Header() {
       return 'Analyst Dashboard';
     } else if (hasRole('dataengineer')) {
       return 'Engineer Dashboard';
+       } else if (hasRole('ML')) {
+      return 'ML Dashboard';
     } else {
       return 'Dashboard';
     }

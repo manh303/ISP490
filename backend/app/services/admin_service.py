@@ -177,7 +177,7 @@ class AdminService:
 
                 # Log activity
                 await conn.execute(
-                    "INSERT INTO iam.iam.user_activity_logs (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
+                    "INSERT INTO iam.user_activity_logs (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
                     user_id, "USER_CREATED", f"Admin created user: {email} with role: {role_code}"
                 )
 
@@ -313,16 +313,6 @@ class AdminService:
         await self.db.execute_query(query, (user_id,))
         return True
 
-    async def update_last_login(self, user_id: int) -> bool:
-        """Update user's last login timestamp"""
-        query = "UPDATE iam.iam_user SET last_login_at = NOW(), updated_at = NOW() WHERE user_id = $1"
-        try:
-            await self.db.execute_query(query, (user_id,))
-            logger.info(f"Last login updated for user {user_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Update last login error: {e}")
-            return False
 
     # ==================== ACTIVITY LOGS ====================
 
@@ -337,13 +327,13 @@ class AdminService:
         query = f"""
             SELECT log_id, user_id, email, action, resource, details, 
                    ip_address, status, created_at
-            FROM iam.iam.user_activity_logs
+            FROM iam.user_activity_logs
             {where_clause}
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
         """
         
-        count_query = f"SELECT COUNT(*) as total FROM iam.iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
+        count_query = f"SELECT COUNT(*) as total FROM iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
         
         logs = await self.db.execute_query(query, params)
         count_params = [user_id] if user_id else []
