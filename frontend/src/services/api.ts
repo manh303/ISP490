@@ -340,10 +340,10 @@ export const authAPI = {
     (await api.post('/v1/auth/verify-email', data)).data,
 
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> =>
-    (await api.post('/v1/auth/forgot-password', data)).data,
+    (await api.post('/v1/auth/forgot-password-otp', data)).data,
 
   resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> =>
-    (await api.post('/v1/auth/reset-password', data)).data
+    (await api.post('/v1/auth/verify-otp-reset-password', data)).data
 };
 
 export default api;
