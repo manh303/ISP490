@@ -27,7 +27,7 @@ default_args = {
 # ============================================================
 
 PIPELINE_JOB_CODE = "MINIO_ECOMMERCE_DWH_PIPELINE"
-PIPELINE_JOB_NAME = "Ecommerce DSS - Full DWH (Star Schema)"
+PIPELINE_JOB_NAME = "Ecommerce DSS - DWH Pipeline (Crawl → MinIO → Spark)"
 
 
 def _get_pg_conn():
@@ -70,7 +70,7 @@ def _ensure_etl_job(conn):
             (
                 PIPELINE_JOB_CODE,
                 PIPELINE_JOB_NAME,
-                "Full DWH pipeline: crawl -> MinIO -> Spark build star schema (products + reviews) -> ML",
+                "Full DWH pipeline: crawl → MinIO → Spark build star schema (products + reviews)",
             ),
         )
         conn.commit()
@@ -235,11 +235,16 @@ def upload_to_minio(**context):
             print(f"Failed to import/install minio: {e}. Skipping upload_to_minio.")
             return
 
-    client = Minio("minio:9000", "minioadmin", "minioadmin123", secure=False)
+    client = Minio(
+        endpoint="minio:9000",
+        access_key="minioadmin",
+        secret_key="minioadmin123",
+        secure=False
+    )
     bucket = "crawler-data"
 
-    if not client.bucket_exists(bucket):
-        client.make_bucket(bucket)
+    if not client.bucket_exists(bucket_name=bucket):
+        client.make_bucket(bucket_name=bucket)
 
     output_dir = Path(CRAWLER_OUTPUT_DIR)
     date = context["ds"]
@@ -247,7 +252,12 @@ def upload_to_minio(**context):
 
     for jsonl_file in output_dir.rglob(f"**/date={date}/*.jsonl"):
         relative = jsonl_file.relative_to(output_dir)
-        client.fput_object(bucket, str(relative).replace("\\", "/"), str(jsonl_file))
+        object_name = str(relative).replace("\\", "/")
+        client.fput_object(
+            bucket_name=bucket,
+            object_name=object_name,
+            file_path=str(jsonl_file)
+        )
         uploaded += 1
 
     print(f"Uploaded {uploaded} files to MinIO")
@@ -302,10 +312,10 @@ def _reviews_ready(**context):
 with DAG(
     dag_id="minio_ecommerce_dwh_pipeline",
     start_date=datetime(2025, 11, 1),
-    schedule_interval="0 2 * * *",  # chạy mỗi ngày 2h sáng
+    schedule_interval="0 0 * * *",  # chạy mỗi ngày 2h sáng
     catchup=False,
     default_args=default_args,
-    tags=["minio", "dwh", "spark", "dss"],
+    tags=["minio", "dwh", "spark", "dss", "etl"],
 ) as dag:
 
     # --------------------------------------------------------
@@ -481,56 +491,7 @@ docker exec spark-master spark-submit \
     )
 
     # --------------------------------------------------------
-    # PHẦN 3 – ML MODELS (OPTIONAL)
-    #   Các job Spark/ML dùng DWH làm input.
-    #   Nếu sau này bạn muốn dùng Python + scikit-learn tách riêng,
-    #   có thể xoá hoặc thay đổi phần này.
-    # --------------------------------------------------------
-
-    ml_price_optimization = BashOperator(
-        task_id="ml_price_optimization",
-        bash_command="""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --num-executors 2 \
-  --executor-cores 1 \
-  --executor-memory 1g \
-  --driver-memory 512m \
-  /app/src/ml_models/price_optimization.py
-""",
-    )
-
-    ml_inventory_recommendation = BashOperator(
-        task_id="ml_inventory_recommendation",
-        bash_command="""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --num-executors 2 \
-  --executor-cores 1 \
-  --executor-memory 1g \
-  --driver-memory 512m \
-  /app/src/ml_models/demand_forecasting.py
-""",
-    )
-
-    ml_customer_segment = BashOperator(
-        task_id="ml_customer_segment",
-        bash_command="""
-docker exec spark-master spark-submit \
-  --master spark://spark-master:7077 \
-  --deploy-mode client \
-  --num-executors 2 \
-  --executor-cores 1 \
-  --executor-memory 1g \
-  --driver-memory 512m \
-  /app/src/ml_models/product_recommendation.py
-""",
-    )
-
-    # --------------------------------------------------------
-    # PHẦN 4 – KẾT THÚC & GHI LOG
+    # PHẦN 3 – KẾT THÚC & GHI LOG
     # --------------------------------------------------------
 
     etl_run_finish_task = PythonOperator(
@@ -565,12 +526,5 @@ docker exec spark-master spark-submit \
     # Sau đó Spark job build full star DWH (products + reviews)
     upload_minio >> spark_build_star_dwh
 
-    # Khi DWH xong → ML jobs (nếu muốn)
-    spark_build_star_dwh >> [
-        ml_price_optimization,
-        ml_inventory_recommendation,
-        ml_customer_segment,
-    ]
-
-    # Khi tất cả ML (hoặc chỉ DWH nếu bạn bỏ ML) xong → ghi log FINISH → end
-    [ml_price_optimization, ml_inventory_recommendation, ml_customer_segment] >> etl_run_finish_task >> end
+    # Khi DWH xong → ghi log FINISH → end
+    spark_build_star_dwh >> etl_run_finish_task >> end

@@ -395,6 +395,18 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️  Data Engineer API routes not available: {e}")
 
+# Include DSS (Decision Support System) API router
+try:
+    from api.v1.dss import router as dss_router
+    app.include_router(
+        dss_router,
+        prefix=f"{settings.API_V1_PREFIX}",
+        tags=["DSS - Decision Support System"]
+    )
+    logger.info("✅ DSS API routes included")
+except ImportError as e:
+    logger.warning(f"⚠️  DSS API routes not available: {e}")
+
 # Include Reports API (v1)
 try:
     from api.v1.reports import router as reports_router
