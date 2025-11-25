@@ -5,6 +5,8 @@ AI-powered decision support endpoints for analysts
 
 import os
 import logging
+import hashlib
+import json
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
@@ -18,6 +20,7 @@ from app.schemas.dss import (
     ReviewSentimentResponse,
 )
 from app.services.dss_service import DSSService
+from app.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +68,14 @@ async def get_db():
 async def get_dss_service(db=Depends(get_db)) -> DSSService:
     """Get DSS service instance"""
     return DSSService(db)
+
+
+def _generate_cache_key(prefix: str, request_dict: Dict[str, Any]) -> str:
+    """Generate cache key from request parameters"""
+    # Sort keys to ensure consistent hashing
+    sorted_dict = json.dumps(request_dict, sort_keys=True, default=str)
+    key_hash = hashlib.md5(sorted_dict.encode()).hexdigest()[:16]
+    return f"dss:{prefix}:{key_hash}"
 
 
 # ============================================
@@ -123,8 +134,21 @@ async def run_price_prediction_dss(
         # Convert request to dict
         request_dict = request.model_dump()
         
-        # Run DSS analysis
+        # Generate cache key
+        cache_key = _generate_cache_key("price", request_dict)
+        
+        # Try to get from cache first
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            logger.info(f"Cache HIT for price prediction: {cache_key}")
+            return cached_result
+        
+        # Cache miss - run DSS analysis
+        logger.info(f"Cache MISS for price prediction: {cache_key}")
         result = await service.run_price_prediction_dss(request_dict)
+        
+        # Cache the result for 10 minutes (600 seconds)
+        cache.set(cache_key, result, ttl=600)
         
         return result
         
@@ -202,7 +226,23 @@ async def run_product_recommendation_dss(
     
     try:
         request_dict = request.model_dump()
+        
+        # Generate cache key
+        cache_key = _generate_cache_key("reco", request_dict)
+        
+        # Try to get from cache first
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            logger.info(f"Cache HIT for product recommendation: {cache_key}")
+            return cached_result
+        
+        # Cache miss - run DSS analysis
+        logger.info(f"Cache MISS for product recommendation: {cache_key}")
         result = await service.run_product_recommendation_dss(request_dict)
+        
+        # Cache the result for 10 minutes (600 seconds)
+        cache.set(cache_key, result, ttl=600)
+        
         return result
         
     except Exception as e:
@@ -267,7 +307,23 @@ async def run_review_sentiment_dss(
     
     try:
         request_dict = request.model_dump()
+        
+        # Generate cache key
+        cache_key = _generate_cache_key("review", request_dict)
+        
+        # Try to get from cache first
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            logger.info(f"Cache HIT for review sentiment: {cache_key}")
+            return cached_result
+        
+        # Cache miss - run DSS analysis
+        logger.info(f"Cache MISS for review sentiment: {cache_key}")
         result = await service.run_review_sentiment_dss(request_dict)
+        
+        # Cache the result for 10 minutes (600 seconds)
+        cache.set(cache_key, result, ttl=600)
+        
         return result
         
     except Exception as e:
@@ -446,6 +502,52 @@ async def get_data_status():
         status["error"] = str(e)
     
     return status
+
+
+@router.post("/cache/clear")
+async def clear_dss_cache(
+    pattern: Optional[str] = None
+):
+    """
+    Clear DSS API cache
+    
+    **Parameters:**
+    - `pattern` (optional): Cache key pattern to clear. If not provided, clears all DSS cache.
+      Examples:
+      - `dss:price:*` - Clear all price prediction cache
+      - `dss:reco:*` - Clear all recommendation cache
+      - `dss:review:*` - Clear all review sentiment cache
+      - `dss:*` - Clear all DSS cache (default)
+    
+    **Use Cases:**
+    - Clear cache after data updates
+    - Force refresh of cached results
+    - Debug cache issues
+    """
+    try:
+        if pattern:
+            cache.delete_pattern(pattern)
+            logger.info(f"Cleared cache pattern: {pattern}")
+            return {
+                "success": True,
+                "message": f"Cache cleared for pattern: {pattern}",
+                "pattern": pattern
+            }
+        else:
+            # Clear all DSS cache
+            cache.delete_pattern("dss:*")
+            logger.info("Cleared all DSS cache")
+            return {
+                "success": True,
+                "message": "All DSS cache cleared",
+                "pattern": "dss:*"
+            }
+    except Exception as e:
+        logger.error(f"Error clearing cache: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear cache: {str(e)}"
+        )
 
 
 @router.get("/scenarios")
