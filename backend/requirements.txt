@@ -5,6 +5,7 @@ gunicorn==21.2.0
 python-multipart==0.0.6
 middleware==1.2.1
 logger==1.4
+openai==1.62.0
 
 # Async Database Support
 asyncpg==0.29.0
