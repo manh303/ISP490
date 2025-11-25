@@ -49,11 +49,11 @@ python test_ml_local.py
 ```python
 import psycopg2
 conn = psycopg2.connect(
-    host="dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com",
+    host="dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com",
     port=5432,
-    database="ecommerce_dss",
+    database="ecommerce_dss_1",
     user="dss_user",
-    password="IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4"
+    password="6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G"
 )
 cur = conn.cursor()
 
@@ -81,9 +81,9 @@ spark-submit \
   --master spark://spark-master:7077 \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/ml_models/product_recommendation.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
   --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
 ```
 
 ### 4. Expected Output Tables
@@ -149,7 +149,7 @@ docker logs spark-master
 docker exec spark-master ls -la /app/src/ml_models/
 
 # Test database connection from Spark
-docker exec spark-master python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',port=5432,database='ecommerce_dss',user='dss_user',password='IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'); print('OK')"
+docker exec spark-master python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com',port=5432,database='ecommerce_dss_1',user='dss_user',password='6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G'); print('OK')"
 ```
 
 ## Next Steps After Testing

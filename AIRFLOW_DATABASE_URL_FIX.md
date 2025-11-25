@@ -32,7 +32,7 @@ airflow-worker:
 airflow-worker:
   environment:
     <<: *airflow-common-env
-    DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+    DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
 ```
 
 ### Thay đổi cho `airflow-scheduler`
@@ -48,7 +48,7 @@ airflow-scheduler:
 airflow-scheduler:
   environment:
     <<: *airflow-common-env
-    DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+    DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
 ```
 
 ### Thay đổi cho `airflow-webserver`
@@ -64,7 +64,7 @@ airflow-webserver:
 airflow-webserver:
   environment:
     <<: *airflow-common-env
-    DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+    DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
 ```
 
 ---
@@ -96,7 +96,7 @@ docker exec ecommerce-dss-project-airflow-worker-1 printenv DATABASE_URL
 
 **Expected output:**
 ```
-postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
 ```
 
 ### 3. Trigger ML DAG:

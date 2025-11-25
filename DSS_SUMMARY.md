@@ -322,7 +322,7 @@ db_manager = DatabaseManager(
 ```
 DB_HOST=your-postgres-host
 DB_PORT=5432
-DB_NAME=ecommerce_dss
+DB_NAME=ecommerce_dss_1
 DB_USER=dss_user
 DB_PASSWORD=your-password
 ```

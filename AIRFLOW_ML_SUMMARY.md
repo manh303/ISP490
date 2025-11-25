@@ -172,9 +172,9 @@ docker-compose -f docker-compose.ml-airflow.yml exec airflow-webserver \
 docker-compose -f docker-compose.ml-airflow.yml exec airflow-webserver \
   airflow connections add postgres_default \
   --conn-type postgresql \
-  --conn-host dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com \
+  --conn-host dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com \
   --conn-login dss_user --conn-password [PASSWORD] \
-  --conn-port 5432 --conn-schema ecommerce_dss
+  --conn-port 5432 --conn-schema ecommerce_dss_1
 ```
 
 ### 4. Access Web UI

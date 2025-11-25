@@ -44,7 +44,7 @@ class ELTConfig:
     """Configuration for ELT pipeline"""
     db_host: str = 'localhost'
     db_port: int = 5433
-    db_name: str = 'ecommerce_dss'
+    db_name: str = 'ecommerce_dss_1'
     db_user: str = 'dss_user'
     db_password: str = 'dss_password_123'
     crawler_data_path: str = 'C:/DoAn_FPT_FALL2025/ecommerce-dss-project/data-collection/crawlers/outputs'
@@ -751,7 +751,7 @@ def main():
     parser.add_argument('--data-path', default='C:/DoAn_FPT_FALL2025/ecommerce-dss-project/data-collection/crawlers/outputs',
                        help='Path to crawler output files')
     parser.add_argument('--db-host', default='localhost', help='Database host')
-    parser.add_argument('--db-name', default='ecommerce_dss', help='Database name')
+    parser.add_argument('--db-name', default='ecommerce_dss_1', help='Database name')
     parser.add_argument('--batch-size', type=int, default=1000, help='Batch size for processing')
 
     args = parser.parse_args()

@@ -272,7 +272,7 @@ def _map_category_advanced(category_text: str, product_name: str):
 
 ```bash
 # Check actual category values from source
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT 
     split_part(product_key, '_', 1) as platform,
     COUNT(*) FILTER (WHERE category_std = 'OTHER') as other_count,
@@ -387,7 +387,7 @@ After running, verify improvement:
 
 ```bash
 # Check category distribution
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT 
     category_std,
     COUNT(*) as products,

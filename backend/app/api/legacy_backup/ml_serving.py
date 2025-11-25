@@ -9,11 +9,11 @@ import os
 router = APIRouter(prefix="/api/ml", tags=["ML Serving"])
 
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com'),
+    'host': os.getenv('DB_HOST', 'dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com'),
     'port': os.getenv('DB_PORT', '5432'),
-    'database': os.getenv('DB_NAME', 'ecommerce_dss'),
+    'database': os.getenv('DB_NAME', 'ecommerce_dss_1'),
     'user': os.getenv('DB_USER', 'dss_user'),
-    'password': os.getenv('DB_PASSWORD', 'IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4')
+    'password': os.getenv('DB_PASSWORD', '6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G')
 }
 
 class ProductRecommendation(BaseModel):

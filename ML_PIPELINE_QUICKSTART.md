@@ -48,10 +48,10 @@ ls -lh ml/models/
 # price_forecast_rf_v1.0.pkl
 
 # Check database results
-docker exec postgres psql -U dss_user -d ecommerce_dss -c \
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c \
   "SELECT * FROM ml.dim_ml_model;"
 
-docker exec postgres psql -U dss_user -d ecommerce_dss -c \
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c \
   "SELECT COUNT(*) FROM ml.fact_review_sentiment;"
 ```
 
@@ -114,7 +114,7 @@ source airflow/config/airflow_env_optimization.sh
 docker-compose restart airflow-scheduler airflow-webserver
 
 # 3. Check database connections
-docker exec postgres psql -U dss_user -d ecommerce_dss -c \
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c \
   "SELECT count(*), state FROM pg_stat_activity GROUP BY state;"
 ```
 
@@ -123,7 +123,7 @@ docker exec postgres psql -U dss_user -d ecommerce_dss -c \
 **Check:**
 ```bash
 # 1. Verify DWH có data
-docker exec postgres psql -U dss_user -d ecommerce_dss -c \
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c \
   "SELECT COUNT(*) FROM dwh.fact_review;"
 
 # 2. Check DATABASE_URL env var

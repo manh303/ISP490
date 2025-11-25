@@ -187,7 +187,7 @@ GROUP BY sentiment_label;
      └────────┬───────┘
               ↓
        PostgreSQL DWH
-         (ecommerce_dss)
+         (ecommerce_dss_1)
 ```
 
 ## Comparison: Detail vs Aggregate

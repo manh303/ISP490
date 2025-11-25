@@ -118,7 +118,7 @@ docker logs airflow-scheduler -f | grep "sqlalchemy"
 -- PostgreSQL: Check active connections
 SELECT count(*), state
 FROM pg_stat_activity
-WHERE datname = 'ecommerce_dss'
+WHERE datname = 'ecommerce_dss_1'
 GROUP BY state;
 
 -- Check long-running queries
@@ -234,7 +234,7 @@ docker ps | grep airflow-scheduler
 echo -e "\n2. Database Connections:"
 docker exec airflow-scheduler \
   psql $DATABASE_URL -c \
-  "SELECT count(*), state FROM pg_stat_activity WHERE datname = 'ecommerce_dss' GROUP BY state;"
+  "SELECT count(*), state FROM pg_stat_activity WHERE datname = 'ecommerce_dss_1' GROUP BY state;"
 
 echo -e "\n3. Active DAG Runs:"
 docker exec airflow-scheduler \

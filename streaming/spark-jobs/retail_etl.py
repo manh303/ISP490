@@ -6,7 +6,7 @@ Chạy bởi Airflow với tham số:
   --input /app/data/outputs
   --bronze /app/data/bronze
   --silver /app/data/silver
-  --pg-url jdbc:postgresql://postgres:5432/ecommerce_dss
+  --pg-url jdbc:postgresql://postgres:5432/ecommerce_dss_1
   --pg-user dss_user
   --pg-pass dss_password_123
 """

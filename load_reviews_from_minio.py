@@ -15,11 +15,11 @@ minio_client = Minio(
 
 # DB config
 DB_CONFIG = {
-    'host': 'dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com',
+    'host': 'dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com',
     'port': '5432',
-    'database': 'ecommerce_dss',
+    'database': 'ecommerce_dss_1',
     'user': 'dss_user',
-    'password': 'IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4'
+    'password': '6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G'
 }
 
 def load_to_staging(conn):

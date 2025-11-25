@@ -122,7 +122,7 @@ class Settings:
     # Database URLs - Always use Render database (has data)
     POSTGRES_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+        "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
     )
 
     # API Configuration

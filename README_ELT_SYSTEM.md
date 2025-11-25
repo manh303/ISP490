@@ -91,7 +91,7 @@ python src/quality/data_validator.py --report-path quality_report.json
 ### 1. Database Setup
 ```sql
 -- Tạo database
-CREATE DATABASE ecommerce_dss;
+CREATE DATABASE ecommerce_dss_1;
 
 -- Chạy schema setup
 \i schemas/ecommerce_schema.sql
@@ -107,7 +107,7 @@ Update database config trong các files:
 ```python
 ELT_CONFIG = {
     'db_host': 'localhost',
-    'db_name': 'ecommerce_dss',
+    'db_name': 'ecommerce_dss_1',
     'db_user': 'dss_user',
     'db_password': 'dss_password_123'
 }
@@ -221,7 +221,7 @@ ORDER BY sold_count DESC LIMIT 10;
 ELTConfig(
     db_host='localhost',
     db_port=5432,
-    db_name='ecommerce_dss',
+    db_name='ecommerce_dss_1',
     crawler_data_path='/data/crawlers/outputs',
     batch_size=1000,
     max_retries=3

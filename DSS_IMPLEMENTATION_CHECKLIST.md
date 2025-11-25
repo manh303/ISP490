@@ -16,7 +16,7 @@ Overall Revenue ↓ Platform (Lazada) ↓ Category (Electronics) ↓ Product (Br
 ### [ ] 1. Deploy SQL Views (Database Layer)
 ```bash
 # SSH vào database server
-psql -h your-db-host -U dss_user -d ecommerce_dss < database/views/dss_drilldown_views.sql
+psql -h your-db-host -U dss_user -d ecommerce_dss_1 < database/views/dss_drilldown_views.sql
 
 # Verify views created
 \dv v_daily_*

@@ -31,7 +31,7 @@ cp .env.example .env
 
 # Cấu hình database connections
 POSTGRES_HOST=localhost
-POSTGRES_DB=ecommerce_dss
+POSTGRES_DB=ecommerce_dss_1
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_password
 POSTGRES_PORT=5432

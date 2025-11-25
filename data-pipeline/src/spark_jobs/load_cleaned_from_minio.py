@@ -83,12 +83,12 @@ SAVE_TO_MINIO = os.getenv("SAVE_TO_MINIO", "true").lower() == "true"
 # --------------------------
 # Postgres / Data Warehouse
 # --------------------------
-DB_HOST = os.getenv("DB_HOST", "dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com")
+DB_HOST = os.getenv("DB_HOST", "dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com")
 DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "ecommerce_dss")
+DB_NAME = os.getenv("DB_NAME", "ecommerce_dss_1")
 DB_USER = os.getenv("DB_USER", "dss_user")
 DB_PASSWORD = os.getenv(
-    "DB_PASSWORD", "IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4"
+    "DB_PASSWORD", "6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G"
 )  # TODO: đổi khi lên prod
 
 JDBC_URL = f"jdbc:postgresql://{DB_HOST}:{DB_PORT}/{DB_NAME}"
