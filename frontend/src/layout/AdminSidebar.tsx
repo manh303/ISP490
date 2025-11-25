@@ -295,14 +295,14 @@ const AdminSidebar: React.FC = () => {
             <>
               <img
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/logodss.png"
                 alt="Admin Panel"
                 width={150}
                 height={40}
               />
               <img
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/logodss-dark.png"
                 alt="Admin Panel"
                 width={150}
                 height={40}
