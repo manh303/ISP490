@@ -4,7 +4,7 @@ from typing import Optional, List
 
 import asyncpg
 from fastapi import APIRouter, Depends, Query, HTTPException
-
+from app.api.dependencies import require_role
 from schemas.analytics import (
     PlatformFilterItem,
     CategoryFilterItem,
@@ -62,14 +62,14 @@ async def get_analytics_service(db=Depends(get_db)) -> AnalyticsService:
 
 # ====== FILTER / METADATA ======
 
-@router.get("/filters/platforms", response_model=List[PlatformFilterItem])
+@router.get("/filters/platforms", response_model=List[PlatformFilterItem],dependencies=[Depends(require_role("ANALYST"))])
 async def list_platforms(
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     return await service.get_platform_filters()
 
 
-@router.get("/filters/categories", response_model=List[CategoryFilterItem])
+@router.get("/filters/categories", response_model=List[CategoryFilterItem],dependencies=[Depends(require_role("ANALYST"))])
 async def list_categories(
     platform_code: Optional[str] = Query(None),
     parent_category_key: Optional[str] = Query(None),
@@ -78,7 +78,7 @@ async def list_categories(
     return await service.get_category_filters(platform_code, parent_category_key)
 
 
-@router.get("/filters/products", response_model=List[ProductFilterItem])
+@router.get("/filters/products", response_model=List[ProductFilterItem],dependencies=[Depends(require_role("ANALYST"))])
 async def search_products(
     q: str = Query(..., description="Từ khóa tìm sản phẩm"),
     platform_code: Optional[str] = Query(None),
@@ -91,7 +91,7 @@ async def search_products(
 
 # ====== OVERVIEW / KPI ======
 
-@router.get("/overview/kpis", response_model=OverviewKPIResponse)
+@router.get("/overview/kpis", response_model=OverviewKPIResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_overview_kpis(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -102,7 +102,7 @@ async def get_overview_kpis(
     return await service.get_overview_kpis(from_date, to_date, platform_code, category_key)
 
 
-@router.get("/overview/trends", response_model=OverviewTrendResponse)
+@router.get("/overview/trends", response_model=OverviewTrendResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_overview_trends(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -115,7 +115,7 @@ async def get_overview_trends(
 
 # ====== PLATFORM COMPARISON ======
 
-@router.get("/platforms/comparison", response_model=PlatformComparisonResponse)
+@router.get("/platforms/comparison", response_model=PlatformComparisonResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def compare_platforms(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -125,7 +125,7 @@ async def compare_platforms(
     return await service.get_platform_comparison(from_date, to_date, category_key)
 
 
-@router.get("/platforms/category-share", response_model=List[CategoryShareItem])
+@router.get("/platforms/category-share", response_model=List[CategoryShareItem],dependencies=[Depends(require_role("ANALYST"))])
 async def get_category_share(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -137,7 +137,7 @@ async def get_category_share(
 
 # ====== PRODUCT PERFORMANCE ======
 
-@router.get("/products/top", response_model=List[TopProductItem])
+@router.get("/products/top", response_model=List[TopProductItem],dependencies=[Depends(require_role("ANALYST"))])
 async def get_top_products(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -157,7 +157,7 @@ async def get_top_products(
     )
 
 
-@router.get("/products/{product_key}/timeseries", response_model=ProductTimeseriesResponse)
+@router.get("/products/{product_key}/timeseries", response_model=ProductTimeseriesResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_product_timeseries(
     product_key: str,
     platform_code: str = Query(...),
@@ -173,7 +173,7 @@ async def get_product_timeseries(
     )
 
 
-@router.get("/products/{product_key}/reviews/summary", response_model=ReviewSummaryResponse)
+@router.get("/products/{product_key}/reviews/summary", response_model=ReviewSummaryResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_product_review_summary(
     product_key: str,
     platform_code: str = Query(...),
@@ -193,7 +193,7 @@ async def get_product_review_summary(
 
 # ====== PRICING ANALYTICS ======
 
-@router.get("/pricing/price-distribution", response_model=PriceDistributionResponse)
+@router.get("/pricing/price-distribution", response_model=PriceDistributionResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_price_distribution(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -204,7 +204,7 @@ async def get_price_distribution(
     return await service.get_price_distribution(from_date, to_date, platform_code, category_key)
 
 
-@router.get("/pricing/price-vs-revenue", response_model=List[PriceVsRevenueItem])
+@router.get("/pricing/price-vs-revenue", response_model=List[PriceVsRevenueItem],dependencies=[Depends(require_role("ANALYST"))])
 async def get_price_vs_revenue(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -224,7 +224,7 @@ async def get_price_vs_revenue(
 
 # ====== REPORT APIs ======
 
-@router.get("/report/overview", response_model=OverviewReportResponse)
+@router.get("/report/overview", response_model=OverviewReportResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_overview_report(
     from_date: date = Query(...),
     to_date: date = Query(...),
@@ -288,7 +288,7 @@ async def get_overview_report(
     )
 
 
-@router.get("/report/product", response_model=ProductReportResponse)
+@router.get("/report/product", response_model=ProductReportResponse,dependencies=[Depends(require_role("ANALYST"))])
 async def get_product_report(
     product_key: str = Query(..., description="global product key, vd: tiki_123456"),
     platform_code: str = Query(..., description="tiki / lazada"),
@@ -330,7 +330,7 @@ async def get_product_report(
 
 # ====== PRODUCTS BY CATEGORY ======
 
-@router.get("/products/by-category")
+@router.get("/products/by-category",dependencies=[Depends(require_role("ANALYST"))])
 async def get_products_by_category_platform(
     platform_code: str = Query(..., description="Platform code: tiki / lazada"),
     category_id: Optional[int] = Query(
@@ -359,6 +359,7 @@ async def get_products_by_category_platform(
             pl.platform_code,
             pl.platform_name,
             c.category_sk AS category_id,
+            COALESCE(c.category_std_key, 'Unknown') AS category_name,
             p.product_key,
             p.product_name,
             COALESCE(b.brand_name, 'Unknown') AS brand_name,
@@ -380,6 +381,7 @@ async def get_products_by_category_platform(
             pl.platform_code,
             pl.platform_name,
             c.category_sk,
+            c.category_std_key,
             p.product_key,
             p.product_name,
             b.brand_name
@@ -397,7 +399,7 @@ async def get_products_by_category_platform(
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
 
-@router.get("/products/by-category-all-platforms")
+@router.get("/products/by-category-all-platforms",dependencies=[Depends(require_role("ANALYST"))])
 async def get_products_by_category_all_platforms(
     category_id: Optional[int] = Query(
         None, description="Lọc theo category_sk (optional)"
@@ -426,6 +428,7 @@ async def get_products_by_category_all_platforms(
             pl.platform_code,
             pl.platform_name,
             c.category_sk AS category_id,
+            COALESCE(c.category_std_key, 'Unknown') AS category_name,
             p.product_key,
             p.product_name,
             COALESCE(b.brand_name, 'Unknown') AS brand_name,
@@ -446,6 +449,7 @@ async def get_products_by_category_all_platforms(
             pl.platform_code,
             pl.platform_name,
             c.category_sk,
+            c.category_std_key,
             p.product_key,
             p.product_name,
             b.brand_name

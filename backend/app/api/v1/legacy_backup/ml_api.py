@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
-
+from app.api.dependencies import require_role  
 # Try to import database
 try:
     from databases import Database

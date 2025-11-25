@@ -3,10 +3,10 @@ User Profile Management Pydantic Models
 """
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from models.shared import UserResponse, BaseUserRequest
+from models.shared import BaseUserRequest
 
 # Use shared UserResponse instead of duplicate ProfileResponse
-ProfileResponse = UserResponse
+
 
 class ProfileUpdateRequest(BaseUserRequest):
     """Profile update request"""
@@ -26,3 +26,13 @@ class EmailChangeConfirmIn(BaseModel):
     """Email change confirmation"""
     request_id: str
     otp: str
+
+class UserProfileResponse(BaseModel):
+    """User profile response"""
+    user_id: int
+    email: str
+    full_name: Optional[str]
+    phone: Optional[str]
+    role_name: Optional[str]
+    
+   

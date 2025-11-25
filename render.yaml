@@ -1,10 +1,4 @@
 services:
-  # Redis Cache (for performance)
-  - type: redis
-    name: ecommerce-dss-redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
-
   # Backend API Service
   - type: web
     name: ecommerce-dss-backend
@@ -18,11 +12,13 @@ services:
       cd backend &&
       uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
+      # Redis Cloud Connection
+      # ⚠️ SECURITY WARNING: Password is in this file!
+      # For better security, set REDIS_URL in Render Dashboard → Environment tab instead
+      # 
+      # Your Redis URL format is CORRECT ✅
       - key: REDIS_URL
-        fromService:
-          name: ecommerce-dss-redis
-          type: redis
-          property: connectionString
+        value: redis://default:H7452ZmrxCCJDB6pxk8pqOzgj2pAq7c3@redis-15687.crce194.ap-seast-1-1.ec2.cloud.redislabs.com:15687
       - key: DATABASE_URL
         value: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
       - key: DB_HOST

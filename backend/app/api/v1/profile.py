@@ -7,15 +7,16 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from app.api.dependencies import get_current_user
+
 from models.user import (
     EmailChangeConfirmIn, 
     EmailChangeRequestIn,
-    ProfileResponse, 
-    ProfileUpdateRequest
+    ProfileUpdateRequest,
+    UserProfileResponse
 )
-from app.services.admin_service import AdminService, UserActionResponse
+from app.services.profile_service import ProfileService
 
-class ProfileActionResponse(UserActionResponse):
+class ProfileActionResponse(UserProfileResponse):
     pass
 
 logger = logging.getLogger(__name__)
@@ -42,29 +43,31 @@ async def get_database():
         raise HTTPException(status_code=500, detail="Database connection failed")
 
 async def get_user_service(db=Depends(get_database)):
-    """Get admin service for user management"""
-    return AdminService(db)
+    """Get profile service for user management"""
+    return ProfileService(db)
 
 # Endpoints
-@router.get("", response_model=ProfileResponse, summary="👤 View My Profile")
+@router.get("", response_model=UserProfileResponse, summary="👤 View My Profile")
 async def get_my_profile(
-    user_id: int = 1,
-    user_service: AdminService = Depends(get_user_service)
+    current_user: dict = Depends(get_current_user),
+    user_service: ProfileService = Depends(get_user_service)
 ):
     """
-    Get user profile by user_id
+    Get current user profile
     
-    **No Authentication Required**
-    
-    **Returns**: Complete user profile information
+    **Authentication Required**
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User ID not found in token")
+        
         # Get profile from database
-        profile = await user_service.get_user_by_id(user_id)
+        profile = await user_service.get_profile(user_id)
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
         
-        return ProfileResponse(**profile)
+        return UserProfileResponse(**profile)
         
     except HTTPException:
         raise
@@ -74,30 +77,32 @@ async def get_my_profile(
 
 @router.put("", response_model=ProfileActionResponse, summary="✏️ Update Profile")
 async def update_my_profile(
-    user_id: int,
     profile_data: ProfileUpdateRequest,
-    user_service: AdminService = Depends(get_user_service)
+    current_user: dict = Depends(get_current_user),
+    user_service: ProfileService = Depends(get_user_service)
 ):
     """
-    Update user profile
+    Update current user profile
     
-    **No Authentication Required**
+    **Authentication Required**
     
     **Updatable fields**:
     - full_name: User's full name
     - phone: Phone number
-    - email: Email address (must be unique)
     
     **Example request body**:
     ```json
     {
         "full_name": "John Doe Updated",
-        "phone": "+84987654321",
-        "email": "newemail@example.com"
+        "phone": "+84987654321"
     }
     ```
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User ID not found in token")
+        
         # Update profile using update_user from AdminService
         from models.admin import UserUpdateRequest
         update_data = UserUpdateRequest(
@@ -126,7 +131,7 @@ async def request_email_change(
     current_user = Depends(get_current_user),
     service = Depends(get_user_service),
 ):
-    return await service.request_email_change(current_user.user_id, data.new_email)
+    return await service.request_email_change(current_user["user_id"], data.new_email)
 
 @router.post("/email/confirm")
 async def confirm_email_change(
@@ -135,5 +140,5 @@ async def confirm_email_change(
     service = Depends(get_user_service),
 ):
     return await service.confirm_email_change(
-        current_user.user_id, data.request_id, data.otp
+        current_user["user_id"], data.request_id, data.otp
     )

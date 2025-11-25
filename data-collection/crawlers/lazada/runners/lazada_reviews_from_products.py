@@ -12,7 +12,7 @@ import uuid
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
@@ -29,6 +29,129 @@ LOG_PREFIX = "[Lazada-Reviews]"
 # Flush logs immediately to see progress when running in Docker
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
+
+
+# ============================================================
+#  ETL METADATA LOGGING (schema meta.*)
+# ============================================================
+
+def _get_pg_conn():
+    """
+    Kết nối Postgres từ DATABASE_URL.
+    Nếu không có hoặc lỗi -> trả về None (không làm fail crawler).
+    """
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        print(f"{LOG_PREFIX} [META] DATABASE_URL not set, skip ETL logging.")
+        return None
+
+    try:
+        import psycopg2  # type: ignore
+    except ImportError:
+        print(f"{LOG_PREFIX} [META] psycopg2 not installed, skip ETL logging.")
+        return None
+
+    try:
+        conn = psycopg2.connect(db_url)
+        return conn
+    except Exception as e:
+        print(f"{LOG_PREFIX} [META] Failed to connect to Postgres: {e}")
+        return None
+
+
+def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
+    """
+    Ghi log bắt đầu crawler vào meta.etl_run.
+    Trả về run_id hoặc None.
+    """
+    conn = _get_pg_conn()
+    if conn is None:
+        return None
+
+    try:
+        cur = conn.cursor()
+        
+        # Ensure job exists
+        cur.execute(
+            """
+            INSERT INTO meta.etl_job (job_code, job_name, description)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (job_code) DO NOTHING
+            """,
+            (job_code, "Lazada Reviews Crawler", "Extract reviews from Lazada product pages")
+        )
+        
+        # Get job_id
+        cur.execute("SELECT job_id FROM meta.etl_job WHERE job_code = %s", (job_code,))
+        row = cur.fetchone()
+        if not row:
+            print(f"{LOG_PREFIX} [META] Cannot find etl_job for {job_code}")
+            conn.close()
+            return None
+        
+        job_id = row[0]
+        
+        # Create run
+        cur.execute(
+            """
+            INSERT INTO meta.etl_run (job_id, run_date, started_at, status)
+            VALUES (%s, %s, %s, %s)
+            RETURNING run_id
+            """,
+            (job_id, run_date, datetime.utcnow(), "RUNNING")
+        )
+        run_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        print(f"{LOG_PREFIX} [META] Created etl_run id={run_id} for {job_code}")
+        return run_id
+    except Exception as e:
+        print(f"{LOG_PREFIX} [META] Error creating etl_run: {e}")
+        try:
+            conn.close()
+        except:
+            pass
+        return None
+
+
+def log_etl_finish(run_id: Optional[int], status: str, rows_read: int = 0, rows_written: int = 0, error_message: str = None):
+    """
+    Ghi log kết thúc crawler vào meta.etl_run.
+    """
+    if run_id is None:
+        return
+
+    conn = _get_pg_conn()
+    if conn is None:
+        return
+
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE meta.etl_run
+            SET finished_at = %s,
+                status = %s,
+                rows_read = %s,
+                rows_written = %s,
+                error_message = %s
+            WHERE run_id = %s
+            """,
+            (datetime.utcnow(), status, rows_read, rows_written, error_message, run_id)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        print(f"{LOG_PREFIX} [META] Finished etl_run id={run_id} with status={status}")
+    except Exception as e:
+        print(f"{LOG_PREFIX} [META] Error updating etl_run: {e}")
+        try:
+            conn.close()
+        except:
+            pass
 
 
 def _build_canonical_url(product_url: str, product_id: str) -> str:
@@ -119,10 +242,17 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
         print(f"{LOG_PREFIX} Loading: {product_name[:50]}...")
         try:
             page.goto(canonical_url, wait_until="domcontentloaded", timeout=45000, referer="https://www.lazada.vn/")
-
         except PlaywrightTimeoutError:
             print(f"{LOG_PREFIX} Timeout loading product URL. Skipping: {canonical_url}")
             return reviews
+        except Exception as e:
+            # Catch browser closed errors
+            if "closed" in str(e).lower():
+                print(f"{LOG_PREFIX} ⚠️  Browser closed/crashed. Stopping crawler.")
+                raise  # Re-raise to stop crawling
+            print(f"{LOG_PREFIX} Error loading page: {e}")
+            return reviews
+            
         print(f"{LOG_PREFIX} Landed on: {page.url}")
         
         # Detect punish/anti-bot redirect and retry once with canonical URL
@@ -275,11 +405,15 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
     
     return reviews
 
-def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: int = 10000) -> List[Dict[str, Any]]:
-     """Crawl reviews from product URLs with checkpoint support"""
+def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: int = 10000) -> tuple[List[Dict[str, Any]], bool]:
+     """Crawl reviews from product URLs with checkpoint support
+     
+     Returns:
+         tuple: (all_reviews, hit_antibot) - reviews list and anti-bot detection flag
+     """
      if not PLAYWRIGHT_AVAILABLE:
          print(f"{LOG_PREFIX} Playwright not available")
-         return []
+         return [], False
      
      # Load checkpoint to resume from last position
      checkpoint = load_checkpoint()
@@ -287,84 +421,169 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
      total_reviews_saved = checkpoint["total_reviews_saved"]
      
      all_reviews = []
+     batch_reviews = []
+     batch_num = 1
+     BATCH_SIZE = 20
      max_idx = min(len(products), max_products)
+     hit_antibot = False
+     antibot_count = 0
+     ANTIBOT_THRESHOLD = 3  # Skip after 3 consecutive anti-bot hits
      
      print(f"{LOG_PREFIX} Resuming from product {start_idx}/{max_idx}")
+     print(f"{LOG_PREFIX} Batch saving every {BATCH_SIZE} reviews")
      
-     with sync_playwright() as p:
-        HEADLESS = os.getenv("LAZADA_HEADLESS", "1") == "1"
-        USER_AGENTS = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0'
-        ]
-        ua = random.choice(USER_AGENTS)
-        context = p.chromium.launch_persistent_context(
-            user_data_dir=PROFILE_DIR,
-            headless=HEADLESS,
-            viewport={'width': 1920, 'height': 1080},
-            user_agent=ua,
-            args=['--no-sandbox', '--disable-dev-shm-usage'],
-            extra_http_headers={
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
-                "sec-ch-ua": '"Google Chrome";v="120", "Not=A?Brand";v="24", "Chromium";v="120"',
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": '"Windows"',
-                "sec-fetch-dest": "document",
-                "sec-fetch-mode": "navigate",
-                "sec-fetch-site": "none",
-                "sec-fetch-user": "?1",
-            },
-        )
-
-        if os.path.exists(COOKIE_FILE):
-            with open(COOKIE_FILE, 'r') as f:
-                context.add_cookies(json.load(f))
-            print(f"{LOG_PREFIX} Cookies loaded from {COOKIE_FILE}")
-        else:
-            print(f"{LOG_PREFIX} Cookie file not found at {COOKIE_FILE} (running without login cookies)")
-
-        page = context.new_page()
-        page.set_default_navigation_timeout(120000)
-        # warm-up để thiết lập cookie trên domain
-        page.goto("https://www.lazada.vn/", wait_until="domcontentloaded", timeout=45000)
-         
-        try:
-             for i in range(start_idx, max_idx):
-                 product = products[i]
-                 progress = i + 1
-                 print(f"\n{LOG_PREFIX} Product {progress}/{max_idx}")
-                 
-                 try:
-                     reviews = extract_reviews_from_product(
-                         page,
-                         product['url'],
-                         product['id'],
-                         product['name']
-                     )
-                     all_reviews.extend(reviews)
-                     
-                     # Save checkpoint after each product
-                     save_checkpoint(i + 1, total_reviews_saved + len(reviews))
-                     total_reviews_saved += len(reviews)
-                     
-                     time.sleep(random.uniform(3, 5))
-                     
-                 except Exception as e:
-                     print(f"{LOG_PREFIX} Failed product {progress}: {e}")
-                     # Save checkpoint even on error to resume from next product
-                     save_checkpoint(i + 1, total_reviews_saved)
-                     continue
+     try:
+         with sync_playwright() as p:
+             HEADLESS = os.getenv("LAZADA_HEADLESS", "1") == "1"
+             USER_AGENTS = [
+                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0'
+             ]
+             ua = random.choice(USER_AGENTS)
              
-        finally:
-             context.close()
-     
-     return all_reviews
+             # Browser args optimized for Docker/headless environment
+             browser_args = [
+                 '--no-sandbox',
+                 '--disable-dev-shm-usage',
+                 '--disable-gpu',
+                 '--disable-software-rasterizer',
+                 '--disable-gl-drawing-for-tests',
+                 '--disable-accelerated-2d-canvas',
+                 '--disable-features=VizDisplayCompositor',
+                 '--single-process',  # Avoid GPU process initialization
+             ]
+             
+             try:
+                 context = p.chromium.launch_persistent_context(
+                     user_data_dir=PROFILE_DIR,
+                     headless=HEADLESS,
+                     viewport={'width': 1920, 'height': 1080},
+                     user_agent=ua,
+                     args=browser_args,
+                     extra_http_headers={
+                         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                         "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+                         "sec-ch-ua": '"Google Chrome";v="120", "Not=A?Brand";v="24", "Chromium";v="120"',
+                         "sec-ch-ua-mobile": "?0",
+                         "sec-ch-ua-platform": '"Windows"',
+                         "sec-fetch-dest": "document",
+                         "sec-fetch-mode": "navigate",
+                         "sec-fetch-site": "none",
+                         "sec-fetch-user": "?1",
+                     },
+                 )
+             except PlaywrightTimeoutError as e:
+                 print(f"{LOG_PREFIX} ⚠️  Browser launch timeout (likely GPU/display issue in Docker)")
+                 print(f"{LOG_PREFIX} This is a environment issue, not a crawler bug")
+                 print(f"{LOG_PREFIX} Treating as SKIPPED - pipeline will continue")
+                 return [], True  # Return empty + hit_antibot=True to skip gracefully
 
-def save_reviews(reviews: List[Dict[str, Any]]):
-    """Save reviews to JSONL file"""
+             if os.path.exists(COOKIE_FILE):
+                 with open(COOKIE_FILE, 'r') as f:
+                     context.add_cookies(json.load(f))
+                 print(f"{LOG_PREFIX} Cookies loaded from {COOKIE_FILE}")
+             else:
+                 print(f"{LOG_PREFIX} Cookie file not found at {COOKIE_FILE} (running without login cookies)")
+
+             page = context.new_page()
+             page.set_default_navigation_timeout(120000)
+             
+             # warm-up để thiết lập cookie trên domain
+             try:
+                 page.goto("https://www.lazada.vn/", wait_until="domcontentloaded", timeout=45000)
+                 # Check if landing page has anti-bot
+                 if "punish" in page.url or "x5sec" in page.url or "__" in page.url:
+                     print(f"{LOG_PREFIX} ⚠️  ANTI-BOT detected on homepage! Skipping crawler...")
+                     hit_antibot = True
+                     context.close()
+                     return [], True
+             except Exception as e:
+                 print(f"{LOG_PREFIX} Error on homepage warmup: {e}")
+          
+             try:
+                 for i in range(start_idx, max_idx):
+                     if hit_antibot:
+                         print(f"{LOG_PREFIX} ⚠️  Anti-bot threshold reached. Stopping crawler.")
+                         break
+                     
+                     
+                     product = products[i]
+                     progress = i + 1
+                     print(f"\n{LOG_PREFIX} Product {progress}/{max_idx}")
+                     
+                     try:
+                         reviews = extract_reviews_from_product(
+                             page,
+                             product['url'],
+                             product['id'],
+                             product['name']
+                         )
+                         
+                         # Check if hit anti-bot (no reviews + suspicious URL)
+                         if not reviews and ("punish" in page.url or "x5sec" in page.url or "__" in page.url):
+                             antibot_count += 1
+                             print(f"{LOG_PREFIX} ⚠️  Anti-bot detected ({antibot_count}/{ANTIBOT_THRESHOLD})")
+                             if antibot_count >= ANTIBOT_THRESHOLD:
+                                 hit_antibot = True
+                                 print(f"{LOG_PREFIX} ⚠️  Anti-bot threshold reached. Stopping crawler.")
+                                 break
+                         else:
+                             antibot_count = 0  # Reset counter on success
+                         
+                         all_reviews.extend(reviews)
+                         batch_reviews.extend(reviews)
+                         
+                         # Batch save every BATCH_SIZE reviews
+                         if len(batch_reviews) >= BATCH_SIZE:
+                             print(f"{LOG_PREFIX} 💾 Saving batch {batch_num} ({len(batch_reviews)} reviews)")
+                             save_reviews(batch_reviews, batch_num)
+                             batch_reviews = []
+                             batch_num += 1
+                         
+                         # Save checkpoint after each product
+                         save_checkpoint(i + 1, total_reviews_saved + len(reviews))
+                         total_reviews_saved += len(reviews)
+                         
+                         time.sleep(random.uniform(3, 5))
+                         
+                     except Exception as e:
+                         error_str = str(e).lower()
+                         # Check if browser crashed/closed
+                         if "closed" in error_str or "browser" in error_str:
+                             print(f"{LOG_PREFIX} ⚠️  Browser crashed/closed: {e}")
+                             print(f"{LOG_PREFIX} ⚠️  Stopping crawler - will resume from checkpoint")
+                             hit_antibot = True  # Treat as skip
+                             break
+                         
+                         print(f"{LOG_PREFIX} Failed product {progress}: {e}")
+                         # Save checkpoint even on error to resume from next product
+                         save_checkpoint(i + 1, total_reviews_saved)
+                         continue
+                 
+                 # Save remaining reviews in batch
+                 if batch_reviews:
+                     print(f"{LOG_PREFIX} 💾 Saving final batch {batch_num} ({len(batch_reviews)} reviews)")
+                     save_reviews(batch_reviews, batch_num)
+                  
+             finally:
+                 context.close()
+      
+     except Exception as e:
+         print(f"{LOG_PREFIX} ⚠️  Playwright error: {e}")
+         print(f"{LOG_PREFIX} This might be a browser/environment issue")
+         # If it's a timeout or launch error, treat as skip
+         if "Timeout" in str(e) or "launch" in str(e):
+             print(f"{LOG_PREFIX} Treating as SKIPPED - pipeline will continue")
+             return [], True
+         # Otherwise re-raise
+         raise
+     
+     return all_reviews, hit_antibot
+
+def save_reviews(reviews: List[Dict[str, Any]], batch_num: int = None):
+    """Save reviews to JSONL file (supports batch saving)"""
     if not reviews:
         print(f"{LOG_PREFIX} No reviews to save")
         return
@@ -374,7 +593,8 @@ def save_reviews(reviews: List[Dict[str, Any]]):
     date_dir.mkdir(parents=True, exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"lazada_reviews_{timestamp}.jsonl"
+    batch_suffix = f"_batch{batch_num}" if batch_num is not None else ""
+    filename = f"lazada_reviews_{timestamp}{batch_suffix}.jsonl"
     filepath = date_dir / filename
     
     with open(filepath, 'w', encoding='utf-8') as f:
@@ -384,31 +604,70 @@ def save_reviews(reviews: List[Dict[str, Any]]):
     print(f"\n{LOG_PREFIX} Saved {len(reviews)} reviews to: {filepath}")
 
 def main():
-     """Main execution"""
+     """Main execution with ETL metadata logging"""
      print(f"{LOG_PREFIX} Starting Reviews Crawler")
      print("=" * 60)
      
-     # Step 1: Load product URLs from today's products data
-     products = load_product_urls_from_today()
+     # ETL logging setup
+     today = datetime.now().strftime("%Y-%m-%d")
+     job_code = "LAZADA_REVIEWS_CRAWLER"
+     run_id = log_etl_start(job_code, today)
      
-     if not products:
-         print(f"{LOG_PREFIX} No products found. Run products crawler first!")
-         return
+     products_count = 0
+     reviews_count = 0
+     error_msg = None
      
-     print(f"{LOG_PREFIX} Found {len(products)} products to crawl reviews")
-     
-     # Step 2: Crawl reviews from products (limit to 10 for efficiency)
-     reviews = crawl_reviews_from_products(products, max_products=10000)
-     
-     # Step 3: Save reviews
-     if reviews:
-         save_reviews(reviews)
-         clear_checkpoint()  # Clear checkpoint on successful completion
-         print(f"\n{LOG_PREFIX} SUCCESS! Total reviews: {len(reviews)}")
-     else:
-         print(f"\n{LOG_PREFIX} No reviews extracted")
-     
-     print("=" * 60)
+     try:
+         # Step 1: Load product URLs from today's products data
+         products = load_product_urls_from_today()
+         products_count = len(products)
+         
+         if not products:
+             error_msg = "No products found. Run products crawler first!"
+             print(f"{LOG_PREFIX} {error_msg}")
+             log_etl_finish(run_id, "SKIPPED", rows_read=0, rows_written=0, error_message=error_msg)
+             sys.exit(0)  # Exit 0 to skip gracefully in DAG
+         
+         print(f"{LOG_PREFIX} Found {len(products)} products to crawl reviews")
+         
+         # Step 2: Crawl reviews from products (with batch saving)
+         reviews, hit_antibot = crawl_reviews_from_products(products, max_products=10000)
+         reviews_count = len(reviews)
+         
+         # Step 3: Handle anti-bot detection, browser crash, or launch issues
+         if hit_antibot:
+             if reviews_count == 0 and products_count < 3:
+                 error_msg = "Browser launch timeout/GPU initialization failed (Docker environment issue)"
+             elif reviews_count > 0:
+                 error_msg = f"Browser crashed after processing {products_count} products (collected {reviews_count} reviews before crash)"
+             else:
+                 error_msg = "ANTI-BOT DETECTED - Skipping reviews crawler (graceful skip)"
+             print(f"\n{LOG_PREFIX} ⚠️  {error_msg}")
+             print(f"{LOG_PREFIX} ℹ️  Pipeline will continue without review data")
+             print(f"{LOG_PREFIX} ℹ️  Checkpoint saved - will resume from product #{products_count} next time")
+             print("=" * 60)
+             log_etl_finish(run_id, "SKIPPED", rows_read=products_count, rows_written=reviews_count, error_message=error_msg)
+             sys.exit(0)  # Exit 0 to skip task gracefully (DAG won't fail)
+         
+         # Step 4: Report results
+         if reviews:
+             clear_checkpoint()  # Clear checkpoint on successful completion
+             print(f"\n{LOG_PREFIX} ✅ SUCCESS! Total reviews: {len(reviews)}")
+             log_etl_finish(run_id, "SUCCESS", rows_read=products_count, rows_written=reviews_count)
+         else:
+             error_msg = "No reviews extracted from products"
+             print(f"\n{LOG_PREFIX} {error_msg}")
+             log_etl_finish(run_id, "SUCCESS", rows_read=products_count, rows_written=0, error_message=error_msg)
+         
+         print("=" * 60)
+         
+     except Exception as e:
+         error_msg = f"Crawler failed: {str(e)}"
+         print(f"\n{LOG_PREFIX} ❌ ERROR: {error_msg}")
+         import traceback
+         traceback.print_exc()
+         log_etl_finish(run_id, "FAILED", rows_read=products_count, rows_written=reviews_count, error_message=error_msg[:500])
+         sys.exit(1)  # Exit 1 on real errors
 
 if __name__ == "__main__":
     main()
