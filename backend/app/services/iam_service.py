@@ -3,9 +3,8 @@ IAM (Identity & Access Management) Service
 Handles authentication, authorization, and user management using PostgreSQL IAM schema
 """
 
-import hashlib
-import secrets
-import datetime
+
+from datetime import datetime
 from typing import Optional, Dict, List, Any
 import bcrypt
 # JWT removed
@@ -88,7 +87,7 @@ class IAMService:
         """
         try:
             query = "UPDATE iam.iam_user SET last_login_at = $1, updated_at = $2 WHERE user_id = $3"
-            now = datetime.datetime.now(datetime.timezone.utc)
+            now = datetime.datetime.utcnow()
             await self.db.execute_query(query, (now, now, user_id))
         except Exception as e:
             logger.error(f"Update last login error: {e}")
