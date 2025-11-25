@@ -278,7 +278,7 @@ async def export_reviews_report(
     return _rows_to_csv(rows, filename)
 
 @router.get(
-    "/All reviews details",
+    "/reviews-details",
     response_class=StreamingResponse,
     summary="Export Reviews Details (CSV)",
 )
@@ -331,7 +331,7 @@ async def export_reviews_report_details(
     return _rows_to_csv(rows, filename)
 
 @router.get(
-    "/product reviews details",
+    "/product-reviews-details",
     response_class=StreamingResponse,
     summary="Export Reviews Details for Specific Product (CSV)",
 )
