@@ -44,10 +44,10 @@ export function PlatformAnalytics() {
       };
 
       const platformCompData = await getPlatformComparison(params);
-
+     // console.log('Platform Comparison Data:', platformCompData);
       setPlatformComparison(platformCompData);
     } catch (err) {
-      console.error('Error loading analytics data:', err);
+    //  console.error('Error loading analytics data:', err);
       setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -98,7 +98,7 @@ export function PlatformAnalytics() {
       </div>
     );
   }
-
+console.log('Rendering PlatformAnalytics with data:', platformComparison);
   return (
     <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm" style={{ minHeight: '800px' }}>
       <div className="flex h-full flex-col">

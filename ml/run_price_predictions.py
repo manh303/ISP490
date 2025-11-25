@@ -3,6 +3,7 @@ import os
 import pickle
 from datetime import date, datetime
 
+import numpy as np
 import pandas as pd
 
 from load_ml_results_to_db import get_conn, load_price_predictions
@@ -42,6 +43,35 @@ def build_features(df: pd.DataFrame):
     return df[["min_price", "max_price", "total_review_count", "avg_rating"]].fillna(0).astype(float)
 
 
+def predict_with_confidence_interval(model, X, confidence=0.95):
+    """
+    Predict with confidence intervals using Random Forest tree predictions.
+    
+    Args:
+        model: Trained RandomForestRegressor
+        X: Features to predict
+        confidence: Confidence level (default 0.95 for 95% CI)
+    
+    Returns:
+        predictions: Mean predictions
+        ci_lower: Lower bound of confidence interval
+        ci_upper: Upper bound of confidence interval
+    """
+    # Get predictions from all trees in the forest
+    # Shape: (n_samples, n_estimators)
+    tree_predictions = np.array([tree.predict(X) for tree in model.estimators_]).T
+    
+    # Mean prediction (same as model.predict(X))
+    predictions = tree_predictions.mean(axis=1)
+    
+    # Calculate confidence intervals using quantiles
+    alpha = (1 - confidence) / 2
+    ci_lower = np.quantile(tree_predictions, alpha, axis=1)
+    ci_upper = np.quantile(tree_predictions, 1 - alpha, axis=1)
+    
+    return predictions, ci_lower, ci_upper
+
+
 def run_batch_predictions():
     conn = get_conn()
     df = fetch_scoring_data(conn)
@@ -55,20 +85,26 @@ def run_batch_predictions():
     with open(model_path, "rb") as f:
         model = pickle.load(f)
 
-    preds = model.predict(X)
+    # Predict with confidence intervals (95% CI)
+    print(f"🔮 Predicting prices with 95% confidence intervals for {len(X)} products...")
+    preds, ci_lower, ci_upper = predict_with_confidence_interval(model, X, confidence=0.95)
+    
+    print(f"✅ Predictions complete:")
+    print(f"   Mean price: ${preds.mean():.2f}")
+    print(f"   CI width: ${(ci_upper - ci_lower).mean():.2f} (average)")
 
     # Chuẩn bị list dict predictions để load vào DB
     scoring_date = df["date_value"].iloc[0]  # vì query 1 ngày
     results = []
-    for (_, row), pred in zip(df.iterrows(), preds):
+    for idx, (_, row) in enumerate(df.iterrows()):
         results.append(
             {
                 "date": scoring_date,
                 "product_key": row["product_key"],
                 "platform_code": row["platform_code"],
-                "predicted_price": float(pred),
-                "ci_lower": None,  # nếu anh không tính CI, để None
-                "ci_upper": None,
+                "predicted_price": float(preds[idx]),
+                "ci_lower": float(ci_lower[idx]),  # ✅ Calculated from tree predictions
+                "ci_upper": float(ci_upper[idx]),  # ✅ Calculated from tree predictions
             }
         )
 

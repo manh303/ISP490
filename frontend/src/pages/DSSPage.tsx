@@ -184,25 +184,25 @@ const DSSPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Products</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {overview.total_products.toLocaleString()}
+              {overview?.total_products?.toLocaleString()}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Platforms</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {overview.platforms}
+              {overview?.platforms}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Average Price</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(overview.avg_price || 0)}
+              {formatCurrency(overview?.avg_price || 0)}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Products with Ratings</h3>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {overview.rated_products.toLocaleString()}
+              {overview?.rated_products?.toLocaleString()}
             </p>
           </div>
         </div>
