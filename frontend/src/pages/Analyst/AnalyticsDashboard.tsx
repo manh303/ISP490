@@ -5,11 +5,11 @@ import {
   AlertCircle,
   Loader2,
   RefreshCw,
-  Calendar,
-  Filter
+  // Calendar,
+  // Filter
 } from 'lucide-react';
 import { Button } from '../../components/ui/figma/button';
-import { Calendar as CalendarComponent } from '../../components/ui/figma/calendar';
+// import { Calendar as CalendarComponent } from '../../components/ui/figma/calendar';
 import {
   Select,
   SelectContent,
@@ -17,21 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/figma/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../components/ui/figma/popover';
-import { format } from 'date-fns';
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from '../../components/ui/figma/popover';
+// import { format } from 'date-fns';
 import {
   getAllOverviewData,
   getTopProducts,
-  getPlatforms,
-  getCategories,
+  // getPlatforms,
+  // getCategories,
   type OverviewReport,
   type TopProduct,
-  type Platform,
-  type Category,
+  // type Platform,
+  // type Category,
   type GetOverviewReportParams,
   type GetTopProductsParams,
 } from '../../services/analyticsApi';
@@ -40,7 +40,7 @@ import { CategoryPerformanceChart } from '../../components/analytics/CategoryPer
 // import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
 import { PlatformSelect } from '../../components/analytics/PlatformSelect';
-import { CategoryHierarchySelector } from '../../components/analytics/CategoryHierarchySelector';
+import { CategorySelect } from '../../components/analytics/CategorySelect';
 
 export function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,6 @@ export function AnalyticsDashboard() {
   const [toDate, setToDate] = useState<Date>();
   const [platformCode, setPlatformCode] = useState<string>();
   const [categoryKey, setCategoryKey] = useState<string>();
-  const [parentCategoryKey, setParentCategoryKey] = useState<string>();
   const [metric, setMetric] = useState<'revenue' | 'review_count' | 'avg_rating' | 'price_growth'>('revenue');
 
   // Analytics data state
@@ -77,7 +76,6 @@ export function AnalyticsDashboard() {
       // console.log('API Params:', {
       //   overviewParams,
       //   categoryKey,
-      //   parentCategoryKey,
       //   platformCode
       // });
 
@@ -131,7 +129,7 @@ export function AnalyticsDashboard() {
   // Chỉ load tổng quan khi đổi các filter tổng quan
   useEffect(() => {
     if (fromDate && toDate) {
-      console.log('Loading analytics data with:', { platformCode, categoryKey, parentCategoryKey });
+      console.log('Loading analytics data with:', { platformCode, categoryKey });
       loadAnalyticsData();
     }
   }, [fromDate, toDate, platformCode, categoryKey]);
@@ -220,15 +218,9 @@ export function AnalyticsDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium">Danh mục:</label>
-                <CategoryHierarchySelector
-                  platformCode={platformCode}
-                  selectedCategoryKey={categoryKey}
-                  selectedParentKey={parentCategoryKey}
-                  onCategoryChange={(categoryKey, parentKey) => {
-                    console.log('CategoryHierarchySelector onCategoryChange:', { categoryKey, parentKey });
-                    setCategoryKey(categoryKey);
-                    setParentCategoryKey(parentKey);
-                  }}
+                <CategorySelect
+                  value={categoryKey}
+                  onValueChange={setCategoryKey}
                 />
               </div>
               <div className="flex items-center gap-2">
