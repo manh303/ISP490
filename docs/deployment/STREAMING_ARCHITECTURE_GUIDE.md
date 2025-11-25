@@ -142,10 +142,10 @@ docker-compose exec spark-master spark-submit \
 ### **Database Access**
 ```bash
 # PostgreSQL
-docker-compose exec postgres psql -U dss_user -d ecommerce_dss
+docker-compose exec postgres psql -U dss_user -d ecommerce_dss_1
 
 # MongoDB
-docker-compose exec mongodb mongosh ecommerce_dss
+docker-compose exec mongodb mongosh ecommerce_dss_1
 ```
 
 ## 📊 **DATA FLOW**

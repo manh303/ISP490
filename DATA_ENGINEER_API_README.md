@@ -113,7 +113,7 @@ NEXT STEPS
 
 ```bash
 # 1. Apply extended schema
-psql "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss" \
+psql "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1" \
   -f database/schema/meta_schema_extended.sql
 
 # 2. Restart backend

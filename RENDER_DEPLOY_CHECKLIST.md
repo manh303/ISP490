@@ -46,7 +46,7 @@ cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
 
 **Environment Variables:**
 ```
-DATABASE_URL=postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
+DATABASE_URL=postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
 ENVIRONMENT=production
 DEBUG=false
 PORT=10000

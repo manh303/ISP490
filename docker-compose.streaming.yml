@@ -10,7 +10,7 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=ecommerce_dss
+      - POSTGRES_DB=ecommerce_dss_1
       - POSTGRES_USER=dss_user
       - POSTGRES_PASSWORD=dss_password_123
       - KAFKA_SERVERS=kafka:29092

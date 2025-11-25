@@ -81,7 +81,7 @@ summary = df.groupBy("category", "platform") \
 
 summary.write \
     .jdbc(
-        url="jdbc:postgresql://postgres:5432/ecommerce_dss",
+        url="jdbc:postgresql://postgres:5432/ecommerce_dss_1",
         table="product_summary",
         mode="overwrite"
     )

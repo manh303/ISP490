@@ -125,7 +125,7 @@ python check_review_details.py
 
 **Usage**:
 ```bash
-psql -h localhost -U admin -d ecommerce_dss -f review_detail_queries.sql
+psql -h localhost -U admin -d ecommerce_dss_1 -f review_detail_queries.sql
 ```
 
 ### 5. **Documentation**

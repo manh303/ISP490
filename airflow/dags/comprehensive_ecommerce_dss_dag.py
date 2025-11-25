@@ -132,7 +132,7 @@ def send_alert(message: str, severity: str = "INFO"):
     """Send alert to monitoring system"""
     try:
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         alert_doc = {
             'alert_id': f"dag_{datetime.now().isoformat()}",
@@ -241,7 +241,7 @@ def collect_external_data(**context):
         ]
 
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         for source in data_sources:
             try:
@@ -482,7 +482,7 @@ def process_streaming_data(**context):
     try:
         # Get MongoDB client for storing processed data
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Topics to process
         topics = ['ecommerce.products.stream', 'ecommerce.customers.stream', 'ecommerce.orders.stream']
@@ -572,7 +572,7 @@ def populate_datawarehouse(**context):
     try:
         engine = get_db_connection()
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Create datawarehouse schemas if they don't exist
         with engine.begin() as conn:
@@ -1118,7 +1118,7 @@ def prepare_ml_features(**context):
 
         # Store features in MongoDB for ML pipeline
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Store CLV features
         clv_features = clv_df.to_dict('records')
@@ -1161,7 +1161,7 @@ def train_ml_models(**context):
     try:
         # Get features from MongoDB
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Train Customer Lifetime Value model
         clv_features = list(db.ml_features_clv.find({}, {'_id': 0}))
@@ -1279,7 +1279,7 @@ def generate_predictions(**context):
 
     try:
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Load CLV model and generate predictions
         try:
@@ -1424,7 +1424,7 @@ def monitor_system_health(**context):
 
         # Store health metrics in MongoDB
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         health_doc = {
             'timestamp': datetime.now(),
@@ -1462,7 +1462,7 @@ def generate_performance_report(**context):
     try:
         engine = get_db_connection()
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Business metrics - memory-efficient queries with LIMIT
         business_metrics = {}
@@ -1628,7 +1628,7 @@ def backup_critical_data(**context):
 
         # Backup MongoDB collections
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         critical_collections = ['ml_predictions', 'ml_models', 'alerts', 'performance_reports']
 
@@ -1681,7 +1681,7 @@ def cleanup_old_data(**context):
     try:
         # Clean up old streaming data (keep last 7 days)
         mongo_client = get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         cutoff_date = datetime.now() - timedelta(days=7)
 

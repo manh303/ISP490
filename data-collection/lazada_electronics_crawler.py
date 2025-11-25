@@ -607,7 +607,7 @@ class LazadaElectronicsCrawler:
             # Database connection (adjust as needed)
             db_config = {
                 'host': 'localhost',
-                'database': 'ecommerce_dss',
+                'database': 'ecommerce_dss_1',
                 'user': 'postgres',
                 'password': 'your_password',
                 'port': 5432

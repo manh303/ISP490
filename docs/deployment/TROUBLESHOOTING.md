@@ -53,7 +53,7 @@ docker-compose ps postgres
 docker-compose port postgres 5432
 
 # Test connection from host
-psql -h localhost -p 5432 -U dss_user -d ecommerce_dss
+psql -h localhost -p 5432 -U dss_user -d ecommerce_dss_1
 ```
 
 ### **MongoDB Connection Problems**
@@ -73,7 +73,7 @@ docker-compose logs mongodb | tail -50
 **❌ Error:** `Authentication failed`
 ```bash
 # Connect without authentication for debugging
-docker-compose exec mongodb mongosh ecommerce_dss
+docker-compose exec mongodb mongosh ecommerce_dss_1
 
 # Reset MongoDB with clean data
 docker-compose stop mongodb
@@ -239,7 +239,7 @@ docker-compose logs backend | grep -i error
 # Test database connectivity from backend
 docker-compose exec backend python -c "
 from sqlalchemy import create_engine
-engine = create_engine('postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss')
+engine = create_engine('postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1')
 print(engine.execute('SELECT 1').scalar())
 "
 
@@ -480,16 +480,16 @@ docker volume ls | grep ecommerce-dss | awk '{print $2}' | xargs docker volume r
 mkdir -p backups/$(date +%Y%m%d)
 
 # Backup PostgreSQL
-docker-compose exec postgres pg_dump -U dss_user ecommerce_dss > backups/$(date +%Y%m%d)/postgres_backup.sql
+docker-compose exec postgres pg_dump -U dss_user ecommerce_dss_1 > backups/$(date +%Y%m%d)/postgres_backup.sql
 
 # Backup MongoDB
-docker-compose exec mongodb mongodump --db ecommerce_dss --out /backups/$(date +%Y%m%d)
+docker-compose exec mongodb mongodump --db ecommerce_dss_1 --out /backups/$(date +%Y%m%d)
 
 # Restore PostgreSQL
-docker-compose exec -T postgres psql -U dss_user ecommerce_dss < backups/[date]/postgres_backup.sql
+docker-compose exec -T postgres psql -U dss_user ecommerce_dss_1 < backups/[date]/postgres_backup.sql
 
 # Restore MongoDB
-docker-compose exec mongodb mongorestore /backups/[date]/ecommerce_dss
+docker-compose exec mongodb mongorestore /backups/[date]/ecommerce_dss_1
 ```
 
 ---

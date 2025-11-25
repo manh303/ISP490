@@ -17,7 +17,7 @@ if not DB_HOST or DB_HOST == "postgres":
     DB_HOST = "localhost"
     
 DB_PORT = os.getenv("DB_PORT") or os.getenv("PGPORT", "5432")
-DB_NAME = os.getenv("DB_NAME") or os.getenv("PGDB", "ecommerce_dss")
+DB_NAME = os.getenv("DB_NAME") or os.getenv("PGDB", "ecommerce_dss_1")
 DB_USER = os.getenv("DB_USER") or os.getenv("PGUSER", "admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD") or os.getenv("PGPASSWORD", "admin")
 DWH_SCHEMA = os.getenv("DWH_SCHEMA", "dwh")

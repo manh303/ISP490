@@ -334,7 +334,7 @@ DATA_SOURCES = {
         'sendo': {'api_endpoint': 'https://api.sendo.vn', 'type': 'REST'}
     },
     'database': {
-        'postgresql': 'postgresql://user:pass@postgres:5432/ecommerce_dss',
+        'postgresql': 'postgresql://user:pass@postgres:5432/ecommerce_dss_1',
         'mongodb': 'mongodb://user:pass@mongodb:27017/ecommerce_raw'
     },
     'streaming': {
@@ -674,7 +674,7 @@ def process_sales_stream():
         .writeStream \
         .outputMode("append") \
         .format("jdbc") \
-        .option("url", "jdbc:postgresql://postgres:5432/ecommerce_dss") \
+        .option("url", "jdbc:postgresql://postgres:5432/ecommerce_dss_1") \
         .option("dbtable", "fact_sales_realtime") \
         .option("user", "dss_user") \
         .option("password", "dss_password_123") \
