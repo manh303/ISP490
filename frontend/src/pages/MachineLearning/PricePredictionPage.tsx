@@ -225,11 +225,11 @@ const PricePredictionPage: React.FC = () => {
                   <tbody>
                     {history.points.map((point, index) => (
                       <tr key={index} className="border-t">
-                        <td className="px-4 py-2">{new Date(point.date).toLocaleDateString()}</td>
-                        <td className="px-4 py-2">{point.predicted_price.toLocaleString()} VND</td>
-                        <td className="px-4 py-2">{point.ci_lower.toLocaleString()} VND</td>
-                        <td className="px-4 py-2">{point.ci_upper.toLocaleString()} VND</td>
-                        <td className="px-4 py-2">{point.run_id}</td>
+                        <td className="px-4 py-2">{new Date(point.date)?.toLocaleDateString()}</td>
+                        <td className="px-4 py-2">{point?.predicted_price?.toLocaleString()} VND</td>
+                        <td className="px-4 py-2">{point?.ci_lower?.toLocaleString()} VND</td>
+                        <td className="px-4 py-2">{point?.ci_upper?.toLocaleString()} VND</td>
+                        <td className="px-4 py-2">{point?.run_id}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -330,22 +330,22 @@ const PricePredictionPage: React.FC = () => {
                 <div>
                   <span className="font-medium">Giá Dự đoán:</span>
                   <div className="text-2xl font-bold text-blue-600">
-                    {onlineResult.predicted_price.toLocaleString()} VND
+                    {onlineResult?.predicted_price?.toLocaleString()} VND
                   </div>
                 </div>
                 <div>
                   <span className="font-medium">Khoảng Tin cậy:</span>
                   <div className="text-sm">
-                    {onlineResult.ci_lower.toLocaleString()} - {onlineResult.ci_upper.toLocaleString()} VND
+                    {onlineResult?.ci_lower?.toLocaleString()} - {onlineResult?.ci_upper?.toLocaleString()} VND
                   </div>
                 </div>
                 <div>
                   <span className="font-medium">Mô hình:</span>
-                  <div>{onlineResult.model_name} ({onlineResult.model_version})</div>
+                  <div>{onlineResult?.model_name} ({onlineResult?.model_version})</div>
                 </div>
                 <div>
                   <span className="font-medium">Độ trễ:</span>
-                  <div>{onlineResult.latency_ms}ms</div>
+                  <div>{onlineResult?.latency_ms}ms</div>
                 </div>
               </div>
             </div>
