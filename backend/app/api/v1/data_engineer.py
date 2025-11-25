@@ -11,7 +11,7 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
-
+from api.dependencies import require_role
 router = APIRouter(prefix="/data-engineer", tags=["Data Engineer"])
 
 # Database connection
@@ -110,7 +110,7 @@ async def health_check():
 # ETL MONITORING
 # ===================================================================
 
-@router.get("/etl/jobs", response_model=List[ETLJobStatus], summary="Get All ETL Jobs Status")
+@router.get("/etl/jobs", response_model=List[ETLJobStatus], summary="Get All ETL Jobs Status", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_etl_jobs_status():
     """
     Get status of all ETL jobs with recent run history
@@ -159,7 +159,7 @@ async def get_etl_jobs_status():
     finally:
         conn.close()
 
-@router.get("/etl/runs/{job_code}", response_model=List[ETLRunDetail], summary="Get ETL Run History")
+@router.get("/etl/runs/{job_code}", response_model=List[ETLRunDetail], summary="Get ETL Run History", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_etl_run_history(
     job_code: str,
     limit: int = Query(default=20, le=100),
@@ -203,7 +203,7 @@ async def get_etl_run_history(
     finally:
         conn.close()
 
-@router.get("/etl/logs/{run_id}", summary="Get ETL Run Logs")
+@router.get("/etl/logs/{run_id}", summary="Get ETL Run Logs", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_etl_run_logs(run_id: int):
     """
     Get detailed logs for a specific ETL run
@@ -234,7 +234,7 @@ async def get_etl_run_logs(run_id: int):
 # TABLE HEALTH
 # ===================================================================
 
-@router.get("/tables/health", response_model=List[TableHealth], summary="Get Table Health Status")
+@router.get("/tables/health", response_model=List[TableHealth], summary="Get Table Health Status", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_table_health(
     schema_name: Optional[str] = None,
     stale_hours: int = Query(default=24, description="Hours to consider data stale")
@@ -286,7 +286,7 @@ async def get_table_health(
     finally:
         conn.close()
 
-@router.get("/tables/growth/{schema_name}/{table_name}", summary="Get Table Growth History")
+@router.get("/tables/growth/{schema_name}/{table_name}", summary="Get Table Growth History", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_table_growth(schema_name: str, table_name: str, days: int = 30):
     """
     Get row count and size growth over time
@@ -314,7 +314,7 @@ async def get_table_growth(schema_name: str, table_name: str, days: int = 30):
 # DATA QUALITY
 # ===================================================================
 
-@router.get("/data-quality/issues", response_model=List[DataQualityIssue], summary="Get Data Quality Issues")
+@router.get("/data-quality/issues", response_model=List[DataQualityIssue], summary="Get Data Quality Issues", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_data_quality_issues(
     status: str = Query(default="OPEN", description="OPEN, IN_PROGRESS, RESOLVED, IGNORED"),
     severity: Optional[str] = None,
@@ -358,7 +358,7 @@ async def get_data_quality_issues(
     finally:
         conn.close()
 
-@router.get("/data-quality/summary", summary="Get Data Quality Summary")
+@router.get("/data-quality/summary", summary="Get Data Quality Summary", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_data_quality_summary():
     """
     Get summary statistics of data quality issues
@@ -384,7 +384,7 @@ async def get_data_quality_summary():
 # DATABASE HEALTH
 # ===================================================================
 
-@router.get("/database/health", response_model=DatabaseHealth, summary="Get Database Health")
+@router.get("/database/health", response_model=DatabaseHealth, summary="Get Database Health", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_database_health():
     """
     Get current database connection health and performance metrics
@@ -432,7 +432,7 @@ async def get_database_health():
 # DATA LINEAGE
 # ===================================================================
 
-@router.get("/lineage/table/{schema_name}/{table_name}", response_model=List[DataLineageNode], summary="Get Table Lineage")
+@router.get("/lineage/table/{schema_name}/{table_name}", response_model=List[DataLineageNode], summary="Get Table Lineage", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_table_lineage(schema_name: str, table_name: str, direction: str = Query(default="both", regex="^(upstream|downstream|both)$")):
     """
     Get data lineage for a specific table
@@ -488,7 +488,7 @@ async def get_table_lineage(schema_name: str, table_name: str, direction: str = 
 # ALERTS
 # ===================================================================
 
-@router.get("/alerts/summary", response_model=List[AlertSummary], summary="Get Alert Summary")
+@router.get("/alerts/summary", response_model=List[AlertSummary], summary="Get Alert Summary", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_alert_summary():
     """
     Get summary of all configured alerts and their recent trigger counts
@@ -522,7 +522,7 @@ async def get_alert_summary():
     finally:
         conn.close()
 
-@router.get("/alerts/history", summary="Get Alert History")
+@router.get("/alerts/history", summary="Get Alert History", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_alert_history(
     hours: int = Query(default=24, le=168),
     status: Optional[str] = None
@@ -565,7 +565,7 @@ async def get_alert_history(
 # STATISTICS & DASHBOARDS
 # ===================================================================
 
-@router.get("/stats/pipeline-performance", summary="Get Pipeline Performance Stats")
+@router.get("/stats/pipeline-performance", summary="Get Pipeline Performance Stats", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_pipeline_performance(days: int = 7):
     """
     Get pipeline performance statistics over time
@@ -594,7 +594,7 @@ async def get_pipeline_performance(days: int = 7):
     finally:
         conn.close()
 
-@router.get("/stats/data-volume", summary="Get Data Volume Trends")
+@router.get("/stats/data-volume", summary="Get Data Volume Trends", dependencies=[Depends(require_role("DATA_ENGINEER"))])
 async def get_data_volume_trends(days: int = 30):
     """
     Get data volume growth trends across schemas

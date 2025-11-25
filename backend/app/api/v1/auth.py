@@ -56,6 +56,15 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
     confirm_password: str = Field(..., min_length=8, description="Confirm new password")
 
+class ForgotPasswordOTPRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+
+class VerifyOTPResetPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirm new password")
+
 class SignupRequest(BaseModel):
     name: str = Field(..., max_length=100, description="Full name")
     email: EmailStr = Field(..., description="User email address")
@@ -317,60 +326,7 @@ async def refresh_access_token(request: RefreshTokenRequest, iam: IAMService = D
             }
         )
 
-@router.get("/profile", response_model=UserResponse)
-async def get_profile(current_user: Dict[str, Any] = Depends(get_current_user_from_token)):
-    """Get current user profile"""
-    return UserResponse(
-        user_id=current_user['user_id'],
-        email=current_user['email'],
-        full_name=current_user.get('full_name'),
-        phone=current_user.get('phone'),
-        status=current_user['status'],
-        roles=current_user.get('roles', []),
-        permissions=current_user.get('permissions', []),
-        last_login_at=current_user.get('last_login_at'),
-        created_at=current_user['created_at']
-    )
 
-@router.put("/profile")
-async def update_profile(
-    request: UpdateProfileRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user_from_token),
-    iam: IAMService = Depends(get_iam_service)
-):
-    """Update user profile"""
-    try:
-        # Update profile
-        updated_user = await iam.update_user_profile(
-            user_id=current_user['user_id'],
-            data=request.dict(exclude_unset=True)
-        )
-
-        # Log profile update
-        await iam.log_user_action(
-            user_id=current_user['user_id'],
-            action="PROFILE_UPDATE",
-            details="User profile updated"
-        )
-
-        return {
-            "success": True,
-            "message": "Profile updated successfully",
-            "data": updated_user
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Profile update error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "success": False,
-                "message": "Profile update failed",
-                "error": str(e)
-            }
-        )
 
 @router.post("/change-password")
 async def change_password(
@@ -499,10 +455,11 @@ async def signup(request: SignupRequest, iam: IAMService = Depends(get_iam_servi
             }
         )
 
-# Forgot Password endpoints
-@router.post("/forgot-password")
-async def forgot_password(request: ForgotPasswordRequest, iam: IAMService = Depends(get_iam_service)):
-    """Request password reset token"""
+
+# Forgot Password with OTP endpoints
+@router.post("/forgot-password-otp")
+async def forgot_password_otp(request: ForgotPasswordOTPRequest, iam: IAMService = Depends(get_iam_service)):
+    """Request OTP for password reset via email"""
     try:
         # Check if user exists
         user = await iam.get_user_by_email(request.email)
@@ -510,46 +467,59 @@ async def forgot_password(request: ForgotPasswordRequest, iam: IAMService = Depe
             # Don't reveal if email exists for security
             return {
                 "success": True,
-                "message": "If your email is registered, you will receive a password reset link."
+                "message": "If your email is registered, you will receive an OTP code to reset your password."
             }
 
-        # Generate password reset token
-        reset_token = await iam.create_password_reset_token(user['user_id'])
+        # Generate and send OTP via email
+        from app.services.email_service import send_otp_email
+        
+        result = await send_otp_email(
+            email=request.email,
+            name=user.get('full_name', 'User')
+        )
 
-        # In a real app, you would send this via email
-        # For development, we'll return it in the response
-        logger.info(f"Password reset token for {request.email}: {reset_token}")
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "success": False,
+                    "message": "Failed to send OTP email"
+                }
+            )
 
         # Log password reset request
         await iam.log_user_action(
             user_id=user['user_id'],
-            action="PASSWORD_RESET_REQUEST",
-            details=f"Password reset requested for email: {request.email}"
+            action="PASSWORD_RESET_OTP_REQUEST",
+            details=f"Password reset OTP sent to email: {request.email}"
         )
 
         return {
             "success": True,
-            "message": "If your email is registered, you will receive a password reset link.",
+            "message": "If your email is registered, you will receive an OTP code to reset your password.",
             "data": {
-                "reset_token": reset_token,  # Remove this in production
-                "note": "In production, this token would be sent via email"
+                "email": request.email,
+                "expires_in_minutes": 10,
+                "note": "Please check your email for the 6-digit OTP code"
             }
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Forgot password error: {e}")
+        logger.error(f"Forgot password OTP error: {e}")
         raise HTTPException(
             status_code=500,
             detail={
                 "success": False,
-                "message": "Password reset request failed",
+                "message": "Failed to process password reset request",
                 "error": str(e)
             }
         )
 
-@router.post("/reset-password")
-async def reset_password(request: ResetPasswordRequest, iam: IAMService = Depends(get_iam_service)):
-    """Reset password using token"""
+@router.post("/verify-otp-reset-password")
+async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, iam: IAMService = Depends(get_iam_service)):
+    """Verify OTP and reset password"""
     try:
         # Validate password confirmation
         if request.new_password != request.confirm_password:
@@ -562,34 +532,73 @@ async def reset_password(request: ResetPasswordRequest, iam: IAMService = Depend
                 }
             )
 
-        # Reset password using token
-        result = await iam.reset_password_with_token(request.token, request.new_password)
+        # Check if user exists
+        user = await iam.get_user_by_email(request.email)
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "success": False,
+                    "message": "User not found"
+                }
+            )
 
-        if not result:
+        # Verify OTP
+        from app.services.email_service import verify_otp
+        
+        otp_result = await verify_otp(request.email, request.otp)
+        
+        if not otp_result.get('valid'):
             raise HTTPException(
                 status_code=400,
                 detail={
                     "success": False,
-                    "message": "Invalid or expired reset token"
+                    "message": otp_result.get('message', 'Invalid or expired OTP'),
+                    "field": "otp"
                 }
             )
 
-        # Log password reset
+        # Hash new password
+        hashed_password = await iam.hash_password(request.new_password)
+
+        # Update password in database
+        update_query = """
+            UPDATE iam.iam_user 
+            SET password_hash = $1, updated_at = NOW()
+            WHERE email = $2
+            RETURNING user_id, email
+        """
+        
+        result = await iam.db.execute_query(update_query, (hashed_password, request.email))
+        
+        if not result:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "success": False,
+                    "message": "Failed to reset password"
+                }
+            )
+
+        # Log password reset success
         await iam.log_user_action(
-            user_id=result['user_id'],
+            user_id=user['user_id'],
             action="PASSWORD_RESET_SUCCESS",
-            details=f"Password reset completed for user: {result['email']}"
+            details=f"Password reset completed via OTP for user: {request.email}"
         )
 
         return {
             "success": True,
-            "message": "Password reset successfully. You can now sign in with your new password."
+            "message": "Password reset successfully. You can now sign in with your new password.",
+            "data": {
+                "email": request.email
+            }
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Reset password error: {e}")
+        logger.error(f"Verify OTP reset password error: {e}")
         raise HTTPException(
             status_code=500,
             detail={

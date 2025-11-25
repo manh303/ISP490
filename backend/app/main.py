@@ -62,8 +62,8 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, Field, EmailStr
 import uvicorn
 
 # Database connections
@@ -327,10 +327,15 @@ app = FastAPI(
 # Remove custom OpenAPI to avoid duplicate security schemes
 # FastAPI will auto-generate based on dependencies
 
-# Include IAM router (temporarily disabled due to database parameter binding issues)
-# if IAM_AVAILABLE:
+# Include IAM Auth router (disabled - using inline endpoints instead)
+# try:
+#     from api.v1.auth import router as auth_router, init_iam_service
+#     # Initialize IAM service with database manager
+#     init_iam_service(db_manager, settings.JWT_SECRET_KEY)
 #     app.include_router(auth_router, prefix=f"{settings.API_V1_PREFIX}")
-#     logger.info("IAM routes included")
+#     logger.info("✅ IAM Auth routes included successfully")
+# except Exception as e:
+#     logger.warning(f"⚠️ IAM Auth routes not available: {e}")
 
 # Include Admin router
 try:
@@ -691,26 +696,24 @@ class SignInResponse(BaseModel):
     user: dict
 
 # Forgot password models
-class ForgotPasswordRequest(BaseModel):
-    email: str
+class ForgotPasswordOTPRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
 
-class ForgotPasswordResponse(BaseModel):
+class ForgotPasswordOTPResponse(BaseModel):
     success: bool
     message: str
+    data: Optional[dict] = None
 
-class ResetPasswordRequest(BaseModel):
-    email: str
-    otp: str
-    new_password: str
-    
-    @field_validator('new_password')
-    @classmethod
-    def validate_password_field(cls, v):
-        return validate_password(v, min_length=8)
+class VerifyOTPResetPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirm new password")
 
-class ResetPasswordResponse(BaseModel):
+class VerifyOTPResetPasswordResponse(BaseModel):
     success: bool
     message: str
+    data: Optional[dict] = None
 
 class SignOutResponse(BaseModel):
     success: bool
@@ -1072,68 +1075,147 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
         logger.error(f"Signin error: {e}")
         raise HTTPException(status_code=500, detail="Signin failed")
 
-# Forgot Password - with OTP generation and email
-@app.post(f"{settings.API_V1_PREFIX}/auth/forgot-password", response_model=ForgotPasswordResponse)
-async def forgot_password(request: ForgotPasswordRequest, db: DatabaseManager = Depends(get_database)):
-    """Request password reset OTP code"""
+# Forgot Password with OTP endpoints
+@app.post(f"{settings.API_V1_PREFIX}/auth/forgot-password-otp", response_model=ForgotPasswordOTPResponse)
+async def forgot_password_otp(request: ForgotPasswordOTPRequest, db: DatabaseManager = Depends(get_database)):
+    """Request OTP for password reset via email"""
     try:
-        email = request.email.strip().lower()
-        if not email:
-            raise HTTPException(status_code=400, detail="Email is required")
-
-        # Check if email exists and get user info
-        user_query = "SELECT full_name FROM iam.iam_user WHERE email = $1"
-        user_result = await db.execute_query(user_query, (email,))
+        # Check if user exists
+        user_query = "SELECT user_id, email, full_name FROM iam.iam_user WHERE email = $1 AND status = 'active'"
+        user_result = await db.execute_query(user_query, (request.email,))
         
-        # Always respond success (avoid user enumeration)
         if not user_result:
-            logger.info(f"Forgot password requested for non-existent email: {email}")
-            return ForgotPasswordResponse(
+            # Don't reveal if email exists for security
+            return ForgotPasswordOTPResponse(
                 success=True,
-                message="If this email exists, we've sent a reset code."
+                message="If your email is registered, you will receive an OTP code to reset your password."
             )
         
-        # Get user's full name
-        user_name = user_result[0].get('full_name', 'User') if user_result else 'User'
+        user = user_result[0]
 
-        # Use the new EmailService to send OTP
-        if email_service_module:
-            try:
-                result = await send_otp_email(email, name=user_name)
-                if result['success']:
-                    logger.info(f"✅ OTP sent to {email}")
-                    return ForgotPasswordResponse(
-                        success=True,
-                        message="A verification code has been sent to your email."
-                    )
-                else:
-                    logger.error(f"Failed to send OTP: {result.get('error')}")
-                    return ForgotPasswordResponse(
-                        success=False,
-                        message="Failed to send email. Please try again later."
-                    )
-            except Exception as e:
-                logger.error(f"Email service error: {e}")
-                return ForgotPasswordResponse(
-                    success=False,
-                    message="Failed to send email. Please check server logs."
-                )
-        else:
-            # Fallback if email service not available
-            logger.warning("Email service not available - check logs for OTP")
-            return ForgotPasswordResponse(
-                success=True,
-                message="Reset code would be sent (check server logs in dev mode)"
-            )
+        # Generate and send OTP via email
+        from services.email_service import send_otp_email
         
+        result = await send_otp_email(
+            email=request.email,
+            name=user.get('full_name', 'User')
+        )
+
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send OTP email"
+            )
+
+        # Log password reset request
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user['user_id'],
+                email=request.email,
+                action="PASSWORD_RESET_OTP_REQUEST",
+                details={"email": request.email},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log activity: {e}")
+
+        return ForgotPasswordOTPResponse(
+            success=True,
+            message="If your email is registered, you will receive an OTP code to reset your password.",
+            data={
+                "email": request.email,
+                "expires_in_minutes": 10,
+                "note": "Please check your email for the 6-digit OTP code"
+            }
+        )
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Forgot-password error: {e}")
-        raise HTTPException(status_code=500, detail="Forgot password failed")
+        logger.error(f"Forgot password OTP error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process password reset request")
 
+@app.post(f"{settings.API_V1_PREFIX}/auth/verify-otp-reset-password", response_model=VerifyOTPResetPasswordResponse)
+async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, db: DatabaseManager = Depends(get_database)):
+    """Verify OTP and reset password"""
+    try:
+        # Validate password confirmation
+        if request.new_password != request.confirm_password:
+            raise HTTPException(
+                status_code=400,
+                detail="Passwords do not match"
+            )
 
+        # Check if user exists
+        user_query = "SELECT user_id, email FROM iam.iam_user WHERE email = $1 AND status = 'active'"
+        user_result = await db.execute_query(user_query, (request.email,))
+        
+        if not user_result:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+        
+        user = user_result[0]
 
+        # Verify OTP
+        from services.email_service import verify_otp
+        
+        otp_result = await verify_otp(request.email, request.otp)
+        
+        if not otp_result.get('valid'):
+            raise HTTPException(
+                status_code=400,
+                detail=otp_result.get('message', 'Invalid or expired OTP')
+            )
+
+        # Hash new password
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(request.new_password.encode('utf-8'), salt).decode('utf-8')
+
+        # Update password in database
+        update_query = """
+            UPDATE iam.iam_user 
+            SET password_hash = $1, updated_at = NOW()
+            WHERE email = $2
+            RETURNING user_id, email
+        """
+        
+        result = await db.execute_query(update_query, (hashed_password, request.email))
+        
+        if not result:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to reset password"
+            )
+
+        # Log password reset success
+        try:
+            activity_logger = ActivityLogger(db)
+            await activity_logger.log_activity(
+                user_id=user['user_id'],
+                email=request.email,
+                action="PASSWORD_RESET_SUCCESS",
+                details={"email": request.email},
+                status="success"
+            )
+        except Exception as e:
+            logger.error(f"Failed to log activity: {e}")
+
+        return VerifyOTPResetPasswordResponse(
+            success=True,
+            message="Password reset successfully. You can now sign in with your new password.",
+            data={
+                "email": request.email
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Verify OTP reset password error: {e}")
+        raise HTTPException(status_code=500, detail="Password reset failed")
 
 @app.post(f"{settings.API_V1_PREFIX}/auth/signout", response_model=SignOutResponse)
 async def signout(request: Request):

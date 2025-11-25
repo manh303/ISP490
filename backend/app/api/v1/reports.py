@@ -228,7 +228,7 @@ async def export_reviews_report(
     db=Depends(get_db),
 ):
     """
-    Report review + sentiment theo ngày, dựa trên **dwh.fact_review_daily_agg**:
+    Report review + sentiment theo ngày, dựa trên **dwh.fact_review_daily**:
 
     - agg_date
     - platform_code

@@ -2,7 +2,7 @@
 Profile Service - Business Logic
 """
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 from models.user import ProfileUpdateRequest
 import secrets
 from datetime import datetime, timedelta
@@ -29,8 +29,8 @@ class ProfileService:
     async def get_profile(self, user_id: int) -> Optional[Dict]:
         """Get user profile by ID"""
         query = """
-        SELECT u.user_id, u.email, u.full_name, u.phone, u.last_login_at,
-               r.role_code as role
+        SELECT u.user_id, u.email, u.full_name, u.phone,
+               r.role_name
         FROM iam.iam_user u
         LEFT JOIN iam.iam_user_role ur ON u.user_id = ur.user_id
         LEFT JOIN iam.iam_role r ON ur.role_id = r.role_id
