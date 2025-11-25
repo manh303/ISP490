@@ -12,6 +12,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_REDIS_URL = "redis://localhost:6379/0"
+
 class CacheService:
     """Redis cache service with fallback to in-memory cache"""
     
@@ -22,15 +24,17 @@ class CacheService:
         
         try:
             import redis
-            redis_url = os.getenv("REDIS_URL")
-            if redis_url:
-                self.redis = redis.from_url(redis_url, decode_responses=True)
-                # Test connection
-                self.redis.ping()
-                self.enabled = True
-                logger.info("✅ Redis cache enabled")
-            else:
-                logger.warning("⚠️  REDIS_URL not set, using in-memory cache")
+            redis_url = os.getenv("REDIS_URL", DEFAULT_REDIS_URL).strip()
+
+            if redis_url.lower() in {"", "memory", "disabled"}:
+                logger.info("Redis cache disabled via REDIS_URL=%s, using in-memory cache", redis_url or "''")
+                return
+
+            self.redis = redis.from_url(redis_url, decode_responses=True)
+            # Test connection
+            self.redis.ping()
+            self.enabled = True
+            logger.info("✅ Redis cache enabled (url=%s)", redis_url)
         except Exception as e:
             logger.warning(f"⚠️  Redis not available ({e}), using in-memory cache")
     
