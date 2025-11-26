@@ -143,13 +143,36 @@ export interface OnlineSentimentResponse {
   latency_ms: number;
 }
 
-export interface StatusSummary {
-  models_total: number;
-  models_active: number;
-  models_deprecated: number;
-  models_training: number;
-  predictions_last_7_days: number;
-  recommendations_last_7_days: number;
+export interface DSSRunRequest {
+  model_type: 'price_prediction' | 'product_recommendation' | 'review_sentiment';
+  input_data: Record<string, any>;
+}
+
+export interface DSSRunResponse {
+  model_results: Record<string, any>;
+  charts_data?: any[];
+  tables_data?: any[];
+  metrics?: Record<string, any>;
+}
+
+export interface AISummarizeRequest {
+  model_type: string;
+  ml_results: Record<string, any>;
+  business_context?: Record<string, any>;
+}
+
+export interface AISummarizeResponse {
+  summary: string;
+  insights: string[];
+  anomalies: string[];
+  risks: string[];
+  recommendations: {
+    title: string;
+    description: string;
+    impact: 'Cao' | 'Trung bình' | 'Thấp';
+    effort: 'Cao' | 'Trung bình' | 'Thấp';
+    priority: 'Cao' | 'Trung bình' | 'Thấp';
+  }[];
 }
 
 /* ------------------------- API Functions ------------------------- */
@@ -251,5 +274,21 @@ export const onlineSentiment = async (data: OnlineSentimentRequest): Promise<Onl
  */
 export const getStatusSummary = async (): Promise<StatusSummary> => {
   const response = await api.get('/v1/ml/status/summary');
+  return response.data;
+};
+
+/**
+ * Run DSS Analysis
+ */
+export const runDSSAnalysis = async (data: DSSRunRequest): Promise<DSSRunResponse> => {
+  const response = await api.post('/api/v1/dss/run', data);
+  return response.data;
+};
+
+/**
+ * Get AI Summary
+ */
+export const getAISummary = async (data: AISummarizeRequest): Promise<AISummarizeResponse> => {
+  const response = await api.post('/api/v1/ai/summarize', data);
   return response.data;
 };

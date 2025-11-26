@@ -65,6 +65,9 @@ import { PlatformAnalytics } from "./pages/Analyst/PlatformAnalytics.js";
 import { CategoryAnalytics } from "./pages/Analyst/CategoryAnalytics.js";
 import { PricingAnalytics } from "./pages/Analyst/PricingAnalytics.js";
 import { ProductDetailAnalytics } from "./pages/Analyst/ProductDetailAnalytics.js";
+import ModelDashboard from "./pages/Analyst/ModelDashboard";
+import DSSInput from "./pages/Analyst/DSSInput";
+import DSSResults from "./pages/Analyst/DSSResults";
 import MLOverview from "./pages/MLInsights/MLOverview.js";
 import PriceIntelligence from "./pages/MLInsights/PriceIntelligence.js";
 import DemandSalesForecasting from "./pages/MLInsights/DemandSalesForecasting.js";
@@ -205,6 +208,9 @@ export default function App() {
           >
             <Route path="/analyst/home" element={<AnalystPage />} />
             <Route path="/analyst/dashboard" element={<AnalystWireframe />} />
+            <Route path="/analyst/model-dashboard" element={<ModelDashboard />} />
+            <Route path="/analyst/dss/:modelId" element={<DSSInput />} />
+            <Route path="/analyst/dss/:modelId/results" element={<DSSResults />} />
             <Route path="/analyst/analytics-dashboard" element={<AnalyticsDashboard />} />
             <Route path="/analyst/product-analytics" element={<ProductAnalytics />} />
             <Route path="/analyst/review-analytics" element={<ReviewAnalytics />} />

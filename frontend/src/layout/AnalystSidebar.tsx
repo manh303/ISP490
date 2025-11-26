@@ -32,6 +32,11 @@ const navItems: NavItem[] = [
     path: "/analyst/dashboard",
   },
   {
+    icon: <BoxCubeIcon />,
+    name: "Model Dashboard",
+    path: "/analyst/model-dashboard",
+  },
+  {
     icon: <PieChartIcon />,
     name: "Phân tích Dữ liệu",
     subItems: [
