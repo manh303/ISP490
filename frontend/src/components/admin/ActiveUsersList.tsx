@@ -96,9 +96,9 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
         if (searchTerm.trim()) {
             const searchLower = searchTerm.toLowerCase();
             filtered = filtered.filter(user => 
-                user.email.toLowerCase().includes(searchLower) ||
-                user.full_name.toLowerCase().includes(searchLower) ||
-                user.phone.includes(searchTerm)
+                (user.email?.toLowerCase().includes(searchLower)) ||
+                (user.full_name?.toLowerCase().includes(searchLower)) ||
+                (user.phone?.includes(searchTerm))
             );
         }
 

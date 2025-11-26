@@ -34,11 +34,14 @@ if parent_dir not in sys.path:
 
 # Now import after path setup
 try:
-        from app.middleware.activity_middleware import ActivityLoggingMiddleware
-        from app.services.activity_logger import ActivityLogger
+        # Try alternative import path for Render deployment
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
         ACTIVITY_AVAILABLE = True
 except ImportError:
         ACTIVITY_AVAILABLE = False
+        ActivityLoggingMiddleware = None
+        ActivityLogger = None
         logger.warning("Activity logging not available")
         
 try:
