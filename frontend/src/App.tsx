@@ -81,7 +81,9 @@ import {
   SentimentAnalysisPage,
   StatusOverviewPage
 } from "./pages/MachineLearning";
-import DataEngineerDashboard from "./pages/DataEngineer/DataEngineerDashboard.js";
+import DataEngineerDashboard from "./pages/DataEngineer/DataEngineerDashboard.tsx";
+import DataPipeline from "./pages/DataEngineer/DataPipeline.tsx";
+import DataQuality from "./pages/DataEngineer/DataQuality.tsx";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -244,15 +246,17 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/dataengineer/dashboard" element={<DataEngineerWireframe />} />
-            <Route path="/dataengineer/pipelines" element={<Blank />} />
+            <Route path="/dataengineer/dashboard" element={<DataEngineerDashboard />} />
+            <Route path="/dataengineer/pipelines" element={<DataPipeline />} />
+            <Route path="/dataengineer/pipelines/:jobCode" element={<DataPipeline />} />
+            <Route path="/dataengineer/quality" element={<DataQuality />} />
             <Route path="/dataengineer/jobs" element={<Blank />} />
             <Route path="/dataengineer/schedules" element={<Calendar />} />
             <Route path="/dataengineer/monitoring" element={<Alerts />} />
             <Route path="/dataengineer/logs" element={<Blank />} />
             <Route path="/dataengineer/settings" element={<Blank />} />
             <Route path="/dataengineer/profile" element={<UserProfiles />} />
-          </Route>  
+          </Route>
           {/* MLISidebar Layout - Protected Routes */}
           <Route
             element={

@@ -22,7 +22,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://ecommerce-dss-backend.onrender.com',
+        target: 'https://isp490.onrender.com',
         changeOrigin: true,
         secure: true,
       },

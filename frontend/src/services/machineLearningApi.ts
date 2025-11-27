@@ -175,6 +175,15 @@ export interface AISummarizeResponse {
   }[];
 }
 
+// Thêm interface cho kết quả /v1/ml/status/summary
+export interface StatusSummary {
+  total_models: number;
+  active_models: number;
+  failed_models: number;
+  last_updated: string;
+  [key: string]: any; // Cho phép mở rộng nếu API trả thêm trường khác
+}
+
 /* ------------------------- API Functions ------------------------- */
 
 /**

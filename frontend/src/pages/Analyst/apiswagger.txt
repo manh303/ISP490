@@ -12,10 +12,10 @@ Responses
 Curl
 
 curl -X 'GET' \
-  'https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/platforms' \
+  'https://isp490.onrender.com/api/v1/analytics/filters/platforms' \
   -H 'accept: application/json'
 Request URL
-https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/platforms
+https://isp490.onrender.com/api/v1/analytics/filters/platforms
 Server response
 Code	Details
 200	
@@ -57,10 +57,10 @@ Responses
 Curl
 
 curl -X 'GET' \
-  'https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/categories' \
+  'https://isp490.onrender.com/api/v1/analytics/filters/categories' \
   -H 'accept: application/json'
 Request URL
-https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/categories
+https://isp490.onrender.com/api/v1/analytics/filters/categories
 Server response
 Code	Details
 200	
@@ -118,10 +118,10 @@ Responses
 Curl
 
 curl -X 'GET' \
-  'https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/products?q=q&limit=10' \
+  'https://isp490.onrender.com/api/v1/analytics/filters/products?q=q&limit=10' \
   -H 'accept: application/json'
 Request URL
-https://ecommerce-dss-backend.onrender.com/api/v1/analytics/filters/products?q=q&limit=10
+https://isp490.onrender.com/api/v1/analytics/filters/products?q=q&limit=10
 Server response
 Code	Details
 200	
