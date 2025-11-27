@@ -34,12 +34,12 @@ const navItems: NavItem[] = [
   {
     icon: <TableIcon />,
     name: "Data Pipeline",
-    subItems: [
-      { name: "ETL Processes", path: "/dataengineer/etl", pro: false },
-      { name: "Data Ingestion", path: "/dataengineer/ingestion", pro: false },
-      { name: "Data Transformation", path: "/dataengineer/transformation", pro: false },
-      { name: "Data Quality", path: "/dataengineer/quality", pro: false },
-    ],
+    path: "/dataengineer/pipeline",
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Data Quality",
+    path: "/dataengineer/quality",
   },
   {
     icon: <BoxCubeIcon />,
