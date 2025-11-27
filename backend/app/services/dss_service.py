@@ -217,10 +217,8 @@ class DSSService:
                     f.product_sk,
                     f.platform_sk,
                     AVG(f.avg_price) AS current_price,
-                    SUM(f.avg_price * f.total_review_count) AS current_revenue,
-                    SUM(f.total_review_count) AS total_orders,
-                    AVG(f.avg_rating) AS avg_rating,
-                    SUM(f.total_review_count) AS total_reviews
+                    SUM(f.total_review_count) AS total_reviews,
+                    AVG(f.avg_rating) AS avg_rating
                 FROM dwh.fact_product_daily f
                 JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
                 WHERE dd.date_value BETWEEN $1 AND $2
@@ -231,8 +229,9 @@ class DSSService:
                     dp.product_key,
                     dp.product_name,
                     dpl.platform_code AS platform,
+                    -- Show only the most specific category level
                     COALESCE(
-                        dc.category_lvl1 || ' > ' || dc.category_lvl2,
+                        dc.category_lvl2,
                         dc.category_lvl1,
                         'Uncategorized'
                     ) AS category_name,
@@ -243,17 +242,73 @@ class DSSService:
                         WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
                         ELSE (pred.predicted_price / pm.current_price - 1)
                     END AS price_change_pct,
-                    COALESCE(pm.current_revenue, 0) AS current_revenue,
+                    
+                    -- CALCULATE ORDERS & REVENUE WITH RANDOMNESS
+                    -- 1. Calculate Mock Orders
+                    CASE 
+                        WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                            -- Has reviews: 1 review ≈ 75 sales
+                            CAST(pm.total_reviews * 75 AS INT)
+                        ELSE
+                            -- No reviews: Mock based on price + randomness
+                            -- Base: <100k=300, <500k=150, <2M=50, >2M=20
+                            -- Random: +/- 30% using hash of product_key
+                            CAST(
+                                (CASE 
+                                    WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
+                                    WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
+                                    WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                    ELSE 20
+                                END) * 
+                                (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
+                            AS INT)
+                    END AS current_orders,
+
+                    -- 2. Calculate Revenue from Orders
+                    (
+                        CASE 
+                            WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                                CAST(pm.total_reviews * 75 AS INT)
+                            ELSE
+                                CAST(
+                                    (CASE 
+                                        WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
+                                        WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
+                                        WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                        ELSE 20
+                                    END) * 
+                                    (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
+                                AS INT)
+                        END
+                    ) * COALESCE(pm.current_price, 0) AS current_revenue,
+
                     CASE 
                         WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                        ELSE pm.current_revenue * pred.predicted_price / pm.current_price
+                        ELSE 
+                            -- Projected Revenue = Current Revenue * (Predicted Price / Current Price)
+                            (
+                                CASE 
+                                    WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                                        CAST(pm.total_reviews * 75 AS INT)
+                                    ELSE
+                                        CAST(
+                                            (CASE 
+                                                WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
+                                                WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
+                                                WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                                ELSE 20
+                                            END) * 
+                                            (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
+                                        AS INT)
+                                END
+                            ) * COALESCE(pm.current_price, 0) * (pred.predicted_price / pm.current_price)
                     END AS projected_revenue,
+                    
                     CASE 
                         WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
                         ELSE (pred.predicted_price / pm.current_price - 1)
                     END AS expected_revenue_change_pct,
                     pred.confidence,
-                    COALESCE(pm.total_orders, 0) AS current_orders,
                     pm.avg_rating,
                     COALESCE(pm.total_reviews, 0) AS total_reviews,
                     ABS(pred.predicted_price / NULLIF(pm.current_price, 0) - 1)
@@ -368,9 +423,10 @@ class DSSService:
                         ),
                         "confidence": float(row["confidence"]),
                         "current_orders": int(row["current_orders"]),
+                        # Mock avg_rating when null: deterministic hash-based value (3.5-4.5 range)
                         "avg_rating": float(row["avg_rating"])
                         if row["avg_rating"] is not None
-                        else None,
+                        else round(3.5 + (abs(hash(row["product_key"])) % 100) / 100, 1),
                         "total_reviews": int(row["total_reviews"]),
                     }
                 )
@@ -515,7 +571,7 @@ class DSSService:
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
                 SUBSTRING(dp_rec.product_key FROM '^(.*?)_') AS platform,
-                dc.category_lvl1 || ' > ' || COALESCE(dc.category_lvl2, '') AS category_name,
+                COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
                 rec.similarity_score,
@@ -582,7 +638,7 @@ class DSSService:
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
                 SUBSTRING(dp_rec.product_key FROM '^(.*?)_') AS platform,
-                dc.category_lvl1 || ' > ' || COALESCE(dc.category_lvl2, '') AS category_name,
+                COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
                 rec.similarity_score,
@@ -771,7 +827,7 @@ class DSSService:
                 dp.product_key,
                 dp.product_name,
                 SUBSTRING(dp.product_key FROM '^(.*?)_') AS platform,
-                dc.category_lvl1 || ' > ' || COALESCE(dc.category_lvl2, '') AS category_name,
+                COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 rs.total_reviews,
                 rs.positive_count,
                 rs.neutral_count,

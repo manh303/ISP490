@@ -20,9 +20,9 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Airflow Configuration
-AIRFLOW_BASE_URL = settings.AIRFLOW_URL  # e.g., "https://your-airflow.railway.app"
-AIRFLOW_USERNAME = settings.AIRFLOW_USERNAME
-AIRFLOW_PASSWORD = settings.AIRFLOW_PASSWORD
+AIRFLOW_BASE_URL = settings.airflow_url  # e.g., "https://your-airflow.railway.app"
+AIRFLOW_USERNAME = settings.airflow_username
+AIRFLOW_PASSWORD = settings.airflow_password
 
 class AirflowClient:
     """Client for Airflow REST API"""
