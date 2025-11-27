@@ -4,24 +4,52 @@ import { getTableGrowth } from '../../services/dataEngineerApi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface TableGrowthData {
-  date: string;
+  snapshot_date: string;
   row_count: number;
   size_mb: number;
+  avg_row_size_kb: number;
 }
 
 const TableGrowthPage: React.FC = () => {
   const [growthData, setGrowthData] = useState<TableGrowthData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [schemaName, setSchemaName] = useState('ecommerce');
-  const [tableName, setTableName] = useState('products');
+  const [schemaName, setSchemaName] = useState('dwh');
+  const [tableName, setTableName] = useState('');
   const [days, setDays] = useState(30);
+
+  const schemas = ['dwh', 'ml'];
+  const tablesBySchema: { [key: string]: string[] } = {
+    dwh: [
+      'dim_brand',
+      'dim_category',
+      'dim_date',
+      'dim_platform',
+      'dim_product',
+      'dim_reviewer',
+      'fact_product_daily',
+      'fact_product_daily_agg',
+      'fact_review',
+      'fact_review_daily',
+      'fact_review_daily_agg',
+      'fact_reviews_detail'
+    ],
+    ml: [
+      'dim_ml_model',
+      'fact_price_prediction',
+      'fact_product_recommen',
+      'fact_review_sentiment'
+    ]
+  };
+
+  const availableTables = tablesBySchema[schemaName] || [];
 
   const fetchTableGrowth = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getTableGrowth(schemaName, tableName, days);
+      console.log('Fetched growth data:', data);
       setGrowthData(data);
     } catch (err) {
       console.error('Error fetching table growth:', err);
@@ -32,7 +60,9 @@ const TableGrowthPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTableGrowth();
+    if (schemaName && tableName) {
+      fetchTableGrowth();
+    }
   }, [schemaName, tableName, days]);
 
   const formatBytes = (bytes: number) => {
@@ -71,13 +101,15 @@ const TableGrowthPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Schema Name
             </label>
-            <input
-              type="text"
+            <select
               value={schemaName}
               onChange={(e) => setSchemaName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="e.g., ecommerce"
-            />
+            >
+              {schemas.map(schema => (
+                <option key={schema} value={schema}>{schema}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -87,9 +119,15 @@ const TableGrowthPage: React.FC = () => {
               type="text"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
+              list="table-options"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="e.g., products"
+              placeholder="Select or enter table name"
             />
+            <datalist id="table-options">
+              {availableTables.map(table => (
+                <option key={table} value={table} />
+              ))}
+            </datalist>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -146,7 +184,7 @@ const TableGrowthPage: React.FC = () => {
               <LineChart data={growthData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="date"
+                  dataKey="snapshot_date"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => new Date(value).toLocaleDateString()}
                 />
@@ -158,9 +196,9 @@ const TableGrowthPage: React.FC = () => {
                 <Line
                   type="monotone"
                   dataKey="row_count"
-                  stroke="#3B82F6"
+                  stroke="#EF4444"
                   strokeWidth={2}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -178,7 +216,7 @@ const TableGrowthPage: React.FC = () => {
               <BarChart data={growthData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="date"
+                  dataKey="snapshot_date"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => new Date(value).toLocaleDateString()}
                 />
@@ -187,7 +225,7 @@ const TableGrowthPage: React.FC = () => {
                   labelFormatter={(value) => new Date(value).toLocaleDateString()}
                   formatter={(value: number) => [`${value.toFixed(2)} MB`, 'Size']}
                 />
-                <Bar dataKey="size_mb" fill="#10B981" />
+                <Bar dataKey="size_mb" fill="#F59E0B" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -223,7 +261,7 @@ const TableGrowthPage: React.FC = () => {
                     return (
                       <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                          {new Date(item.date).toLocaleDateString()}
+                          {new Date(item.snapshot_date).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">
                           {item.row_count.toLocaleString()}

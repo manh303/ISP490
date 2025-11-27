@@ -15,9 +15,35 @@ const TableLineagePage: React.FC = () => {
   const [lineageData, setLineageData] = useState<TableLineageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [schemaName, setSchemaName] = useState('ecommerce');
-  const [tableName, setTableName] = useState('products');
+  const [schemaName, setSchemaName] = useState('dwh');
+  const [tableName, setTableName] = useState('');
   const [direction, setDirection] = useState<'upstream' | 'downstream' | 'both'>('both');
+
+  const schemas = ['dwh', 'ml'];
+  const tablesBySchema: { [key: string]: string[] } = {
+    dwh: [
+      'dim_brand',
+      'dim_category',
+      'dim_date',
+      'dim_platform',
+      'dim_product',
+      'dim_reviewer',
+      'fact_product_daily',
+      'fact_product_daily_agg',
+      'fact_review',
+      'fact_review_daily',
+      'fact_review_daily_agg',
+      'fact_reviews_detail'
+    ],
+    ml: [
+      'dim_ml_model',
+      'fact_price_prediction',
+      'fact_product_recommen',
+      'fact_review_sentiment'
+    ]
+  };
+
+  const availableTables = tablesBySchema[schemaName] || [];
 
   const fetchTableLineage = async () => {
     try {
@@ -34,7 +60,9 @@ const TableLineagePage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTableLineage();
+    if (schemaName && tableName) {
+      fetchTableLineage();
+    }
   }, [schemaName, tableName, direction]);
 
   const getTransformationColor = (type: string) => {
@@ -89,13 +117,15 @@ const TableLineagePage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Schema Name
             </label>
-            <input
-              type="text"
+            <select
               value={schemaName}
               onChange={(e) => setSchemaName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="e.g., ecommerce"
-            />
+            >
+              {schemas.map(schema => (
+                <option key={schema} value={schema}>{schema}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -105,9 +135,15 @@ const TableLineagePage: React.FC = () => {
               type="text"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
+              list="table-options"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="e.g., products"
+              placeholder="Select or enter table name"
             />
+            <datalist id="table-options">
+              {availableTables.map(table => (
+                <option key={table} value={table} />
+              ))}
+            </datalist>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -310,7 +310,7 @@ const AdminSidebar: React.FC = () => {
             </>
           ) : (
             <img
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/logodss-icon.png"
               alt="Admin"
               width={32}
               height={32}

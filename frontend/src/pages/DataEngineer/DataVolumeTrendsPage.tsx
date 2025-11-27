@@ -5,11 +5,9 @@ import { getDataVolumeTrends } from '../../services/dataEngineerApi';
 
 interface VolumeTrend {
   schema_name: string;
-  table_name: string;
-  date: string;
-  row_count: number;
-  size_mb: number;
-  growth_rate: number;
+  snapshot_date: string;
+  total_rows: number;
+  total_size_gb: number;
 }
 
 interface VolumeStats {
@@ -36,8 +34,8 @@ const DataVolumeTrendsPage: React.FC = () => {
       // Convert timeRange to days
       const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 180;
       const data = await getDataVolumeTrends(days);
-      setTrends(data.trends || []);
-      setStats(data.stats || null);
+      setTrends(data);
+      setStats(null);
     } catch (err) {
       console.error('Error fetching data volume trends:', err);
       setError('Failed to load data volume trends');
@@ -58,22 +56,22 @@ const DataVolumeTrendsPage: React.FC = () => {
 
   // Prepare chart data
   const rowCountData = filteredTrends.reduce((acc, trend) => {
-    const date = new Date(trend.date).toLocaleDateString();
+    const date = new Date(trend.snapshot_date).toLocaleDateString();
     if (!acc[date]) {
       acc[date] = { date, totalRows: 0, tables: {} };
     }
-    acc[date].totalRows += trend.row_count;
-    acc[date].tables[`${trend.schema_name}.${trend.table_name}`] = trend.row_count;
+    acc[date].totalRows += trend.total_rows;
+    acc[date].tables[trend.schema_name] = trend.total_rows;
     return acc;
   }, {} as Record<string, any>);
 
   const sizeData = filteredTrends.reduce((acc, trend) => {
-    const date = new Date(trend.date).toLocaleDateString();
+    const date = new Date(trend.snapshot_date).toLocaleDateString();
     if (!acc[date]) {
       acc[date] = { date, totalSize: 0, tables: {} };
     }
-    acc[date].totalSize += trend.size_mb;
-    acc[date].tables[`${trend.schema_name}.${trend.table_name}`] = trend.size_mb;
+    acc[date].totalSize += trend.total_size_gb;
+    acc[date].tables[trend.schema_name] = trend.total_size_gb;
     return acc;
   }, {} as Record<string, any>);
 
@@ -85,27 +83,14 @@ const DataVolumeTrendsPage: React.FC = () => {
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  // Top growing tables
-  const topGrowingTables = trends
-    .filter(trend => trend.growth_rate > 0)
-    .sort((a, b) => b.growth_rate - a.growth_rate)
-    .slice(0, 10)
-    .map(trend => ({
-      table: `${trend.schema_name}.${trend.table_name}`,
-      growthRate: trend.growth_rate,
-      currentRows: trend.row_count,
-      currentSize: trend.size_mb
-    }));
-
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
 
-  const formatSize = (mb: number) => {
-    if (mb >= 1024) return `${(mb / 1024).toFixed(1)}GB`;
-    return `${mb.toFixed(1)}MB`;
+  const formatSize = (gb: number) => {
+    return `${gb.toFixed(2)}GB`;
   };
 
   const renderChart = (data: any[], dataKey: string, title: string, yAxisLabel: string, formatter: (value: number) => string) => {
@@ -238,71 +223,6 @@ const DataVolumeTrendsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Database className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Schemas</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_schemas}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Tables</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_tables}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Rows</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(stats.total_rows)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Database className="w-6 h-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Size</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_size_gb.toFixed(1)}GB</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Avg Growth Rate</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.avg_growth_rate.toFixed(1)}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Error State */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -332,58 +252,9 @@ const DataVolumeTrendsPage: React.FC = () => {
             sizeChartData,
             'totalSize',
             'Data Size Trends',
-            'Size (MB)',
+            'Size (GB)',
             (value) => formatSize(value)
           )}
-        </div>
-      )}
-
-      {/* Top Growing Tables */}
-      {!loading && !error && topGrowingTables.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2" />
-              Top Growing Tables
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Table</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Growth Rate</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Current Rows</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Current Size</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topGrowingTables.map((table, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
-                        {table.table}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center">
-                          <TrendingUp className="w-4 h-4 mr-2 text-green-600" />
-                          <span className="text-green-600 font-medium">
-                            +{table.growthRate.toFixed(1)}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {formatNumber(table.currentRows)}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {formatSize(table.currentSize)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 
@@ -400,49 +271,28 @@ const DataVolumeTrendsPage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Table</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Schema</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Row Count</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Size</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Growth Rate</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Total Rows</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Total Size</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTrends
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .sort((a, b) => new Date(b.snapshot_date).getTime() - new Date(a.snapshot_date).getTime())
                     .map((trend, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {trend.table_name}
-                          </p>
-                          <p className="text-sm text-gray-500">{trend.schema_name}</p>
-                        </div>
+                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
+                        {trend.schema_name}
                       </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {new Date(trend.date).toLocaleDateString()}
+                        {new Date(trend.snapshot_date).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {formatNumber(trend.row_count)}
+                        {formatNumber(trend.total_rows)}
                       </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {formatSize(trend.size_mb)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center">
-                          {trend.growth_rate > 0 ? (
-                            <TrendingUp className="w-4 h-4 mr-2 text-green-600" />
-                          ) : trend.growth_rate < 0 ? (
-                            <TrendingDown className="w-4 h-4 mr-2 text-red-600" />
-                          ) : null}
-                          <span className={`font-medium ${
-                            trend.growth_rate > 0 ? 'text-green-600' :
-                            trend.growth_rate < 0 ? 'text-red-600' : 'text-gray-600'
-                          }`}>
-                            {trend.growth_rate > 0 ? '+' : ''}{trend.growth_rate.toFixed(1)}%
-                          </span>
-                        </div>
+                        {formatSize(trend.total_size_gb)}
                       </td>
                     </tr>
                   ))}
