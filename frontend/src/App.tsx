@@ -84,6 +84,12 @@ import {
 import DataEngineerDashboard from "./pages/DataEngineer/DataEngineerDashboard.tsx";
 import DataPipeline from "./pages/DataEngineer/DataPipeline.tsx";
 import DataQuality from "./pages/DataEngineer/DataQuality.tsx";
+import TableGrowthPage from "./pages/DataEngineer/TableGrowthPage.tsx";
+import DataQualitySummaryPage from "./pages/DataEngineer/DataQualitySummaryPage.tsx";
+import TableLineagePage from "./pages/DataEngineer/TableLineagePage.tsx";
+import AlertHistoryPage from "./pages/DataEngineer/AlertHistoryPage.tsx";
+import PipelinePerformancePage from "./pages/DataEngineer/PipelinePerformancePage.tsx";
+import DataVolumeTrendsPage from "./pages/DataEngineer/DataVolumeTrendsPage.tsx";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -250,6 +256,12 @@ export default function App() {
             <Route path="/dataengineer/pipelines" element={<DataPipeline />} />
             <Route path="/dataengineer/pipelines/:jobCode" element={<DataPipeline />} />
             <Route path="/dataengineer/quality" element={<DataQuality />} />
+            <Route path="/dataengineer/table-growth" element={<TableGrowthPage />} />
+            <Route path="/dataengineer/data-quality-summary" element={<DataQualitySummaryPage />} />
+            <Route path="/dataengineer/table-lineage" element={<TableLineagePage />} />
+            <Route path="/dataengineer/alert-history" element={<AlertHistoryPage />} />
+            <Route path="/dataengineer/pipeline-performance" element={<PipelinePerformancePage />} />
+            <Route path="/dataengineer/data-volume-trends" element={<DataVolumeTrendsPage />} />
             <Route path="/dataengineer/jobs" element={<Blank />} />
             <Route path="/dataengineer/schedules" element={<Calendar />} />
             <Route path="/dataengineer/monitoring" element={<Alerts />} />

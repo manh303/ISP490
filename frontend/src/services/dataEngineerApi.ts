@@ -86,6 +86,14 @@ export interface DataQualityIssue {
   detected_at: string;
 }
 
+// Data Quality Summary
+export interface DataQualitySummaryItem {
+  status: string;
+  severity: string;
+  issue_count: number;
+  total_affected_rows: number;
+}
+
 // Database Health
 export interface DatabaseHealth {
   status: string;
@@ -208,7 +216,7 @@ export const getDataQualityIssues = async (
 /**
  * Get Data Quality Summary
  */
-export const getDataQualitySummary = async (): Promise<any> => {
+export const getDataQualitySummary = async (): Promise<DataQualitySummaryItem[]> => {
   const response = await api.get('/v1/data-engineer/data-quality/summary');
   return response.data;
 };

@@ -11,12 +11,13 @@ import {
 import {
   getDataQualityIssues,
   getDataQualitySummary,
-  DataQualityIssue
+  DataQualityIssue,
+  DataQualitySummaryItem
 } from '../../services/dataEngineerApi';
 
 const DataQuality: React.FC = () => {
   const [issues, setIssues] = useState<DataQualityIssue[]>([]);
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<DataQualitySummaryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     status: 'OPEN',
@@ -93,6 +94,11 @@ const DataQuality: React.FC = () => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
+  const getTotalIssues = () => summary.reduce((sum, item) => sum + item.issue_count, 0);
+  const getOpenIssues = () => summary.filter(item => item.status === 'OPEN').reduce((sum, item) => sum + item.issue_count, 0);
+  const getResolvedIssues = () => summary.filter(item => item.status === 'RESOLVED').reduce((sum, item) => sum + item.issue_count, 0);
+  const getAvgResolutionHours = () => 'N/A';
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -113,14 +119,14 @@ const DataQuality: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      {summary && (
+      {summary.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Issues</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {summary.total_issues || 0}
+                  {getTotalIssues()}
                 </p>
               </div>
               <AlertTriangle className="w-8 h-8 text-orange-600" />
@@ -132,7 +138,7 @@ const DataQuality: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Open Issues</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {summary.open_issues || 0}
+                  {getOpenIssues()}
                 </p>
               </div>
               <XCircle className="w-8 h-8 text-orange-600" />
@@ -142,9 +148,9 @@ const DataQuality: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Resolved Today</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Resolved Issues</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {summary.resolved_today || 0}
+                  {getResolvedIssues()}
                 </p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -156,7 +162,7 @@ const DataQuality: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Avg Resolution Time</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {summary.avg_resolution_hours ? `${summary.avg_resolution_hours.toFixed(1)}h` : 'N/A'}
+                  {getAvgResolutionHours()}
                 </p>
               </div>
               <TrendingUp className="w-8 h-8 text-blue-600" />
