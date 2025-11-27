@@ -85,7 +85,7 @@ clean.reviews
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=ecommerce_dss
+DB_NAME=ecommerce_dss_1
 DB_USER=dss_user
 DB_PASSWORD=dss_password_123
 CRAWLER_OUTPUT_DIR=/tmp/data/outputs

@@ -299,7 +299,7 @@ docker exec airflow-webserver \
 docker logs spark-master -f
 
 # Check database progress
-docker exec -it postgres psql -U dss_user -d ecommerce_dss -c \
+docker exec -it postgres psql -U dss_user -d ecommerce_dss_1 -c \
   "SELECT COUNT(*) FROM dwh.fact_product_daily;"
 ```
 

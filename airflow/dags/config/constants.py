@@ -67,7 +67,7 @@ DB_CONFIG = {
     'POSTGRES': {
         'HOST': 'postgres',
         'PORT': 5432,
-        'DATABASE': 'ecommerce_dss',
+        'DATABASE': 'ecommerce_dss_1',
         'SCHEMA': 'public',
         'POOL_SIZE': 20,
         'MAX_OVERFLOW': 30,
@@ -76,7 +76,7 @@ DB_CONFIG = {
     'MONGODB': {
         'HOST': 'mongodb',
         'PORT': 27017,
-        'DATABASE': 'ecommerce_dss',
+        'DATABASE': 'ecommerce_dss_1',
         'MAX_POOL_SIZE': 100,
         'SERVER_SELECTION_TIMEOUT': 30000
     },

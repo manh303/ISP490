@@ -20,7 +20,7 @@ x-airflow-common-env:
   AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
 
   # Optional conn cho ETL downstream
-  AIRFLOW_CONN_POSTGRES_DEFAULT: postgres://dss_user:dss_password_123@postgres:5432/ecommerce_dss
+  AIRFLOW_CONN_POSTGRES_DEFAULT: postgres://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1
 
 services:
   # ====================================
@@ -581,7 +581,7 @@ services:
     ports:
       - "9187:9187"
     environment:
-      - DATA_SOURCE_NAME=postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1?sslmode=disable
     networks:
       - dss_network
     depends_on:

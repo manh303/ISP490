@@ -66,7 +66,7 @@ class BaseDSSOperator(BaseOperator):
         """Send alert to monitoring system"""
         try:
             mongo_client = self.get_mongo_client()
-            db = mongo_client['ecommerce_dss']
+            db = mongo_client['ecommerce_dss_1']
 
             alert_doc = {
                 'alert_id': f"{self.task_id}_{datetime.now().isoformat()}",
@@ -319,7 +319,7 @@ class ApiDataCollectorOperator(BaseDSSOperator):
     def _store_in_mongodb(self, records: List[Dict], config: Dict, context):
         """Store data in MongoDB"""
         mongo_client = self.get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         collection_name = config.get('collection', f"api_data_{config['name']}")
         collection = db[collection_name]
@@ -451,7 +451,7 @@ class MLModelTrainingOperator(BaseDSSOperator):
         else:
             # Load from MongoDB
             mongo_client = self.get_mongo_client()
-            db = mongo_client['ecommerce_dss']
+            db = mongo_client['ecommerce_dss_1']
 
             collection_name = self.model_config.get('data_collection', 'ml_features')
             docs = list(db[collection_name].find({}, {'_id': 0}))
@@ -544,7 +544,7 @@ class MLModelTrainingOperator(BaseDSSOperator):
 
         # Save metadata to MongoDB
         mongo_client = self.get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         model_metadata = {
             'model_name': self.model_config['name'],
@@ -620,7 +620,7 @@ class MLPredictionOperator(BaseDSSOperator):
     def _load_model(self):
         """Load trained model and metadata"""
         mongo_client = self.get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Get latest model metadata
         model_doc = db.ml_models.find_one(
@@ -651,7 +651,7 @@ class MLPredictionOperator(BaseDSSOperator):
 
         elif self.input_data_source == 'mongodb':
             mongo_client = self.get_mongo_client()
-            db = mongo_client['ecommerce_dss']
+            db = mongo_client['ecommerce_dss_1']
 
             collection_name = self.input_query or 'ml_features'
             docs = list(db[collection_name].find({}, {'_id': 0}).limit(self.batch_size))
@@ -710,7 +710,7 @@ class MLPredictionOperator(BaseDSSOperator):
     def _store_predictions(self, predictions: List[Dict], context):
         """Store predictions in MongoDB"""
         mongo_client = self.get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         # Add task metadata
         for pred in predictions:
@@ -847,7 +847,7 @@ class DataQualityOperator(BaseDSSOperator):
     def _execute_mongodb_check(self, check: Dict[str, Any]) -> Dict[str, Any]:
         """Execute MongoDB-based quality check"""
         mongo_client = self.get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         collection_name = check['collection']
         aggregation_pipeline = check.get('pipeline', [])
@@ -922,7 +922,7 @@ class DataQualityOperator(BaseDSSOperator):
     def _store_quality_results(self, results: Dict, context):
         """Store quality check results"""
         mongo_client = self.get_mongo_client()
-        db = mongo_client['ecommerce_dss']
+        db = mongo_client['ecommerce_dss_1']
 
         quality_doc = {
             'timestamp': datetime.now(),

@@ -1,505 +1,619 @@
+# backend/app/api/v1/data_engineer.py
 """
-DSS (Decision Support System) API Router
-AI-powered decision support endpoints for analysts
+Data Engineer API - Monitoring & Operations
+Provides endpoints for ETL monitoring, data quality, and system health
 """
 
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import List, Optional, Dict, Any
+from datetime import datetime, date, timedelta
+from pydantic import BaseModel
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
-import logging
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException
-import asyncpg
 
-from app.schemas.dss import (
-    PricePredictionRequest,
-    PricePredictionResponse,
-    ProductRecommendationRequest,
-    ProductRecommendationResponse,
-    ReviewSentimentRequest,
-    ReviewSentimentResponse,
-)
-from app.services.dss_service import DSSService
+router = APIRouter(prefix="/data-engineer", tags=["Data Engineer"])
 
-logger = logging.getLogger(__name__)
+# Database connection
+def get_db_conn():
+    """Get database connection"""
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        raise HTTPException(status_code=500, detail="DATABASE_URL not configured")
+    return psycopg2.connect(db_url)
 
-router = APIRouter(prefix="/dss", tags=["DSS - Decision Support System"])
+# ===================================================================
+# MODELS
+# ===================================================================
 
-# Database configuration
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "ecommerce_dss"),
-    "user": os.getenv("DB_USER", "dss_user"),
-    "password": os.getenv("DB_PASSWORD", "IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4"),
-}
+class ETLJobStatus(BaseModel):
+    job_code: str
+    job_name: str
+    is_active: bool
+    last_run_date: Optional[date]
+    last_run_status: Optional[str]
+    last_run_duration_minutes: Optional[float]
+    total_runs: int
+    success_rate: float
+    avg_duration_minutes: Optional[float]
 
-# Connection pool configuration
-POOL_CONFIG = {
-    **DB_CONFIG,
-    "min_size": int(os.getenv("DB_POOL_MIN_SIZE", "2")),
-    "max_size": int(os.getenv("DB_POOL_MAX_SIZE", "10")),
-    "command_timeout": int(os.getenv("DB_COMMAND_TIMEOUT", "60")),
-    "timeout": int(os.getenv("DB_CONNECTION_TIMEOUT", "30")),
-}
+class ETLRunDetail(BaseModel):
+    run_id: int
+    job_code: str
+    run_date: date
+    started_at: datetime
+    finished_at: Optional[datetime]
+    status: str
+    rows_read: Optional[int]
+    rows_written: Optional[int]
+    duration_minutes: Optional[float]
+    error_message: Optional[str]
+    airflow_run_id: Optional[str]
 
-# Global connection pool
-_db_pool: Optional[asyncpg.Pool] = None
+class TableHealth(BaseModel):
+    schema_name: str
+    table_name: str
+    row_count: int
+    size_mb: float
+    last_loaded_at: Optional[datetime]
+    freshness_hours: Optional[float]
+    health_status: str  # 'HEALTHY', 'STALE', 'EMPTY', 'DEGRADED'
 
+class DataQualityIssue(BaseModel):
+    issue_id: int
+    schema_name: str
+    table_name: str
+    issue_type: str
+    severity: str
+    status: str
+    affected_rows: int
+    issue_description: str
+    detected_at: datetime
 
-async def get_db_pool() -> asyncpg.Pool:
-    """Get or create database connection pool"""
-    global _db_pool
-    if _db_pool is None:
-        logger.info("Creating database connection pool...")
-        _db_pool = await asyncpg.create_pool(**POOL_CONFIG)
-        logger.info(f"Connection pool created: min={POOL_CONFIG['min_size']}, max={POOL_CONFIG['max_size']}")
-    return _db_pool
+class DatabaseHealth(BaseModel):
+    status: str
+    active_connections: int
+    idle_connections: int
+    max_connections: int
+    connection_usage_pct: float
+    avg_query_time_ms: Optional[float]
+    slow_queries_count: int
+    check_time: datetime
 
+class DataLineageNode(BaseModel):
+    source_schema: str
+    source_table: str
+    target_schema: str
+    target_table: str
+    transformation_type: str
+    job_code: Optional[str]
 
-async def get_db():
-    """Get database connection from pool"""
-    pool = await get_db_pool()
-    async with pool.acquire() as conn:
-        yield conn
+class AlertSummary(BaseModel):
+    alert_name: str
+    alert_type: str
+    severity: str
+    target_name: str
+    triggered_count_24h: int
+    last_triggered_at: Optional[datetime]
+    status: str
 
+# ===================================================================
+# ENDPOINTS
+# ===================================================================
 
-async def get_dss_service(db=Depends(get_db)) -> DSSService:
-    """Get DSS service instance"""
-    return DSSService(db)
+@router.get("/health", summary="API Health Check")
+async def health_check():
+    """Simple health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.now()}
 
+# ===================================================================
+# ETL MONITORING
+# ===================================================================
 
-# ============================================
-# PRICE PREDICTION DSS
-# ============================================
-
-@router.post("/price/run", response_model=Dict[str, Any])
-async def run_price_prediction_dss(
-    request: PricePredictionRequest,
-    service: DSSService = Depends(get_dss_service),
-):
+@router.get("/etl/jobs", response_model=List[ETLJobStatus], summary="Get All ETL Jobs Status")
+async def get_etl_jobs_status():
     """
-    Run Price Prediction DSS Analysis
-    
-    **Purpose:**
-    Analyze product pricing and generate AI-powered recommendations for price optimization.
-    
-    **Workflow:**
-    1. Query fact tables + ML price predictions from database
-    2. Calculate KPIs (revenue impact, number of products with recommendations)
-    3. Generate AI insights and action recommendations
-    4. Return structured results with AI analysis
-    
-    **Use Cases:**
-    - Identify products with pricing opportunities
-    - Estimate revenue impact of price changes
-    - Get AI recommendations for pricing strategy
-    
-    **Example Request:**
-    ```json
-    {
-      "from_date": "2025-11-23",
-      "to_date": "2025-11-24",
-      "platforms": ["tiki", "lazada"],
-      "categories": ["1", "2"],
-      "scope_mode": "top_n",
-      "top_n": 50,
-      "max_discount_pct": 0.15,
-      "min_confidence": 0.70,
-      "min_price_change_pct": 0.02
-    }
-    ```
-    
-    **Note:** API supports auto-fallback to latest available date if requested date has no data.
-    Check `date_adjustment_info` in response for actual dates used.
-    
-    **Response Includes:**
-    - `kpi_summary`: Overall metrics (num_products, revenue impact)
-    - `table_data`: Detailed product-level data
-    - `ai_summary_insights`: 3-5 AI-generated insights
-    - `ai_recommended_actions`: 3-7 actionable recommendations
-    - `date_adjustment_info`: (optional) Date adjustment details if fallback occurred
+    Get status of all ETL jobs with recent run history
     """
-    
+    conn = get_db_conn()
     try:
-        # Convert request to dict
-        request_dict = request.model_dump()
-        
-        # Run DSS analysis
-        result = await service.run_price_prediction_dss(request_dict)
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error in price prediction DSS: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to run price prediction DSS: {str(e)}"
-        )
-
-
-# ============================================
-# PRODUCT RECOMMENDATION DSS
-# ============================================
-
-@router.post("/reco/run", response_model=Dict[str, Any])
-async def run_product_recommendation_dss(
-    request: ProductRecommendationRequest,
-    service: DSSService = Depends(get_dss_service),
-):
-    """
-    Run Product Recommendation DSS Analysis
-    
-    **Purpose:**
-    Analyze product relationships and generate AI-powered cross-sell/upsell recommendations.
-    
-    **Workflow:**
-    1. Query ML product recommendations from database
-    2. Calculate KPIs (similarity scores, bundle opportunities)
-    3. Generate AI insights for cross-sell/upsell strategies
-    4. Return structured results with AI analysis
-    
-    **Use Cases:**
-    - Find products frequently bought together
-    - Identify bundle opportunities
-    - Get AI recommendations for product placement
-    - Optimize "You might also like" sections
-    
-    **Modes:**
-    - `by_product`: Get recommendations for a specific product
-    - `by_category`: Get top recommendations within category
-    
-    **Example Request (by_product):**
-    ```json
-    {
-      "from_date": "2025-11-23",
-      "to_date": "2025-11-24",
-      "platforms": ["tiki"],
-      "scope_mode": "by_product",
-      "source_product_key": "tiki_9975869",
-      "top_k": 10,
-      "min_similarity": 0.5
-    }
-    ```
-    
-    **Example Request (by_category):**
-    ```json
-    {
-      "from_date": "2025-11-23",
-      "to_date": "2025-11-24",
-      "platforms": ["tiki", "lazada"],
-      "categories": ["1", "2"],
-      "scope_mode": "by_category",
-      "top_k": 20,
-      "min_similarity": 0.6
-    }
-    ```
-    
-    **Response Includes:**
-    - `kpi_summary`: Overall metrics (num_recommendations, avg_similarity)
-    - `table_data`: Product pairs with similarity and co-purchase rates
-    - `ai_summary_insights`: 3-5 AI-generated insights
-    - `ai_recommended_actions`: 3-7 actionable recommendations for cross-sell
-    """
-    
-    try:
-        request_dict = request.model_dump()
-        result = await service.run_product_recommendation_dss(request_dict)
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error in product recommendation DSS: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to run product recommendation DSS: {str(e)}"
-        )
-
-
-# ============================================
-# REVIEW SENTIMENT DSS
-# ============================================
-
-@router.post("/review/run", response_model=Dict[str, Any])
-async def run_review_sentiment_dss(
-    request: ReviewSentimentRequest,
-    service: DSSService = Depends(get_dss_service),
-):
-    """
-    Run Review Sentiment Analysis DSS
-    
-    **Purpose:**
-    Analyze customer review sentiment and generate AI-powered recommendations for quality improvement.
-    
-    **Workflow:**
-    1. Query review data + ML sentiment analysis from database
-    2. Calculate KPIs (positive/negative percentages, critical products)
-    3. Generate AI insights about customer satisfaction issues
-    4. Return structured results with AI analysis
-    
-    **Use Cases:**
-    - Identify products with negative sentiment issues
-    - Understand top customer complaints
-    - Get AI recommendations for quality/CS improvements
-    - Monitor brand reputation
-    
-    **Example Request:**
-    ```json
-    {
-      "from_date": "2025-11-23",
-      "to_date": "2025-11-24",
-      "platforms": ["tiki", "lazada"],
-      "categories": ["1", "2"],
-      "min_reviews_per_product": 10,
-      "sentiment_focus": "all",
-      "negative_threshold": 0.25
-    }
-    ```
-    
-    **Sentiment Focus Options:**
-    - `all`: Analyze all products
-    - `only_negative`: Focus on products with high negative sentiment
-    - `only_positive`: Focus on products with high positive sentiment
-    
-    **Response Includes:**
-    - `kpi_summary`: Overall metrics (avg sentiment, critical products count)
-    - `table_data`: Product-level sentiment breakdown with top reasons
-    - `ai_summary_insights`: 3-5 main customer satisfaction issues
-    - `ai_recommended_actions`: 3-7 actionable recommendations for CS/Quality teams
-    """
-    
-    try:
-        request_dict = request.model_dump()
-        result = await service.run_review_sentiment_dss(request_dict)
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error in review sentiment DSS: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to run review sentiment DSS: {str(e)}"
-        )
-
-
-# ============================================
-# UTILITY ENDPOINTS
-# ============================================
-
-@router.get("/health")
-async def dss_health_check():
-    """
-    Health check for DSS system
-    
-    Returns status of DSS components:
-    - Database connection
-    - AI/LLM availability
-    - ML tables accessibility
-    """
-    
-    health_status = {
-        "status": "healthy",
-        "components": {}
-    }
-    
-    # Check database
-    try:
-        async with asyncpg.create_pool(**DB_CONFIG, min_size=1, max_size=1) as pool:
-            async with pool.acquire() as conn:
-                await conn.fetchval("SELECT 1")
-        health_status["components"]["database"] = "healthy"
-    except Exception as e:
-        health_status["components"]["database"] = f"unhealthy: {str(e)}"
-        health_status["status"] = "degraded"
-    
-    # Check AI availability
-    from app.services.ai_summarizer import get_ai_summarizer
-    ai_summarizer = get_ai_summarizer()
-    
-    if ai_summarizer.available:
-        health_status["components"]["ai"] = {
-            "status": "healthy",
-            "model": ai_summarizer.model
-        }
-    else:
-        health_status["components"]["ai"] = {
-            "status": "degraded",
-            "mode": "rule-based fallback"
-        }
-    
-    # Check ML tables
-    try:
-        async with asyncpg.create_pool(**DB_CONFIG, min_size=1, max_size=1) as pool:
-            async with pool.acquire() as conn:
-                tables = await conn.fetch("""
-                    SELECT table_name 
-                    FROM information_schema.tables 
-                    WHERE table_schema = 'ml'
-                """)
-                health_status["components"]["ml_tables"] = {
-                    "status": "healthy",
-                    "count": len(tables)
-                }
-    except Exception as e:
-        health_status["components"]["ml_tables"] = f"unhealthy: {str(e)}"
-        health_status["status"] = "degraded"
-    
-    return health_status
-
-
-@router.get("/data/status")
-async def get_data_status():
-    """
-    Check data availability and freshness
-    
-    Returns:
-    - Latest data dates for fact tables and ML predictions
-    - How many days behind current date
-    - Warnings if data is stale
-    - Recommendations for action
-    
-    Use this endpoint to:
-    - Show data freshness warning in UI
-    - Monitor data pipeline health
-    - Determine if manual refresh is needed
-    """
-    from datetime import date, timedelta
-    
-    today = date.today()
-    status = {
-        "status": "healthy",
-        "current_date": str(today),
-        "warnings": [],
-        "recommendations": []
-    }
-    
-    try:
-        async with asyncpg.create_pool(**DB_CONFIG, min_size=1, max_size=1) as pool:
-            async with pool.acquire() as conn:
-                # Check latest fact_product_daily
-                latest_fact = await conn.fetchval("""
-                    SELECT MAX(dd.date_value)
-                    FROM dwh.fact_product_daily f
-                    JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                """)
-                
-                # Check latest ML predictions
-                latest_pred = await conn.fetchval("""
-                    SELECT MAX(dd.date_value)
-                    FROM ml.fact_price_prediction pred
-                    JOIN dwh.dim_date dd ON pred.date_sk = dd.date_sk
-                """)
-                
-                # Calculate staleness
-                fact_days_old = (today - latest_fact).days if latest_fact else None
-                pred_days_old = (today - latest_pred).days if latest_pred else None
-                
-                status["latest_fact_date"] = str(latest_fact) if latest_fact else None
-                status["latest_prediction_date"] = str(latest_pred) if latest_pred else None
-                status["fact_days_behind"] = fact_days_old
-                status["prediction_days_behind"] = pred_days_old
-                
-                # Check for issues
-                if not latest_fact:
-                    status["status"] = "critical"
-                    status["warnings"].append("No source data found in database!")
-                    status["recommendations"].append("Run initial ETL pipeline")
-                elif fact_days_old > 2:
-                    status["status"] = "degraded"
-                    status["warnings"].append(f"Source data is {fact_days_old} days old (latest: {latest_fact})")
-                    status["recommendations"].append("Run ETL pipeline: python load_tiki_pipeline.py")
-                
-                if not latest_pred:
-                    status["status"] = "critical"
-                    status["warnings"].append("No ML predictions found!")
-                    status["recommendations"].append("Run ML pipeline: python ml/run_price_predictions.py")
-                elif pred_days_old > 2:
-                    status["status"] = "degraded"
-                    status["warnings"].append(f"ML predictions are {pred_days_old} days old (latest: {latest_pred})")
-                    status["recommendations"].append("Run ML pipeline: python ml/run_price_predictions.py")
-                
-                # Get data coverage stats
-                coverage = await conn.fetchrow("""
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                WITH recent_runs AS (
+                    SELECT DISTINCT ON (job_id) 
+                        job_id,
+                        run_date as last_run_date,
+                        started_at as last_run_started,
+                        finished_at as last_run_finished,
+                        status as last_run_status
+                    FROM meta.etl_run
+                    ORDER BY job_id, started_at DESC
+                ),
+                stats AS (
                     SELECT 
-                        MIN(dd.date_value) as min_date,
-                        MAX(dd.date_value) as max_date,
-                        COUNT(DISTINCT dd.date_value) as total_days,
-                        COUNT(DISTINCT f.product_sk) as total_products
-                    FROM dwh.fact_product_daily f
-                    JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                """)
-                
-                status["data_coverage"] = {
-                    "min_date": str(coverage['min_date']) if coverage['min_date'] else None,
-                    "max_date": str(coverage['max_date']) if coverage['max_date'] else None,
-                    "total_days": coverage['total_days'],
-                    "total_products": coverage['total_products']
-                }
-                
-                # Add helpful info
-                if status["status"] == "healthy":
-                    status["message"] = "All systems operational. Data is up-to-date."
-                elif status["status"] == "degraded":
-                    status["message"] = "Data is available but may be outdated. Consider running refresh."
-                else:
-                    status["message"] = "Critical data issues detected. Immediate action required."
-                
-    except Exception as e:
-        logger.error(f"Error checking data status: {e}")
-        status["status"] = "error"
-        status["error"] = str(e)
-    
-    return status
+                        job_id,
+                        COUNT(*) as total_runs,
+                        AVG(EXTRACT(EPOCH FROM (finished_at - started_at))/60) as avg_duration_minutes,
+                        100.0 * SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) as success_rate
+                    FROM meta.etl_run
+                    WHERE started_at >= NOW() - INTERVAL '30 days'
+                    GROUP BY job_id
+                )
+                SELECT 
+                    j.job_code,
+                    j.job_name,
+                    j.is_active,
+                    r.last_run_date,
+                    r.last_run_status,
+                    EXTRACT(EPOCH FROM (r.last_run_finished - r.last_run_started))/60 as last_run_duration_minutes,
+                    COALESCE(s.total_runs, 0) as total_runs,
+                    COALESCE(s.success_rate, 0) as success_rate,
+                    s.avg_duration_minutes
+                FROM meta.etl_job j
+                LEFT JOIN recent_runs r ON j.job_id = r.job_id
+                LEFT JOIN stats s ON j.job_id = s.job_id
+                ORDER BY j.job_code;
+            """)
+            rows = cur.fetchall()
+            return [ETLJobStatus(**row) for row in rows]
+    finally:
+        conn.close()
 
+@router.get("/etl/runs/{job_code}", response_model=List[ETLRunDetail], summary="Get ETL Run History")
+async def get_etl_run_history(
+    job_code: str,
+    limit: int = Query(default=20, le=100),
+    status: Optional[str] = None
+):
+    """
+    Get run history for a specific ETL job
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            query = """
+                SELECT 
+                    r.run_id,
+                    j.job_code,
+                    r.run_date,
+                    r.started_at,
+                    r.finished_at,
+                    r.status,
+                    r.rows_read,
+                    r.rows_written,
+                    EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60 as duration_minutes,
+                    r.error_message,
+                    r.airflow_run_id
+                FROM meta.etl_run r
+                JOIN meta.etl_job j ON r.job_id = j.job_id
+                WHERE j.job_code = %s
+            """
+            params = [job_code]
+            
+            if status:
+                query += " AND r.status = %s"
+                params.append(status)
+            
+            query += " ORDER BY r.started_at DESC LIMIT %s"
+            params.append(limit)
+            
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            return [ETLRunDetail(**row) for row in rows]
+    finally:
+        conn.close()
 
-@router.get("/scenarios")
-async def list_dss_scenarios():
+@router.get("/etl/logs/{run_id}", summary="Get ETL Run Logs")
+async def get_etl_run_logs(run_id: int):
     """
-    List available DSS scenarios
-    
-    Returns information about each scenario including:
-    - Name and description
-    - Required inputs
-    - Output format
-    - Use cases
+    Get detailed logs for a specific ETL run
     """
-    
-    return {
-        "scenarios": [
-            {
-                "code": "price_prediction",
-                "name": "Price Prediction & Optimization",
-                "description": "Analyze pricing opportunities and estimate revenue impact",
-                "endpoint": "/api/v1/dss/price/run",
-                "use_cases": [
-                    "Identify products with pricing opportunities",
-                    "Estimate revenue impact of price changes",
-                    "Get AI recommendations for pricing strategy"
-                ],
-                "required_inputs": ["from_date", "to_date"],
-                "optional_inputs": ["platforms", "categories", "top_n", "max_discount_pct"]
-            },
-            {
-                "code": "product_recommendation",
-                "name": "Product Recommendation & Cross-sell",
-                "description": "Find cross-sell/upsell opportunities based on product relationships",
-                "endpoint": "/api/v1/dss/reco/run",
-                "use_cases": [
-                    "Find products frequently bought together",
-                    "Identify bundle opportunities",
-                    "Optimize product recommendations"
-                ],
-                "required_inputs": ["from_date", "to_date", "scope_mode"],
-                "optional_inputs": ["platforms", "categories", "source_product_key", "top_k"]
-            },
-            {
-                "code": "review_sentiment",
-                "name": "Review Sentiment Analysis",
-                "description": "Analyze customer sentiment and identify quality issues",
-                "endpoint": "/api/v1/dss/review/run",
-                "use_cases": [
-                    "Identify products with negative sentiment",
-                    "Understand customer complaints",
-                    "Get recommendations for quality improvement"
-                ],
-                "required_inputs": ["from_date", "to_date"],
-                "optional_inputs": ["platforms", "categories", "min_reviews_per_product", "sentiment_focus"]
-            }
-        ]
-    }
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    log_id,
+                    job_name,
+                    stage,
+                    log_level,
+                    log_message,
+                    records_processed,
+                    records_failed,
+                    error_message,
+                    created_at
+                FROM meta.etl_log
+                WHERE run_id = %s
+                ORDER BY created_at ASC;
+            """, (run_id,))
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+# ===================================================================
+# TABLE HEALTH
+# ===================================================================
+
+@router.get("/tables/health", response_model=List[TableHealth], summary="Get Table Health Status")
+async def get_table_health(
+    schema_name: Optional[str] = None,
+    stale_hours: int = Query(default=24, description="Hours to consider data stale")
+):
+    """
+    Get health status of all tables (row count, size, freshness)
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            query = """
+                WITH latest_stats AS (
+                    SELECT DISTINCT ON (schema_name, table_name)
+                        schema_name,
+                        table_name,
+                        row_count,
+                        size_bytes,
+                        last_loaded_at
+                    FROM meta.table_stats
+                    ORDER BY schema_name, table_name, snapshot_date DESC
+                )
+                SELECT 
+                    schema_name,
+                    table_name,
+                    row_count,
+                    ROUND(size_bytes / 1024.0 / 1024.0, 2) as size_mb,
+                    last_loaded_at,
+                    EXTRACT(EPOCH FROM (NOW() - last_loaded_at))/3600 as freshness_hours,
+                    CASE 
+                        WHEN last_loaded_at IS NULL THEN 'EMPTY'
+                        WHEN EXTRACT(EPOCH FROM (NOW() - last_loaded_at))/3600 > %s THEN 'STALE'
+                        WHEN row_count = 0 THEN 'EMPTY'
+                        ELSE 'HEALTHY'
+                    END as health_status
+                FROM latest_stats
+            """
+            
+            params = [stale_hours]
+            
+            if schema_name:
+                query += " WHERE schema_name = %s"
+                params.append(schema_name)
+            
+            query += " ORDER BY schema_name, table_name"
+            
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            return [TableHealth(**row) for row in rows]
+    finally:
+        conn.close()
+
+@router.get("/tables/growth/{schema_name}/{table_name}", summary="Get Table Growth History")
+async def get_table_growth(schema_name: str, table_name: str, days: int = 30):
+    """
+    Get row count and size growth over time
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    snapshot_date,
+                    row_count,
+                    ROUND(size_bytes / 1024.0 / 1024.0, 2) as size_mb,
+                    ROUND((size_bytes / 1024.0 / 1024.0) / NULLIF(row_count, 0), 4) as avg_row_size_kb
+                FROM meta.table_stats
+                WHERE schema_name = %s 
+                  AND table_name = %s
+                  AND snapshot_date >= CURRENT_DATE - %s
+                ORDER BY snapshot_date DESC;
+            """, (schema_name, table_name, days))
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+# ===================================================================
+# DATA QUALITY
+# ===================================================================
+
+@router.get("/data-quality/issues", response_model=List[DataQualityIssue], summary="Get Data Quality Issues")
+async def get_data_quality_issues(
+    status: str = Query(default="OPEN", description="OPEN, IN_PROGRESS, RESOLVED, IGNORED"),
+    severity: Optional[str] = None,
+    schema_name: Optional[str] = None
+):
+    """
+    Get data quality issues filtered by status, severity, schema
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            query = """
+                SELECT 
+                    issue_id,
+                    schema_name,
+                    table_name,
+                    issue_type,
+                    severity,
+                    status,
+                    affected_rows,
+                    issue_description,
+                    detected_at
+                FROM meta.data_quality_issue
+                WHERE status = %s
+            """
+            params = [status]
+            
+            if severity:
+                query += " AND severity = %s"
+                params.append(severity)
+            
+            if schema_name:
+                query += " AND schema_name = %s"
+                params.append(schema_name)
+            
+            query += " ORDER BY severity DESC, detected_at DESC LIMIT 100"
+            
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            return [DataQualityIssue(**row) for row in rows]
+    finally:
+        conn.close()
+
+@router.get("/data-quality/summary", summary="Get Data Quality Summary")
+async def get_data_quality_summary():
+    """
+    Get summary statistics of data quality issues
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    status,
+                    severity,
+                    COUNT(*) as issue_count,
+                    SUM(affected_rows) as total_affected_rows
+                FROM meta.data_quality_issue
+                GROUP BY status, severity
+                ORDER BY severity, status;
+            """)
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+# ===================================================================
+# DATABASE HEALTH
+# ===================================================================
+
+@router.get("/database/health", response_model=DatabaseHealth, summary="Get Database Health")
+async def get_database_health():
+    """
+    Get current database connection health and performance metrics
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Get latest health check or perform new one
+            cur.execute("""
+                SELECT 
+                    check_time,
+                    status,
+                    active_connections,
+                    idle_connections,
+                    max_connections,
+                    connection_usage_pct,
+                    avg_query_time_ms,
+                    slow_queries_count
+                FROM meta.db_connection_health
+                WHERE check_time >= NOW() - INTERVAL '5 minutes'
+                ORDER BY check_time DESC
+                LIMIT 1;
+            """)
+            row = cur.fetchone()
+            
+            if row:
+                return DatabaseHealth(**row)
+            
+            # If no recent check, return a basic health status
+            # (In production, you'd trigger a health check here)
+            return DatabaseHealth(
+                status="UNKNOWN",
+                active_connections=0,
+                idle_connections=0,
+                max_connections=100,
+                connection_usage_pct=0.0,
+                avg_query_time_ms=None,
+                slow_queries_count=0,
+                check_time=datetime.now()
+            )
+    finally:
+        conn.close()
+
+# ===================================================================
+# DATA LINEAGE
+# ===================================================================
+
+@router.get("/lineage/table/{schema_name}/{table_name}", response_model=List[DataLineageNode], summary="Get Table Lineage")
+async def get_table_lineage(schema_name: str, table_name: str, direction: str = Query(default="both", regex="^(upstream|downstream|both)$")):
+    """
+    Get data lineage for a specific table
+    - upstream: Show source tables
+    - downstream: Show dependent tables
+    - both: Show both directions
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            if direction in ["upstream", "both"]:
+                # Get upstream sources
+                cur.execute("""
+                    SELECT 
+                        source_schema,
+                        source_table,
+                        target_schema,
+                        target_table,
+                        transformation_type,
+                        job_code
+                    FROM meta.data_lineage
+                    WHERE target_schema = %s AND target_table = %s
+                      AND is_active = TRUE
+                """, (schema_name, table_name))
+                upstream = cur.fetchall()
+            else:
+                upstream = []
+            
+            if direction in ["downstream", "both"]:
+                # Get downstream dependents
+                cur.execute("""
+                    SELECT 
+                        source_schema,
+                        source_table,
+                        target_schema,
+                        target_table,
+                        transformation_type,
+                        job_code
+                    FROM meta.data_lineage
+                    WHERE source_schema = %s AND source_table = %s
+                      AND is_active = TRUE
+                """, (schema_name, table_name))
+                downstream = cur.fetchall()
+            else:
+                downstream = []
+            
+            all_lineage = upstream + downstream
+            return [DataLineageNode(**row) for row in all_lineage]
+    finally:
+        conn.close()
+
+# ===================================================================
+# ALERTS
+# ===================================================================
+
+@router.get("/alerts/summary", response_model=List[AlertSummary], summary="Get Alert Summary")
+async def get_alert_summary():
+    """
+    Get summary of all configured alerts and their recent trigger counts
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    ac.alert_name,
+                    ac.alert_type,
+                    ac.severity,
+                    ac.target_name,
+                    COUNT(CASE WHEN ah.triggered_at >= NOW() - INTERVAL '24 hours' THEN ah.alert_history_id END) as triggered_count_24h,
+                    MAX(ah.triggered_at) as last_triggered_at,
+                    COALESCE((
+                        SELECT status 
+                        FROM meta.alert_history 
+                        WHERE alert_id = ac.alert_id 
+                        ORDER BY triggered_at DESC 
+                        LIMIT 1
+                    ), 'NONE') as status
+                FROM meta.alert_config ac
+                LEFT JOIN meta.alert_history ah ON ac.alert_id = ah.alert_id
+                WHERE ac.is_active = TRUE
+                GROUP BY ac.alert_id, ac.alert_name, ac.alert_type, ac.severity, ac.target_name
+                ORDER BY triggered_count_24h DESC, ac.severity;
+            """)
+            rows = cur.fetchall()
+            return [AlertSummary(**row) for row in rows]
+    finally:
+        conn.close()
+
+@router.get("/alerts/history", summary="Get Alert History")
+async def get_alert_history(
+    hours: int = Query(default=24, le=168),
+    status: Optional[str] = None
+):
+    """
+    Get alert trigger history
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            query = """
+                SELECT 
+                    ah.alert_history_id,
+                    ac.alert_name,
+                    ac.alert_type,
+                    ah.severity,
+                    ah.alert_message,
+                    ah.triggered_at,
+                    ah.status,
+                    ah.acknowledged_by,
+                    ah.resolved_by
+                FROM meta.alert_history ah
+                JOIN meta.alert_config ac ON ah.alert_id = ac.alert_id
+                WHERE ah.triggered_at >= NOW() - INTERVAL '%s hours'
+            """
+            params = [hours]
+            
+            if status:
+                query += " AND ah.status = %s"
+                params.append(status)
+            
+            query += " ORDER BY ah.triggered_at DESC LIMIT 100"
+            
+            cur.execute(query, params)
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+# ===================================================================
+# STATISTICS & DASHBOARDS
+# ===================================================================
+
+@router.get("/stats/pipeline-performance", summary="Get Pipeline Performance Stats")
+async def get_pipeline_performance(days: int = 7):
+    """
+    Get pipeline performance statistics over time
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    j.job_code,
+                    j.job_name,
+                    DATE(r.started_at) as run_date,
+                    COUNT(*) as runs_count,
+                    COUNT(*) FILTER (WHERE r.status = 'SUCCESS') as success_count,
+                    COUNT(*) FILTER (WHERE r.status = 'FAILED') as failed_count,
+                    AVG(EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60) as avg_duration_minutes,
+                    MIN(EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60) as min_duration_minutes,
+                    MAX(EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60) as max_duration_minutes
+                FROM meta.etl_run r
+                JOIN meta.etl_job j ON r.job_id = j.job_id
+                WHERE r.started_at >= NOW() - INTERVAL '%s days'
+                GROUP BY j.job_code, j.job_name, DATE(r.started_at)
+                ORDER BY run_date DESC, j.job_code;
+            """, (days,))
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+@router.get("/stats/data-volume", summary="Get Data Volume Trends")
+async def get_data_volume_trends(days: int = 30):
+    """
+    Get data volume growth trends across schemas
+    """
+    conn = get_db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    schema_name,
+                    snapshot_date,
+                    SUM(row_count) as total_rows,
+                    ROUND(SUM(size_bytes) / 1024.0 / 1024.0 / 1024.0, 2) as total_size_gb
+                FROM meta.table_stats
+                WHERE snapshot_date >= CURRENT_DATE - %s
+                GROUP BY schema_name, snapshot_date
+                ORDER BY snapshot_date DESC, schema_name;
+            """, (days,))
+            return cur.fetchall()
+    finally:
+        conn.close()
+

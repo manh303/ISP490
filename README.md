@@ -2,7 +2,7 @@
 
 A comprehensive, production-ready e-commerce analytics and decision support system built with modern big data technologies and real-time streaming capabilities.
 
-## <× Architecture Overview
+## < Architecture Overview
 
 This system provides real-time analytics, machine learning insights, and decision support for e-commerce operations using:
 
@@ -14,7 +14,7 @@ This system provides real-time analytics, machine learning insights, and decisio
 - **Monitoring**: Prometheus + Grafana dashboards
 - **Containerization**: Full Docker deployment
 
-## =€ Quick Start
+## = Quick Start
 
 ### Prerequisites
 
@@ -46,7 +46,7 @@ docker-compose up -d
 docker-compose ps
 ```
 
-## =æ System Components
+## = System Components
 
 ### Core Services
 
@@ -92,7 +92,7 @@ npm install
 npm run dev
 ```
 
-## =Ê Monitoring & Analytics
+## = Monitoring & Analytics
 
 ### Access Points
 
@@ -119,7 +119,7 @@ npm run dev
 ### Pipeline Components
 
 ```
-Data Sources ’ Kafka ’ Spark Streaming ’ ML Models ’ Databases ’ APIs ’ Dashboards
+Data Sources  Kafka  Spark Streaming  ML Models  Databases  APIs  Dashboards
 ```
 
 ## > Machine Learning Features
@@ -138,7 +138,7 @@ Key configuration in `.env`:
 ```bash
 # Database
 DB_HOST=postgres
-DB_NAME=ecommerce_dss
+DB_NAME=ecommerce_dss_1
 DB_USER=postgres
 DB_PASSWORD=your_password
 
@@ -160,7 +160,7 @@ REDIS_URL=redis://redis:6379
 - Docker network isolation
 - Health checks for all services
 
-## =È Performance & Scaling
+## = Performance & Scaling
 
 ### Recommended Resources
 
@@ -175,7 +175,7 @@ REDIS_URL=redis://redis:6379
 - Redis clustering for session management
 - Load balancer for API endpoints
 
-## >ê Testing
+## > Testing
 
 Run the test suite:
 ```bash
@@ -191,7 +191,7 @@ python -m pytest tests/
 docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
 
-## =Ú Documentation
+## = Documentation
 
 Detailed documentation is available in the `docs/` directory:
 
@@ -209,25 +209,25 @@ Detailed documentation is available in the `docs/` directory:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## =Ë Project Status
+## = Project Status
 
 -  Core backend API
 -  Real-time data pipeline
 -  ML model integration
 -  Monitoring setup
 - = Frontend dashboard (in progress)
-- =Ë Advanced ML features (planned)
+- = Advanced ML features (planned)
 
-## =Þ Support
+## = Support
 
 For questions and support:
 - Check the [Troubleshooting Guide](docs/deployment/TROUBLESHOOTING.md)
 - Review system logs: `docker-compose logs [service-name]`
 - Create an issue in the repository
 
-## =Ä License
+## = License
 
-This project is part of a Final Project (Ó Án) for FPT Fall 2025.
+This project is part of a Final Project ( n) for FPT Fall 2025.
 
 ---
 

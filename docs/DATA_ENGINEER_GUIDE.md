@@ -32,14 +32,14 @@ curl http://localhost:8081
 curl http://localhost:9000/minio/health/live
 
 # Kiểm tra PostgreSQL
-psql -h localhost -p 5433 -U dss_user -d ecommerce_dss -c "SELECT version();"
+psql -h localhost -p 5433 -U dss_user -d ecommerce_dss_1 -c "SELECT version();"
 ```
 
 ### 1.2. Kiểm Tra Schema Meta
 
 ```sql
 -- Kết nối database
-psql -h localhost -p 5433 -U dss_user -d ecommerce_dss
+psql -h localhost -p 5433 -U dss_user -d ecommerce_dss_1
 
 -- Kiểm tra schema meta tồn tại
 SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'meta';
@@ -520,7 +520,7 @@ docker exec spark-master spark-submit \
 docker ps | grep postgres
 
 # 2. Test connection từ Spark container
-docker exec spark-master psql -h postgres -p 5432 -U dss_user -d ecommerce_dss -c "SELECT 1;"
+docker exec spark-master psql -h postgres -p 5432 -U dss_user -d ecommerce_dss_1 -c "SELECT 1;"
 
 # 3. Kiểm tra environment variables
 docker exec spark-master env | grep -E "DB_|DATABASE"

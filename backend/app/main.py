@@ -34,11 +34,14 @@ if parent_dir not in sys.path:
 
 # Now import after path setup
 try:
-        from app.middleware.activity_middleware import ActivityLoggingMiddleware
-        from app.services.activity_logger import ActivityLogger
+        # Try alternative import path for Render deployment
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
         ACTIVITY_AVAILABLE = True
 except ImportError:
         ACTIVITY_AVAILABLE = False
+        ActivityLoggingMiddleware = None
+        ActivityLogger = None
         logger.warning("Activity logging not available")
         
 try:
@@ -122,7 +125,7 @@ class Settings:
     # Database URLs - Always use Render database (has data)
     POSTGRES_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+        "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
     )
 
     # API Configuration

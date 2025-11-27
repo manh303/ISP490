@@ -334,7 +334,7 @@ After applying this fix:
      ls -lh /app/ml/models/
    
    # Check database
-   docker exec postgres psql -U dss_user -d ecommerce_dss -c \
+   docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c \
      "SELECT * FROM ml.dim_ml_model;"
    ```
 

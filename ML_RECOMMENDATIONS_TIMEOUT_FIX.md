@@ -197,7 +197,7 @@ And this took 1 minute, then:
 
 ```bash
 # 1. Check recommendations created
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT 
     COUNT(*) as total_recommendations,
     COUNT(DISTINCT source_product_sk) as unique_products,
@@ -216,7 +216,7 @@ FROM ml.fact_product_recommendation;
 ### Check by Platform
 
 ```bash
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT 
     split_part(p.product_key, '_', 1) as platform,
     COUNT(*) as recs_count,

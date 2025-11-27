@@ -22,12 +22,12 @@ x-airflow-common-env:
   # ... các biến khác ...
   
   # Database Render
-  DATABASE_URL: postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss
-  DB_HOST: dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com
+  DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
+  DB_HOST: dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com
   DB_PORT: "5432"
-  DB_NAME: ecommerce_dss
+  DB_NAME: ecommerce_dss_1
   DB_USER: dss_user
-  DB_PASSWORD: IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+  DB_PASSWORD: 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
 ```
 
 **Cách 2: Update file .env**
@@ -46,10 +46,10 @@ cat .env.render >> .env
 2. Admin → Connections
 3. Tìm connection `postgres_default`
 4. Update:
-   - Host: `dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com`
-   - Schema: `ecommerce_dss`
+   - Host: `dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com`
+   - Schema: `ecommerce_dss_1`
    - Login: `dss_user`
-   - Password: `IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4`
+   - Password: `6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G`
    - Port: `5432`
 
 ### 2. Restart Airflow
@@ -191,7 +191,7 @@ database/scripts/data_engineer_queries.sql
 
 ```bash
 # Kết nối psql
-psql "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+psql "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
 
 # Chạy query cụ thể (copy từ file)
 ```
@@ -201,7 +201,7 @@ Hoặc dùng Python script:
 ```python
 import psycopg2
 
-DATABASE_URL = "postgresql://dss_user:IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4@dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com/ecommerce_dss"
+DATABASE_URL = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
 
 conn = psycopg2.connect(DATABASE_URL)
 cur = conn.cursor()

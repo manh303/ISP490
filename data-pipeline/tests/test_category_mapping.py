@@ -11,7 +11,7 @@ def db_config():
     return {
         'host': 'localhost',
         'port': 5432,
-        'database': 'ecommerce_dss',
+        'database': 'ecommerce_dss_1',
         'user': 'postgres',
         'password': 'postgres123'
     }

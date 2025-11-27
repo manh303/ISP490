@@ -8,6 +8,7 @@ import logging
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
+from app.db_config import DATABASE_URL
 
 from app.schemas.dss import (
     PricePredictionRequest,
@@ -23,44 +24,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dss", tags=["DSS - Decision Support System"])
 
-# Database configuration
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "ecommerce_dss"),
-    "user": os.getenv("DB_USER", "dss_user"),
-    "password": os.getenv("DB_PASSWORD", "IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4"),
-}
-
-# Connection pool configuration
-POOL_CONFIG = {
-    **DB_CONFIG,
-    "min_size": int(os.getenv("DB_POOL_MIN_SIZE", "2")),
-    "max_size": int(os.getenv("DB_POOL_MAX_SIZE", "10")),
-    "command_timeout": int(os.getenv("DB_COMMAND_TIMEOUT", "60")),
-    "timeout": int(os.getenv("DB_CONNECTION_TIMEOUT", "30")),
-}
-
-# Global connection pool
-_db_pool: Optional[asyncpg.Pool] = None
-
-
-async def get_db_pool() -> asyncpg.Pool:
-    """Get or create database connection pool"""
-    global _db_pool
-    if _db_pool is None:
-        logger.info("Creating database connection pool...")
-        _db_pool = await asyncpg.create_pool(**POOL_CONFIG)
-        logger.info(f"Connection pool created: min={POOL_CONFIG['min_size']}, max={POOL_CONFIG['max_size']}")
-    return _db_pool
-
 
 async def get_db():
-    """Get database connection from pool"""
-    pool = await get_db_pool()
-    async with pool.acquire() as conn:
+    """
+    Tạo 1 kết nối asyncpg cho mỗi request ML.
+    MLService đang dùng self.db.fetch / fetchrow / execute theo style asyncpg.
+    """
+    conn = await asyncpg.connect(dsn=DATABASE_URL)
+    try:
         yield conn
-
+    finally:
+        await conn.close()
 
 async def get_dss_service(db=Depends(get_db)) -> DSSService:
     """Get DSS service instance"""
@@ -71,7 +45,11 @@ async def get_dss_service(db=Depends(get_db)) -> DSSService:
 # PRICE PREDICTION DSS
 # ============================================
 
-@router.post("/price/run", response_model=Dict[str, Any])
+@router.post(
+    "/price/run",
+    response_model=Dict[str, Any],
+    operation_id="run_price_prediction_dss_v1",
+)
 async def run_price_prediction_dss(
     request: PricePredictionRequest,
     service: DSSService = Depends(get_dss_service),
@@ -140,7 +118,11 @@ async def run_price_prediction_dss(
 # PRODUCT RECOMMENDATION DSS
 # ============================================
 
-@router.post("/reco/run", response_model=Dict[str, Any])
+@router.post(
+    "/reco/run",
+    response_model=Dict[str, Any],
+    operation_id="run_product_recommendation_dss_v1",
+)
 async def run_product_recommendation_dss(
     request: ProductRecommendationRequest,
     service: DSSService = Depends(get_dss_service),
@@ -217,7 +199,11 @@ async def run_product_recommendation_dss(
 # REVIEW SENTIMENT DSS
 # ============================================
 
-@router.post("/review/run", response_model=Dict[str, Any])
+@router.post(
+    "/review/run",
+    response_model=Dict[str, Any],
+    operation_id="run_review_sentiment_dss_v1",
+)
 async def run_review_sentiment_dss(
     request: ReviewSentimentRequest,
     service: DSSService = Depends(get_dss_service),
@@ -282,7 +268,7 @@ async def run_review_sentiment_dss(
 # UTILITY ENDPOINTS
 # ============================================
 
-@router.get("/health")
+@router.get("/health", operation_id="dss_health_check_v1")
 async def dss_health_check():
     """
     Health check for DSS system
@@ -300,9 +286,9 @@ async def dss_health_check():
     
     # Check database
     try:
-        async with asyncpg.create_pool(**DB_CONFIG, min_size=1, max_size=1) as pool:
-            async with pool.acquire() as conn:
-                await conn.fetchval("SELECT 1")
+        conn = await asyncpg.connect(**DB_CONFIG)
+        await conn.fetchval("SELECT 1")
+        await conn.close()
         health_status["components"]["database"] = "healthy"
     except Exception as e:
         health_status["components"]["database"] = f"unhealthy: {str(e)}"
@@ -325,17 +311,17 @@ async def dss_health_check():
     
     # Check ML tables
     try:
-        async with asyncpg.create_pool(**DB_CONFIG, min_size=1, max_size=1) as pool:
-            async with pool.acquire() as conn:
-                tables = await conn.fetch("""
-                    SELECT table_name 
-                    FROM information_schema.tables 
-                    WHERE table_schema = 'ml'
-                """)
-                health_status["components"]["ml_tables"] = {
-                    "status": "healthy",
-                    "count": len(tables)
-                }
+        conn = await asyncpg.connect(**DB_CONFIG)
+        tables = await conn.fetch("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'ml'
+        """)
+        await conn.close()
+        health_status["components"]["ml_tables"] = {
+            "status": "healthy",
+            "count": len(tables)
+        }
     except Exception as e:
         health_status["components"]["ml_tables"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
@@ -343,7 +329,7 @@ async def dss_health_check():
     return health_status
 
 
-@router.get("/data/status")
+@router.get("/data/status", operation_id="get_data_status_v1")
 async def get_data_status():
     """
     Check data availability and freshness
@@ -448,7 +434,7 @@ async def get_data_status():
     return status
 
 
-@router.get("/scenarios")
+@router.get("/scenarios", operation_id="list_dss_scenarios_v1")
 async def list_dss_scenarios():
     """
     List available DSS scenarios

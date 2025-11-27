@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 /** API root */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ecommerce-dss-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://isp490.onrender.com';
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({

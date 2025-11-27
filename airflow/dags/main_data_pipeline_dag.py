@@ -252,7 +252,7 @@ def extract_streaming_data(**context):
         # Also try to extract from MongoDB if available
         try:
             mongo_client = get_mongodb_connection()
-            db = mongo_client.ecommerce_dss
+            db = mongo_client.ecommerce_dss_1
 
             # Check for any existing collections
             mongo_collections = ['raw_data_collection', 'processed_data']

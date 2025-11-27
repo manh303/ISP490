@@ -58,9 +58,9 @@ docker exec spark-master spark-submit \
   --master spark://spark-master:7077 \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/ods_transformation.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
   --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
 """
     )
 
@@ -71,9 +71,9 @@ docker exec spark-master spark-submit \
   --master spark://spark-master:7077 \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/dwh_build.py \
-  --pg-url jdbc:postgresql://dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com:5432/ecommerce_dss \
+  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
   --pg-user dss_user \
-  --pg-pass IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4
+  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
 """
     )
 

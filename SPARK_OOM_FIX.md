@@ -227,19 +227,19 @@ docker stats spark-master
 
 ```bash
 # 1. Check dim_product populated
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT COUNT(*) FROM dwh.dim_product;
 "
 # Expected: 54679
 
 # 2. Check fact_product_daily populated
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT COUNT(*) FROM dwh.fact_product_daily;
 "
 # Expected: 54679
 
 # 3. Check data by platform
-docker exec postgres psql -U dss_user -d ecommerce_dss -c "
+docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c "
 SELECT 
     split_part(product_key, '_', 1) as platform,
     COUNT(*) as product_count
@@ -403,7 +403,7 @@ Container killed by YARN for exceeding memory limits
 4. **Verify data appears:**
    ```bash
    # Every few minutes, check count
-   docker exec postgres psql -U dss_user -d ecommerce_dss -c \
+   docker exec postgres psql -U dss_user -d ecommerce_dss_1 -c \
      "SELECT COUNT(*) FROM dwh.dim_product;"
    
    # Should increase: 5000, 10000, 15000, ... 54679

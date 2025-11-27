@@ -8,7 +8,7 @@ services:
       context: ./database/docker/postgres
       dockerfile: Dockerfile
     environment:
-      POSTGRES_DB: ecommerce_dss
+      POSTGRES_DB: ecommerce_dss_1
       POSTGRES_USER: dss_user
       POSTGRES_PASSWORD: dss_password_123
     ports:
@@ -16,7 +16,7 @@ services:
     networks:
       - dss_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dss_user -d ecommerce_dss"]
+      test: ["CMD-SHELL", "pg_isready -U dss_user -d ecommerce_dss_1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,7 +38,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgresql+asyncpg://dss_user:dss_password_123@postgres:5432/ecommerce_dss
+      - DATABASE_URL=postgresql+asyncpg://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET_KEY=test-secret-key
       - SECRET_KEY=test-secret

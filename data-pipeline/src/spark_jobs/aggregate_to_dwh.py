@@ -37,11 +37,11 @@ S3_ACCESS_KEY = MINIO_ACCESS_KEY
 S3_SECRET_KEY = MINIO_SECRET_KEY
 MINIO_CLEANED_BUCKET = os.getenv("MINIO_CLEANED_BUCKET", "cleaned-data")
 
-DB_HOST = os.getenv("DB_HOST", "dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com")
+DB_HOST = os.getenv("DB_HOST", "dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com")
 DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "ecommerce_dss")
+DB_NAME = os.getenv("DB_NAME", "ecommerce_dss_1")
 DB_USER = os.getenv("DB_USER", "dss_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "IkJaw42NkCz2JQw0UjdqdsTmXgcMIHC4")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G")
 
 DWH_SCHEMA = os.getenv("DWH_SCHEMA", "dwh")
 FACT_TABLE = os.getenv("FACT_TABLE", "fact_product_daily_agg")

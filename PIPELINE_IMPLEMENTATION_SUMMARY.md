@@ -100,7 +100,7 @@ Các script xử lý dữ liệu lớn bằng Spark:
 Stack hoàn chỉnh với:
 
 **Databases**:
-- PostgreSQL (ecommerce_dss)
+- PostgreSQL (ecommerce_dss_1)
 - Redis (caching)
 
 **Storage**:
@@ -193,7 +193,7 @@ s3://processed-data/
 
 | Service | Port | Access |
 |---------|------|--------|
-| PostgreSQL | 5433 | postgres://dss_user@localhost:5433/ecommerce_dss |
+| PostgreSQL | 5433 | postgres://dss_user@localhost:5433/ecommerce_dss_1 |
 | MinIO API | 9000 | http://localhost:9000 |
 | MinIO Console | 9001 | http://localhost:9001 |
 | Spark Master | 7077 | spark://spark-master:7077 |

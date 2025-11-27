@@ -116,9 +116,9 @@ docker-compose -f docker-compose.ml-airflow.yml logs airflow-worker | tail -20
 3. Configure PostgreSQL:
    - Connection ID: `postgres_default`
    - Connection Type: PostgreSQL
-   - Host: `dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com`
+   - Host: `dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com`
    - Port: 5432
-   - Database: `ecommerce_dss`
+   - Database: `ecommerce_dss_1`
    - User: `dss_user`
    - Password: [your password]
 
@@ -127,11 +127,11 @@ docker-compose -f docker-compose.ml-airflow.yml logs airflow-worker | tail -20
 docker-compose -f docker-compose.ml-airflow.yml exec airflow-webserver \
   airflow connections add postgres_default \
   --conn-type postgresql \
-  --conn-host dpg-d454rjq4d50c73fhmen0-a.oregon-postgres.render.com \
+  --conn-host dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com \
   --conn-login dss_user \
   --conn-password [password] \
   --conn-port 5432 \
-  --conn-schema ecommerce_dss
+  --conn-schema ecommerce_dss_1
 ```
 
 ### Step 6: Verify DAGs
