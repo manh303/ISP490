@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional, Any, Dict
 
-from schemas.analytics import (
+from app.schemas.analytics import (
     PlatformFilterItem,
     CategoryFilterItem,
     ProductFilterItem,
