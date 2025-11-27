@@ -78,6 +78,7 @@ import {
   SentimentAnalysisPage,
   StatusOverviewPage
 } from "./pages/MachineLearning";
+import DataEngineerDashboard from "./pages/DataEngineer/DataEngineerDashboard.js";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -328,6 +329,7 @@ export default function App() {
              <Route path="/admin/users" element={<AdminUserManagement />} />
             <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => {}} />} />
              <Route path="/user/:userId" element={<UserDetailsWrapper />} />
+                       <Route path="/data-engineer" element={<DataEngineerDashboard />} />
           </Route>
 
           {/* Auth Layout */}

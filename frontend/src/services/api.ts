@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 /** API root (ví dụ: http://localhost:8000) */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ecommerce-dss-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://isp490.onrender.com';
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({
@@ -340,10 +340,10 @@ export const authAPI = {
     (await api.post('/v1/auth/verify-email', data)).data,
 
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> =>
-    (await api.post('/v1/auth/forgot-password', data)).data,
+    (await api.post('/v1/auth/forgot-password-otp', data)).data,
 
   resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> =>
-    (await api.post('/v1/auth/reset-password', data)).data
+    (await api.post('/v1/auth/verify-otp-reset-password', data)).data
 };
 
 export default api;
