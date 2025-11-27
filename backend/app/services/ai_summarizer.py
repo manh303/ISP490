@@ -97,19 +97,19 @@ class AISummarizer:
     
     def _get_system_prompt(self) -> str:
         """System prompt for AI assistant"""
-        return """Bạn là trợ lý phân tích dữ liệu e-commerce chuyên nghiệp.
+        return """Bạn là chuyên gia phân tích dữ liệu e-commerce cấp cao (Senior Data Analyst).
 
 Nhiệm vụ của bạn:
-1. Phân tích dữ liệu DSS (Decision Support System) được cung cấp
-2. Tóm tắt 3-5 insights quan trọng nhất (tiếng Việt, ngắn gọn, dễ hiểu)
-3. Đề xuất 3-7 hành động cụ thể, có thể thực hiện ngay
+1. Phân tích sâu dữ liệu DSS (Decision Support System) được cung cấp.
+2. Tìm ra các pattern, anomaly (bất thường), và cơ hội tiềm năng.
+3. Đưa ra 5 insights sắc bén và 7 hành động chiến lược.
 
-Yêu cầu:
-- Insights phải dựa trên SỐ LIỆU thực tế trong data
-- Actions phải CỤ THỂ, HÀNH ĐỘNG ĐƯỢC (không chung chung)
-- Sử dụng số liệu để minh họa (VD: "tăng 15%", "40/120 sản phẩm")
-- Ưu tiên insights có tác động lớn nhất đến doanh thu/lợi nhuận
-- Viết bằng tiếng Việt chuyên nghiệp
+Yêu cầu QUAN TRỌNG để đảm bảo sự đa dạng:
+- TRÁNH TUYỆT ĐỐI các câu chung chung như "Cần tối ưu giá", "Cần cải thiện dịch vụ".
+- Insights phải gắn liền với SỐ LIỆU CỤ THỂ (VD: "Sản phẩm A đang mất 15% doanh thu do giá cao hơn thị trường").
+- Actions phải ĐA DẠNG: kết hợp giữa ngắn hạn (quick wins) và dài hạn (strategic).
+- Thay đổi góc nhìn phân tích: lúc thì tập trung vào tăng trưởng, lúc thì tập trung vào cắt giảm rủi ro.
+- KHÔNG dùng lại một template cố định. Hãy sáng tạo dựa trên context của dữ liệu.
 
 Trả về ĐÚNG format JSON:
 {
@@ -168,8 +168,15 @@ Top sản phẩm có cơ hội tăng doanh thu:
         
         prompt += """
 Hãy phân tích và đưa ra:
-1. Summary Insights: 3-5 insight quan trọng về cơ hội tối ưu giá
-2. Recommended Actions: 3-7 hành động cụ thể cho team Pricing/Product
+1. Summary Insights: 5 insight sâu sắc. Hãy tìm kiếm các pattern như:
+   - Sản phẩm nào đang bị định giá quá thấp (underpriced)?
+   - Sản phẩm nào có độ nhạy cảm về giá cao (high elasticity)?
+   - Cơ hội tăng biên lợi nhuận ở đâu?
+2. Recommended Actions: 7 hành động chiến lược. Đừng chỉ nói "tăng giá", hãy đề xuất:
+   - Chiến lược tâm lý giá (VD: 99k vs 100k)
+   - Bundle pricing
+   - Flash sale cho sản phẩm cụ thể
+   - A/B testing plan
 
 Trả về JSON format đúng như system prompt."""
         
@@ -207,10 +214,15 @@ Top gợi ý cross-sell/upsell:
         
         prompt += """
 Hãy phân tích và đưa ra:
-1. Summary Insights: 3-5 insight về cơ hội cross-sell/upsell
-2. Recommended Actions: 3-7 hành động cụ thể cho team Marketing/Product
-
-Ví dụ actions: tạo bundle, hiển thị "Frequently bought together", campaign combo, điều chỉnh layout...
+1. Summary Insights: 5 insight về hành vi mua sắm. Hãy chú ý:
+   - Các cặp sản phẩm bổ trợ nhau (complementary) hay thay thế nhau (substitute)?
+   - Có xu hướng mua theo brand hay theo category không?
+   - Giá trị đơn hàng trung bình (AOV) có thể tăng bao nhiêu?
+2. Recommended Actions: 7 hành động sáng tạo. Ví dụ:
+   - Tạo combo "Work from home", "Gamer starter pack"...
+   - Chiến thuật "Mua X giảm giá Y"
+   - Email marketing automation cho cross-sell
+   - Tối ưu vị trí hiển thị trên UI
 
 Trả về JSON format đúng như system prompt."""
         
@@ -252,10 +264,15 @@ Sản phẩm cần chú ý:
         
         prompt += """
 Hãy phân tích và đưa ra:
-1. Summary Insights: 3-5 vấn đề chính khách hàng đang không hài lòng
-2. Recommended Actions: 3-7 hành động cụ thể cho team CS/Quality/Content
-
-Ví dụ actions: cải thiện mô tả sản phẩm, xử lý giao hàng, đổi supplier, training CS, update FAQ...
+1. Summary Insights: 5 vấn đề cốt lõi (root causes). Đừng chỉ liệt kê, hãy xâu chuỗi:
+   - Có phải do lỗi sản xuất hàng loạt?
+   - Hay do kỳ vọng sai từ marketing (quảng cáo quá đà)?
+   - Hay do vấn đề vận chuyển/đóng gói?
+2. Recommended Actions: 7 giải pháp triệt để. Ví dụ:
+   - Sửa lại content mô tả sản phẩm để quản lý kỳ vọng
+   - Làm việc lại với supplier cụ thể
+   - Tặng voucher xin lỗi tự động
+   - Quay video hướng dẫn sử dụng cho các lỗi do user không biết dùng
 
 Trả về JSON format đúng như system prompt."""
         

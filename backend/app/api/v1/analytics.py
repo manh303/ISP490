@@ -5,7 +5,7 @@ from typing import Optional, List
 import asyncpg
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.api.dependencies import require_role
-from schemas.analytics import (
+from app.schemas.analytics import (
     PlatformFilterItem,
     CategoryFilterItem,
     ProductFilterItem,
