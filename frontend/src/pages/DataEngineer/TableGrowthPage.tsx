@@ -50,7 +50,9 @@ const TableGrowthPage: React.FC = () => {
       setError(null);
       const data = await getTableGrowth(schemaName, tableName, days);
       console.log('Fetched growth data:', data);
-      setGrowthData(data);
+      // Sort data by date ascending (oldest first)
+      const sortedData = data.sort((a: TableGrowthData, b: TableGrowthData) => new Date(a.snapshot_date).getTime() - new Date(b.snapshot_date).getTime());
+      setGrowthData(sortedData);
     } catch (err) {
       console.error('Error fetching table growth:', err);
       setError('Failed to load table growth data');
