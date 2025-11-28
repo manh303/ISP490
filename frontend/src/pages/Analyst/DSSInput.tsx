@@ -100,11 +100,23 @@ const DSSInput: React.FC = () => {
         }
       }
     } else if (modelId === 'review_sentiment') {
-      if (!formData.product_key?.trim()) {
-        newErrors.product_key = 'Mã sản phẩm là bắt buộc';
+      if (!formData.scope_mode) {
+        newErrors.scope_mode = 'Chế độ phạm vi là bắt buộc';
       }
-      if (!formData.platform_code) {
-        newErrors.platform_code = 'Nền tảng là bắt buộc';
+      if (formData.scope_mode === 'by_product') {
+        if (!formData.product_key?.trim()) {
+          newErrors.product_key = 'Mã sản phẩm là bắt buộc';
+        }
+        if (!formData.platform_code) {
+          newErrors.platform_code = 'Nền tảng là bắt buộc';
+        }
+      } else if (formData.scope_mode === 'by_category') {
+        if (!formData.platform_code) {
+          newErrors.platform_code = 'Nền tảng là bắt buộc';
+        }
+        if (!formData.category) {
+          newErrors.category = 'Danh mục là bắt buộc';
+        }
       }
       if (!formData.from_date) {
         newErrors.from_date = 'Ngày bắt đầu là bắt buộc';
@@ -135,8 +147,8 @@ const DSSInput: React.FC = () => {
       name: 'Phân tích Cảm xúc Đánh giá',
       icon: <MessageSquare className="w-6 h-6" />,
       description: 'Phân tích cảm xúc trong đánh giá của khách hàng',
-      fields: ['product_key', 'platform_code', 'from_date', 'to_date']
-    }
+      fields: ['scope_mode', 'product_key', 'platform_code', 'category', 'from_date', 'to_date']
+    },
   };
 
   const currentModel = models[modelId as keyof typeof models];
@@ -240,9 +252,9 @@ const DSSInput: React.FC = () => {
             from_date: formData.from_date || '2025-01-01',
             to_date: formData.to_date || '2025-12-31',
             platforms: formData.platform_code ? [formData.platform_code] : undefined,
-            categories: formData.category ? [formData.category] : undefined,
+            categories: formData.scope_mode === 'by_category' ? (formData.category ? [formData.category] : undefined) : undefined,
             min_reviews_per_product: 10,
-            sentiment_focus: 'all',
+            sentiment_focus: formData.scope_mode === 'by_category' ? 'only_negative' : 'all',
             negative_threshold: 0.3
           };
           dssResponse = await runReviewSentimentDSS(sentimentRequest);
@@ -251,7 +263,8 @@ const DSSInput: React.FC = () => {
             ml_results: dssResponse,
             business_context: {
               platform: formData.platform_code,
-              product_key: formData.product_key
+              product_key: formData.product_key,
+              scope_mode: formData.scope_mode
             }
           };
           break;
@@ -310,7 +323,9 @@ const DSSInput: React.FC = () => {
         );
       case 'product_key':
         // Only show product_key field for product_recommendation when scope_mode is by_product
-        if (modelId === 'product_recommendation' && formData.scope_mode !== 'by_product') {
+        // or for review_sentiment when scope_mode is by_product
+        if ((modelId === 'product_recommendation' && formData.scope_mode !== 'by_product') ||
+            (modelId === 'review_sentiment' && formData.scope_mode !== 'by_product')) {
           return null;
         }
         return (
@@ -343,7 +358,7 @@ const DSSInput: React.FC = () => {
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Danh mục{modelId === 'product_recommendation' && formData.scope_mode === 'by_category' ? ' *' : ''}
+              Danh mục{((modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_category') ? ' *' : ''}
             </label>
             <Select
               options={categoryOptions}
@@ -525,17 +540,23 @@ const DSSInput: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 dark:text-gray-300">Required Fields</h4>
                   <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    {modelId === 'product_recommendation' ? (
+                    {(modelId === 'product_recommendation' || modelId === 'review_sentiment') ? (
                       <>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                           Scope Mode
                         </li>
                         {formData.scope_mode === 'by_product' && (
-                          <li className="flex items-center">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                            Product Key (Source)
-                          </li>
+                          <>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                              Product Key (Source)
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                              Platform
+                            </li>
+                          </>
                         )}
                         {formData.scope_mode === 'by_category' && (
                           <>
@@ -549,6 +570,14 @@ const DSSInput: React.FC = () => {
                             </li>
                           </>
                         )}
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          From Date
+                        </li>
+                        <li className="flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                          To Date
+                        </li>
                       </>
                     ) : (
                       currentModel.fields.filter(field => field !== 'category' && field !== 'time_range').map(field => (
