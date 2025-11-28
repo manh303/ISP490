@@ -221,9 +221,9 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
   const mockData = getMockData();
 
   // Use API data if available, otherwise fallback to mock
-  const mlResults = dssResults?.model_results || mockData.mlResults;
-  const aiSummaryData = aiSummary || mockData.aiSummary;
-  const aiActions = aiSummary?.recommendations || mockData.aiActions;
+  const mlResults = dssResults || {};
+  const aiSummaryData = aiSummary || {};
+  const aiActions = aiSummary?.recommendations || [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -244,72 +244,112 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
   const renderMLResults = () => {
     switch (modelId) {
       case 'price_prediction':
+        const priceData = mlResults as any; // PricePredictionResponse
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Current Price</h4>
-                <p className="text-2xl font-bold text-blue-600">{formatCurrency(mlResults.currentPrice || mockData.mlResults.currentPrice)}</p>
+                <h4 className="font-medium text-blue-900">Total Products</h4>
+                <p className="text-2xl font-bold text-blue-600">{priceData?.kpi_summary?.num_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Predicted Price</h4>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(mlResults.predictedPrice || mockData.mlResults.predictedPrice)}</p>
+                <h4 className="font-medium text-green-900">Products with Recommendation</h4>
+                <p className="text-2xl font-bold text-green-600">{priceData?.kpi_summary?.num_with_recommendation || 0}</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900">Confidence Interval</h4>
-                <p className="text-sm text-purple-600">
-                  {formatCurrency(mlResults.confidenceInterval?.lower || mockData.mlResults.confidenceInterval.lower)} - {formatCurrency(mlResults.confidenceInterval?.upper || mockData.mlResults.confidenceInterval.upper)}
-                </p>
+                <h4 className="font-medium text-purple-900">Expected Revenue Uplift</h4>
+                <p className="text-2xl font-bold text-purple-600">{priceData?.kpi_summary?.expected_revenue_uplift_pct ? `${priceData.kpi_summary.expected_revenue_uplift_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
             </div>
             <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-4">Price Trend Analysis</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mlResults.chartData || mockData.mlResults.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                  <Line type="monotone" dataKey="price" stroke="#3B82F6" name="Actual Price" />
-                  <Line type="monotone" dataKey="predicted" stroke="#10B981" name="Predicted Price" />
-                  <Line type="monotone" dataKey="lower" stroke="#F59E0B" name="Lower Bound" strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="upper" stroke="#F59E0B" name="Upper Bound" strokeDasharray="5 5" />
-                </LineChart>
-              </ResponsiveContainer>
+              <h4 className="font-medium mb-4">Price Optimization Recommendations</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price Change</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue Impact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {priceData?.table_data?.slice(0, 10).map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <button
+                            onClick={() => navigate(`/analyst/product-review/${item.product_key}`)}
+                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          >
+                            {item.product_name}
+                          </button>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Key: {item.product_key}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatCurrency(item.current_price)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatCurrency(item.predicted_price)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 py-1 text-xs rounded-full ${item.price_change_pct >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {item.price_change_pct >= 0 ? '+' : ''}{item.price_change_pct.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.expected_revenue_change_pct >= 0 ? '+' : ''}{item.expected_revenue_change_pct.toFixed(1)}%
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {(item.confidence * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         );
 
       case 'product_recommendation':
+        const recoData = mlResults as any; // ProductRecommendationResponse
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Total Products Analyzed</h4>
-                <p className="text-2xl font-bold text-blue-600">{(mlResults.totalProducts || mockData.mlResults.totalProducts).toLocaleString()}</p>
+                <h4 className="font-medium text-blue-900">Source Products</h4>
+                <p className="text-2xl font-bold text-blue-600">{recoData?.kpi_summary?.num_source_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Average Similarity</h4>
-                <p className="text-2xl font-bold text-green-600">{((mlResults.avgSimilarity || mockData.mlResults.avgSimilarity) * 100).toFixed(1)}%</p>
+                <h4 className="font-medium text-green-900">Total Recommendations</h4>
+                <p className="text-2xl font-bold text-green-600">{recoData?.kpi_summary?.num_recommendations || 0}</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h4 className="font-medium text-purple-900">Avg Similarity</h4>
+                <p className="text-2xl font-bold text-purple-600">{recoData?.kpi_summary?.avg_similarity || 'N/A'}</p>
               </div>
             </div>
             <div className="bg-white rounded-lg border overflow-hidden">
               <div className="p-4 border-b">
-                <h4 className="font-medium">Top Product Recommendations</h4>
+                <h4 className="font-medium">Product Recommendations</h4>
               </div>
               <div className="divide-y">
-                {(mlResults.recommendations || mockData.mlResults.recommendations).map((rec) => (
-                  <div key={rec.rank} className="p-4 hover:bg-gray-50">
+                {recoData?.table_data?.map((rec, index) => (
+                  <div key={index} className="p-4 hover:bg-gray-50">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-blue-600">Rank #{rec.rank}</span>
-                          <span className="text-sm text-gray-500">Similarity: {(rec.similarity_score * 100).toFixed(1)}%</span>
+                          <span className="text-sm font-medium text-blue-600">Source:</span>
+                          <span className="text-sm text-gray-900">{rec.source_product_name}</span>
                         </div>
-                        <h5 className="font-medium">{rec.product_name}</h5>
+                        <h5 className="font-medium">{rec.recommended_product_name}</h5>
                         <div className="flex gap-4 text-sm text-gray-600 mt-1">
-                          <span>Price: {formatCurrency(rec.min_price)}</span>
-                          <span>Rating: {rec.avg_rating.toFixed(1)} ⭐</span>
+                          <span>Similarity: {(parseFloat(rec.similarity_score) * 100).toFixed(1)}%</span>
+                          <span>Type: {rec.recommendation_type}</span>
                         </div>
                       </div>
                     </div>
@@ -321,21 +361,28 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
         );
 
       case 'review_sentiment':
+        const sentimentData = mlResults as any; // ReviewSentimentResponse
         const COLORS = ['#10B981', '#EF4444', '#6B7280'];
+        const sentimentChartData = [
+          { name: 'Positive', value: sentimentData?.kpi_summary?.avg_positive_pct || 0, count: Math.round((sentimentData?.kpi_summary?.total_reviews || 0) * (sentimentData?.kpi_summary?.avg_positive_pct || 0) / 100) },
+          { name: 'Negative', value: sentimentData?.kpi_summary?.avg_negative_pct || 0, count: Math.round((sentimentData?.kpi_summary?.total_reviews || 0) * (sentimentData?.kpi_summary?.avg_negative_pct || 0) / 100) },
+          { name: 'Neutral', value: 100 - (sentimentData?.kpi_summary?.avg_positive_pct || 0) - (sentimentData?.kpi_summary?.avg_negative_pct || 0), count: Math.round((sentimentData?.kpi_summary?.total_reviews || 0) * (100 - (sentimentData?.kpi_summary?.avg_positive_pct || 0) - (sentimentData?.kpi_summary?.avg_negative_pct || 0)) / 100) }
+        ];
+
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900">Total Reviews</h4>
-                <p className="text-2xl font-bold text-blue-600">{mockData.mlResults.totalReviews}</p>
+                <p className="text-2xl font-bold text-blue-600">{sentimentData?.kpi_summary?.total_reviews || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Average Sentiment</h4>
-                <p className="text-2xl font-bold text-green-600">{mockData.mlResults.avgSentiment}</p>
+                <h4 className="font-medium text-green-900">Positive Reviews</h4>
+                <p className="text-2xl font-bold text-green-600">{sentimentData?.kpi_summary?.avg_positive_pct ? `${sentimentData.kpi_summary.avg_positive_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900">Sentiment Score</h4>
-                <p className="text-2xl font-bold text-purple-600">{mockData.mlResults.sentimentScore}</p>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h4 className="font-medium text-red-900">Critical Products</h4>
+                <p className="text-2xl font-bold text-red-600">{sentimentData?.kpi_summary?.num_products_with_critical_negative || 0}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -344,32 +391,40 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
-                      data={mockData.mlResults.sentimentData}
+                      data={sentimentChartData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ sentiment, percentage }) => `${sentiment}: ${percentage}%`}
+                      label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
                       outerRadius={80}
                       fill="#8884d8"
-                      dataKey="count"
+                      dataKey="value"
                     >
-                      {mockData.mlResults.sentimentData.map((entry, index) => (
+                      {sentimentChartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value) => `${value}%`} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium mb-4">Key Phrases</h4>
-                <div className="space-y-2">
-                  {mockData.mlResults.keyPhrases.map((phrase, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className={`text-sm ${phrase.sentiment === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
-                        "{phrase.phrase}"
-                      </span>
-                      <span className="text-xs text-gray-500">{phrase.frequency} times</span>
+                <h4 className="font-medium mb-4">Top Products Analysis</h4>
+                <div className="space-y-3">
+                  {sentimentData?.table_data?.slice(0, 5).map((product, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onClick={() => navigate(`/analyst/product-review/${product.product_key}`)}>
+                      <div className="flex-1">
+                        <h5 className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{product.product_name}</h5>
+                        <p className="text-xs text-gray-600">{product.total_reviews} reviews</p>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-sm font-medium ${product.positive_pct > 50 ? 'text-green-600' : product.negative_pct > 30 ? 'text-red-600' : 'text-yellow-600'}`}>
+                          {product.positive_pct.toFixed(1)}% positive
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {product.is_critical ? 'Critical' : 'Normal'}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
