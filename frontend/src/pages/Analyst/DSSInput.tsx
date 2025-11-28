@@ -263,8 +263,7 @@ const DSSInput: React.FC = () => {
             ml_results: dssResponse,
             business_context: {
               platform: formData.platform_code,
-              product_key: formData.product_key,
-              scope_mode: formData.scope_mode
+              product_key: formData.product_key
             }
           };
           break;
