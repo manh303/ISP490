@@ -392,7 +392,7 @@ async def get_database_health():
     conn = get_db_conn()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            # Get latest health check or perform new one
+            # First try to get cached health check (within last 2 minutes for freshness)
             cur.execute("""
                 SELECT 
                     check_time,
@@ -404,7 +404,7 @@ async def get_database_health():
                     avg_query_time_ms,
                     slow_queries_count
                 FROM meta.db_connection_health
-                WHERE check_time >= NOW() - INTERVAL '5 minutes'
+                WHERE check_time >= NOW() - INTERVAL '2 minutes'
                 ORDER BY check_time DESC
                 LIMIT 1;
             """)
@@ -413,8 +413,68 @@ async def get_database_health():
             if row:
                 return DatabaseHealth(**row)
             
-            # If no recent check, return a basic health status
-            # (In production, you'd trigger a health check here)
+            # If no recent check, perform a real-time health check
+            # Query actual PostgreSQL system statistics
+            cur.execute("""
+                WITH connection_stats AS (
+                    SELECT 
+                        COUNT(*) FILTER (WHERE state = 'active') as active_count,
+                        COUNT(*) FILTER (WHERE state = 'idle') as idle_count,
+                        COUNT(*) as total_count
+                    FROM pg_stat_activity
+                    WHERE pid != pg_backend_pid()  -- Exclude current connection
+                ),
+                max_conn AS (
+                    SELECT setting::int as max_connections
+                    FROM pg_settings 
+                    WHERE name = 'max_connections'
+                ),
+                slow_queries AS (
+                    SELECT COUNT(*) as slow_count
+                    FROM pg_stat_activity
+                    WHERE state = 'active' 
+                      AND query_start < NOW() - INTERVAL '5 seconds'
+                      AND pid != pg_backend_pid()
+                )
+                SELECT 
+                    cs.active_count,
+                    cs.idle_count,
+                    mc.max_connections,
+                    ROUND((cs.total_count::numeric / mc.max_connections::numeric * 100), 2) as usage_pct,
+                    sq.slow_count
+                FROM connection_stats cs
+                CROSS JOIN max_conn mc
+                CROSS JOIN slow_queries sq;
+            """)
+            stats = cur.fetchone()
+            
+            if stats:
+                active = stats['active_count'] or 0
+                idle = stats['idle_count'] or 0
+                max_conn = stats['max_connections'] or 100
+                usage_pct = stats['usage_pct'] or 0.0
+                slow_count = stats['slow_count'] or 0
+                
+                # Determine status based on connection usage
+                if usage_pct >= 90:
+                    status = "CRITICAL"
+                elif usage_pct >= 70:
+                    status = "WARNING"
+                else:
+                    status = "HEALTHY"
+                
+                return DatabaseHealth(
+                    status=status,
+                    active_connections=active,
+                    idle_connections=idle,
+                    max_connections=max_conn,
+                    connection_usage_pct=usage_pct,
+                    avg_query_time_ms=None,  # Would need pg_stat_statements extension
+                    slow_queries_count=slow_count,
+                    check_time=datetime.now()
+                )
+            
+            # Fallback if query fails
             return DatabaseHealth(
                 status="UNKNOWN",
                 active_connections=0,
