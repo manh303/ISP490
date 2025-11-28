@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, MessageSquare, Lightbulb, Target, AlertTriangle } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { AISummarizeResponse } from '../../services/DSSApi';
 
 interface DSSResultsProps {}
 
@@ -223,7 +224,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
   // Use API data if available, otherwise fallback to mock
   const mlResults = dssResults || {};
   const aiSummaryData = aiSummary || {};
-  const aiActions = aiSummary?.recommendations || [];
+  const aiActions: AISummarizeResponse['recommendations'] = aiSummary?.recommendations || [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -276,7 +277,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {priceData?.table_data?.slice(0, 10).map((item, index) => (
+                    {(priceData?.table_data as any[])?.slice(0, 10).map((item: any, index: number) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
@@ -338,7 +339,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 <h4 className="font-medium">Product Recommendations</h4>
               </div>
               <div className="divide-y">
-                {recoData?.table_data?.map((rec, index) => (
+                {(recoData?.table_data as any[])?.map((rec: any, index: number) => (
                   <div key={index} className="p-4 hover:bg-gray-50">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -411,7 +412,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
               <div className="bg-white p-4 rounded-lg border">
                 <h4 className="font-medium mb-4">Top Products Analysis</h4>
                 <div className="space-y-3">
-                  {sentimentData?.table_data?.slice(0, 5).map((product, index) => (
+                  {(sentimentData?.table_data as any[])?.slice(0, 5).map((product: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onClick={() => navigate(`/analyst/product-review/${product.product_key}`)}>
                       <div className="flex-1">
                         <h5 className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{product.product_name}</h5>
@@ -485,7 +486,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div>
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Insights</h3>
               <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
-                {aiSummaryData.insights.map((insight, index) => (
+                {(aiSummaryData.insights as string[]).map((insight: string, index: number) => (
                   <li key={index}>{insight}</li>
                 ))}
               </ul>
@@ -496,7 +497,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 Anomalies Detected
               </h3>
               <ul className="list-disc list-inside space-y-1 text-orange-800 dark:text-orange-200">
-                {aiSummaryData.anomalies.map((anomaly, index) => (
+                {(aiSummaryData.anomalies as string[]).map((anomaly: string, index: number) => (
                   <li key={index}>{anomaly}</li>
                 ))}
               </ul>
@@ -504,7 +505,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div>
               <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Risk Assessment</h3>
               <ul className="list-disc list-inside space-y-1 text-red-800 dark:text-red-200">
-                {aiSummaryData.risks.map((risk, index) => (
+                {(aiSummaryData.risks as string[]).map((risk: string, index: number) => (
                   <li key={index}>{risk}</li>
                 ))}
               </ul>
@@ -520,7 +521,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           AI Actionable Recommendations
         </h2>
         <div className="space-y-4">
-          {aiActions.map((action, index) => (
+          {aiActions.map((action: AISummarizeResponse['recommendations'][0], index: number) => (
             <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-start mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">{action.title}</h3>

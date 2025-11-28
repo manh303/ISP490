@@ -90,6 +90,8 @@ import TableLineagePage from "./pages/DataEngineer/TableLineagePage.tsx";
 import AlertHistoryPage from "./pages/DataEngineer/AlertHistoryPage.tsx";
 import PipelinePerformancePage from "./pages/DataEngineer/PipelinePerformancePage.tsx";
 import DataVolumeTrendsPage from "./pages/DataEngineer/DataVolumeTrendsPage.tsx";
+import DSSResults from "./pages/Analyst/DSSResults.tsx";
+import ReportsPage from "./pages/Analyst/ReportsPage";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -227,6 +229,7 @@ export default function App() {
             <Route path="/analyst/category-analytics" element={<CategoryAnalytics />} />
             <Route path="/analyst/pricing-analytics" element={<PricingAnalytics />} />
             <Route path="/analyst/product-detail-analytics" element={<ProductDetailAnalytics />} />
+            <Route path="/analyst/reports" element={<ReportsPage />} />
             <Route path="/analyst/sales" element={<BarChart />} />
             <Route path="/analyst/trends" element={<LineChart />} />
             <Route path="/analyst/customers" element={<DSSPage />} />
