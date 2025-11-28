@@ -53,7 +53,7 @@ const TableLineagePage: React.FC = () => {
       setLineageData(data);
     } catch (err) {
       console.error('Error fetching table lineage:', err);
-      setError('Failed to load table lineage data');
+      setError('Không thể tải dữ liệu tuyến dõi bảng');
     } finally {
       setLoading(false);
     }
@@ -95,10 +95,10 @@ const TableLineagePage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Table Lineage
+            Tuyến dõi Bảng
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Visualize data flow and dependencies between tables
+            Trực quan hóa luồng dữ liệu và phụ thuộc giữa các bảng
           </p>
         </div>
         <button
@@ -106,7 +106,7 @@ const TableLineagePage: React.FC = () => {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh
+          Làm mới
         </button>
       </div>
 
@@ -115,7 +115,7 @@ const TableLineagePage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Schema Name
+              Tên Lược đồ
             </label>
             <select
               value={schemaName}
@@ -129,7 +129,7 @@ const TableLineagePage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Table Name
+              Tên Bảng
             </label>
             <input
               type="text"
@@ -137,7 +137,7 @@ const TableLineagePage: React.FC = () => {
               onChange={(e) => setTableName(e.target.value)}
               list="table-options"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="Select or enter table name"
+              placeholder="Chọn hoặc nhập tên bảng"
             />
             <datalist id="table-options">
               {availableTables.map(table => (
@@ -147,16 +147,16 @@ const TableLineagePage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Direction
+              Hướng
             </label>
             <select
               value={direction}
               onChange={(e) => setDirection(e.target.value as 'upstream' | 'downstream' | 'both')}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="upstream">Upstream (Sources)</option>
-              <option value="downstream">Downstream (Targets)</option>
-              <option value="both">Both Directions</option>
+              <option value="upstream">Nguồn gốc (Nguồn)</option>
+              <option value="downstream">Xuôi dòng (Mục tiêu)</option>
+              <option value="both">Cả hai hướng</option>
             </select>
           </div>
           <div className="flex items-end">
@@ -190,7 +190,7 @@ const TableLineagePage: React.FC = () => {
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <Network className="w-5 h-5 mr-2" />
-              Data Lineage Flow
+              Luồng Tuyến dõi Dữ liệu
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               Showing lineage for table: <strong>{schemaName}.{tableName}</strong>
@@ -244,7 +244,7 @@ const TableLineagePage: React.FC = () => {
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <GitBranch className="w-5 h-5 mr-2" />
-              Detailed Lineage Information
+              Thông tin Tuyến dõi Chi tiết
             </h2>
           </div>
           <div className="p-6">
@@ -252,10 +252,10 @@ const TableLineagePage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Source Table</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Target Table</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Transformation</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Job Code</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Bảng Nguồn</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Bảng Mục tiêu</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Biến đổi</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Mã Công việc</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,10 +300,10 @@ const TableLineagePage: React.FC = () => {
           <div className="text-center">
             <GitBranch className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-              No Lineage Data Available
+              Không có Dữ liệu Tuyến dõi nào
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              No lineage information found for the selected table.
+              Không tìm thấy thông tin tuyến dõi cho bảng đã chọn.
             </p>
           </div>
         </div>

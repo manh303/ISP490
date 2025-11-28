@@ -25,7 +25,7 @@ const DataQualitySummaryPage: React.FC = () => {
       setSummary(data);
     } catch (err) {
       console.error('Error fetching data quality summary:', err);
-      setError('Failed to load data quality summary');
+      setError('Không thể tải tóm tắt chất lượng dữ liệu');
     } finally {
       setLoading(false);
     }
@@ -101,10 +101,10 @@ const DataQualitySummaryPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Data Quality Summary
+            Tóm tắt Chất lượng Dữ liệu
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Overview of data quality issues across all schemas and tables
+            Tổng quan về vấn đề chất lượng dữ liệu trên tất cả lược đồ và bảng
           </p>
         </div>
         <button
@@ -112,7 +112,7 @@ const DataQualitySummaryPage: React.FC = () => {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh
+          Làm mới
         </button>
       </div>
 
@@ -122,7 +122,7 @@ const DataQualitySummaryPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Issues</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Tổng số Vấn đề</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {stats.totalIssues}
                 </p>
@@ -134,7 +134,7 @@ const DataQualitySummaryPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Open Issues</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Mở</p>
                 <p className="text-2xl font-bold text-red-600">
                   {stats.openIssues}
                 </p>
@@ -146,7 +146,7 @@ const DataQualitySummaryPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Resolved Issues</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Đã giải quyết</p>
                 <p className="text-2xl font-bold text-green-600">
                   {stats.resolvedIssues}
                 </p>
@@ -158,7 +158,7 @@ const DataQualitySummaryPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Critical Issues</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Nghiêm trọng</p>
                 <p className="text-2xl font-bold text-red-600">
                   {stats.criticalIssues}
                 </p>
@@ -177,7 +177,7 @@ const DataQualitySummaryPage: React.FC = () => {
             <div className="flex items-center mb-4">
               <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Issues by Severity
+                Vấn đề theo Mức độ nghiêm trọng
               </h2>
             </div>
             {severityData.length > 0 ? (
@@ -212,7 +212,7 @@ const DataQualitySummaryPage: React.FC = () => {
             <div className="flex items-center mb-4">
               <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Issues by Status
+                Vấn đề theo Trạng thái
               </h2>
             </div>
             <ResponsiveContainer width="100%" height={300}>
@@ -237,7 +237,7 @@ const DataQualitySummaryPage: React.FC = () => {
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <AlertTriangle className="w-5 h-5 mr-2" />
-              Issues Summary
+              Tóm tắt Vấn đề
             </h2>
           </div>
           <div className="p-6">
@@ -245,11 +245,11 @@ const DataQualitySummaryPage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Severity</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Issue Count</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Affected Rows</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Percentage</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Trạng thái</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Mức độ nghiêm trọng</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Số lượng Vấn đề</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Hàng Bị ảnh hưởng</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tỷ lệ phần trăm</th>
                   </tr>
                 </thead>
                 <tbody>

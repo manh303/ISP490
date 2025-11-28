@@ -65,7 +65,7 @@ const DataEngineerDashboard: React.FC = () => {
       setAlerts(alertsData);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load dashboard data');
+          setError('Không thể tải dữ liệu bảng điều khiển');
     } finally {
       setLoading(false);
     }
@@ -132,10 +132,10 @@ const DataEngineerDashboard: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Data Engineer Dashboard
+            Bảng điều khiển Kỹ sư Dữ liệu
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Monitor ETL pipelines, data quality, and system health
+            Giám sát đường ống ETL, chất lượng dữ liệu và sức khỏe hệ thống
           </p>
         </div>
         <button
@@ -143,7 +143,7 @@ const DataEngineerDashboard: React.FC = () => {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh
+          Làm mới
         </button>
       </div>
 
@@ -152,9 +152,9 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">System Health</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sức khỏe Hệ thống</p>
               <p className={`text-2xl font-bold ${health?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}`}>
-                {health?.status === 'healthy' ? 'Healthy' : 'Unhealthy'}
+                {health?.status === 'healthy' ? 'Khỏe mạnh' : 'Không khỏe mạnh'}
               </p>
             </div>
             <Activity className={`w-8 h-8 ${health?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}`} />
@@ -164,7 +164,7 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Database Status</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Trạng thái Cơ sở Dữ liệu</p>
               <p className={`text-2xl font-bold ${databaseHealth?.status?.toLowerCase() === 'healthy' ? 'text-green-600' : 'text-red-600'}`}>
                 {databaseHealth?.status ? databaseHealth.status.charAt(0) + databaseHealth.status.slice(1).toLowerCase() : 'Unknown'}
               </p>
@@ -176,7 +176,7 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active ETL Jobs</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Công việc ETL Đang hoạt động</p>
               <p className="text-2xl font-bold text-blue-600">
                 {etlJobs.filter(job => job.is_active).length}
               </p>
@@ -188,7 +188,7 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Data Quality Issues</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Chất lượng Dữ liệu</p>
               <p className="text-2xl font-bold text-orange-600">
                 {dataQualityIssues.length}
               </p>
@@ -203,7 +203,7 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
             <Server className="w-5 h-5 mr-2" />
-            ETL Pipeline Status
+            Trạng thái Đường ống ETL
           </h2>
         </div>
         <div className="p-6">
@@ -211,11 +211,11 @@ const DataEngineerDashboard: React.FC = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Job Name</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Status</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Last Run</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Success Rate</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Duration</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tên Công việc</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Trạng thái</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Chạy Lần cuối</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tỷ lệ Thành công</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Thời lượng</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,14 +256,14 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
             <AlertTriangle className="w-5 h-5 mr-2" />
-            Data Quality Issues
+            Vấn đề Chất lượng Dữ liệu
           </h2>
         </div>
         <div className="p-6">
           {dataQualityIssues.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
-              <p>No data quality issues found</p>
+              <p>Không tìm thấy vấn đề chất lượng dữ liệu</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -300,31 +300,31 @@ const DataEngineerDashboard: React.FC = () => {
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <Database className="w-5 h-5 mr-2" />
-              Database Health
+              Sức khỏe Cơ sở Dữ liệu
             </h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Active Connections</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Kết nối Đang hoạt động</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {databaseHealth?.active_connections || 0}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Connection Usage</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Sử dụng Kết nối</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {databaseHealth?.connection_usage_pct?.toFixed(1) || 0}%
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Avg Query Time</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Thời gian Truy vấn Trung bình</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {databaseHealth?.avg_query_time_ms?.toFixed(1) || 0}ms
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Slow Queries</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Truy vấn Chậm</p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {databaseHealth?.slow_queries_count || 0}
                 </p>
@@ -338,14 +338,14 @@ const DataEngineerDashboard: React.FC = () => {
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <AlertTriangle className="w-5 h-5 mr-2" />
-              Recent Alerts (24h)
+              Cảnh báo Gần đây (24h)
             </h2>
           </div>
           <div className="p-6">
             {alerts.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                <p>No alerts in the last 24 hours</p>
+                <p>Không có cảnh báo trong 24 giờ qua</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -360,7 +360,7 @@ const DataEngineerDashboard: React.FC = () => {
                         {alert.severity}
                       </span>
                       <p className="text-xs text-gray-500 mt-1">
-                        {alert.triggered_count_24h} triggers
+                        {alert.triggered_count_24h} kích hoạt
                       </p>
                     </div>
                   </div>
@@ -376,7 +376,7 @@ const DataEngineerDashboard: React.FC = () => {
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
             <BarChart3 className="w-5 h-5 mr-2" />
-            Table Health Summary
+            Tóm tắt Sức khỏe Bảng
           </h2>
         </div>
         <div className="p-6">
@@ -384,11 +384,11 @@ const DataEngineerDashboard: React.FC = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Table</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Rows</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Size</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Freshness</th>
-                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Status</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Bảng</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Hàng</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Kích thước</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tính mới</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Trạng thái</th>
                 </tr>
               </thead>
               <tbody>

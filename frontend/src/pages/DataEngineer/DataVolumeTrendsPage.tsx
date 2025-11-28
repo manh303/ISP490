@@ -39,7 +39,7 @@ const DataVolumeTrendsPage: React.FC = () => {
       setStats(null);
     } catch (err) {
       console.error('Error fetching data volume trends:', err);
-      setError('Failed to load data volume trends');
+      setError('Không thể tải xu hướng khối lượng dữ liệu');
     } finally {
       setLoading(false);
     }
@@ -159,10 +159,10 @@ const DataVolumeTrendsPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Data Volume Trends
+            Xu hướng Khối lượng Dữ liệu
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Monitor database growth patterns and volume trends over time
+            Giám sát các mẫu tăng trưởng cơ sở dữ liệu và xu hướng khối lượng theo thời gian
           </p>
         </div>
         <button
@@ -170,7 +170,7 @@ const DataVolumeTrendsPage: React.FC = () => {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh
+          Làm mới
         </button>
       </div>
 
@@ -179,29 +179,29 @@ const DataVolumeTrendsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Time Range
+              Khoảng thời gian
             </label>
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-              <option value="180d">Last 6 months</option>
+              <option value="7d">7 ngày qua</option>
+              <option value="30d">30 ngày qua</option>
+              <option value="90d">90 ngày qua</option>
+              <option value="180d">6 tháng qua</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Schema Filter
+              Bộ lọc Lược đồ
             </label>
             <select
               value={selectedSchema}
               onChange={(e) => setSelectedSchema(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="ALL">All Schemas</option>
+              <option value="ALL">Tất cả Lược đồ</option>
               {uniqueSchemas.map(schema => (
                 <option key={schema} value={schema}>{schema}</option>
               ))}
@@ -256,7 +256,7 @@ const DataVolumeTrendsPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Detailed Volume Trends
+              Xu hướng Khối lượng Chi tiết
             </h2>
           </div>
           <div className="p-6">
@@ -264,10 +264,10 @@ const DataVolumeTrendsPage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Schema</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Total Rows</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Total Size</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Lược đồ</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Ngày</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Tổng Hàng</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Tổng Kích thước</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -302,10 +302,10 @@ const DataVolumeTrendsPage: React.FC = () => {
           <div className="text-center">
             <Database className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-              No Volume Data Available
+              Không có Dữ liệu Khối lượng nào
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              No data volume trends found for the selected time range.
+              Không tìm thấy xu hướng khối lượng dữ liệu cho khoảng thời gian đã chọn.
             </p>
           </div>
         </div>

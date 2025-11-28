@@ -162,10 +162,10 @@ const DataPipeline: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Data Pipeline Management
+          Quản lý Đường ống Dữ liệu
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          Monitor and manage ETL jobs and data pipelines
+          Giám sát và quản lý công việc ETL và đường ống dữ liệu
         </p>
       </div>
 
@@ -175,7 +175,7 @@ const DataPipeline: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                ETL Jobs
+                Công việc ETL
               </h2>
             </div>
             <div className="max-h-96 overflow-y-auto">
@@ -197,8 +197,8 @@ const DataPipeline: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-500 mb-1">{job.job_code}</p>
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>Success: {job.success_rate.toFixed(1)}%</span>
-                    <span>Last: {job.last_run_date}</span>
+                    <span>Thành công: {job.success_rate.toFixed(1)}%</span>
+                    <span>Lần cuối: {job.last_run_date}</span>
                   </div>
                 </div>
               ))}
@@ -211,7 +211,7 @@ const DataPipeline: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Run History
+                Lịch sử Chạy
               </h2>
               {selectedJob && (
                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -222,7 +222,7 @@ const DataPipeline: React.FC = () => {
             <div className="max-h-96 overflow-y-auto">
               {runHistory.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
-                  No runs found
+                  Không tìm thấy lần chạy nào
                 </div>
               ) : (
                 runHistory.map((run) => (
@@ -237,7 +237,7 @@ const DataPipeline: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {getStatusIcon(run.status)}
                         <span className="font-medium text-gray-900 dark:text-white">
-                          Run #{run.run_id}
+                          Chạy #{run.run_id}
                         </span>
                       </div>
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(run.status)}`}>
@@ -245,12 +245,12 @@ const DataPipeline: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 space-y-1">
-                      <div>Started: {new Date(run.started_at).toLocaleString()}</div>
+                      <div>Đã bắt đầu: {new Date(run.started_at).toLocaleString()}</div>
                       {run.finished_at && (
-                        <div>Finished: {new Date(run.finished_at).toLocaleString()}</div>
+                        <div>Đã kết thúc: {new Date(run.finished_at).toLocaleString()}</div>
                       )}
-                      <div>Duration: {run.duration_minutes?.toFixed(1) || 'N/A'} min</div>
-                      <div>Rows: {run.rows_read?.toLocaleString()} read, {run.rows_written?.toLocaleString()} written</div>
+                      <div>Thời lượng: {run.duration_minutes?.toFixed(1) || 'N/A'} phút</div>
+                      <div>Hàng: {run.rows_read?.toLocaleString()} đọc, {run.rows_written?.toLocaleString()} ghi</div>
                     </div>
                   </div>
                 ))
@@ -264,7 +264,7 @@ const DataPipeline: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Run Details & Logs
+                Chi tiết Chạy & Nhật ký
               </h2>
             </div>
             <div className="max-h-96 overflow-y-auto">
@@ -272,40 +272,40 @@ const DataPipeline: React.FC = () => {
                 <div className="p-4">
                   <div className="mb-4">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                      Run #{selectedRun.run_id}
+                      Chạy #{selectedRun.run_id}
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Status:</span>
+                        <span className="text-gray-500">Trạng thái:</span>
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(selectedRun.status)}`}>
                           {selectedRun.status}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Started:</span>
+                        <span className="text-gray-500">Đã bắt đầu:</span>
                         <span>{new Date(selectedRun.started_at).toLocaleString()}</span>
                       </div>
                       {selectedRun.finished_at && (
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Finished:</span>
+                          <span className="text-gray-500">Đã kết thúc:</span>
                           <span>{new Date(selectedRun.finished_at).toLocaleString()}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Duration:</span>
-                        <span>{selectedRun.duration_minutes?.toFixed(1) || 'N/A'} min</span>
+                        <span className="text-gray-500">Thời lượng:</span>
+                        <span>{selectedRun.duration_minutes?.toFixed(1) || 'N/A'} phút</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Rows Read:</span>
+                        <span className="text-gray-500">Hàng Đọc:</span>
                         <span>{selectedRun.rows_read?.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Rows Written:</span>
+                        <span className="text-gray-500">Hàng Ghi:</span>
                         <span>{selectedRun.rows_written?.toLocaleString()}</span>
                       </div>
                       {selectedRun.error_message && (
                         <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-red-700 dark:text-red-300 text-xs">
-                          <strong>Error:</strong> {selectedRun.error_message}
+                          <strong>Lỗi:</strong> {selectedRun.error_message}
                         </div>
                       )}
                     </div>
@@ -313,10 +313,10 @@ const DataPipeline: React.FC = () => {
 
                   <div className="border-t pt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 dark:text-white">Logs</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Nhật ký</h4>
                       <button className="text-blue-600 hover:text-blue-800 text-sm">
                         <Download className="w-4 h-4 inline mr-1" />
-                        Download
+                        Tải xuống
                       </button>
                     </div>
                     {logsLoading ? (
@@ -325,14 +325,14 @@ const DataPipeline: React.FC = () => {
                       </div>
                     ) : (
                       <pre className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded max-h-64 overflow-y-auto whitespace-pre-wrap">
-                        {runLogs || 'No logs available'}
+                        {runLogs || 'Không có nhật ký nào'}
                       </pre>
                     )}
                   </div>
                 </div>
               ) : (
                 <div className="p-4 text-center text-gray-500">
-                  Select a run to view details
+                  Chọn một lần chạy để xem chi tiết
                 </div>
               )}
             </div>
@@ -348,21 +348,21 @@ const DataPipeline: React.FC = () => {
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Play className="w-4 h-4" />
-            Run Job
+            Chạy Công việc
           </button>
           <button
             onClick={pauseJob}
             className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Pause className="w-4 h-4" />
-            Pause Job
+            Tạm dừng Công việc
           </button>
           <button
             onClick={restartJob}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
-            Restart Job
+            Khởi động lại Công việc
           </button>
         </div>
       )}
