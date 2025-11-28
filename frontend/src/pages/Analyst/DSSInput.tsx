@@ -214,14 +214,6 @@ const DSSInput: React.FC = () => {
             min_price_change_pct: 0.05 // 5% as decimal
           };
           dssResponse = await runPricePredictionDSS(priceRequest);
-          aiRequest = {
-            model_type: 'price_prediction',
-            ml_results: dssResponse,
-            business_context: {
-              platform: formData.platform_code,
-              product_key: formData.product_key
-            }
-          };
           break;
 
         case 'product_recommendation':
@@ -237,14 +229,6 @@ const DSSInput: React.FC = () => {
             min_co_purchase_rate: 0.05
           };
           dssResponse = await runProductRecommendationDSS(recoRequest);
-          aiRequest = {
-            model_type: 'product_recommendation',
-            ml_results: dssResponse,
-            business_context: {
-              platform: formData.platform_code,
-              product_key: formData.product_key
-            }
-          };
           break;
 
         case 'review_sentiment':
@@ -258,29 +242,17 @@ const DSSInput: React.FC = () => {
             negative_threshold: 0.3
           };
           dssResponse = await runReviewSentimentDSS(sentimentRequest);
-          aiRequest = {
-            model_type: 'review_sentiment',
-            ml_results: dssResponse,
-            business_context: {
-              platform: formData.platform_code,
-              product_key: formData.product_key
-            }
-          };
           break;
 
         default:
           throw new Error('Unknown model type');
       }
 
-      // Step 5: Call AI Summary API
-      const aiResponse = await getAISummary(aiRequest);
-
-      // Navigate to results with both responses
+      // Navigate to results with DSS response
       navigate(`/analyst/dss/${modelId}/results`, {
         state: {
           inputData: formData,
-          dssResults: dssResponse,
-          aiSummary: aiResponse
+          dssResults: dssResponse
         }
       });
     } catch (error) {
