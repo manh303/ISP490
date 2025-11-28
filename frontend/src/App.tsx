@@ -67,7 +67,7 @@ import { PricingAnalytics } from "./pages/Analyst/PricingAnalytics.js";
 import { ProductDetailAnalytics } from "./pages/Analyst/ProductDetailAnalytics.js";
 import ModelDashboard from "./pages/Analyst/ModelDashboard";
 import DSSInput from "./pages/Analyst/DSSInput";
-import DSSResults from "./pages/Analyst/DSSResults";
+import ProductReviewDetails from "./pages/Analyst/ProductReviewDetails";
 import MLOverview from "./pages/MLInsights/MLOverview.js";
 import PriceIntelligence from "./pages/MLInsights/PriceIntelligence.js";
 import DemandSalesForecasting from "./pages/MLInsights/DemandSalesForecasting.js";
@@ -90,6 +90,9 @@ import TableLineagePage from "./pages/DataEngineer/TableLineagePage.tsx";
 import AlertHistoryPage from "./pages/DataEngineer/AlertHistoryPage.tsx";
 import PipelinePerformancePage from "./pages/DataEngineer/PipelinePerformancePage.tsx";
 import DataVolumeTrendsPage from "./pages/DataEngineer/DataVolumeTrendsPage.tsx";
+import DSSResults from "./pages/Analyst/DSSResults.tsx";
+import ReportsPage from "./pages/Analyst/ReportsPage";
+import DSSScenarios from "./pages/Analyst/DSSScenarios.tsx";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -189,7 +192,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUserManagement />} />
             <Route path="/admin/roles" element={<RoleManagement />} />
             {/* <Route path="/admin/users/details" element={<UserProfiles />} /> */}
-            <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => {}} />} />
+            <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => { }} />} />
             <Route path="/admin/analytics" element={<DSSPage />} />
             <Route path="/admin/tables" element={<BasicTables />} />
             <Route path="/admin/export" element={<Blank />} />
@@ -219,6 +222,8 @@ export default function App() {
             <Route path="/analyst/model-dashboard" element={<ModelDashboard />} />
             <Route path="/analyst/dss/:modelId" element={<DSSInput />} />
             <Route path="/analyst/dss/:modelId/results" element={<DSSResults />} />
+            <Route path="/analyst/dss-scenarios" element={<DSSScenarios />} />
+            <Route path="/analyst/product-review/:productKey" element={<ProductReviewDetails />} />
             <Route path="/analyst/analytics-dashboard" element={<AnalyticsDashboard />} />
             <Route path="/analyst/product-analytics" element={<ProductAnalytics />} />
             <Route path="/analyst/review-analytics" element={<ReviewAnalytics />} />
@@ -226,6 +231,7 @@ export default function App() {
             <Route path="/analyst/category-analytics" element={<CategoryAnalytics />} />
             <Route path="/analyst/pricing-analytics" element={<PricingAnalytics />} />
             <Route path="/analyst/product-detail-analytics" element={<ProductDetailAnalytics />} />
+            <Route path="/analyst/reports" element={<ReportsPage />} />
             <Route path="/analyst/sales" element={<BarChart />} />
             <Route path="/analyst/trends" element={<LineChart />} />
             <Route path="/analyst/customers" element={<DSSPage />} />
@@ -248,7 +254,7 @@ export default function App() {
           <Route
             element={
               <ProtectedRoute requiredRole="DATA_ENGINEER">
-                <DataEngineerLayout/>
+                <DataEngineerLayout />
               </ProtectedRoute>
             }
           >
@@ -273,12 +279,12 @@ export default function App() {
           <Route
             element={
               <ProtectedRoute requiredRole={["ANALYST", "DATA_ENGINEER", "ML", "MLI"]}>
-                <MLILayout/>
+                <MLILayout />
               </ProtectedRoute>
             }
           >
             {/* Machine Learning Pages */}
-             <Route path="/ml/dashboard" element={<StatusOverviewPage />} />
+            <Route path="/ml/dashboard" element={<StatusOverviewPage />} />
             <Route path="/ml/models" element={<ModelsListPage />} />
             <Route path="/ml/models/create" element={<CreateModelPage />} />
             <Route path="/ml/models/:model_sk" element={<ModelDetailPage />} />
@@ -304,7 +310,7 @@ export default function App() {
             <Route path="/mli/model-management" element={<Blank />} />
             <Route path="/mli/data-sets" element={<Blank />} />
             <Route path="/mli/profile" element={<UserProfiles />} />
-          </Route> 
+          </Route>
           {/* Customer Layout - Protected Routes */}
           <Route
             element={
@@ -345,13 +351,13 @@ export default function App() {
             <Route path="/contact" element={<ContactPage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
             <Route path="/send-message" element={<SendMessagePage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
             <Route path="/explore" element={<ExplorePage navigateTo={navigateTo} isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-             <Route path="/analyst-home" element={<AnalystPage />} />
-             <Route path="/customer-home" element={<CustomerPage />} />
-             <Route path="/admin-home" element={<AdminPage />} />
-             <Route path="/admin/users" element={<AdminUserManagement />} />
-            <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => {}} />} />
-             <Route path="/user/:userId" element={<UserDetailsWrapper />} />
-                       <Route path="/data-engineer" element={<DataEngineerDashboard />} />
+            <Route path="/analyst-home" element={<AnalystPage />} />
+            <Route path="/customer-home" element={<CustomerPage />} />
+            <Route path="/admin-home" element={<AdminPage />} />
+            <Route path="/admin/users" element={<AdminUserManagement />} />
+            <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => { }} />} />
+            <Route path="/user/:userId" element={<UserDetailsWrapper />} />
+            <Route path="/data-engineer" element={<DataEngineerDashboard />} />
           </Route>
 
           {/* Auth Layout */}

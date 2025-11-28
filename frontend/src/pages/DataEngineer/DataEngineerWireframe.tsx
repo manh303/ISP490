@@ -17,7 +17,7 @@ export function DataEngineerWireframe() {
     id: i + 1,
     name: `Pipeline ${i + 1} - Data Processing`,
     date: `2025-11-0${(i % 9) + 1}`,
-    status: i % 3 === 0 ? 'Running' : i % 3 === 1 ? 'Success' : 'Failed',
+    status: i % 3 === 0 ? 'Đang chạy' : i % 3 === 1 ? 'Thành công' : 'Thất bại',
   }));
 
   const displayedReports = mockReports.slice(0, parseInt(reportsPerPage));
@@ -93,7 +93,7 @@ export function DataEngineerWireframe() {
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Activity className="h-5 w-5 text-green-500" />
-                      <span className="text-gray-600 text-sm">Active Pipelines</span>
+                      <span className="text-gray-600 text-sm">Pipeline Đang hoạt động</span>
                     </div>
                     <div className="text-gray-900 text-2xl">24</div>
                   </div>
@@ -101,7 +101,7 @@ export function DataEngineerWireframe() {
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <GitBranch className="h-5 w-5 text-blue-500" />
-                      <span className="text-gray-600 text-sm">Data Sources</span>
+                      <span className="text-gray-600 text-sm">Nguồn Dữ liệu</span>
                     </div>
                     <div className="text-gray-900 text-2xl">12</div>
                   </div>
@@ -109,7 +109,7 @@ export function DataEngineerWireframe() {
                   <div className="bg-white border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <BarChart3 className="h-5 w-5 text-purple-500" />
-                      <span className="text-gray-600 text-sm">Data Volume</span>
+                      <span className="text-gray-600 text-sm">Khối lượng Dữ liệu</span>
                     </div>
                     <div className="text-gray-900 text-2xl">2.4TB</div>
                   </div>
@@ -120,15 +120,15 @@ export function DataEngineerWireframe() {
               <div className="flex gap-3 justify-center">
                 <Button>
                   <Play className="h-4 w-4 mr-2" />
-                  Run Pipeline
+                  Chạy Pipeline
                 </Button>
                 <Button variant="outline">
                   <Database className="h-4 w-4 mr-2" />
-                  Create ETL Job
+                  Tạo Công việc ETL
                 </Button>
                 <Button variant="outline">
                   <FileText className="h-4 w-4 mr-2" />
-                  View Logs
+                  Xem Nhật ký
                 </Button>
               </div>
             </div>
@@ -137,7 +137,7 @@ export function DataEngineerWireframe() {
           {/* Recent Jobs Section */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-900">Recent Pipeline Jobs</h3>
+              <h3 className="text-gray-900">Công việc Pipeline Gần đây</h3>
               <div className="flex items-center gap-2">
                 <span className="text-gray-600 text-sm">Hiển thị:</span>
                 <Select value={reportsPerPage} onValueChange={setReportsPerPage}>
@@ -166,8 +166,8 @@ export function DataEngineerWireframe() {
                   </div>
                   <Badge 
                     variant={
-                      report.status === 'Running' ? 'secondary' : 
-                      report.status === 'Success' ? 'default' : 
+                      report.status === 'Đang chạy' ? 'secondary' : 
+                      report.status === 'Thành công' ? 'default' : 
                       'destructive'
                     }
                   >

@@ -50,10 +50,12 @@ const TableGrowthPage: React.FC = () => {
       setError(null);
       const data = await getTableGrowth(schemaName, tableName, days);
       console.log('Fetched growth data:', data);
-      setGrowthData(data);
+      // Sort data by date ascending (oldest first)
+      const sortedData = data.sort((a: TableGrowthData, b: TableGrowthData) => new Date(a.snapshot_date).getTime() - new Date(b.snapshot_date).getTime());
+      setGrowthData(sortedData);
     } catch (err) {
       console.error('Error fetching table growth:', err);
-      setError('Failed to load table growth data');
+      setError('Không thể tải dữ liệu tăng trưởng bảng');
     } finally {
       setLoading(false);
     }
@@ -79,10 +81,10 @@ const TableGrowthPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Table Growth History
+            Lịch sử Tăng trưởng Bảng
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Monitor table size and row count growth over time
+            Giám sát kích thước bảng và tăng trưởng số lượng hàng theo thời gian
           </p>
         </div>
         <button
@@ -90,7 +92,7 @@ const TableGrowthPage: React.FC = () => {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh
+          Làm mới
         </button>
       </div>
 
@@ -99,7 +101,7 @@ const TableGrowthPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Schema Name
+              Tên Lược đồ
             </label>
             <select
               value={schemaName}
@@ -113,7 +115,7 @@ const TableGrowthPage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Table Name
+              Tên Bảng
             </label>
             <input
               type="text"
@@ -121,7 +123,7 @@ const TableGrowthPage: React.FC = () => {
               onChange={(e) => setTableName(e.target.value)}
               list="table-options"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="Select or enter table name"
+              placeholder="Chọn hoặc nhập tên bảng"
             />
             <datalist id="table-options">
               {availableTables.map(table => (
@@ -131,17 +133,17 @@ const TableGrowthPage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Days
+              Ngày
             </label>
             <select
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value={7}>Last 7 days</option>
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
-              <option value={180}>Last 180 days</option>
+              <option value={7}>7 ngày qua</option>
+              <option value={30}>30 ngày qua</option>
+              <option value={90}>90 ngày qua</option>
+              <option value={180}>180 ngày qua</option>
             </select>
           </div>
           <div className="flex items-end">
@@ -177,7 +179,7 @@ const TableGrowthPage: React.FC = () => {
             <div className="flex items-center mb-4">
               <Database className="w-5 h-5 mr-2 text-blue-600" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Row Count Growth
+                Tăng trưởng Số lượng Hàng
               </h2>
             </div>
             <ResponsiveContainer width="100%" height={300}>
@@ -209,7 +211,7 @@ const TableGrowthPage: React.FC = () => {
             <div className="flex items-center mb-4">
               <BarChart3 className="w-5 h-5 mr-2 text-green-600" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Size Growth (MB)
+                Tăng trưởng Kích thước (MB)
               </h2>
             </div>
             <ResponsiveContainer width="100%" height={300}>
@@ -246,10 +248,10 @@ const TableGrowthPage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Row Count</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Size (MB)</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Growth Rate</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Ngày</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Số lượng Hàng</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Kích thước (MB)</th>
+                    <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tỷ lệ Tăng trưởng</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -272,11 +274,11 @@ const TableGrowthPage: React.FC = () => {
                         <td className="py-3 px-4">
                           <div className="text-sm">
                             <span className={rowGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              Rows: {rowGrowth >= 0 ? '+' : ''}{rowGrowth.toFixed(2)}%
+                              Hàng: {rowGrowth >= 0 ? '+' : ''}{rowGrowth.toFixed(2)}%
                             </span>
                             <br />
                             <span className={sizeGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              Size: {sizeGrowth >= 0 ? '+' : ''}{sizeGrowth.toFixed(2)}%
+                              Kích thước: {sizeGrowth >= 0 ? '+' : ''}{sizeGrowth.toFixed(2)}%
                             </span>
                           </div>
                         </td>
@@ -296,10 +298,10 @@ const TableGrowthPage: React.FC = () => {
           <div className="text-center">
             <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-              No Growth Data Available
+              Không có Dữ liệu Tăng trưởng nào
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              No growth data found for the selected table and time period.
+              Không tìm thấy dữ liệu tăng trưởng cho bảng và khoảng thời gian đã chọn.
             </p>
           </div>
         </div>

@@ -37,6 +37,11 @@ const navItems: NavItem[] = [
     path: "/analyst/model-dashboard",
   },
   {
+    icon: <ListIcon />,
+    name: "DSS Scenarios",
+    path: "/analyst/dss-scenarios",
+  },
+  {
     icon: <PieChartIcon />,
     name: "Phân tích Dữ liệu",
     subItems: [
@@ -60,6 +65,7 @@ const navItems: NavItem[] = [
       { name: "Báo cáo Tuần", path: "/analyst/reports/weekly", pro: false },
       { name: "Báo cáo Tháng", path: "/analyst/reports/monthly", pro: false },
       { name: "Báo cáo Tùy chỉnh", path: "/analyst/reports/custom", pro: false },
+      { name: "Xuất Báo cáo", path: "/analyst/reports", pro: false },
     ],
   },
   {
