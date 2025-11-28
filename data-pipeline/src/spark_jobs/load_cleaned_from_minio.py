@@ -97,106 +97,175 @@ JDBC_URL = f"jdbc:postgresql://{DB_HOST}:{DB_PORT}/{DB_NAME}"
 #  Category mapping config
 # ============================================================
 CATEGORY_MAPPINGS = [
-    # Headphones & Earphones
-    ("headphones", "Electronics|Audio|Headphones"),
-    ("tai nghe", "Electronics|Audio|Headphones"),
-    ("tai nghe không dây", "Electronics|Audio|Headphones"),
-    ("earphone", "Electronics|Audio|Headphones"),
+    # ============================================================
+    # PRIORITY 1: PLURAL FORMS (Critical for Lazada compatibility)
+    # ============================================================
+    
+    # Headphones & Earphones - SPECIFIC FIRST, GENERAL LAST
     ("wireless earbuds", "Electronics|Audio|Headphones"),
-    ("true wireless", "Electronics|Audio|Headphones"),
+    ("true wireless earbuds", "Electronics|Audio|Headphones"),
+    ("galaxy buds", "Electronics|Audio|Headphones"),
+    ("airpods pro", "Electronics|Audio|Headphones"),
     ("airpods", "Electronics|Audio|Headphones"),
+    ("tai nghe không dây", "Electronics|Audio|Headphones"),
+    ("tai nghe máy tính", "Electronics|Audio|Headphones"),
+    ("tai nghe", "Electronics|Audio|Headphones"),
+    ("headphones", "Electronics|Audio|Headphones"),
+    ("earphones", "Electronics|Audio|Headphones"),  # ✅ NEW: Plural
+    ("earphone", "Electronics|Audio|Headphones"),
     
     # Speakers
+    ("bluetooth speakers", "Electronics|Audio|Speakers"),  # ✅ NEW: Plural
     ("bluetooth speaker", "Electronics|Audio|Speakers"),
+    ("loa bluetooth", "Electronics|Audio|Speakers"),
+    ("speakers", "Electronics|Audio|Speakers"),  # ✅ NEW: Plural
     ("speaker", "Electronics|Audio|Speakers"),
     ("loa", "Electronics|Audio|Speakers"),
-    ("loa bluetooth", "Electronics|Audio|Speakers"),
     
-    # Laptops
-    ("notebook", "Electronics|Computers|Laptops"),
+    # Laptops - SPECIFIC FIRST
+    ("gaming laptop", "Electronics|Computers|Laptops"),  # ✅ NEW
+    ("gaming laptops", "Electronics|Computers|Laptops"),  # ✅ NEW
     ("máy tính xách tay", "Electronics|Computers|Laptops"),
-    ("laptop", "Electronics|Computers|Laptops"),
+    ("macbook pro", "Electronics|Computers|Laptops"),  # ✅ NEW
+    ("macbook air", "Electronics|Computers|Laptops"),  # ✅ NEW
     ("macbook", "Electronics|Computers|Laptops"),
+    ("chromebook", "Electronics|Computers|Laptops"),  # ✅ NEW
     ("ultrabook", "Electronics|Computers|Laptops"),
+    ("notebook", "Electronics|Computers|Laptops"),
+    ("laptops", "Electronics|Computers|Laptops"),  # ✅ NEW: Plural - CRITICAL!
+    ("laptop", "Electronics|Computers|Laptops"),
     
     # Smartwatches
     ("đồng hồ thông minh", "Electronics|Wearables|Smartwatches"),
-    ("smartwatch", "Electronics|Wearables|Smartwatches"),
-    ("smart watch", "Electronics|Wearables|Smartwatches"),
     ("apple watch", "Electronics|Wearables|Smartwatches"),
     ("galaxy watch", "Electronics|Wearables|Smartwatches"),
+    ("smart watch", "Electronics|Wearables|Smartwatches"),
+    ("smartwatches", "Electronics|Wearables|Smartwatches"),  # ✅ NEW: Plural
+    ("smartwatch", "Electronics|Wearables|Smartwatches"),
+    ("wearable devices", "Electronics|Wearables|Smartwatches"),  # ✅ NEW: Lazada generic
     
     # Tablets
-    ("ipad", "Electronics|Tablets"),
-    ("tablet", "Electronics|Tablets"),
     ("máy tính bảng", "Electronics|Tablets"),
     ("galaxy tab", "Electronics|Tablets"),
+    ("ipad pro", "Electronics|Tablets"),  # ✅ NEW
+    ("ipad air", "Electronics|Tablets"),  # ✅ NEW
+    ("ipad", "Electronics|Tablets"),
+    ("kindle", "Electronics|Tablets"),  # ✅ NEW
+    ("tablets", "Electronics|Tablets"),  # ✅ NEW: Plural
+    ("tablet", "Electronics|Tablets"),
     
-    # Keyboards
-    ("keyboard", "Electronics|Computers|Accessories|Keyboard"),
+    # Keyboards - SPECIFIC FIRST
+    ("bàn phím máy tính", "Electronics|Computers|Accessories|Keyboard"),  # ✅ NEW
     ("mechanical keyboard", "Electronics|Computers|Accessories|Keyboard"),
-    ("bàn phím", "Electronics|Computers|Accessories|Keyboard"),
-    ("bàn phím cơ", "Electronics|Computers|Accessories|Keyboard"),
     ("gaming keyboard", "Electronics|Computers|Accessories|Keyboard"),
+    ("bàn phím cơ", "Electronics|Computers|Accessories|Keyboard"),
+    ("bàn phím", "Electronics|Computers|Accessories|Keyboard"),
+    ("keyboards", "Electronics|Computers|Accessories|Keyboard"),  # ✅ NEW: Plural
+    ("keyboard", "Electronics|Computers|Accessories|Keyboard"),
     
     # Mouse
-    ("mouse", "Electronics|Computers|Accessories|Mouse"),
+    ("chuột không dây", "Electronics|Computers|Accessories|Mouse"),  # ✅ NEW
     ("chuột máy tính", "Electronics|Computers|Accessories|Mouse"),
     ("gaming mouse", "Electronics|Computers|Accessories|Mouse"),
     ("wireless mouse", "Electronics|Computers|Accessories|Mouse"),
+    ("mice", "Electronics|Computers|Accessories|Mouse"),  # ✅ NEW: Plural
+    ("mouse", "Electronics|Computers|Accessories|Mouse"),
     
     # Monitors
     ("màn hình máy tính", "Electronics|Computers|Monitors"),
+    ("gaming monitor", "Electronics|Computers|Monitors"),
+    ("monitors", "Electronics|Computers|Monitors"),  # ✅ NEW: Plural
     ("monitor", "Electronics|Computers|Monitors"),
     ("display", "Electronics|Computers|Monitors"),
-    ("gaming monitor", "Electronics|Computers|Monitors"),
     
     # Cameras
-    ("máy ảnh", "Electronics|Cameras"),
-    ("máy ảnh kỹ thuật số", "Electronics|Cameras"),
-    ("camera", "Electronics|Cameras"),
-    ("digital camera", "Electronics|Cameras"),
-    ("dslr", "Electronics|Cameras"),
-    ("mirrorless", "Electronics|Cameras"),
     ("action camera", "Electronics|Cameras"),
+    ("digital camera", "Electronics|Cameras"),
+    ("máy ảnh kỹ thuật số", "Electronics|Cameras"),
+    ("máy ảnh", "Electronics|Cameras"),
+    ("mirrorless", "Electronics|Cameras"),
     ("gopro", "Electronics|Cameras"),
+    ("dslr", "Electronics|Cameras"),
+    ("cameras", "Electronics|Cameras"),  # ✅ NEW: Plural
+    ("camera", "Electronics|Cameras"),
     
-    # Printers
-    ("máy in", "Electronics|Computers|Printers"),
-    ("printer", "Electronics|Computers|Printers"),
+    # Printers & Scanners
     ("laser printer", "Electronics|Computers|Printers"),
+    ("máy in", "Electronics|Computers|Printers"),
     ("inkjet", "Electronics|Computers|Printers"),
+    ("printers", "Electronics|Computers|Printers"),  # ✅ NEW: Plural
+    ("printer", "Electronics|Computers|Printers"),
+    ("máy quét", "Electronics|Computers|Scanners"),  # ✅ NEW
+    ("scanner", "Electronics|Computers|Scanners"),  # ✅ NEW
     
     # Desktop PCs
     ("máy tính để bàn", "Electronics|Computers|Desktop"),
-    ("pc", "Electronics|Computers|Desktop"),
-    ("desktop", "Electronics|Computers|Desktop"),
     ("gaming pc", "Electronics|Computers|Desktop"),
+    ("mac mini", "Electronics|Computers|Desktop"),  # ✅ NEW
+    ("imac", "Electronics|Computers|Desktop"),  # ✅ NEW
+    ("desktop", "Electronics|Computers|Desktop"),
+    ("pc", "Electronics|Computers|Desktop"),
     
-    # Smartphones (place after specific keywords to avoid false positives)
-    ("điện thoại", "Electronics|Mobile Phones|Smartphones"),
+    # Storage & Accessories
+    ("ổ cứng di động", "Electronics|Computers|Storage"),  # ✅ NEW
+    ("ổ cứng", "Electronics|Computers|Storage"),  # ✅ NEW
+    ("hard drive", "Electronics|Computers|Storage"),  # ✅ NEW
+    ("ssd", "Electronics|Computers|Storage"),  # ✅ NEW
+    ("usb flash drive", "Electronics|Computers|Accessories|USB"),  # ✅ NEW
+    ("flash drive", "Electronics|Computers|Accessories|USB"),  # ✅ NEW
+    
+    # Smartphones - SPECIFIC FIRST (place after other specific keywords)
     ("điện thoại thông minh", "Electronics|Mobile Phones|Smartphones"),
-    ("mobile phone", "Electronics|Mobile Phones|Smartphones"),
-    ("smartphone", "Electronics|Mobile Phones|Smartphones"),
-    ("iphone", "Electronics|Mobile Phones|Smartphones"),
+    ("samsung galaxy s", "Electronics|Mobile Phones|Smartphones"),  # ✅ NEW
     ("samsung galaxy", "Electronics|Mobile Phones|Smartphones"),
+    ("mobile phone", "Electronics|Mobile Phones|Smartphones"),
+    ("điện thoại", "Electronics|Mobile Phones|Smartphones"),
+    ("iphone", "Electronics|Mobile Phones|Smartphones"),
+    ("smartphones", "Electronics|Mobile Phones|Smartphones"),  # ✅ NEW: Plural
+    ("smartphone", "Electronics|Mobile Phones|Smartphones"),
     ("xiaomi", "Electronics|Mobile Phones|Smartphones"),
     ("oppo", "Electronics|Mobile Phones|Smartphones"),
     ("vivo", "Electronics|Mobile Phones|Smartphones"),
     ("realme", "Electronics|Mobile Phones|Smartphones"),
     
+    # Mobile Accessories
+    ("sạc dự phòng", "Electronics|Mobile Phones|Accessories|PowerBank"),  # ✅ NEW
+    ("power bank", "Electronics|Mobile Phones|Accessories|PowerBank"),  # ✅ NEW
+    ("ốp lưng điện thoại", "Electronics|Mobile Phones|Accessories|Case"),  # ✅ NEW
+    ("ốp lưng", "Electronics|Mobile Phones|Accessories|Case"),  # ✅ NEW
+    ("phone case", "Electronics|Mobile Phones|Accessories|Case"),  # ✅ NEW
+    ("miếng dán màn hình", "Electronics|Mobile Phones|Accessories|ScreenProtector"),  # ✅ NEW
+    ("miếng dán", "Electronics|Mobile Phones|Accessories|ScreenProtector"),  # ✅ NEW
+    ("cáp sạc", "Electronics|Mobile Phones|Accessories|Cable"),  # ✅ NEW
+    ("charging cable", "Electronics|Mobile Phones|Accessories|Cable"),  # ✅ NEW
+    
     # Networking
     ("router wifi", "Electronics|Networking|Router"),
+    ("access point", "Electronics|Networking|Access Points"),
+    ("routers", "Electronics|Networking|Router"),  # ✅ NEW: Plural
     ("router", "Electronics|Networking|Router"),
     ("modem", "Electronics|Networking|Modem"),
-    ("access point", "Electronics|Networking|Access Points"),
     
-    # TVs
+    # TVs & Accessories
+    ("android tv", "Electronics|TVs|Smart TVs"),
+    ("tivi smart", "Electronics|TVs|Smart TVs"),
     ("smart tv", "Electronics|TVs|Smart TVs"),
+    ("apple tv", "Electronics|TVs|Smart TVs"),  # ✅ NEW
+    ("fire tv", "Electronics|TVs|Smart TVs"),  # ✅ NEW
     ("television", "Electronics|TVs|Smart TVs"),
     ("tivi", "Electronics|TVs|Smart TVs"),
-    ("tivi smart", "Electronics|TVs|Smart TVs"),
-    ("android tv", "Electronics|TVs|Smart TVs"),
+    ("máy chiếu", "Electronics|TVs|Projectors"),  # ✅ NEW
+    ("projector", "Electronics|TVs|Projectors"),  # ✅ NEW
+    
+    # ============================================================
+    # PRIORITY 2: LAZADA GENERIC CATEGORIES (Fallback)
+    # ============================================================
+    ("computer peripherals", "Electronics|Computers|Accessories|Mouse"),  # ✅ NEW
+    ("computer accessories", "Electronics|Computers|Accessories|Mouse"),  # ✅ NEW
+    ("gaming accessories", "Electronics|Computers|Accessories|Mouse"),  # ✅ NEW
+    ("mobile accessories", "Electronics|Mobile Phones|Accessories|Case"),  # ✅ NEW
+    ("audio accessories", "Electronics|Audio|Headphones"),  # ✅ NEW
+    ("tv accessories", "Electronics|TVs|Smart TVs"),  # ✅ NEW
 ]
 
 # ============================================================
@@ -675,26 +744,39 @@ def map_categories(df):
         name = row["product_name"][:50] if row["product_name"] else "NULL"
         print(f"  {i}. Category: '{cat}' | Product: '{name}'")
 
+    # ✅ NEW: Create sorted mapping dict (longest keywords first for better matching)
+    print(f"\n[INFO] Total category mappings configured: {len(CATEGORY_MAPPINGS)}")
     mapping_dict = {k.lower(): v for (k, v) in CATEGORY_MAPPINGS}
+    print(f"[INFO] Unique category patterns: {len(mapping_dict)}")
+    
+    # Count plural variants
+    plural_count = sum(1 for k in mapping_dict.keys() if k.endswith('s') and k not in ['access', 'wireless'])
+    print(f"[INFO] Including {plural_count} plural variants for Lazada compatibility")
 
     def _map_category_enhanced(category_text: str, product_name: str):
         """
         Try to map using category first, then fallback to product_name
+        ✅ IMPROVED: Sort by keyword length (longest first) for best match
         """
         if not category_text and not product_name:
             return None
         
+        # ✅ Sort mappings by keyword length DESC for better specificity
+        sorted_mappings = sorted(mapping_dict.items(), 
+                                key=lambda x: len(x[0]), 
+                                reverse=True)
+        
         # Try category text first
         if category_text:
-            t = category_text.lower()
-            for key, path in mapping_dict.items():
+            t = category_text.lower().strip()
+            for key, path in sorted_mappings:
                 if key in t:
                     return path
         
         # Fallback to product name if category didn't match
         if product_name:
-            p = product_name.lower()
-            for key, path in mapping_dict.items():
+            p = product_name.lower().strip()
+            for key, path in sorted_mappings:
                 if key in p:
                     return path
         
@@ -710,6 +792,12 @@ def map_categories(df):
         "product_name_lower",
         lower(trim(coalesce(col("product_name"), lit(""))))
     )
+
+    # ✅ DEBUG: Show before mapping stats
+    print("\n[DEBUG] Before mapping - checking for potential matches:")
+    before_sample = df_mapped.select("category_text").limit(1000).collect()
+    plural_found = sum(1 for row in before_sample if row["category_text"] and row["category_text"].endswith('s'))
+    print(f"  Found {plural_found}/1000 categories ending in 's' (likely plural)")
 
     # Map using both category and product_name
     df_mapped = df_mapped.withColumn(
@@ -747,14 +835,80 @@ def map_categories(df):
         )
     )
 
+    # ✅ NEW: Enhanced unmapped category analysis
+    print("\n[DEBUG] Analyzing unmapped categories (will become OTHER)...")
+    
+    # Get frequency distribution of unmapped categories
+    unmapped_freq = (df_mapped.filter(col("category_std") == "OTHER")
+                     .groupBy("category")
+                     .count()
+                     .orderBy(col("count").desc())
+                     .limit(30)
+                     .collect())
+    
+    print(f"\n[DEBUG] Top 30 unmapped category patterns by frequency:")
+    for i, row in enumerate(unmapped_freq, 1):
+        cat = row["category"] if row["category"] else "NULL"
+        count = row["count"]
+        print(f"  {i:2d}. '{cat}' → {count:,} products")
+    
+    # ✅ NEW: Platform distribution of OTHER categories
+    print(f"\n[DEBUG] OTHER category distribution by platform:")
+    other_by_platform = (df_mapped.filter(col("category_std") == "OTHER")
+                        .groupBy("source_platform")
+                        .count()
+                        .orderBy(col("count").desc())
+                        .collect())
+    
+    total_other = sum(row["count"] for row in other_by_platform)
+    for row in other_by_platform:
+        platform = row["source_platform"]
+        count = row["count"]
+        pct = (count / total_other * 100) if total_other > 0 else 0
+        print(f"  {platform}: {count:,} ({pct:.1f}% of OTHER)")
+    
+    # Show sample products from unmapped categories
+    print(f"\n[DEBUG] Sample unmapped products (first 50):")
+    unmapped_samples = df_mapped.filter(col("category_std") == "OTHER").select("category", "product_name", "source_platform").limit(50).collect()
+    for i, row in enumerate(unmapped_samples, 1):
+        cat = row["category"] if row["category"] else "NULL"
+        name = row["product_name"][:40] if row["product_name"] else "NULL"
+        platform = row["source_platform"][:10] if row["source_platform"] else "?"
+        print(f"  {i:2d}. [{platform}] Cat:'{cat}' | '{name}'")
+
     df_mapped = df_mapped.drop("category_array", "category_text")
 
     print("\n Category Mapping Summary:")
-    dist = df_mapped.groupBy("category_std").count().collect()
-    for row in dist:
-        print(f"  {row['category_std']}: {row['count']:,}")
+    dist = df_mapped.groupBy("category_std").count().orderBy(col("count").desc()).collect()
+    
+    # ✅ NEW: Calculate total and percentages
+    total = sum(row['count'] for row in dist)
+    other_count = next((row['count'] for row in dist if row['category_std'] == 'OTHER'), 0)
+    other_pct = (other_count / total * 100) if total > 0 else 0
+    
+    print(f"  Total products: {total:,}")
+    print(f"  Categories mapped: {len(dist)}")
+    print(f"\n  Top categories:")
+    for row in dist[:15]:  # Show top 15
+        count = row['count']
+        pct = (count / total * 100) if total > 0 else 0
+        marker = "⚠️ " if row['category_std'] == 'OTHER' else "  "
+        print(f"  {marker}{row['category_std']}: {count:,} ({pct:.1f}%)")
+    
+    if len(dist) > 15:
+        print(f"  ... and {len(dist) - 15} more categories")
+    
+    # ✅ NEW: Summary statistics
+    print(f"\n[RESULT] OTHER classification: {other_count:,} ({other_pct:.1f}%)")
+    if other_pct > 15:
+        print(f"[WARNING] OTHER rate is high (>15%). Check unmapped categories above.")
+    elif other_pct <= 10:
+        print(f"[SUCCESS] OTHER rate is acceptable (≤10%). Mapping is working well! ✅")
+    else:
+        print(f"[INFO] OTHER rate is moderate (10-15%). Could be improved further.")
 
     return df_mapped
+
 
 
 
