@@ -71,8 +71,19 @@ const DataPipeline: React.FC = () => {
   const fetchRunLogs = async (runId: number) => {
     setLogsLoading(true);
     try {
-      const logs = await getETLRunLogs(runId);
-      setRunLogs(logs);
+      const logs: any = await getETLRunLogs(runId);
+      // Assuming logs might be an array of objects or a string; format accordingly
+      let formattedLogs: string;
+      if (typeof logs === 'string') {
+        formattedLogs = logs;
+      } else if (Array.isArray(logs)) {
+        formattedLogs = logs.map((log: any) => 
+          `[${log.created_at}] ${log.log_level}: ${log.log_message}${log.error_message ? ` - Error: ${log.error_message}` : ''}`
+        ).join('\n');
+      } else {
+        formattedLogs = JSON.stringify(logs, null, 2);
+      }
+      setRunLogs(formattedLogs);
     } catch (error) {
       console.error('Error fetching run logs:', error);
       setRunLogs('Error loading logs');
