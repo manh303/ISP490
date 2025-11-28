@@ -28,6 +28,7 @@ interface DSSInputData {
   review_text?: string;
   from_date?: string;
   to_date?: string;
+  scope_mode?: 'by_product' | 'by_category';
 }
 
 const DSSInput: React.FC = () => {
@@ -158,6 +159,13 @@ const DSSInput: React.FC = () => {
   const scopeModeOptions = [
     { value: 'by_product', label: 'Theo sản phẩm (dựa trên sản phẩm nguồn)' },
     { value: 'by_category', label: 'Theo danh mục (top sản phẩm trong danh mục)' }
+  ];
+
+  const timeRangeOptions = [
+    { value: '7d', label: 'Last 7 days' },
+    { value: '30d', label: 'Last 30 days' },
+    { value: '90d', label: 'Last 90 days' },
+    { value: '1y', label: 'Last year' }
   ];
 
   const handleChange = (field: string, value: any) => {
