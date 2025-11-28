@@ -25,7 +25,8 @@ const DataVolumeTrendsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<string>('30d');
   const [selectedSchema, setSelectedSchema] = useState<string>('ALL');
-  const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
+  const [rowChartType, setRowChartType] = useState<'line' | 'area' | 'bar'>('line');
+  const [sizeChartType, setSizeChartType] = useState<'line' | 'area' | 'bar'>('bar');
 
   const fetchDataVolumeTrends = async () => {
     try {
@@ -93,7 +94,7 @@ const DataVolumeTrendsPage: React.FC = () => {
     return `${gb.toFixed(2)}GB`;
   };
 
-  const renderChart = (data: any[], dataKey: string, title: string, yAxisLabel: string, formatter: (value: number) => string) => {
+  const renderChart = (data: any[], dataKey: string, title: string, yAxisLabel: string, formatter: (value: number) => string, color: string = '#3B82F6', chartType: 'line' | 'area' | 'bar', onChartTypeChange: (type: 'line' | 'area' | 'bar') => void) => {
     const ChartComponent = chartType === 'line' ? LineChart : chartType === 'area' ? AreaChart : BarChart;
     const DataComponent = chartType === 'line' ? Line : chartType === 'area' ? Area : Bar;
 
@@ -103,19 +104,19 @@ const DataVolumeTrendsPage: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setChartType('line')}
+              onClick={() => onChartTypeChange('line')}
               className={`p-2 rounded ${chartType === 'line' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
             >
               📈
             </button>
             <button
-              onClick={() => setChartType('area')}
+              onClick={() => onChartTypeChange('area')}
               className={`p-2 rounded ${chartType === 'area' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
             >
               📊
             </button>
             <button
-              onClick={() => setChartType('bar')}
+              onClick={() => onChartTypeChange('bar')}
               className={`p-2 rounded ${chartType === 'bar' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
             >
               📊
@@ -142,8 +143,8 @@ const DataVolumeTrendsPage: React.FC = () => {
             <DataComponent
               type="monotone"
               dataKey={dataKey}
-              stroke="#3B82F6"
-              fill={chartType === 'area' ? "#3B82F6" : chartType === 'bar' ? "#3B82F6" : undefined}
+              stroke={color}
+              fill={chartType === 'area' ? color : chartType === 'bar' ? color : undefined}
               fillOpacity={chartType === 'area' ? 0.3 : undefined}
             />
           </ChartComponent>
@@ -175,7 +176,7 @@ const DataVolumeTrendsPage: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Time Range
@@ -206,20 +207,6 @@ const DataVolumeTrendsPage: React.FC = () => {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Chart Type
-            </label>
-            <select
-              value={chartType}
-              onChange={(e) => setChartType(e.target.value as 'line' | 'area' | 'bar')}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            >
-              <option value="line">Line Chart</option>
-              <option value="area">Area Chart</option>
-              <option value="bar">Bar Chart</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -245,7 +232,10 @@ const DataVolumeTrendsPage: React.FC = () => {
             'totalRows',
             'Row Count Trends',
             'Row Count',
-            formatNumber
+            formatNumber,
+            '#3B82F6',
+            rowChartType,
+            setRowChartType
           )}
 
           {renderChart(
@@ -253,7 +243,10 @@ const DataVolumeTrendsPage: React.FC = () => {
             'totalSize',
             'Data Size Trends',
             'Size (GB)',
-            (value) => formatSize(value)
+            (value) => formatSize(value),
+            '#10B981',
+            sizeChartType,
+            setSizeChartType
           )}
         </div>
       )}
