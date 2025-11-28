@@ -93,6 +93,24 @@ const DataPipeline: React.FC = () => {
     fetchRunLogs(run.run_id);
   };
 
+  const runJob = async () => {
+    if (!selectedJob) return;
+    alert(`Run Job "${selectedJob.job_name}" - Chức năng đang phát triển, API chưa sẵn sàng.`);
+    // TODO: Call API to run job
+  };
+
+  const pauseJob = async () => {
+    if (!selectedJob) return;
+    alert(`Pause Job "${selectedJob.job_name}" - Chức năng đang phát triển, API chưa sẵn sàng.`);
+    // TODO: Call API to pause job
+  };
+
+  const restartJob = async () => {
+    if (!selectedJob) return;
+    alert(`Restart Job "${selectedJob.job_name}" - Chức năng đang phát triển, API chưa sẵn sàng.`);
+    // TODO: Call API to restart job
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'success':
@@ -314,15 +332,24 @@ const DataPipeline: React.FC = () => {
       {/* Action Buttons */}
       {selectedJob && (
         <div className="mt-6 flex gap-4">
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+          <button
+            onClick={runJob}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
             <Play className="w-4 h-4" />
             Run Job
           </button>
-          <button className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+          <button
+            onClick={pauseJob}
+            className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
             <Pause className="w-4 h-4" />
             Pause Job
           </button>
-          <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+          <button
+            onClick={restartJob}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
             <RotateCcw className="w-4 h-4" />
             Restart Job
           </button>

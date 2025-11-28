@@ -6,7 +6,18 @@ import Form from '../../components/form/Form';
 import Input from '../../components/form/input/InputField';
 import Select from '../../components/form/Select';
 import DatePicker from 'react-datepicker';
-import { runDSSAnalysis, getAISummary, DSSRunRequest, AISummarizeRequest } from '../../services/mockDSSApi';
+import { FaRegCalendarAlt } from 'react-icons/fa';
+import { vi } from 'date-fns/locale';
+import {
+  runPricePredictionDSS,
+  runProductRecommendationDSS,
+  runReviewSentimentDSS,
+  getAISummary,
+  PricePredictionRequest,
+  ProductRecommendationRequest,
+  ReviewSentimentRequest,
+  AISummarizeRequest
+} from '../../services/DSSApi';
 
 interface DSSInputData {
   product_key?: string;
@@ -83,24 +94,82 @@ const DSSInput: React.FC = () => {
     setLoading(true);
 
     try {
-      // Step 4: Call DSS API
-      const dssRequest: DSSRunRequest = {
-        model_type: modelId as any,
-        input_data: formData
-      };
+      let dssResponse: any;
+      let aiRequest: AISummarizeRequest;
 
-      const dssResponse = await runDSSAnalysis(dssRequest);
+      // Step 4: Call DSS API based on model type
+      switch (modelId) {
+        case 'price_prediction':
+          const priceRequest: PricePredictionRequest = {
+            from_date: formData.from_date || '2025-01-01',
+            to_date: formData.to_date || '2025-12-31',
+            platforms: formData.platform_code ? [formData.platform_code] : undefined,
+            categories: formData.category ? [formData.category] : undefined,
+            scope_mode: 'specific_products',
+            product_keys: formData.product_key ? [formData.product_key] : undefined,
+            max_discount_pct: 20,
+            min_margin_pct: 10,
+            min_confidence: 0.8,
+            min_price_change_pct: 5
+          };
+          dssResponse = await runPricePredictionDSS(priceRequest);
+          aiRequest = {
+            model_type: 'price_prediction',
+            ml_results: dssResponse,
+            business_context: {
+              platform: formData.platform_code,
+              product_key: formData.product_key
+            }
+          };
+          break;
+
+        case 'product_recommendation':
+          const recoRequest: ProductRecommendationRequest = {
+            platforms: formData.platform_code ? [formData.platform_code] : undefined,
+            categories: formData.category ? [formData.category] : undefined,
+            scope_mode: 'by_product',
+            source_product_key: formData.product_key,
+            top_k: 5,
+            min_similarity: 0.7,
+            min_co_purchase_rate: 0.1
+          };
+          dssResponse = await runProductRecommendationDSS(recoRequest);
+          aiRequest = {
+            model_type: 'product_recommendation',
+            ml_results: dssResponse,
+            business_context: {
+              platform: formData.platform_code,
+              product_key: formData.product_key
+            }
+          };
+          break;
+
+        case 'review_sentiment':
+          const sentimentRequest: ReviewSentimentRequest = {
+            from_date: formData.from_date || '2025-01-01',
+            to_date: formData.to_date || '2025-12-31',
+            platforms: formData.platform_code ? [formData.platform_code] : undefined,
+            categories: formData.category ? [formData.category] : undefined,
+            min_reviews_per_product: 10,
+            sentiment_focus: 'all',
+            negative_threshold: 0.3
+          };
+          dssResponse = await runReviewSentimentDSS(sentimentRequest);
+          aiRequest = {
+            model_type: 'review_sentiment',
+            ml_results: dssResponse,
+            business_context: {
+              platform: formData.platform_code,
+              product_key: formData.product_key
+            }
+          };
+          break;
+
+        default:
+          throw new Error('Unknown model type');
+      }
 
       // Step 5: Call AI Summary API
-      const aiRequest: AISummarizeRequest = {
-        model_type: modelId,
-        ml_results: dssResponse,
-        business_context: {
-          platform: formData.platform_code,
-          product_key: formData.product_key || formData.source_product_key
-        }
-      };
-
       const aiResponse = await getAISummary(aiRequest);
 
       // Navigate to results with both responses

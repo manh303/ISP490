@@ -59,7 +59,6 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Pipeline Performance", path: "/dataengineer/pipeline-performance", pro: false },
       { name: "Alert History", path: "/dataengineer/alert-history", pro: false },
-      { name: "System Health", path: "/dataengineer/health", pro: false },
     ],
   },
 ];
