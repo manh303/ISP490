@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, MessageSquare, Lightbulb, Target, AlertTriangle } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { AISummarizeResponse } from '../../services/DSSApi';
 
 interface DSSResultsProps {}
 
@@ -10,7 +9,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
   const { modelId } = useParams<{ modelId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { inputData, dssResults, aiSummary } = location.state || {};
+  const { inputData, dssResults } = location.state || {};
 
   const models = {
     price_prediction: {
@@ -223,8 +222,16 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
 
   // Use API data if available, otherwise fallback to mock
   const mlResults = dssResults || {};
-  const aiSummaryData = aiSummary || {};
-  const aiActions: AISummarizeResponse['recommendations'] = aiSummary?.recommendations || [];
+  const insights = dssResults?.ai_summary_insights || [];
+  const anomalies: string[] = []; // Not provided in DSS response
+  const risks: string[] = []; // Not provided
+  const recommendations = (dssResults?.ai_recommended_actions || []).map((action: string) => ({
+    title: action,
+    description: action,
+    impact: 'Trung bình',
+    effort: 'Trung bình',
+    priority: 'Trung bình'
+  }));
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -486,7 +493,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div>
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Insights</h3>
               <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
-                {(aiSummaryData.insights as string[]).map((insight: string, index: number) => (
+                {insights.map((insight: string, index: number) => (
                   <li key={index}>{insight}</li>
                 ))}
               </ul>
@@ -497,7 +504,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 Anomalies Detected
               </h3>
               <ul className="list-disc list-inside space-y-1 text-orange-800 dark:text-orange-200">
-                {(aiSummaryData.anomalies as string[]).map((anomaly: string, index: number) => (
+                {anomalies.map((anomaly: string, index: number) => (
                   <li key={index}>{anomaly}</li>
                 ))}
               </ul>
@@ -505,7 +512,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div>
               <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Risk Assessment</h3>
               <ul className="list-disc list-inside space-y-1 text-red-800 dark:text-red-200">
-                {(aiSummaryData.risks as string[]).map((risk: string, index: number) => (
+                {risks.map((risk: string, index: number) => (
                   <li key={index}>{risk}</li>
                 ))}
               </ul>
@@ -521,7 +528,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           AI Actionable Recommendations
         </h2>
         <div className="space-y-4">
-          {aiActions.map((action: AISummarizeResponse['recommendations'][0], index: number) => (
+          {recommendations.map((action: { title: string; description: string; impact: string; effort: string; priority: string }, index: number) => (
             <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-start mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">{action.title}</h3>
