@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Activity, Clock, CheckCircle, AlertTriangle, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Activity, RefreshCw } from 'lucide-react';
 import { getPipelinePerformanceStats } from '../../services/dataEngineerApi';
 
 interface PipelineMetric {
-  pipeline_name: string;
   job_code: string;
-  status: 'SUCCESS' | 'FAILED' | 'RUNNING' | 'PENDING';
-  start_time: string;
-  end_time?: string;
-  duration_seconds: number;
-  records_processed: number;
-  error_message?: string;
-  schema_name: string;
-  table_name: string;
+  job_name: string;
+  run_date: string;
+  runs_count: number;
+  success_count: number;
+  failed_count: number;
+  avg_duration_minutes: number;
+  min_duration_minutes: number;
+  max_duration_minutes: number;
 }
 
 interface PerformanceStats {
@@ -38,8 +37,8 @@ const PipelinePerformancePage: React.FC = () => {
       // Convert timeRange to days
       const days = timeRange === '1h' ? 1 : timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30;
       const data = await getPipelinePerformanceStats(days);
-      setMetrics(data.metrics || []);
-      setStats(data.stats || null);
+      setMetrics(data);
+      setStats(null);
     } catch (err) {
       console.error('Error fetching pipeline performance:', err);
       setError('Failed to load pipeline performance data');
@@ -52,69 +51,32 @@ const PipelinePerformancePage: React.FC = () => {
     fetchPipelinePerformance();
   }, [timeRange]);
 
-  const getStatusColor = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'SUCCESS': return '#10B981';
-      case 'FAILED': return '#EF4444';
-      case 'RUNNING': return '#F59E0B';
-      case 'PENDING': return '#6B7280';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'SUCCESS': return <CheckCircle className="w-4 h-4" />;
-      case 'FAILED': return <AlertTriangle className="w-4 h-4" />;
-      case 'RUNNING': return <Activity className="w-4 h-4" />;
-      case 'PENDING': return <Clock className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  const formatDuration = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  const formatDuration = (minutes: number) => {
+    if (minutes < 1) return `${(minutes * 60).toFixed(0)}s`;
+    if (minutes < 60) return `${minutes.toFixed(1)}m`;
+    return `${Math.floor(minutes / 60)}h ${Math.floor(minutes % 60)}m`;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleDateString();
   };
 
   // Prepare chart data
-  const statusDistribution = metrics.reduce((acc, metric) => {
-    acc[metric.status] = (acc[metric.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const statusChartData = Object.entries(statusDistribution).map(([status, count]) => ({
-    name: status,
-    value: count,
-    color: getStatusColor(status)
+  const successRateData = metrics.map(metric => ({
+    date: formatDate(metric.run_date),
+    job: metric.job_name,
+    successRate: metric.runs_count > 0 ? (metric.success_count / metric.runs_count) * 100 : 0,
+    avgDuration: metric.avg_duration_minutes
   }));
 
   const durationChartData = metrics
-    .filter(m => m.status === 'SUCCESS')
-    .sort((a, b) => b.duration_seconds - a.duration_seconds)
+    .sort((a, b) => b.avg_duration_minutes - a.avg_duration_minutes)
     .slice(0, 10)
     .map(m => ({
-      name: m.pipeline_name,
-      duration: m.duration_seconds,
+      name: m.job_name,
+      duration: m.avg_duration_minutes,
       jobCode: m.job_code
     }));
-
-  const recordsProcessedData = metrics
-    .filter(m => m.records_processed > 0)
-    .sort((a, b) => b.records_processed - a.records_processed)
-    .slice(0, 10)
-    .map(m => ({
-      name: m.pipeline_name,
-      records: m.records_processed,
-      jobCode: m.job_code
-    }));
-
-  const successRate = stats ? ((stats.successful_runs / stats.total_pipelines) * 100).toFixed(1) : '0';
 
   return (
     <div className="p-6 space-y-6">
@@ -149,71 +111,6 @@ const PipelinePerformancePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Activity className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Pipelines</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_pipelines}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{successRate}%</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Failed Runs</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.failed_runs}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Clock className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Avg Duration</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatDuration(stats.avg_duration)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Records Processed</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_records_processed.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Error State */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -231,36 +128,38 @@ const PipelinePerformancePage: React.FC = () => {
       {/* Charts */}
       {!loading && !error && metrics.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Status Distribution */}
+          {/* Success Rate */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Pipeline Status Distribution
+              Success Rate by Job
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statusChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {statusChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+              <BarChart data={successRateData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  fontSize={12}
+                />
+                <YAxis
+                  label={{ value: 'Success Rate (%)', angle: -90, position: 'insideLeft' }}
+                  fontSize={12}
+                />
+                <Tooltip
+                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Success Rate']}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
+                <Bar dataKey="successRate" fill="#10B981" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Top Duration Pipelines */}
+          {/* Average Duration */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Longest Running Pipelines
+              Average Duration by Job
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={durationChartData}>
@@ -273,42 +172,14 @@ const PipelinePerformancePage: React.FC = () => {
                   fontSize={12}
                 />
                 <YAxis
-                  label={{ value: 'Duration (seconds)', angle: -90, position: 'insideLeft' }}
+                  label={{ value: 'Duration (minutes)', angle: -90, position: 'insideLeft' }}
                   fontSize={12}
                 />
                 <Tooltip
                   formatter={(value: number) => [formatDuration(value), 'Duration']}
-                  labelFormatter={(label) => `Pipeline: ${label}`}
+                  labelFormatter={(label) => `Job: ${label}`}
                 />
                 <Bar dataKey="duration" fill="#3B82F6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Records Processed */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Records Processed by Pipeline
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={recordsProcessedData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  fontSize={12}
-                />
-                <YAxis
-                  label={{ value: 'Records', angle: -90, position: 'insideLeft' }}
-                  fontSize={12}
-                />
-                <Tooltip
-                  formatter={(value: number) => [value.toLocaleString(), 'Records']}
-                  labelFormatter={(label) => `Pipeline: ${label}`}
-                />
-                <Bar dataKey="records" fill="#10B981" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -328,13 +199,14 @@ const PipelinePerformancePage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Pipeline</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Duration</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Records</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Table</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Start Time</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">End Time</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Job Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Run Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Runs Count</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Success Count</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Failed Count</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Avg Duration</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Min Duration</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Max Duration</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -343,41 +215,31 @@ const PipelinePerformancePage: React.FC = () => {
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">
-                            {metric.pipeline_name}
+                            {metric.job_name}
                           </p>
                           <p className="text-sm text-gray-500">{metric.job_code}</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center">
-                          {getStatusIcon(metric.status)}
-                          <span
-                            className="ml-2 inline-flex px-2 py-1 text-xs rounded-full text-white"
-                            style={{ backgroundColor: getStatusColor(metric.status) }}
-                          >
-                            {metric.status}
-                          </span>
-                        </div>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                        {formatDate(metric.run_date)}
                       </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {formatDuration(metric.duration_seconds)}
+                        {metric.runs_count}
+                      </td>
+                      <td className="py-3 px-4 text-green-600">
+                        {metric.success_count}
+                      </td>
+                      <td className="py-3 px-4 text-red-600">
+                        {metric.failed_count}
                       </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {metric.records_processed.toLocaleString()}
+                        {formatDuration(metric.avg_duration_minutes)}
                       </td>
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {metric.table_name}
-                          </p>
-                          <p className="text-sm text-gray-500">{metric.schema_name}</p>
-                        </div>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                        {formatDuration(metric.min_duration_minutes)}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
-                        {formatDate(metric.start_time)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
-                        {metric.end_time ? formatDate(metric.end_time) : '-'}
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                        {formatDuration(metric.max_duration_minutes)}
                       </td>
                     </tr>
                   ))}
