@@ -279,7 +279,7 @@ const DataVolumeTrendsPage: React.FC = () => {
                 </thead>
                 <tbody>
                   {filteredTrends
-                    .sort((a, b) => new Date(b.snapshot_date).getTime() - new Date(a.snapshot_date).getTime())
+                    .sort((a, b) => new Date(a.snapshot_date).getTime() - new Date(b.snapshot_date).getTime())
                     .map((trend, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
