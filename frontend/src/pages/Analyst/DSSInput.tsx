@@ -118,6 +118,9 @@ const DSSInput: React.FC = () => {
           newErrors.category = 'Danh mục là bắt buộc';
         }
       }
+      if (!formData.category) {
+        newErrors.category = 'Danh mục là bắt buộc';
+      }
       if (!formData.from_date) {
         newErrors.from_date = 'Ngày bắt đầu là bắt buộc';
       }
@@ -236,10 +239,10 @@ const DSSInput: React.FC = () => {
             from_date: formData.from_date || '2025-01-01',
             to_date: formData.to_date || '2025-12-31',
             platforms: formData.platform_code ? [formData.platform_code] : undefined,
-            categories: formData.scope_mode === 'by_category' ? (formData.category ? [formData.category] : undefined) : undefined,
+            categories: formData.category ? [formData.category] : undefined,
             min_reviews_per_product: 10,
-            sentiment_focus: formData.scope_mode === 'by_category' ? 'only_negative' : 'all',
-            negative_threshold: 0.3
+            sentiment_focus: 'all',
+            negative_threshold: 0.25
           };
           dssResponse = await runReviewSentimentDSS(sentimentRequest);
           break;
@@ -329,7 +332,7 @@ const DSSInput: React.FC = () => {
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Danh mục{((modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_category') ? ' *' : ''}
+              Danh mục{(modelId === 'review_sentiment' || ((modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_category')) ? ' *' : ''}
             </label>
             <Select
               options={categoryOptions}
@@ -540,6 +543,12 @@ const DSSInput: React.FC = () => {
                               Category
                             </li>
                           </>
+                        )}
+                        {modelId === 'review_sentiment' && (
+                          <li className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Category
+                          </li>
                         )}
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>

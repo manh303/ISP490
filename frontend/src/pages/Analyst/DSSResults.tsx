@@ -13,17 +13,17 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
 
   const models = {
     price_prediction: {
-      name: 'Price Prediction',
+      name: 'Dự đoán Giá',
       icon: <TrendingUp className="w-6 h-6" />,
       color: '#3B82F6'
     },
     product_recommendation: {
-      name: 'Product Recommendation',
+      name: 'Gợi ý Sản phẩm',
       icon: <Users className="w-6 h-6" />,
       color: '#10B981'
     },
     review_sentiment: {
-      name: 'Review Sentiment Analysis',
+      name: 'Phân tích Cảm xúc Đánh giá',
       icon: <MessageSquare className="w-6 h-6" />,
       color: '#F59E0B'
     }
@@ -257,30 +257,30 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Total Products</h4>
+                <h4 className="font-medium text-blue-900">Tổng số sản phẩm</h4>
                 <p className="text-2xl font-bold text-blue-600">{priceData?.kpi_summary?.num_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Products with Recommendation</h4>
+                <h4 className="font-medium text-green-900">Sản phẩm có khuyến nghị</h4>
                 <p className="text-2xl font-bold text-green-600">{priceData?.kpi_summary?.num_with_recommendation || 0}</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900">Expected Revenue Uplift</h4>
+                <h4 className="font-medium text-purple-900">Tăng trưởng doanh thu dự kiến</h4>
                 <p className="text-2xl font-bold text-purple-600">{priceData?.kpi_summary?.expected_revenue_uplift_pct ? `${priceData.kpi_summary.expected_revenue_uplift_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
             </div>
             <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-4">Price Optimization Recommendations</h4>
+              <h4 className="font-medium mb-4">Khuyến nghị tối ưu hóa giá</h4>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price Change</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue Impact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá hiện tại</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá dự đoán</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thay đổi giá</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tác động doanh thu</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Độ tin cậy</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -329,21 +329,21 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Source Products</h4>
+                <h4 className="font-medium text-blue-900">Sản phẩm nguồn</h4>
                 <p className="text-2xl font-bold text-blue-600">{recoData?.kpi_summary?.num_source_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Total Recommendations</h4>
+                <h4 className="font-medium text-green-900">Tổng số khuyến nghị</h4>
                 <p className="text-2xl font-bold text-green-600">{recoData?.kpi_summary?.num_recommendations || 0}</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900">Avg Similarity</h4>
+                <h4 className="font-medium text-purple-900">Độ tương đồng trung bình</h4>
                 <p className="text-2xl font-bold text-purple-600">{recoData?.kpi_summary?.avg_similarity || 'N/A'}</p>
               </div>
             </div>
             <div className="bg-white rounded-lg border overflow-hidden">
               <div className="p-4 border-b">
-                <h4 className="font-medium">Product Recommendations</h4>
+                <h4 className="font-medium">Khuyến nghị sản phẩm</h4>
               </div>
               <div className="divide-y">
                 {(recoData?.table_data as any[])?.map((rec: any, index: number) => (
@@ -381,21 +381,21 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Total Reviews</h4>
+                <h4 className="font-medium text-blue-900">Tổng số đánh giá</h4>
                 <p className="text-2xl font-bold text-blue-600">{sentimentData?.kpi_summary?.total_reviews || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Positive Reviews</h4>
+                <h4 className="font-medium text-green-900">Đánh giá tích cực</h4>
                 <p className="text-2xl font-bold text-green-600">{sentimentData?.kpi_summary?.avg_positive_pct ? `${sentimentData.kpi_summary.avg_positive_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
-                <h4 className="font-medium text-red-900">Critical Products</h4>
+                <h4 className="font-medium text-red-900">Sản phẩm quan trọng</h4>
                 <p className="text-2xl font-bold text-red-600">{sentimentData?.kpi_summary?.num_products_with_critical_negative || 0}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium mb-4">Sentiment Distribution</h4>
+                <h4 className="font-medium mb-4">Phân bố cảm xúc</h4>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -417,7 +417,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 </ResponsiveContainer>
               </div>
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium mb-4">Top Products Analysis</h4>
+                <h4 className="font-medium mb-4">Phân tích sản phẩm hàng đầu</h4>
                 <div className="space-y-3">
                   {(sentimentData?.table_data as any[])?.slice(0, 5).map((product: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onClick={() => navigate(`/analyst/product-review/${product.product_key}`)}>
@@ -442,7 +442,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
         );
 
       default:
-        return <div>No ML results available</div>;
+        return <div>Không có kết quả ML nào</div>;
     }
   };
 
@@ -462,10 +462,10 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {currentModel.name} - DSS Results
+              {currentModel.name} - Kết quả DSS
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              AI-Powered Business Intelligence & Strategic Insights
+              Thông tin kinh doanh và hiểu biết chiến lược được hỗ trợ bởi AI
             </p>
           </div>
         </div>
@@ -475,7 +475,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <TrendingUp className="w-6 h-6 mr-2" />
-          ML Results & Visualization
+          Kết quả ML & Trực quan hóa
         </h2>
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
           {renderMLResults()}
@@ -486,12 +486,12 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <Lightbulb className="w-6 h-6 mr-2" />
-          AI Analyst Summary
+          Tóm tắt Phân tích AI
         </h2>
         <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Insights</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Những hiểu biết chính</h3>
               <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
                 {insights.map((insight: string, index: number) => (
                   <li key={index}>{insight}</li>
@@ -501,7 +501,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div>
               <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
                 <AlertTriangle className="w-4 h-4 mr-1" />
-                Anomalies Detected
+                Các bất thường được phát hiện
               </h3>
               <ul className="list-disc list-inside space-y-1 text-orange-800 dark:text-orange-200">
                 {anomalies.map((anomaly: string, index: number) => (
@@ -510,7 +510,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Risk Assessment</h3>
+              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Đánh giá rủi ro</h3>
               <ul className="list-disc list-inside space-y-1 text-red-800 dark:text-red-200">
                 {risks.map((risk: string, index: number) => (
                   <li key={index}>{risk}</li>
@@ -525,7 +525,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <Target className="w-6 h-6 mr-2" />
-          AI Actionable Recommendations
+          Khuyến nghị hành động của AI
         </h2>
         <div className="space-y-4">
           {recommendations.map((action: { title: string; description: string; impact: string; effort: string; priority: string }, index: number) => (
@@ -545,7 +545,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Effort: {action.effort}</span>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                  Implement Action
+                  Thực hiện hành động
                 </button>
               </div>
             </div>
