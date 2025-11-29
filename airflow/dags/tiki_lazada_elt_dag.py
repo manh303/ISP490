@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.sensors.python import PythonSensor
+
+# Import metadata collection helpers
+from helpers.collect_metrics_after_etl import collect_table_stats_after_etl, collect_db_health
 
 CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
 
@@ -313,9 +317,24 @@ docker exec spark-master spark-submit \
 """
     )
 
+    # Metadata collection task - runs after all ETL/ML completes
+    def collect_metadata_wrapper():
+        """Wrapper to call both metadata collection functions"""
+        print("📊 Collecting table statistics...")
+        collect_table_stats_after_etl()
+        print("💚 Collecting database health...")
+        collect_db_health()
+        print("✅ Metadata collection completed!")
+    
+    collect_metadata = PythonOperator(
+        task_id="collect_metadata",
+        python_callable=collect_metadata_wrapper,
+    )
+
     end = EmptyOperator(task_id="end")
 
     # Parallel crawling
+
     start >> [crawl_lazada, crawl_tiki]
     crawl_lazada >> crawl_lazada_reviews
     crawl_tiki >> crawl_tiki_reviews
@@ -331,6 +350,6 @@ docker exec spark-master spark-submit \
     
     # Parallel ML (all independent)
     if SKIP_ML:
-        build_datamart >> end
+        build_datamart >> collect_metadata >> end
     else:
-        build_datamart >> [ml_product_recommendation, ml_price_optimization, ml_demand_forecasting, ml_sales_forecasting] >> end
+        build_datamart >> [ml_product_recommendation, ml_price_optimization, ml_demand_forecasting, ml_sales_forecasting] >> collect_metadata >> end

@@ -8,6 +8,9 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.python import PythonSensor
 
+# Import metadata collection helpers
+from helpers.collect_metrics_after_etl import collect_table_stats_after_etl, collect_db_health
+
 # ============================================================
 #  CẤU HÌNH CƠ BẢN
 # ============================================================
@@ -491,7 +494,24 @@ docker exec spark-master spark-submit \
     )
 
     # --------------------------------------------------------
-    # PHẦN 3 – KẾT THÚC & GHI LOG
+    # PHẦN 3 – METADATA COLLECTION
+    # --------------------------------------------------------
+    
+    def collect_metadata_wrapper():
+        """Wrapper to call both metadata collection functions"""
+        print("📊 Collecting table statistics...")
+        collect_table_stats_after_etl()
+        print("💚 Collecting database health...")
+        collect_db_health()
+        print("✅ Metadata collection completed!")
+    
+    collect_metadata = PythonOperator(
+        task_id="collect_metadata",
+        python_callable=collect_metadata_wrapper,
+    )
+
+    # --------------------------------------------------------
+    # PHẦN 4 – KẾT THÚC & GHI LOG
     # --------------------------------------------------------
 
     etl_run_finish_task = PythonOperator(
@@ -526,5 +546,8 @@ docker exec spark-master spark-submit \
     # Sau đó Spark job build full star DWH (products + reviews)
     upload_minio >> spark_build_star_dwh
 
-    # Khi DWH xong → ghi log FINISH → end
-    spark_build_star_dwh >> etl_run_finish_task >> end
+    # Thu thập metadata statistics sau khi DWH hoàn thành
+    spark_build_star_dwh >> collect_metadata
+
+    # Khi metadata collection xong → ghi log FINISH → end
+    collect_metadata >> etl_run_finish_task >> end

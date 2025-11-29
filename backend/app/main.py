@@ -403,6 +403,18 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️  Data Engineer API routes not available: {e}")
 
+try:
+    from app.api.v1.business_metadata import router as business_metadata_router
+    app.include_router(
+        business_metadata_router, 
+        prefix=f"{settings.API_V1_PREFIX}", 
+        tags=["Business Metadata"]
+    )
+    logger.info("✅ Business Metadata API routes included")
+except ImportError as e:
+    logger.warning(f"⚠️  Business Metadata API routes not available: {e}")
+
+
 # Include DSS (Decision Support System) API router
 try:
     from api.v1.dss import router as dss_router
