@@ -220,36 +220,36 @@ const ProductReviewDetails: React.FC = () => {
         </div>
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {reviewData.reviews.map((review) => (
-            <div key={review.review_id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div key={review?.review_id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    {renderStars(review.rating)}
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${getSentimentColor(review.sentiment_label)}`}>
-                      {getSentimentIcon(review.sentiment_label)}
-                      {review.sentiment_label}
+                    {renderStars(review?.rating)}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${getSentimentColor(review?.sentiment_label)}`}>
+                      {getSentimentIcon(review?.sentiment_label)}
+                      {review?.sentiment_label}
                     </span>
                     <span className="text-sm text-gray-500">
-                      Sentiment Score: {review.sentiment_score.toFixed(2)}
+                      Sentiment Score: {review?.sentiment_score?.toFixed(2)}
                     </span>
                   </div>
 
-                  {review.review_title && (
+                  {review?.review_title && (
                     <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                      {review.review_title}
+                      {review?.review_title}
                     </h3>
                   )}
 
                   <p className="text-gray-700 dark:text-gray-300 mb-3">
-                    {review.review_body || 'No review text available'}
+                    {review?.review_body || 'No review text available'}
                   </p>
 
                   <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>By {review.reviewer_name}</span>
-                    <span>{new Date(review.review_date).toLocaleDateString()}</span>
+                    <span>By {review?.reviewer_name}</span>
+                    <span>{new Date(review?.review_date)?.toLocaleDateString()}</span>
                     <span className="flex items-center gap-1">
                       <ThumbsUp className="w-3 h-3" />
-                      {review.helpful_votes} helpful votes
+                      {review?.helpful_votes} helpful votes
                     </span>
                   </div>
                 </div>
