@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Technical Metadata - Populate metadata tables
+Technical Metadata - Populate metadata tables (UPDATED FOR CURRENT SCHEMA)
+Only includes tables that actually exist: dwh.* and ml.*
 """
 import psycopg2
 import os
@@ -85,21 +86,28 @@ def populate_source_systems(conn):
         print("[OK] Source systems populated")
 
 def populate_datasets(conn):
-    """Populate dataset metadata"""
+    """Populate dataset metadata - ONLY EXISTING TABLES"""
     datasets = [
-        ('LAZADA', 'stg', 'stg_raw_products', 'table', None, 90),
-        ('LAZADA', 'stg', 'stg_raw_reviews', 'table', None, 90),
-        ('TIKI', 'stg', 'stg_raw_products', 'table', None, 90),
-        ('TIKI', 'stg', 'stg_raw_reviews', 'table', None, 90),
-        ('INTERNAL', 'ods', 'ods_product_clean', 'table', None, 365),
-        ('INTERNAL', 'ods', 'ods_price_point', 'table', None, 365),
-        ('INTERNAL', 'ods', 'ods_review_clean', 'table', 'PII', 365),
-        ('INTERNAL', 'dwh', 'dwh_dim_product', 'table', None, None),
-        ('INTERNAL', 'dwh', 'dwh_fact_product_daily', 'table', None, None),
+        # DWH - Dimensions (correct table names without prefix)
+        ('INTERNAL', 'dwh', 'dim_date', 'dimension', None, None),
+        ('INTERNAL', 'dwh', 'dim_platform', 'dimension', None, None),
+        ('INTERNAL', 'dwh', 'dim_brand', 'dimension', None, None),
+        ('INTERNAL', 'dwh', 'dim_category', 'dimension', None, None),
+        ('INTERNAL', 'dwh', 'dim_product', 'dimension', None, None),
+        
+        # DWH - Facts
+        ('INTERNAL', 'dwh', 'fact_product_daily', 'fact', None, 730),  # 2 years retention
+        ('INTERNAL', 'dwh', 'fact_review', 'fact', 'PII', 730),
+        ('INTERNAL', 'dwh', 'fact_review_daily', 'fact', None, 730),
+        
+        # ML Tables
+        ('INTERNAL', 'ml', 'dim_ml_model', 'dimension', None, None),
+        ('INTERNAL', 'ml', 'fact_price_prediction', 'fact', None, 90),
+        ('INTERNAL', 'ml', 'fact_product_recommendation', 'fact', None, 90),
     ]
     
     with conn.cursor() as cur:
-        for source, layer, table, dtype, pii, retention in datasets:
+        for source, schema, table, dtype, pii, retention in datasets:
             cur.execute("""
                 INSERT INTO meta_dataset 
                 (source_id, layer, schema_name, table_name, dataset_type, pii_class, retention_days, created_at, updated_at)
@@ -109,7 +117,7 @@ def populate_datasets(conn):
                 WHERE s.code = %s
                 ON CONFLICT (schema_name, table_name) DO UPDATE
                 SET updated_at = NOW()
-            """, (layer, layer, table, dtype, pii, retention, source))
+            """, (schema, schema, table, dtype, pii, retention, source))
         
         conn.commit()
         print(f"[OK] Populated {len(datasets)} datasets")
@@ -117,13 +125,10 @@ def populate_datasets(conn):
 def populate_jobs(conn):
     """Populate job metadata"""
     jobs = [
-        ('crawl_lazada', 'data-team', '0 10 * * *'),
-        ('crawl_tiki', 'data-team', '0 10 * * *'),
-        ('load_raw_data', 'data-team', '0 11 * * *'),
-        ('data_cleaning', 'data-team', '0 12 * * *'),
-        ('data_quality', 'data-team', '0 13 * * *'),
-        ('warehouse_build', 'data-team', '0 14 * * *'),
-        ('datamart_build', 'data-team', '0 15 * * *'),
+        ('minio_ecommerce_dwh_pipeline', 'data-team', '0 0 * * *'),
+        ('collect_metadata', 'data-team', '0 1 * * *'),
+        ('ml_price_prediction', 'ml-team', '0 2 * * *'),
+        ('ml_product_recommendation', 'ml-team', '0 3 * * *'),
     ]
     
     with conn.cursor() as cur:
@@ -141,14 +146,14 @@ def populate_jobs(conn):
 def populate_expectations(conn):
     """Populate data quality expectations"""
     expectations = [
-        ('ods_product_clean', 'product_name_not_null', 'error', 
-         'SELECT COUNT(*) FROM ods_product_clean WHERE product_name IS NULL OR product_name = \'\''),
-        ('ods_price_point', 'price_positive', 'error',
-         'SELECT COUNT(*) FROM ods_price_point WHERE price_current <= 0'),
-        ('ods_review_clean', 'rating_valid', 'error',
-         'SELECT COUNT(*) FROM ods_review_clean WHERE rating NOT BETWEEN 1 AND 5'),
-        ('dwh_fact_product_daily', 'no_future_dates', 'error',
-         'SELECT COUNT(*) FROM dwh_fact_product_daily WHERE date_sk > TO_CHAR(NOW(), \'YYYYMMDD\')::INT'),
+        ('fact_product_daily', 'positive_prices', 'error', 
+         'SELECT COUNT(*) FROM dwh.fact_product_daily WHERE avg_price <= 0'),
+        ('fact_product_daily', 'no_future_dates', 'error',
+         'SELECT COUNT(*) FROM dwh.fact_product_daily WHERE date_sk > TO_CHAR(NOW(), \'YYYYMMDD\')::INT'),
+        ('fact_review', 'rating_valid', 'error',
+         'SELECT COUNT(*) FROM dwh.fact_review WHERE rating NOT BETWEEN 1 AND 5'),
+        ('dim_product', 'product_name_not_null', 'error',
+         'SELECT COUNT(*) FROM dwh.dim_product WHERE product_name IS NULL OR product_name = \'\''),
     ]
     
     with conn.cursor() as cur:
@@ -168,10 +173,15 @@ def populate_business_terms(conn):
     """Populate business glossary"""
     terms = [
         ('Product', 'A sellable item on e-commerce platform', 'product-owner'),
-        ('Price Point', 'Historical price snapshot at specific time', 'pricing-team'),
+        ('Price Point', 'Daily aggregated price metrics for a product', 'pricing-team'),
         ('Review', 'Customer feedback and rating for product', 'customer-team'),
-        ('Global Product ID', 'Unique identifier across all platforms', 'data-team'),
-        ('Master Product ID', 'Canonical identifier for matched products', 'data-team'),
+        ('Product Key', 'Unique identifier across all platforms (global_product_id)', 'data-team'),
+        ('Platform', 'E-commerce marketplace (Tiki or Lazada)', 'data-team'),
+        ('Brand', 'Product manufacturer or brand name', 'product-team'),
+        ('Category', 'Standardized product classification', 'product-team'),
+        ('ML Model', 'Machine learning prediction model', 'ml-team'),
+        ('Recommendation', 'AI-generated product suggestion', 'ml-team'),
+        ('Price Prediction', 'Forecasted future product price', 'ml-team'),
     ]
     
     with conn.cursor() as cur:
@@ -187,7 +197,9 @@ def populate_business_terms(conn):
         print(f"[OK] Populated {len(terms)} business terms")
 
 def main():
-    print("TECHNICAL METADATA")
+    print("TECHNICAL METADATA - UPDATED FOR CURRENT SCHEMA")
+    print("=" * 60)
+    print("Only DWH and ML schemas (no staging/ods)")
     print("=" * 60)
     
     conn = psycopg2.connect(**DB_CONFIG)
@@ -200,6 +212,7 @@ def main():
         populate_expectations(conn)
         populate_business_terms(conn)
         print("\n[OK] COMPLETE!")
+        print("✅ Updated metadata for current schema structure")
     except Exception as e:
         print(f"\n[ERROR] FAILED: {e}")
         raise

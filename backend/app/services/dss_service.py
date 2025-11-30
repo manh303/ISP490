@@ -51,9 +51,14 @@ class DSSService:
     # PRICE PREDICTION DSS
     # ============================================
 
-    async def run_price_prediction_dss(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def run_price_prediction_dss(
+        self, 
+        request: Dict[str, Any],
+        user_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Run Price Prediction DSS analysis.
+        Now creates an analysis session and returns session_id for decision linking.
         """
         logger.info(f"Running Price Prediction DSS: {request}")
 
@@ -85,18 +90,50 @@ class DSSService:
 
         # 4. Generate AI insights
         ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", dss_result_raw)
+        
+        ai_summary_insights = ai_result.get("summary_insights", [])
+        ai_recommended_actions = ai_result.get("recommended_actions", [])
 
-        # 5. Return
+        # 5. Create analysis session for decision linking
+        session_id = None
+        if user_id:
+            try:
+                session_row = await self.db.fetchrow(
+                    """
+                    INSERT INTO dss.dss_analysis_session (
+                        scenario_key, user_id, filters_json, kpi_summary_json,
+                        ai_summary_insights, ai_recommended_actions, date_adjustment_info,
+                        generated_at, source_endpoint
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
+                    RETURNING session_id
+                    """,
+                    "price_prediction",
+                    user_id,
+                    json.dumps(dss_result_raw["filters"]),
+                    json.dumps(kpi_summary),
+                    json.dumps(ai_summary_insights),
+                    json.dumps(ai_recommended_actions),
+                    json.dumps(dss_result_raw["date_adjustment_info"]),
+                    "/dss/price/run"
+                )
+                session_id = session_row["session_id"]
+                logger.info(f"Created analysis session {session_id} for price prediction")
+            except Exception as e:
+                logger.warning(f"Failed to create analysis session: {e}")
+                # Continue without session_id - не critical
+
+        # 6. Return with session_id
         return {
             **dss_result_raw,
             "items": data["items"],
             "total_count": data["total_count"],
-            "ai_summary_insights": ai_result.get("summary_insights", []),
-            "ai_recommended_actions": ai_result.get("recommended_actions", []),
+            "ai_summary_insights": ai_summary_insights,
+            "ai_recommended_actions": ai_recommended_actions,
             "generated_at": datetime.now().isoformat(),
             "ai_model_used": self.ai_summarizer.model
             if self.ai_summarizer.available
             else "rule-based-fallback",
+            "session_id": session_id,  # NEW: Session ID for decision linking
         }
 
     async def _query_price_predictions(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -487,7 +524,9 @@ class DSSService:
     # ============================================
 
     async def run_product_recommendation_dss(
-        self, request: Dict[str, Any]
+        self, 
+        request: Dict[str, Any],
+        user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """Run Product Recommendation DSS analysis"""
 
@@ -517,16 +556,46 @@ class DSSService:
         ai_result = self.ai_summarizer.summarize_with_ai(
             "product_recommendation", dss_result_raw
         )
+        
+        ai_summary_insights = ai_result.get("summary_insights", [])
+        ai_recommended_actions = ai_result.get("recommended_actions", [])
 
-        # 5. Return
+        # 5. Create analysis session for decision linking
+        session_id = None
+        if user_id:
+            try:
+                session_row = await self.db.fetchrow(
+                    """
+                    INSERT INTO dss.dss_analysis_session (
+                        scenario_key, user_id, filters_json, kpi_summary_json,
+                        ai_summary_insights, ai_recommended_actions,
+                        generated_at, source_endpoint
+                    ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
+                    RETURNING session_id
+                    """,
+                    "product_recommendation",
+                    user_id,
+                    json.dumps(dss_result_raw["filters"]),
+                    json.dumps(kpi_summary),
+                    json.dumps(ai_summary_insights),
+                    json.dumps(ai_recommended_actions),
+                    "/dss/reco/run"
+                )
+                session_id = session_row["session_id"]
+                logger.info(f"Created analysis session {session_id} for product recommendation")
+            except Exception as e:
+                logger.warning(f"Failed to create analysis session: {e}")
+
+        # 6. Return with session_id
         return {
             **dss_result_raw,
-            "ai_summary_insights": ai_result.get("summary_insights", []),
-            "ai_recommended_actions": ai_result.get("recommended_actions", []),
+            "ai_summary_insights": ai_summary_insights,
+            "ai_recommended_actions": ai_recommended_actions,
             "generated_at": datetime.now().isoformat(),
             "ai_model_used": self.ai_summarizer.model
             if self.ai_summarizer.available
             else "rule-based-fallback",
+            "session_id": session_id,  # NEW: Session ID for decision linking
         }
 
     async def _query_product_recommendations(
@@ -695,7 +764,9 @@ class DSSService:
     # ============================================
 
     async def run_review_sentiment_dss(
-        self, request: Dict[str, Any]
+        self, 
+        request: Dict[str, Any],
+        user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """Run Review Sentiment Analysis DSS"""
 
@@ -724,16 +795,46 @@ class DSSService:
         ai_result = self.ai_summarizer.summarize_with_ai(
             "review_sentiment", dss_result_raw
         )
+        
+        ai_summary_insights = ai_result.get("summary_insights", [])
+        ai_recommended_actions = ai_result.get("recommended_actions", [])
 
-        # 5. Return
+        # 5. Create analysis session for decision linking
+        session_id = None
+        if user_id:
+            try:
+                session_row = await self.db.fetchrow(
+                    """
+                    INSERT INTO dss.dss_analysis_session (
+                        scenario_key, user_id, filters_json, kpi_summary_json,
+                        ai_summary_insights, ai_recommended_actions,
+                        generated_at, source_endpoint
+                    ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
+                    RETURNING session_id
+                    """,
+                    "review_sentiment",
+                    user_id,
+                    json.dumps(dss_result_raw["filters"]),
+                    json.dumps(kpi_summary),
+                    json.dumps(ai_summary_insights),
+                    json.dumps(ai_recommended_actions),
+                    "/dss/review/run"
+                )
+                session_id = session_row["session_id"]
+                logger.info(f"Created analysis session {session_id} for review sentiment")
+            except Exception as e:
+                logger.warning(f"Failed to create analysis session: {e}")
+
+        # 6. Return with session_id
         return {
             **dss_result_raw,
-            "ai_summary_insights": ai_result.get("summary_insights", []),
-            "ai_recommended_actions": ai_result.get("recommended_actions", []),
+            "ai_summary_insights": ai_summary_insights,
+            "ai_recommended_actions": ai_recommended_actions,
             "generated_at": datetime.now().isoformat(),
             "ai_model_used": self.ai_summarizer.model
             if self.ai_summarizer.available
             else "rule-based-fallback",
+            "session_id": session_id,  # NEW: Session ID for decision linking
         }
 
     async def _query_review_sentiment(
@@ -1145,3 +1246,386 @@ class DSSService:
                 "error": str(e),
                 "reviews": []
             }
+
+    # ============================================
+    # DECISION & ACTION MANAGEMENT
+    # ============================================
+
+    async def save_decision(
+        self,
+        user_id: int,
+        payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Save a DSS Decision with action plan.
+        
+        Steps:
+        1. Validate input
+        2. Create or load analysis session
+        3. Insert decision record
+        4. Insert action items
+        5. Log activity
+        
+        Uses transaction for atomicity.
+        """
+        try:
+            scenario_key = payload.get("scenario_key")
+            session_id = payload.get("session_id")
+            actions = payload.get("actions", [])
+            
+            # Validate
+            if scenario_key not in ["price_prediction", "product_recommendation", "review_sentiment"]:
+                raise ValueError(f"Invalid scenario_key: {scenario_key}")
+            
+            if not actions:
+                raise ValueError("Actions list cannot be empty")
+            
+            # Start transaction
+            async with self.db.transaction():
+                # Step 1: Get or create session_id
+                if session_id:
+                    # Verify existing session
+                    session_row = await self.db.fetchrow(
+                        "SELECT session_id, scenario_key FROM dss.dss_analysis_session WHERE session_id = $1",
+                        session_id
+                    )
+                    if not session_row:
+                        raise ValueError(f"Session {session_id} not found")
+                    if session_row["scenario_key"] != scenario_key:
+                        raise ValueError(f"Session scenario_key mismatch")
+                else:
+                    # Create new session from snapshot
+                    session_row = await self.db.fetchrow(
+                        """
+                        INSERT INTO dss.dss_analysis_session (
+                            scenario_key, user_id, filters_json, kpi_summary_json,
+                            ai_summary_insights, ai_recommended_actions, date_adjustment_info,
+                            generated_at, source_endpoint
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
+                        RETURNING session_id
+                        """,
+                        scenario_key,
+                        user_id,
+                        json.dumps(payload.get("filters", {})),
+                        json.dumps(payload.get("kpi_summary", {})),
+                        json.dumps(payload.get("ai_summary_insights", [])),
+                        json.dumps(payload.get("ai_recommended_actions", [])),
+                        json.dumps(payload.get("date_adjustment_info")) if payload.get("date_adjustment_info") else None,
+                        f"/dss/{scenario_key}/run"
+                    )
+                    session_id = session_row["session_id"]
+                    logger.info(f"Created new session {session_id} for scenario {scenario_key}")
+                
+                # Step 2: Insert decision
+                decision_row = await self.db.fetchrow(
+                    """
+                    INSERT INTO dss.dss_decision (
+                        session_id, scenario_key, title, description, status, created_by
+                    ) VALUES ($1, $2, $3, $4, $5, $6)
+                    RETURNING decision_id, created_at
+                    """,
+                    session_id,
+                    scenario_key,
+                    payload.get("title"),
+                    payload.get("description"),
+                    payload.get("status", "DRAFT"),
+                    user_id
+                )
+                decision_id = decision_row["decision_id"]
+                logger.info(f"Created decision {decision_id}")
+                
+                # Step 3: Insert action items
+                action_ids = []
+                for action in actions:
+                    # NEW: Auto-lookup product_sk from product_key if needed
+                    product_sk = action.get("product_sk")
+                    
+                    if not product_sk and action.get("product_key"):
+                        product_key = action.get("product_key")
+                        logger.info(f"Looking up product_sk for product_key: {product_key}")
+                        
+                        product_row = await self.db.fetchrow(
+                            "SELECT product_sk FROM dwh.dim_product WHERE product_key = $1",
+                            product_key
+                        )
+                        
+                        if product_row:
+                            product_sk = product_row["product_sk"]
+                            logger.info(f"Found product_sk: {product_sk} for {product_key}")
+                        else:
+                            logger.warning(f"Product not found for product_key: {product_key}")
+                            # Continue without product_sk - validation will catch if required
+                    
+                    action_row = await self.db.fetchrow(
+                        """
+                        INSERT INTO dss.dss_action_item (
+                            decision_id, action_type, target_level,
+                            product_sk, platform_sk, category_sk,
+                            current_value, recommended_value, chosen_value, unit,
+                            planned_start_date, planned_end_date, status, note
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                        RETURNING action_id
+                        """,
+                        decision_id,
+                        action.get("action_type"),
+                        action.get("target_level"),
+                        action.get("product_sk"),
+                        action.get("platform_sk"),
+                        action.get("category_sk"),
+                        action.get("current_value"),
+                        action.get("recommended_value"),
+                        action.get("chosen_value"),
+                        action.get("unit"),
+                        action.get("planned_start_date"),
+                        action.get("planned_end_date"),
+                        action.get("status", "PLANNED"),
+                        action.get("note")
+                    )
+                    action_ids.append(action_row["action_id"])
+                
+                logger.info(f"Created {len(action_ids)} actions for decision {decision_id}")
+                
+                # Step 4: Log activity
+                await self.db.execute(
+                    """
+                    INSERT INTO iam.user_activity_logs (user_id, action, resource, details, status)
+                    VALUES ($1, $2, $3, $4, $5)
+                    """,
+                    user_id,
+                    "dss_save_decision",
+                    "/dss/decisions",
+                    json.dumps({
+                        "decision_id": decision_id,
+                        "scenario_key": scenario_key,
+                        "num_actions": len(action_ids),
+                        "status": payload.get("status", "DRAFT")
+                    }),
+                    "success"
+                )
+            
+            # Transaction committed
+            logger.info(f"Successfully saved decision {decision_id} with {len(action_ids)} actions")
+            
+            # Return decision detail
+            return await self.get_decision_detail(decision_id)
+            
+        except Exception as e:
+            logger.exception(f"Error saving decision: {e}")
+            raise
+
+    async def list_decisions(
+        self,
+        scenario_key: Optional[str] = None,
+        status: Optional[str] = None,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 10
+    ) -> Dict[str, Any]:
+        """
+        List decisions with filters and pagination.
+        """
+        try:
+            conditions = []
+            params = []
+            param_idx = 1
+            
+            if scenario_key:
+                conditions.append(f"d.scenario_key = ${param_idx}")
+                params.append(scenario_key)
+                param_idx += 1
+            
+            if status:
+                conditions.append(f"d.status = ${param_idx}")
+                params.append(status)
+                param_idx += 1
+            
+            if from_date:
+                conditions.append(f"d.created_at >= ${param_idx}")
+                params.append(from_date)
+                param_idx += 1
+            
+            if to_date:
+                conditions.append(f"d.created_at <= ${param_idx}")
+                params.append(to_date)
+                param_idx += 1
+            
+            where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+            
+            offset = (page - 1) * page_size
+            
+            # Query decisions with action count
+            sql = f"""
+                SELECT 
+                    d.decision_id,
+                    d.scenario_key,
+                    d.title,
+                    d.status,
+                    d.created_by,
+                    u.email AS created_by_email,
+                    d.created_at,
+                    COUNT(a.action_id) AS num_actions
+                FROM dss.dss_decision d
+                LEFT JOIN iam.iam_user u ON d.created_by = u.user_id
+                LEFT JOIN dss.dss_action_item a ON d.decision_id = a.decision_id
+                {where_clause}
+                GROUP BY d.decision_id, d.scenario_key, d.title, d.status, 
+                         d.created_by, u.email, d.created_at
+                ORDER BY d.created_at DESC
+                LIMIT ${param_idx} OFFSET ${param_idx + 1}
+            """
+            params.extend([page_size, offset])
+            
+            rows = await self.db.fetch(sql, *params)
+            
+            # Get total count
+            count_sql = f"""
+                SELECT COUNT(DISTINCT d.decision_id)
+                FROM dss.dss_decision d
+                {where_clause}
+            """
+            count_params = params[:param_idx-1]  # Exclude LIMIT and OFFSET
+            count_row = await self.db.fetchrow(count_sql, *count_params)
+            total = count_row["count"] if count_row else 0
+            
+            items = []
+            for row in rows:
+                items.append({
+                    "decision_id": row["decision_id"],
+                    "scenario_key": row["scenario_key"],
+                    "title": row["title"],
+                    "status": row["status"],
+                    "created_by": row["created_by"],
+                    "created_by_email": row["created_by_email"],
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "num_actions": row["num_actions"]
+                })
+            
+            return {
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "items": items
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error listing decisions: {e}")
+            raise
+
+    async def get_decision_detail(self, decision_id: int) -> Dict[str, Any]:
+        """
+        Get detailed information for a decision including session data and actions.
+        """
+        try:
+            # Query decision with session data
+            decision_sql = """
+                SELECT 
+                    d.decision_id,
+                    d.session_id,
+                    d.scenario_key,
+                    d.title,
+                    d.description,
+                    d.status,
+                    d.created_by,
+                    u_created.email AS created_by_email,
+                    d.created_at,
+                    d.updated_at,
+                    d.approved_by,
+                    u_approved.email AS approved_by_email,
+                    d.approved_at,
+                    s.filters_json,
+                    s.kpi_summary_json,
+                    s.ai_summary_insights,
+                    s.ai_recommended_actions,
+                    s.date_adjustment_info
+                FROM dss.dss_decision d
+                JOIN dss.dss_analysis_session s ON d.session_id = s.session_id
+                LEFT JOIN iam.iam_user u_created ON d.created_by = u_created.user_id
+                LEFT JOIN iam.iam_user u_approved ON d.approved_by = u_approved.user_id
+                WHERE d.decision_id = $1
+            """
+            
+            decision_row = await self.db.fetchrow(decision_sql, decision_id)
+            
+            if not decision_row:
+                raise ValueError(f"Decision {decision_id} not found")
+            
+            # Query actions with enriched data
+            actions_sql = """
+                SELECT 
+                    a.action_id,
+                    a.action_type,
+                    a.target_level,
+                    a.product_sk,
+                    a.platform_sk,
+                    a.category_sk,
+                    a.current_value,
+                    a.recommended_value,
+                    a.chosen_value,
+                    a.unit,
+                    a.planned_start_date,
+                    a.planned_end_date,
+                    a.status,
+                    a.note,
+                    dp.product_name,
+                    COALESCE(dc.category_lvl2, dc.category_lvl1) AS category_name,
+                    dpl.platform_code AS platform_name
+                FROM dss.dss_action_item a
+                LEFT JOIN dwh.dim_product dp ON a.product_sk = dp.product_sk
+                LEFT JOIN dwh.dim_category dc ON a.category_sk = dc.category_sk
+                LEFT JOIN dwh.dim_platform dpl ON a.platform_sk = dpl.platform_sk
+                WHERE a.decision_id = $1
+                ORDER BY a.action_id
+            """
+            
+            action_rows = await self.db.fetch(actions_sql, decision_id)
+            
+            actions = []
+            for row in action_rows:
+                actions.append({
+                    "action_id": row["action_id"],
+                    "action_type": row["action_type"],
+                    "target_level": row["target_level"],
+                    "product_sk": row["product_sk"],
+                    "platform_sk": row["platform_sk"],
+                    "category_sk": row["category_sk"],
+                    "current_value": float(row["current_value"]) if row["current_value"] is not None else None,
+                    "recommended_value": float(row["recommended_value"]) if row["recommended_value"] is not None else None,
+                    "chosen_value": float(row["chosen_value"]) if row["chosen_value"] is not None else None,
+                    "unit": row["unit"],
+                    "planned_start_date": row["planned_start_date"].isoformat() if row["planned_start_date"] else None,
+                    "planned_end_date": row["planned_end_date"].isoformat() if row["planned_end_date"] else None,
+                    "status": row["status"],
+                    "note": row["note"],
+                    "product_name": row["product_name"],
+                    "category_name": row["category_name"],
+                    "platform_name": row["platform_name"]
+                })
+            
+            # Build response
+            return {
+                "decision_id": decision_row["decision_id"],
+                "session_id": decision_row["session_id"],
+                "scenario_key": decision_row["scenario_key"],
+                "title": decision_row["title"],
+                "description": decision_row["description"],
+                "status": decision_row["status"],
+                "created_by": decision_row["created_by"],
+                "created_by_email": decision_row["created_by_email"],
+                "created_at": decision_row["created_at"].isoformat() if decision_row["created_at"] else None,
+                "updated_at": decision_row["updated_at"].isoformat() if decision_row["updated_at"] else None,
+                "approved_by": decision_row["approved_by"],
+                "approved_by_email": decision_row["approved_by_email"],
+                "approved_at": decision_row["approved_at"].isoformat() if decision_row["approved_at"] else None,
+                "filters": json.loads(decision_row["filters_json"]) if decision_row["filters_json"] else {},
+                "kpi_summary": json.loads(decision_row["kpi_summary_json"]) if decision_row["kpi_summary_json"] else {},
+                "ai_summary_insights": json.loads(decision_row["ai_summary_insights"]) if decision_row["ai_summary_insights"] else [],
+                "ai_recommended_actions": json.loads(decision_row["ai_recommended_actions"]) if decision_row["ai_recommended_actions"] else [],
+                "date_adjustment_info": json.loads(decision_row["date_adjustment_info"]) if decision_row["date_adjustment_info"] else None,
+                "actions": actions
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error getting decision detail: {e}")
+            raise
+
