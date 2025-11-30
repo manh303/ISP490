@@ -18,6 +18,11 @@ from app.schemas.dss import (
     ReviewSentimentRequest,
     ReviewSentimentResponse,
 )
+from app.schemas.dss_decision import (
+    SaveDSSDecisionRequest,
+    DSSDecisionListResponse,
+    DSSDecisionDetailResponse,
+)
 from app.services.dss_service import DSSService
 
 logger = logging.getLogger(__name__)
@@ -54,6 +59,7 @@ async def get_dss_service(db=Depends(get_db)) -> DSSService:
 )
 async def run_price_prediction_dss(
     request: PricePredictionRequest,
+    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
 ):
     """
@@ -66,6 +72,7 @@ async def run_price_prediction_dss(
     1. Query fact_product_daily + ml.fact_price_prediction
     2. Calculate KPIs (revenue uplift, confidence…)
     3. AI-powered summary & recommended actions
+    4. Create analysis session for decision linking
 
     **Example Request:**
     ```json
@@ -84,9 +91,11 @@ async def run_price_prediction_dss(
 
     **Note:** API supports auto-fallback to latest available date if requested date has no data.
     Check `date_adjustment_info` in response for actual dates used.
+    
+    **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
     try:
-        result = await service.run_price_prediction_dss(request.dict())
+        result = await service.run_price_prediction_dss(request.dict(), user_id=user_id)
         return result
     except Exception as e:
         logger.exception(f"Error in run_price_prediction_dss: {e}")
@@ -105,6 +114,7 @@ async def run_price_prediction_dss(
 )
 async def run_product_recommendation_dss(
     request: ProductRecommendationRequest,
+    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
 ):
     """
@@ -137,9 +147,11 @@ async def run_product_recommendation_dss(
       "min_similarity": 0.5
     }
     ```
+    
+    **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
     try:
-        result = await service.run_product_recommendation_dss(request.dict())
+        result = await service.run_product_recommendation_dss(request.dict(), user_id=user_id)
         return result
     except Exception as e:
         logger.exception(f"Error in run_product_recommendation_dss: {e}")
@@ -158,6 +170,7 @@ async def run_product_recommendation_dss(
 )
 async def run_review_sentiment_dss(
     request: ReviewSentimentRequest,
+    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
 ):
     """
@@ -178,9 +191,11 @@ async def run_review_sentiment_dss(
       "sentiment_focus": "only_negative"
     }
     ```
+    
+    **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
     try:
-        result = await service.run_review_sentiment_dss(request.dict())
+        result = await service.run_review_sentiment_dss(request.dict(), user_id=user_id)
         return result
     except Exception as e:
         logger.exception(f"Error in run_review_sentiment_dss: {e}")
@@ -493,3 +508,215 @@ async def list_dss_scenarios():
             },
         ]
     }
+
+
+# ============================================
+# DECISION & ACTION MANAGEMENT
+# ============================================
+
+
+@router.post(
+    "/decisions",
+    response_model=Dict[str, Any],
+    operation_id="save_dss_decision_v1",
+)
+async def save_dss_decision(
+    request: SaveDSSDecisionRequest,
+    user_id: int = 1,  # TODO: Get from authentication middleware
+    service: DSSService = Depends(get_dss_service),
+):
+    """
+    Save a DSS Decision with Action Plan
+    
+    **Purpose:**
+    Save analyst decisions and action plans based on DSS analysis results.
+    
+    **Workflow:**
+    1. Create or link to existing analysis session
+    2. Save decision details (title, description, status)
+    3. Save action items (price changes, campaigns, etc.)
+    4. Log activity
+    
+    **Example Request:**
+    ```json
+    {
+      "scenario_key": "price_prediction",
+      "session_id": null,
+      "filters": {
+        "from_date": "2025-11-23",
+        "to_date": "2025-11-24",
+        "platforms": ["tiki"]
+      },
+      "kpi_summary": {
+        "num_products": 150,
+        "current_total_revenue": 50000000
+      },
+      "ai_summary_insights": ["Insight 1", "Insight 2"],
+      "ai_recommended_actions": ["Action 1", "Action 2"],
+      "title": "Tăng giá 2% cho nhóm máy in Tiki",
+      "description": "Dựa trên phân tích ML",
+      "status": "DRAFT",
+      "actions": [
+        {
+          "action_type": "change_price",
+          "target_level": "product",
+          "product_sk": 12345,
+          "current_value": 100000,
+          "recommended_value": 102000,
+          "chosen_value": 102000,
+          "unit": "VND",
+          "status": "PLANNED"
+        }
+      ]
+    }
+    ```
+    
+    **Response:**
+    Returns full decision detail including generated IDs and timestamps.
+    """
+    try:
+        result = await service.save_decision(user_id, request.dict())
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error saving decision: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get(
+    "/decisions",
+    response_model=DSSDecisionListResponse,
+    operation_id="list_dss_decisions_v1",
+)
+async def list_dss_decisions(
+    scenario_key: Optional[str] = None,
+    status: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 10,
+    service: DSSService = Depends(get_dss_service),
+):
+    """
+    List DSS Decisions with Filters
+    
+    **Purpose:**
+    Retrieve paginated list of decisions with optional filters.
+    
+    **Query Parameters:**
+    - `scenario_key`: Filter by scenario (price_prediction, product_recommendation, review_sentiment)
+    - `status`: Filter by status (DRAFT, APPROVED, REJECTED, IMPLEMENTED)
+    - `from_date`: Filter by created_at >= from_date (ISO format)
+    - `to_date`: Filter by created_at <= to_date (ISO format)
+    - `page`: Page number (default: 1)
+    - `page_size`: Items per page (default: 10)
+    
+    **Example:**
+    ```
+    GET /dss/decisions?scenario_key=price_prediction&status=DRAFT&page=1&page_size=10
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "total": 25,
+      "page": 1,
+      "page_size": 10,
+      "items": [
+        {
+          "decision_id": 1,
+          "scenario_key": "price_prediction",
+          "title": "Tăng giá 2% cho nhóm máy in",
+          "status": "DRAFT",
+          "created_by": 3,
+          "created_by_email": "analyst@example.com",
+          "created_at": "2025-11-30T14:30:00",
+          "num_actions": 5
+        }
+      ]
+    }
+    ```
+    """
+    try:
+        result = await service.list_decisions(
+            scenario_key=scenario_key,
+            status=status,
+            from_date=from_date,
+            to_date=to_date,
+            page=page,
+            page_size=page_size
+        )
+        return result
+    except Exception as e:
+        logger.exception(f"Error listing decisions: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get(
+    "/decisions/{decision_id}",
+    response_model=DSSDecisionDetailResponse,
+    operation_id="get_dss_decision_detail_v1",
+)
+async def get_dss_decision_detail(
+    decision_id: int,
+    service: DSSService = Depends(get_dss_service),
+):
+    """
+    Get DSS Decision Detail
+    
+    **Purpose:**
+    Retrieve full details of a specific decision including:
+    - Decision metadata
+    - Analysis session snapshot
+    - All action items with enriched data (product names, category names, etc.)
+    
+    **Example:**
+    ```
+    GET /dss/decisions/1
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "decision_id": 1,
+      "session_id": 10,
+      "scenario_key": "price_prediction",
+      "title": "Tăng giá 2% cho nhóm máy in Tiki",
+      "description": "Dựa trên phân tích ML",
+      "status": "DRAFT",
+      "created_by": 3,
+      "created_by_email": "analyst@example.com",
+      "created_at": "2025-11-30T14:30:00",
+      "updated_at": "2025-11-30T14:30:00",
+      "filters": {...},
+      "kpi_summary": {...},
+      "ai_summary_insights": [...],
+      "ai_recommended_actions": [...],
+      "actions": [
+        {
+          "action_id": 1,
+          "action_type": "change_price",
+          "target_level": "product",
+          "product_sk": 12345,
+          "product_name": "Máy in HP LaserJet",
+          "current_value": 100000,
+          "recommended_value": 102000,
+          "chosen_value": 102000,
+          "unit": "VND",
+          "status": "PLANNED",
+          "category_name": "Máy in",
+          "platform_name": "Tiki"
+        }
+      ]
+    }
+    ```
+    """
+    try:
+        result = await service.get_decision_detail(decision_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error getting decision detail: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
