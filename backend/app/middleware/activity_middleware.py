@@ -27,6 +27,7 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
         # Get user info from token if available
         user_id = None
         email = None
+        role_at_time = None
         
         try:
             auth_header = request.headers.get("authorization")
@@ -41,13 +42,32 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
                 if payload:
                     user_id = payload.get("user_id")
                     email = payload.get("email")
+                    role_at_time = payload.get("role", payload.get("role_code"))
         except Exception:
             pass  # Continue without user info
+
+        # Auto-detect module based on route
+        module = self._detect_module(request.url.path)
+        
+        # Auto-detect action based on method and path
+        action = self._detect_action(request.method, request.url.path)
+        
+        # Capture request payload (for POST/PUT/PATCH)
+        request_payload = None
+        if request.method in ["POST", "PUT", "PATCH"]:
+            try:
+                body = await request.body()
+                if body:
+                    request_payload = json.loads(body)
+                    # Mask sensitive fields
+                    request_payload = self._mask_sensitive_fields(request_payload)
+            except Exception:
+                pass
 
         # Process request
         response = await call_next(request)
         
-        # Log the activity (disabled temporarily - table not created)
+        # Log the activity
         try:
             # Check if table exists before logging
             if self.db_manager.is_connected:
@@ -56,28 +76,108 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
                 )
                 if table_check and table_check[0].get('exists'):
                     process_time = time.time() - start_time
-                    action = f"{request.method} {request.url.path}"
+                    
                     details = {
                         "status_code": response.status_code,
                         "process_time": round(process_time, 3),
-                        "method": request.method,
-                        "path": request.url.path
                     }
                     if request.query_params:
                         details["query_params"] = dict(request.query_params)
+                    
+                    status = "success" if response.status_code < 400 else "error"
+                    message = None
+                    if response.status_code >= 400:
+                        message = f"Request failed with status {response.status_code}"
                     
                     activity_logger = ActivityLogger(self.db_manager)
                     await activity_logger.log_activity(
                         user_id=user_id,
                         email=email,
                         action=action,
-                        resource=request.url.path,
+                        module=module,
+                        role_at_time=role_at_time,
+                        request_method=request.method,
+                        request_path=str(request.url.path),
+                        request_payload=request_payload,
+                        message=message,
                         details=details,
                         request=request,
-                        status="success" if response.status_code < 400 else "error"
+                        status=status
                     )
         except Exception as e:
             # Silently skip logging if table doesn't exist
-            pass
+            logger.error(f"Middleware logging error: {e}")
 
         return response
+    
+    def _detect_module(self, path: str) -> str:
+        """Detect module from request path"""
+        if "/admin/users" in path or "/auth/" in path:
+            return "IAM"
+        elif "/analytics" in path:
+            return "ANALYTICS"
+        elif "/dss" in path:
+            return "DSS"
+        elif "/ml" in path:
+            return "ML"
+        elif "/data-engineer" in path or "/airflow" in path:
+            return "DATA_PIPELINE"
+        return "GENERAL"
+    
+    def _detect_action(self, method: str, path: str) -> str:
+        """Detect action from method and path"""
+        # Authentication actions
+        if "/auth/login" in path:
+            return "LOGIN"
+        if "/auth/logout" in path:
+            return "LOGOUT"
+        if "/auth/register" in path:
+            return "REGISTER"
+        
+        # User management
+        if "/admin/users" in path:
+            if method == "GET":
+                return "VIEW_USERS"
+            elif method == "POST":
+                return "CREATE_USER"
+            elif method == "PUT" and "/roles" in path:
+                return "UPDATE_USER_ROLE"
+            elif method == "PUT" and "/password" in path:
+                return "CHANGE_PASSWORD"
+            elif method == "PUT":
+                return "UPDATE_USER"
+            elif method == "DELETE":
+                return "DELETE_USER"
+        
+        # DSS operations
+        if "/dss" in path:
+            if "/price" in path:
+                return "RUN_PRICE_DSS"
+            elif "/reco" in path:
+                return "RUN_RECOMMENDATION_DSS"
+            elif "/review" in path:
+                return "RUN_REVIEW_DSS"
+        
+        # ML operations
+        if "/ml" in path:
+            return "RUN_ML_MODEL"
+        
+        # Analytics/Reports
+        if "/analytics" in path or "/report" in path:
+            if "export" in path:
+                return "EXPORT_REPORT"
+            return "VIEW_ANALYTICS"
+        
+        # Default action
+        return f"{method}_{path.split('/')[-1].upper()}" if path.split('/')[-1] else f"{method}_REQUEST"
+    
+    def _mask_sensitive_fields(self, data: dict) -> dict:
+        """Mask sensitive fields in request payload"""
+        masked = data.copy()
+        sensitive_fields = ['password', 'token', 'secret', 'api_key', 'access_token', 'refresh_token']
+        
+        for field in sensitive_fields:
+            if field in masked:
+                masked[field] = "***MASKED***"
+        
+        return masked

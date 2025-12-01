@@ -27,6 +27,22 @@ class DSSService:
     # HELPER METHODS
     # ============================================
 
+    def _convert_decimals_to_float(self, obj):
+        """
+        Recursively convert Decimal objects to float for JSON serialization.
+        PostgreSQL numeric fields return Decimal which json.dumps() can't handle.
+        """
+        from decimal import Decimal
+        
+        if isinstance(obj, Decimal):
+            return float(obj)
+        elif isinstance(obj, dict):
+            return {k: self._convert_decimals_to_float(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_decimals_to_float(item) for item in obj]
+        else:
+            return obj
+
     async def _get_latest_available_date(self, target_date: date) -> Optional[date]:
         """
         Get the latest available date in fact_product_daily that is <= target_date.
@@ -110,7 +126,7 @@ class DSSService:
                     "price_prediction",
                     user_id,
                     json.dumps(dss_result_raw["filters"]),
-                    json.dumps(kpi_summary),
+                    json.dumps(self._convert_decimals_to_float(kpi_summary)),
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     json.dumps(dss_result_raw["date_adjustment_info"]),
@@ -576,7 +592,7 @@ class DSSService:
                     "product_recommendation",
                     user_id,
                     json.dumps(dss_result_raw["filters"]),
-                    json.dumps(kpi_summary),
+                    json.dumps(self._convert_decimals_to_float(kpi_summary)),
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     "/dss/reco/run"
@@ -815,7 +831,7 @@ class DSSService:
                     "review_sentiment",
                     user_id,
                     json.dumps(dss_result_raw["filters"]),
-                    json.dumps(kpi_summary),
+                    json.dumps(self._convert_decimals_to_float(kpi_summary)),
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     "/dss/review/run"

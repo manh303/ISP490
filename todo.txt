@@ -1,420 +1,407 @@
-Đây là phần request
+1. Mục tiêu của Activity Log
+
+Ghi lại mọi hành động quan trọng mà user thực hiện trong hệ thống.
+
+Giúp Admin:
+
+Điều tra “ai đã làm gì, lúc nào, ở đâu”.
+
+Kiểm tra các thao tác nhạy cảm (tạo user, đổi role, xóa data, gọi API ML,…).
+
+Phục vụ audit / báo cáo cho thầy / hội đồng: hệ thống có theo dõi & kiểm soát.
+
+2. Từ góc nhìn Admin – Flow màn hình (Step by Step)
+Step 0 – Điều kiện để dùng
+
+Admin đã:
+
+Đăng nhập thành công.
+
+Có quyền: VIEW_ACTIVITY_LOG.
+
+Menu bên trái (sidebar) có item: “Activity Log” trong nhóm “System / Security”.
+
+Step 1 – Admin mở màn Activity Log
+
+Admin click menu “Activity Log”.
+
+FE gọi API, ví dụ:
+
+GET /api/v1/admin/activity-logs?limit=20&page=1&sort=-created_at
+
+Hệ thống trả về danh sách log mới nhất.
+
+UI chính: 1 bảng (table) với các cột:
+
+Time: Thời điểm xảy ra (Ví dụ: 2025-12-01 10:25:13).
+
+User: Email hoặc full_name (ví dụ: user@example.com (Analyst)).
+
+Role: Role chính hiện tại của user lúc thực hiện hành động (admin, analyst, ml_engineer,…).
+
+Action: Hành động ngắn gọn (ví dụ: LOGIN_SUCCESS, CREATE_USER, UPDATE_ROLE, EXPORT_REPORT, CALL_ML_MODEL…).
+
+Module: Phần hệ thống (ví dụ: IAM, ANALYTICS, DSS, ML, DATA_PIPELINE…).
+
+Resource: Tài nguyên cụ thể (ví dụ: iam_user#123, ml_model#price_forecast_v1.0…).
+
+Status: SUCCESS / FAILED.
+
+IP / User Agent (optional): IP của client, trình duyệt.
+
+More / Detail: nút “View” hoặc icon 👁 để xem chi tiết log.
+
+Step 2 – Filter cơ bản để điều tra nhanh
+
+Ở phía trên bảng là các filter:
+
+Khoảng thời gian (Date range)
+
+Từ ngày – đến ngày (mặc định là Today hoặc 7 ngày gần nhất).
+
+FE gửi query: from=2025-11-25&to=2025-12-01.
+
+User / Email
+
+Input search: gõ email hoặc 1 phần tên.
+
+Query: user_email=user@example.com hoặc keyword=manh.
+
+Role
+
+Dropdown: Admin, Analyst, ML Engineer, Data Engineer, Customer.
+
+Query: role=admin.
+
+Action Type
+
+Dropdown multi-select: LOGIN, LOGOUT, CREATE_USER, UPDATE_USER, DELETE_USER, CHANGE_ROLE, EXPORT_REPORT, RUN_MODEL, UPDATE_MODEL_CONFIG,…
+
+Query: action=CREATE_USER hoặc action=LOGIN_FAILED.
+
+Module
+
+Dropdown: IAM, Analytics, DSS, ML, DataPipeline.
+
+Query: module=IAM.
+
+Status
+
+ALL / SUCCESS / FAILED.
+
+Query: status=FAILED.
+
+Full-text search (Keyword)
+
+Tìm trong request_path, resource_id, detail_message.
+
+Ví dụ: gõ “price_forecast_v1.0”, gõ “tiki_459201”, “dim_product”.
+
+Flow sử dụng:
+
+Admin chọn Date range = hôm nay, module=IAM, action=CREATE_USER.
+
+Bấm Search / Apply filter.
+
+Bảng reload, hiển thị đúng subset log.
+
+Step 3 – Xem chi tiết 1 Activity Log
+
+Khi Admin nghi ngờ 1 hành động, họ cần xem chi tiết.
+
+Admin bấm vào icon 👁 hoặc click vào dòng log.
+
+Mở Drawer / Modal “Activity Details” bên phải.
+
+Trong popup chi tiết có các phần:
+
+3.1. Thông tin chung (Header)
+
+Time: 2025-12-01 10:25:13.
+
+User: admin@example.com.
+
+Role tại thời điểm đó: admin.
+
+Module: IAM.
+
+Action: UPDATE_USER_ROLE.
+
+Status: SUCCESS.
+
+IP: 192.168.1.10.
+
+User Agent: Chrome 142 / Windows.
+
+3.2. Context / Resource
+
+Resource type: iam_user.
+
+Resource ID: user_id = 42.
+
+Resource name: user42@example.com.
+
+3.3. Request Info (nếu log)
+
+Request method: PUT.
+
+Request path: /api/v1/admin/users/42/roles.
+
+Request body (masked):
+
 {
-  "from_date": "2025-11-20",
-  "to_date": "2025-11-25",
-  "platforms": [
-    "tiki",
-    "lazada"
-  ],
-  "categories": [
-    "1",
-    "2"
-  ],
-  "page": 1,
-  "page_size": 10,
-  "scope_mode": "top_n",
-  "top_n": 10,
-  "product_keys": [
-    "string"
-  ],
-  "max_discount_pct": 0.15,
-  "min_margin_pct": 0.1,
-  "min_confidence": 0.7,
-  "min_price_change_pct": 0.02
+  "old_roles": ["analyst"],
+  "new_roles": ["analyst", "ml_engineer"]
 }
 
-Đây là phần response
-{
-  "scenario": "price_prediction",
-  "filters": {
-    "from_date": "2025-11-20",
-    "to_date": "2025-11-25",
-    "platforms": [
-      "tiki",
-      "lazada"
-    ],
-    "categories": [
-      "1",
-      "2"
-    ]
-  },
-  "kpi_summary": {
-    "num_products": 10,
-    "num_with_recommendation": 10,
-    "current_revenue": 517453085,
-    "projected_revenue": 953666283.33,
-    "expected_revenue_uplift_pct": 0.8430004786424261,
-    "avg_confidence": 0.9515540870423264
-  },
-  "table_data": [
-    {
-      "product_key": "tiki_278890829",
-      "product_name": "Điện Thoại Samsung Galaxy A17 5G, Camera 50MP & IOS, Kính Cường Lực Gorilla Victus, AI Gemini - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2645000,
-      "predicted_price": 5696299.94,
-      "price_diff": 3051299.94,
-      "price_change_pct": 1.1536105633270322,
-      "current_revenue": 396750000,
-      "projected_revenue": 854444991,
-      "expected_revenue_change_pct": 1.1536105633270322,
-      "confidence": 0.9979494689319327,
-      "current_orders": 150,
-      "avg_rating": 4.185,
-      "total_reviews": 2
-    },
-    {
-      "product_key": "tiki_276393034",
-      "product_name": "Bao da kèm bàn phím cho iPad Air 5 2022 10.9 inch chính hãng Dux Ducis có bàn di chuột TrackPad - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 424279,
-      "predicted_price": 848710.46,
-      "price_diff": 424431.46,
-      "price_change_pct": 1.000359339019843,
-      "current_revenue": 31820925,
-      "projected_revenue": 63653284.5,
-      "expected_revenue_change_pct": 1.000359339019843,
-      "confidence": 1,
-      "current_orders": 75,
-      "avg_rating": 5,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "lazada_3254739423",
-      "product_name": "Samsung Galaxy M51 Ram 8/128Gb Battery 7000 with Nfc",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2799000,
-      "predicted_price": 21419.94,
-      "price_diff": -2777580.06,
-      "price_change_pct": -0.9923472883172562,
-      "current_revenue": 44784000,
-      "projected_revenue": 342719.04,
-      "expected_revenue_change_pct": -0.9923472883172562,
-      "confidence": 0.9516805369202714,
-      "current_orders": 16,
-      "avg_rating": 3.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_55387101",
-      "product_name": "Bảng số kiêm giá đỡ điện thoại trên ô tô (Màu ngẫu nhiên, sử dụng với mọi loại xe ô tô, điện thoại)",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 30000,
-      "predicted_price": 56497.16,
-      "price_diff": 26497.16,
-      "price_change_pct": 0.8832386666666667,
-      "current_revenue": 2250000,
-      "projected_revenue": 4237287,
-      "expected_revenue_change_pct": 0.8832386666666667,
-      "confidence": 0.9585795108993089,
-      "current_orders": 75,
-      "avg_rating": 4.63,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "tiki_278152303",
-      "product_name": "Giá đỡ điện thoại khi cắm sạc tiện lợi hàng nhập khẩu",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3920,
-      "predicted_price": 6515.62,
-      "price_diff": 2595.62,
-      "price_change_pct": 0.6621479591836735,
-      "current_revenue": 1070160,
-      "projected_revenue": 1778764.26,
-      "expected_revenue_change_pct": 0.6621479591836735,
-      "confidence": 0.9112808911508038,
-      "current_orders": 273,
-      "avg_rating": 4.47,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_274371195",
-      "product_name": "Khăn lau kính/lau điện thoại chống sương mù",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4000,
-      "predicted_price": 6515.62,
-      "price_diff": 2515.62,
-      "price_change_pct": 0.628905,
-      "current_revenue": 1248000,
-      "projected_revenue": 2032873.44,
-      "expected_revenue_change_pct": 0.628905,
-      "confidence": 0.9112808911508038,
-      "current_orders": 312,
-      "avg_rating": 4.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_247763618",
-      "product_name": "Giá đỡ điện thoại iCockpit tích hợp cổng sạc USB",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 220000,
-      "predicted_price": 103885.29,
-      "price_diff": -116114.71,
-      "price_change_pct": -0.5277941363636364,
-      "current_revenue": 30800000,
-      "projected_revenue": 14543940.6,
-      "expected_revenue_change_pct": -0.5277941363636364,
-      "confidence": 0.9329728010577821,
-      "current_orders": 140,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_275742132",
-      "product_name": "Miếng dán điện thoại trong ô tô (đen) 206038 ( hàng nhập khẩu )",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 2130000,
-      "projected_revenue": 3082137.69,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 213,
-      "avg_rating": 4.32,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980994",
-      "product_name": "Mã thẻ điện thoại Vinaphone 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3600000,
-      "projected_revenue": 5209246.8,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 360,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980931",
-      "product_name": "Mã thẻ điện thoại Viettel 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3000000,
-      "projected_revenue": 4341039,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 300,
-      "avg_rating": 4,
-      "total_reviews": 4
-    }
-  ],
-  "date_adjustment_info": {
-    "requested_from_date": "2025-11-20",
-    "requested_to_date": "2025-11-25",
-    "actual_from_date": "2025-11-20",
-    "actual_to_date": "2025-11-25",
-    "date_adjusted": false
-  },
-  "items": [
-    {
-      "product_key": "tiki_278890829",
-      "product_name": "Điện Thoại Samsung Galaxy A17 5G, Camera 50MP & IOS, Kính Cường Lực Gorilla Victus, AI Gemini - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2645000,
-      "predicted_price": 5696299.94,
-      "price_diff": 3051299.94,
-      "price_change_pct": 1.1536105633270322,
-      "current_revenue": 396750000,
-      "projected_revenue": 854444991,
-      "expected_revenue_change_pct": 1.1536105633270322,
-      "confidence": 0.9979494689319327,
-      "current_orders": 150,
-      "avg_rating": 4.185,
-      "total_reviews": 2
-    },
-    {
-      "product_key": "tiki_276393034",
-      "product_name": "Bao da kèm bàn phím cho iPad Air 5 2022 10.9 inch chính hãng Dux Ducis có bàn di chuột TrackPad - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 424279,
-      "predicted_price": 848710.46,
-      "price_diff": 424431.46,
-      "price_change_pct": 1.000359339019843,
-      "current_revenue": 31820925,
-      "projected_revenue": 63653284.5,
-      "expected_revenue_change_pct": 1.000359339019843,
-      "confidence": 1,
-      "current_orders": 75,
-      "avg_rating": 5,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "lazada_3254739423",
-      "product_name": "Samsung Galaxy M51 Ram 8/128Gb Battery 7000 with Nfc",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2799000,
-      "predicted_price": 21419.94,
-      "price_diff": -2777580.06,
-      "price_change_pct": -0.9923472883172562,
-      "current_revenue": 44784000,
-      "projected_revenue": 342719.04,
-      "expected_revenue_change_pct": -0.9923472883172562,
-      "confidence": 0.9516805369202714,
-      "current_orders": 16,
-      "avg_rating": 3.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_55387101",
-      "product_name": "Bảng số kiêm giá đỡ điện thoại trên ô tô (Màu ngẫu nhiên, sử dụng với mọi loại xe ô tô, điện thoại)",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 30000,
-      "predicted_price": 56497.16,
-      "price_diff": 26497.16,
-      "price_change_pct": 0.8832386666666667,
-      "current_revenue": 2250000,
-      "projected_revenue": 4237287,
-      "expected_revenue_change_pct": 0.8832386666666667,
-      "confidence": 0.9585795108993089,
-      "current_orders": 75,
-      "avg_rating": 4.63,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "tiki_278152303",
-      "product_name": "Giá đỡ điện thoại khi cắm sạc tiện lợi hàng nhập khẩu",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3920,
-      "predicted_price": 6515.62,
-      "price_diff": 2595.62,
-      "price_change_pct": 0.6621479591836735,
-      "current_revenue": 1070160,
-      "projected_revenue": 1778764.26,
-      "expected_revenue_change_pct": 0.6621479591836735,
-      "confidence": 0.9112808911508038,
-      "current_orders": 273,
-      "avg_rating": 4.47,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_274371195",
-      "product_name": "Khăn lau kính/lau điện thoại chống sương mù",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4000,
-      "predicted_price": 6515.62,
-      "price_diff": 2515.62,
-      "price_change_pct": 0.628905,
-      "current_revenue": 1248000,
-      "projected_revenue": 2032873.44,
-      "expected_revenue_change_pct": 0.628905,
-      "confidence": 0.9112808911508038,
-      "current_orders": 312,
-      "avg_rating": 4.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_247763618",
-      "product_name": "Giá đỡ điện thoại iCockpit tích hợp cổng sạc USB",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 220000,
-      "predicted_price": 103885.29,
-      "price_diff": -116114.71,
-      "price_change_pct": -0.5277941363636364,
-      "current_revenue": 30800000,
-      "projected_revenue": 14543940.6,
-      "expected_revenue_change_pct": -0.5277941363636364,
-      "confidence": 0.9329728010577821,
-      "current_orders": 140,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_275742132",
-      "product_name": "Miếng dán điện thoại trong ô tô (đen) 206038 ( hàng nhập khẩu )",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 2130000,
-      "projected_revenue": 3082137.69,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 213,
-      "avg_rating": 4.32,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980994",
-      "product_name": "Mã thẻ điện thoại Vinaphone 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3600000,
-      "projected_revenue": 5209246.8,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 360,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980931",
-      "product_name": "Mã thẻ điện thoại Viettel 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3000000,
-      "projected_revenue": 4341039,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 300,
-      "avg_rating": 4,
-      "total_reviews": 4
-    }
-  ],
-  "total_count": 802,
-  "ai_summary_insights": [
-    "Sản phẩm 'Điện Thoại Samsung Galaxy A17 5G' hiện đang bị định giá thấp trên thị trường, có thể tăng giá lên tối thiểu 2,800,000 ₫ để tận dụng tiềm năng tăng doanh thu 115.4%.",
-    "Bao da kèm bàn phím cho iPad Air 5 có độ nhạy cảm về giá cao, doanh thu dự kiến tăng gấp đôi với giá đề xuất tối ưu, cho thấy rằng khách hàng sẵn sàng chi trả nhiều hơn cho sản phẩm này.",
-    "Sản phẩm 'Samsung Galaxy M51' cho thấy một dấu hiệu bất thường với sự giảm doanh thu 99.2%, có thể do giá hiện tại quá cao hoặc không còn hấp dẫn. Cần xem xét lại giá và tính năng để xác định nguyên nhân.",
-    "Sản phẩm 'Bảng số kiêm giá đỡ điện thoại' có tiềm năng tăng biên lợi nhuận lên 88.3% với việc điều chỉnh giá nhẹ, cho thấy nhu cầu cao trong phân khúc này.",
-    "Sản phẩm 'Giá đỡ điện thoại khi cắm sạc' có thể được tối ưu hóa hơn nữa với chiến lược bundle pricing để tăng giá trị cho người tiêu dùng và thúc đẩy doanh thu lên 66.2%."
-  ],
-  "ai_recommended_actions": [
-    "Tăng giá sản phẩm 'Điện Thoại Samsung Galaxy A17 5G' lên 2,800,000 ₫ để tận dụng tiềm năng doanh thu cao hơn.",
-    "Thực hiện chiến lược tâm lý giá cho sản phẩm 'Bao da kèm bàn phím cho iPad Air 5' bằng cách điều chỉnh giá thành 499,000 ₫ thay vì 500,000 ₫.",
-    "Thực hiện A/B testing cho sản phẩm 'Samsung Galaxy M51' để xác định giá tối ưu và tìm hiểu phản hồi từ khách hàng.",
-    "Tổ chức flash sale cho sản phẩm 'Bảng số kiêm giá đỡ điện thoại' với mức giá khuyến mãi trong khoảng thời gian ngắn để kích thích doanh thu.",
-    "Áp dụng chiến lược bundle pricing cho 'Giá đỡ điện thoại khi cắm sạc' bằng cách kết hợp nó với một sản phẩm liên quan khác để tăng giá trị cho người tiêu dùng.",
-    "Khảo sát ý kiến khách hàng về mức giá cho sản phẩm 'Samsung Galaxy M51' để hiểu rõ hơn về nhu cầu và kỳ vọng của họ.",
-    "Thực hiện quảng cáo tập trung vào các ưu điểm nổi bật của sản phẩm 'Điện Thoại Samsung Galaxy A17 5G' nhằm gia tăng nhận thức về giá trị và khuyến khích khách hàng chi tiêu nhiều hơn."
-  ],
-  "generated_at": "2025-11-30T14:47:10.271249",
-  "ai_model_used": "gpt-4o-mini",
-  "session_id": 1
-}
+
+Các field nhạy cảm (password, token) phải mask hoặc không log.
+
+3.4. Before/After (nếu có)
+
+Before:
+
+roles: ["analyst"]
+
+After:
+
+roles: ["analyst", "ml_engineer"]
+
+=> Admin nhìn vào biết ai đã cấp thêm quyền ML Engineer cho user này, lúc nào.
+
+3.5. Response / Error (nếu FAILED)
+
+Response code: 403 hoặc 500.
+
+Error message (safe):
+
+PermissionDenied: User 'analyst@example.com' tried to call /api/v1/admin/users without role 'admin'.
+
+Step 4 – Phân trang, sắp xếp
+
+Có Pagination: page 1 2 3 ..., page size: 20/50/100.
+
+Có Sort theo:
+
+Time (mới → cũ, mặc định).
+
+User.
+
+Action.
+
+FE gửi query:
+
+page=2&limit=50&sort=created_at_desc.
+
+Step 5 – Export & Báo cáo
+
+Để phục vụ báo cáo, audit hoặc nộp minh chứng:
+
+Admin filter xong (ví dụ: 1 tuần gần nhất, module = IAM, action = CREATE_USER / UPDATE_ROLE).
+
+Bấm nút Export (CSV/Excel).
+
+FE gọi API, ví dụ:
+
+GET /api/v1/admin/activity-logs/export?...(các filter)
+
+Backend tạo file CSV/Excel và trả về link hoặc file.
+
+Admin tải file, có thể mở bằng Excel để:
+
+Lọc thêm.
+
+Đưa vào báo cáo, slide, phụ lục.
+
+Step 6 – Một số kịch bản sử dụng thực tế
+
+Điều tra “Ai cấp quyền Admin cho user X?”
+
+Filter:
+
+action=UPDATE_USER_ROLE
+
+resource=iam_user#id_of_X
+
+Xem log, biết chính xác:
+
+Admin nào làm.
+
+Thời gian.
+
+Before/After role.
+
+Điều tra “Tại sao user bảo bị đăng nhập lỗi?”
+
+Filter:
+
+module=IAM
+
+action in [LOGIN_SUCCESS, LOGIN_FAILED]
+
+user_email=that_user@example.com
+
+Xem chuỗi log:
+
+Thấy nhiều LOGIN_FAILED, reason = “wrong_password”.
+
+Hoặc lỗi ACCOUNT_LOCKED.
+
+Kiểm tra ai đã export dữ liệu nhạy cảm
+
+Filter:
+
+action=EXPORT_REPORT
+
+module=ANALYTICS hoặc DSS.
+
+Xem:
+
+Ai xuất.
+
+Thời điểm.
+
+Loại report gì (overview, review detail, price forecast…).
+
+Theo dõi call ML model
+
+Filter:
+
+module=ML
+
+Thấy:
+
+Node nào call model.
+
+Số lượng request.
+
+Lỗi trong lúc chạy.
+
+3. Từ góc nhìn hệ thống – Ghi log như thế nào (Step by Step)
+
+Để màn Activity Log chạy được, dưới backend sẽ có luồng ghi log như sau.
+
+Step 1 – Thiết kế bảng iam_activity_log / iam_audit_log
+
+Ví dụ schema tối thiểu:
+
+log_id (PK).
+
+timestamp (timestamptz).
+
+user_id (FK tới iam_user).
+
+user_email (denormalize cho tiện query).
+
+role_at_time (text / jsonb).
+
+module (IAM / Analytics / DSS / ML / DataPipeline…).
+
+action (LOGIN_SUCCESS, CREATE_USER, UPDATE_USER, EXPORT_REPORT,…).
+
+resource_type (iam_user, ml_model, report, dataset,…).
+
+resource_id (text).
+
+request_path (text).
+
+request_method (text).
+
+request_payload (jsonb, optional, đã mask).
+
+before_data (jsonb, optional).
+
+after_data (jsonb, optional).
+
+status (SUCCESS / FAILED).
+
+ip_address (text).
+
+user_agent (text).
+
+message (text – mô tả ngắn, lỗi, note).
+
+Step 2 – Middleware ghi log cho từng request
+
+Mỗi lần có request tới backend:
+
+Middleware đọc:
+
+user_id từ JWT / session.
+
+path, method, body.
+
+IP, user-agent.
+
+Xác định module + action dựa vào route:
+
+/api/v1/admin/users → module IAM, action CREATE_USER (nếu POST).
+
+/api/v1/analytics/... → module ANALYTICS, action tương ứng.
+
+Sau khi xử lý xong:
+
+Nếu không lỗi → status = SUCCESS.
+
+Nếu raise exception → status = FAILED, log kèm error message.
+
+Insert 1 record vào iam_activity_log.
+
+Step 3 – Service riêng cho log
+
+Để Admin UI gọi:
+
+Service ActivityLogService với các method:
+
+list_logs(filters, pagination).
+
+get_log_detail(log_id).
+
+export_logs(filters).
+
+API gợi ý:
+
+GET /api/v1/admin/activity-logs
+Trả về list log (kèm meta pagination).
+
+GET /api/v1/admin/activity-logs/{log_id}
+Trả về chi tiết 1 log.
+
+GET /api/v1/admin/activity-logs/export
+Trả về file.
+
+Step 4 – Phân quyền
+
+Chỉ user có role admin hoặc security_admin mới xem được.
+
+Một số log rất nhạy cảm (token, password) phải ẩn nội dung:
+
+Chỉ show ***MASKED***.
+
+Có thể thêm config:
+
+Thời gian lưu log: 6 tháng / 1 năm.
+
+Dọn log cũ bằng job định kỳ (Airflow / cron).
+
+4. Tóm tắt ngắn gọn
+
+Activity Log của Admin là:
+
+1 màn hình trong Admin Panel để:
+
+Xem bảng tất cả hoạt động.
+
+Lọc theo thời gian, user, role, module, action, status, keyword.
+
+Xem chi tiết từng log (before/after, request, resource).
+
+Export ra CSV/Excel cho audit / báo cáo.
+
+Phần backend:
+
+Middleware + service ghi log vào bảng iam_activity_log.
+
+API cho Admin đọc / export log.
+
+Bảo mật & phân quyền rõ ràng.
