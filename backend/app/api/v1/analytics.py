@@ -280,25 +280,21 @@ async def get_product_report(
     Report chi tiết cho 1 product:
       - Timeseries: giá / rating / review theo ngày
       - Review summary: tổng số review, breakdown rating, top review
-    UI có thể dùng report này cho màn product-detail report.
-    
-    Tối ưu: Chạy parallel timeseries và review summary để giảm thời gian response.
     """
-    # Chạy parallel 2 queries độc lập (nhanh hơn 50%)
-    timeseries, review_summary = await asyncio.gather(
-        service.get_product_timeseries(
-            product_key=product_key,
-            platform_code=platform_code,
-            from_date=from_date,
-            to_date=to_date,
-        ),
-        service.get_review_summary(
-            product_key=product_key,
-            platform_code=platform_code,
-            from_date=from_date,
-            to_date=to_date,
-            top_n=5,
-        ),
+    # CHẠY TUẦN TỰ để tránh dùng chung 1 connection song song
+    timeseries = await service.get_product_timeseries(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
+    review_summary = await service.get_review_summary(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+        top_n=5,
     )
 
     return ProductReportResponse(
