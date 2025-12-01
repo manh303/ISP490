@@ -101,10 +101,9 @@ async def get_overview_trends(
     to_date: date = Query(...),
     platform_code: Optional[str] = Query(None),
     category_key: Optional[str] = Query(None),
-    max_points: int = Query(365, ge=30, le=1000, description="Maximum number of data points (auto-sampling for large ranges)"),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
-    return await service.get_overview_trends(from_date, to_date, platform_code, category_key, max_points)
+    return await service.get_overview_trends(from_date, to_date, platform_code, category_key)
 
 
 # ====== PLATFORM COMPARISON ======
@@ -239,14 +238,9 @@ async def get_overview_report(
     
     Tối ưu: Chạy parallel các queries độc lập để giảm thời gian response.
     """
-    # Tính max_points dựa trên date range để tối ưu performance
-    days_diff = (to_date - from_date).days + 1
-    max_points = min(365, max(30, days_diff))  # Tối đa 365 points, tối thiểu 30
-    
-    # Chạy parallel các queries độc lập (nhanh hơn 60-70%)
     tasks = [
         service.get_overview_kpis(from_date, to_date, platform_code, category_key),
-        service.get_overview_trends(from_date, to_date, platform_code, category_key, max_points),
+        service.get_overview_trends(from_date, to_date, platform_code, category_key),
         service.get_platform_comparison(from_date, to_date, category_key),
     ]
     

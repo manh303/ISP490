@@ -1,407 +1,453 @@
-1. Mục tiêu của Activity Log
-
-Ghi lại mọi hành động quan trọng mà user thực hiện trong hệ thống.
-
-Giúp Admin:
-
-Điều tra “ai đã làm gì, lúc nào, ở đâu”.
-
-Kiểm tra các thao tác nhạy cảm (tạo user, đổi role, xóa data, gọi API ML,…).
-
-Phục vụ audit / báo cáo cho thầy / hội đồng: hệ thống có theo dõi & kiểm soát.
-
-2. Từ góc nhìn Admin – Flow màn hình (Step by Step)
-Step 0 – Điều kiện để dùng
-
-Admin đã:
-
-Đăng nhập thành công.
-
-Có quyền: VIEW_ACTIVITY_LOG.
-
-Menu bên trái (sidebar) có item: “Activity Log” trong nhóm “System / Security”.
-
-Step 1 – Admin mở màn Activity Log
-
-Admin click menu “Activity Log”.
-
-FE gọi API, ví dụ:
-
-GET /api/v1/admin/activity-logs?limit=20&page=1&sort=-created_at
-
-Hệ thống trả về danh sách log mới nhất.
-
-UI chính: 1 bảng (table) với các cột:
-
-Time: Thời điểm xảy ra (Ví dụ: 2025-12-01 10:25:13).
-
-User: Email hoặc full_name (ví dụ: user@example.com (Analyst)).
-
-Role: Role chính hiện tại của user lúc thực hiện hành động (admin, analyst, ml_engineer,…).
-
-Action: Hành động ngắn gọn (ví dụ: LOGIN_SUCCESS, CREATE_USER, UPDATE_ROLE, EXPORT_REPORT, CALL_ML_MODEL…).
-
-Module: Phần hệ thống (ví dụ: IAM, ANALYTICS, DSS, ML, DATA_PIPELINE…).
-
-Resource: Tài nguyên cụ thể (ví dụ: iam_user#123, ml_model#price_forecast_v1.0…).
-
-Status: SUCCESS / FAILED.
-
-IP / User Agent (optional): IP của client, trình duyệt.
-
-More / Detail: nút “View” hoặc icon 👁 để xem chi tiết log.
-
-Step 2 – Filter cơ bản để điều tra nhanh
-
-Ở phía trên bảng là các filter:
-
-Khoảng thời gian (Date range)
-
-Từ ngày – đến ngày (mặc định là Today hoặc 7 ngày gần nhất).
-
-FE gửi query: from=2025-11-25&to=2025-12-01.
-
-User / Email
-
-Input search: gõ email hoặc 1 phần tên.
-
-Query: user_email=user@example.com hoặc keyword=manh.
-
-Role
-
-Dropdown: Admin, Analyst, ML Engineer, Data Engineer, Customer.
-
-Query: role=admin.
-
-Action Type
-
-Dropdown multi-select: LOGIN, LOGOUT, CREATE_USER, UPDATE_USER, DELETE_USER, CHANGE_ROLE, EXPORT_REPORT, RUN_MODEL, UPDATE_MODEL_CONFIG,…
-
-Query: action=CREATE_USER hoặc action=LOGIN_FAILED.
-
-Module
-
-Dropdown: IAM, Analytics, DSS, ML, DataPipeline.
-
-Query: module=IAM.
-
-Status
-
-ALL / SUCCESS / FAILED.
-
-Query: status=FAILED.
-
-Full-text search (Keyword)
-
-Tìm trong request_path, resource_id, detail_message.
-
-Ví dụ: gõ “price_forecast_v1.0”, gõ “tiki_459201”, “dim_product”.
-
-Flow sử dụng:
-
-Admin chọn Date range = hôm nay, module=IAM, action=CREATE_USER.
-
-Bấm Search / Apply filter.
-
-Bảng reload, hiển thị đúng subset log.
-
-Step 3 – Xem chi tiết 1 Activity Log
-
-Khi Admin nghi ngờ 1 hành động, họ cần xem chi tiết.
-
-Admin bấm vào icon 👁 hoặc click vào dòng log.
-
-Mở Drawer / Modal “Activity Details” bên phải.
-
-Trong popup chi tiết có các phần:
-
-3.1. Thông tin chung (Header)
-
-Time: 2025-12-01 10:25:13.
-
-User: admin@example.com.
-
-Role tại thời điểm đó: admin.
-
-Module: IAM.
-
-Action: UPDATE_USER_ROLE.
-
-Status: SUCCESS.
-
-IP: 192.168.1.10.
-
-User Agent: Chrome 142 / Windows.
-
-3.2. Context / Resource
-
-Resource type: iam_user.
-
-Resource ID: user_id = 42.
-
-Resource name: user42@example.com.
-
-3.3. Request Info (nếu log)
-
-Request method: PUT.
-
-Request path: /api/v1/admin/users/42/roles.
-
-Request body (masked):
-
-{
-  "old_roles": ["analyst"],
-  "new_roles": ["analyst", "ml_engineer"]
-}
-
-
-Các field nhạy cảm (password, token) phải mask hoặc không log.
-
-3.4. Before/After (nếu có)
-
-Before:
-
-roles: ["analyst"]
-
-After:
-
-roles: ["analyst", "ml_engineer"]
-
-=> Admin nhìn vào biết ai đã cấp thêm quyền ML Engineer cho user này, lúc nào.
-
-3.5. Response / Error (nếu FAILED)
-
-Response code: 403 hoặc 500.
-
-Error message (safe):
-
-PermissionDenied: User 'analyst@example.com' tried to call /api/v1/admin/users without role 'admin'.
-
-Step 4 – Phân trang, sắp xếp
-
-Có Pagination: page 1 2 3 ..., page size: 20/50/100.
-
-Có Sort theo:
-
-Time (mới → cũ, mặc định).
-
-User.
-
-Action.
-
-FE gửi query:
-
-page=2&limit=50&sort=created_at_desc.
-
-Step 5 – Export & Báo cáo
-
-Để phục vụ báo cáo, audit hoặc nộp minh chứng:
-
-Admin filter xong (ví dụ: 1 tuần gần nhất, module = IAM, action = CREATE_USER / UPDATE_ROLE).
-
-Bấm nút Export (CSV/Excel).
-
-FE gọi API, ví dụ:
-
-GET /api/v1/admin/activity-logs/export?...(các filter)
-
-Backend tạo file CSV/Excel và trả về link hoặc file.
-
-Admin tải file, có thể mở bằng Excel để:
-
-Lọc thêm.
-
-Đưa vào báo cáo, slide, phụ lục.
-
-Step 6 – Một số kịch bản sử dụng thực tế
-
-Điều tra “Ai cấp quyền Admin cho user X?”
-
-Filter:
-
-action=UPDATE_USER_ROLE
-
-resource=iam_user#id_of_X
-
-Xem log, biết chính xác:
-
-Admin nào làm.
-
-Thời gian.
-
-Before/After role.
-
-Điều tra “Tại sao user bảo bị đăng nhập lỗi?”
-
-Filter:
-
-module=IAM
-
-action in [LOGIN_SUCCESS, LOGIN_FAILED]
-
-user_email=that_user@example.com
-
-Xem chuỗi log:
-
-Thấy nhiều LOGIN_FAILED, reason = “wrong_password”.
-
-Hoặc lỗi ACCOUNT_LOCKED.
-
-Kiểm tra ai đã export dữ liệu nhạy cảm
-
-Filter:
-
-action=EXPORT_REPORT
-
-module=ANALYTICS hoặc DSS.
-
-Xem:
-
-Ai xuất.
-
-Thời điểm.
-
-Loại report gì (overview, review detail, price forecast…).
-
-Theo dõi call ML model
-
-Filter:
-
-module=ML
-
-Thấy:
-
-Node nào call model.
-
-Số lượng request.
-
-Lỗi trong lúc chạy.
-
-3. Từ góc nhìn hệ thống – Ghi log như thế nào (Step by Step)
-
-Để màn Activity Log chạy được, dưới backend sẽ có luồng ghi log như sau.
-
-Step 1 – Thiết kế bảng iam_activity_log / iam_audit_log
-
-Ví dụ schema tối thiểu:
-
-log_id (PK).
-
-timestamp (timestamptz).
-
-user_id (FK tới iam_user).
-
-user_email (denormalize cho tiện query).
-
-role_at_time (text / jsonb).
-
-module (IAM / Analytics / DSS / ML / DataPipeline…).
-
-action (LOGIN_SUCCESS, CREATE_USER, UPDATE_USER, EXPORT_REPORT,…).
-
-resource_type (iam_user, ml_model, report, dataset,…).
-
-resource_id (text).
-
-request_path (text).
-
-request_method (text).
-
-request_payload (jsonb, optional, đã mask).
-
-before_data (jsonb, optional).
-
-after_data (jsonb, optional).
-
-status (SUCCESS / FAILED).
-
-ip_address (text).
-
-user_agent (text).
-
-message (text – mô tả ngắn, lỗi, note).
-
-Step 2 – Middleware ghi log cho từng request
-
-Mỗi lần có request tới backend:
-
-Middleware đọc:
-
-user_id từ JWT / session.
-
-path, method, body.
-
-IP, user-agent.
-
-Xác định module + action dựa vào route:
-
-/api/v1/admin/users → module IAM, action CREATE_USER (nếu POST).
-
-/api/v1/analytics/... → module ANALYTICS, action tương ứng.
-
-Sau khi xử lý xong:
-
-Nếu không lỗi → status = SUCCESS.
-
-Nếu raise exception → status = FAILED, log kèm error message.
-
-Insert 1 record vào iam_activity_log.
-
-Step 3 – Service riêng cho log
-
-Để Admin UI gọi:
-
-Service ActivityLogService với các method:
-
-list_logs(filters, pagination).
-
-get_log_detail(log_id).
-
-export_logs(filters).
-
-API gợi ý:
-
-GET /api/v1/admin/activity-logs
-Trả về list log (kèm meta pagination).
-
-GET /api/v1/admin/activity-logs/{log_id}
-Trả về chi tiết 1 log.
-
-GET /api/v1/admin/activity-logs/export
-Trả về file.
-
-Step 4 – Phân quyền
-
-Chỉ user có role admin hoặc security_admin mới xem được.
-
-Một số log rất nhạy cảm (token, password) phải ẩn nội dung:
-
-Chỉ show ***MASKED***.
-
-Có thể thêm config:
-
-Thời gian lưu log: 6 tháng / 1 năm.
-
-Dọn log cũ bằng job định kỳ (Airflow / cron).
-
-4. Tóm tắt ngắn gọn
-
-Activity Log của Admin là:
-
-1 màn hình trong Admin Panel để:
-
-Xem bảng tất cả hoạt động.
-
-Lọc theo thời gian, user, role, module, action, status, keyword.
-
-Xem chi tiết từng log (before/after, request, resource).
-
-Export ra CSV/Excel cho audit / báo cáo.
-
-Phần backend:
-
-Middleware + service ghi log vào bảng iam_activity_log.
-
-API cho Admin đọc / export log.
-
-Bảo mật & phân quyền rõ ràng.
+# IMPLEMENTATION PLAN: Fix Hardcoded ML Online APIs
+# Target APIs: /ml/price-predictions/online và /ml/sentiment/online
+# Date: 2025-12-01
+
+================================================================================
+1. PROBLEM STATEMENT
+================================================================================
+
+Hiện tại 2 API sau đang trả về kết quả HARDCODED, không sử dụng model thật:
+
+1.1. /ml/price-predictions/online (ml_service.py lines 300-325)
+   - Trả về dummy_price = 1000000.0 cố định
+   - CI bounds = dummy_price * 0.9/1.1
+   - latency_ms = 5 (fake)
+   - Không tải model thật, không predict
+
+1.2. /ml/sentiment/online (ml_service.py lines 522-553)
+   - Logic đơn giản: if "tốt"/"ngon" → positive, "tệ"/"dở" → negative
+   - Score cố định 0.9 hoặc 0.6
+   - Không dùng model ML thật
+
+VẤN ĐỀ: 
+- Không thể demo được khả năng ML của hệ thống
+- Kết quả không realistic, không thể validate
+- Không tận dụng model registry (ml.dim_ml_model)
+
+================================================================================
+2. SOLUTION ARCHITECTURE
+================================================================================
+
+2.1. Nguyên tắc thiết kế
+   - Tận dụng Model Registry (ml.dim_ml_model) để quản lý models
+   - Load models động từ file system hoặc database
+   - Cache models trong memory để tránh reload liên tục
+   - Lấy features từ DWH hoặc từ request payload
+   - Tính toán latency thực tế
+
+2.2. Components cần thêm
+   - Helper method: _resolve_model() để chọn model từ registry
+   - Module mới: app/ml_runtime.py để load & cache models
+   - Update ml_service.py: thay stub logic bằng real prediction
+
+================================================================================
+3. IMPLEMENTATION STEPS
+================================================================================
+
+3.1. STEP 1: Tạo helper _resolve_model() trong MLService
+--------------------------------------------------------------------------------
+File: backend/app/services/ml_service.py
+
+Thêm method mới vào class MLService:
+
+    async def _resolve_model(
+        self,
+        model_type: str,
+        model_name: Optional[str],
+        model_version: Optional[str],
+    ) -> MLModelResponse:
+        """
+        Chọn model từ ml.dim_ml_model theo logic:
+        - Nếu truyền model_name/model_version → dùng exact match
+        - Nếu không → lấy model mới nhất có status='active' cho model_type
+        
+        Raises RuntimeError nếu không tìm thấy model phù hợp.
+        """
+        query = """
+            SELECT model_sk, model_name, model_type, model_version,
+                   training_data_until, metrics, status, created_at
+            FROM ml.dim_ml_model
+            WHERE model_type = $1
+              AND status = 'active'
+        """
+        params = [model_type]
+
+        if model_name:
+            query += f" AND model_name = ${len(params)+1}"
+            params.append(model_name)
+        if model_version:
+            query += f" AND model_version = ${len(params)+1}"
+            params.append(model_version)
+
+        query += " ORDER BY created_at DESC LIMIT 1"
+
+        row = await self.db.fetchrow(query, *params)
+        if not row:
+            raise RuntimeError(f"No active model found for type={model_type}")
+
+        metrics = row["metrics"]
+        if isinstance(metrics, str):
+            metrics = json.loads(metrics)
+
+        return MLModelResponse(
+            model_sk=row["model_sk"],
+            model_name=row["model_name"],
+            model_type=row["model_type"],
+            model_version=row["model_version"],
+            training_data_until=row["training_data_until"],
+            metrics=metrics,
+            status=row["status"],
+            created_at=row["created_at"],
+        )
+
+BENEFIT: 
+- Tự động chọn model mới nhất nếu FE không chỉ định
+- Support A/B testing: FE có thể chọn specific version
+- Centralized error handling khi không có model
+
+
+3.2. STEP 2: Tạo module ml_runtime.py để load & cache models
+--------------------------------------------------------------------------------
+File: backend/app/ml_runtime.py (NEW FILE)
+
+import os
+import pickle
+from functools import lru_cache
+from pathlib import Path
+from typing import Tuple, Any
+
+# Đọc từ env variable, mặc định là thư mục "models" trong root
+MODEL_DIR = Path(os.getenv("ML_MODEL_DIR", "models"))
+
+@lru_cache(maxsize=10)
+def load_price_model(model_name: str, model_version: str) -> Any:
+    """
+    Load price prediction model từ file .pkl
+    Quy ước tên file: {model_name}_{model_version}.pkl
+    VD: price_forecast_rf_v1.0.pkl
+    
+    Cache 10 models gần nhất để tránh reload
+    """
+    path = MODEL_DIR / f"{model_name}_{model_version}.pkl"
+    if not path.exists():
+        raise FileNotFoundError(f"Model file not found: {path}")
+    
+    with open(path, "rb") as f:
+        model = pickle.load(f)
+    return model
+
+@lru_cache(maxsize=10)
+def load_sentiment_pipeline(model_name: str, model_version: str) -> Tuple[Any, Any]:
+    """
+    Load sentiment model bundle từ file .pkl
+    Bundle format: {"vectorizer": TfidfVectorizer, "model": LogisticRegression}
+    
+    Returns: (vectorizer, classifier)
+    """
+    path = MODEL_DIR / f"{model_name}_{model_version}.pkl"
+    if not path.exists():
+        raise FileNotFoundError(f"Model file not found: {path}")
+    
+    with open(path, "rb") as f:
+        bundle = pickle.load(f)
+    
+    # Validate bundle structure
+    if not isinstance(bundle, dict) or "vectorizer" not in bundle or "model" not in bundle:
+        raise ValueError(f"Invalid model bundle format in {path}")
+    
+    return bundle["vectorizer"], bundle["model"]
+
+NOTES:
+- @lru_cache giúp model được load một lần, reuse cho các requests sau
+- maxsize=10: cache tối đa 10 models (đủ cho dev/staging)
+- Production: có thể tăng maxsize hoặc dùng Redis cache
+- Error handling: raise FileNotFoundError rõ ràng nếu file không tồn tại
+
+
+3.3. STEP 3: Sửa online_price_prediction() để dùng model thật
+--------------------------------------------------------------------------------
+File: backend/app/services/ml_service.py
+
+REPLACE lines 300-325 với:
+
+    async def online_price_prediction(
+        self, payload: OnlinePricePredictionRequest
+    ) -> OnlinePricePredictionResponse:
+        """
+        Online price prediction sử dụng model thật từ registry + file.
+        
+        Flow:
+        1. Resolve model từ registry
+        2. Lấy features (từ payload hoặc query DWH)
+        3. Load model & predict
+        4. Return kết quả + latency
+        """
+        import time
+        import numpy as np
+        from app.ml_runtime import load_price_model
+        
+        t0 = time.perf_counter()
+
+        # 1) Resolve model từ registry
+        model_info = await self._resolve_model(
+            model_type="price",
+            model_name=payload.model_name,
+            model_version=payload.model_version,
+        )
+
+        # 2) Chuẩn hoá features
+        # Ưu tiên lấy từ payload, nếu thiếu thì query DWH
+        current_price = payload.current_price
+        avg_rating = payload.avg_rating
+        review_count = payload.review_count
+
+        if current_price is None or avg_rating is None or review_count is None:
+            # Query snapshot mới nhất từ fact_product_daily
+            snap_sql = """
+                SELECT fpd.min_price, fpd.max_price,
+                       fpd.total_review_count, fpd.avg_rating
+                FROM dwh.fact_product_daily fpd
+                JOIN dwh.dim_product dp ON dp.product_sk = fpd.product_sk
+                JOIN dwh.dim_platform pl ON pl.platform_sk = fpd.platform_sk
+                JOIN dwh.dim_date d ON d.date_sk = fpd.date_sk
+                WHERE dp.product_key = $1
+                  AND pl.platform_code = $2
+                ORDER BY d.date_value DESC
+                LIMIT 1
+            """
+            snap = await self.db.fetchrow(
+                snap_sql,
+                payload.product_key,
+                payload.platform_code,
+            )
+            if not snap:
+                raise ValueError(f"No snapshot found for product {payload.product_key}")
+
+            min_price = float(snap["min_price"])
+            max_price = float(snap["max_price"])
+            total_review_count = int(snap["total_review_count"] or 0)
+            avg_rating = float(snap["avg_rating"] or 0.0)
+        else:
+            # Dùng current_price cho cả min/max (simplified)
+            min_price = max_price = float(current_price)
+            total_review_count = int(review_count or 0)
+            avg_rating = float(avg_rating or 0.0)
+
+        # Tạo feature vector (tuỳ model, có thể cần thêm features)
+        X = np.array([[min_price, max_price, total_review_count, avg_rating]])
+
+        # 3) Load model & predict
+        model = load_price_model(model_info.model_name, model_info.model_version)
+        pred = float(model.predict(X)[0])
+
+        # Optional: tính CI nếu model support (quantile regression, etc)
+        ci_lower = None
+        ci_upper = None
+        # TODO: implement CI calculation if needed
+
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+
+        return OnlinePricePredictionResponse(
+            predicted_price=pred,
+            ci_lower=ci_lower,
+            ci_upper=ci_upper,
+            model_name=model_info.model_name,
+            model_version=model_info.model_version,
+            latency_ms=latency_ms,
+        )
+
+CHANGES:
+✓ Không còn dummy_price = 1000000.0
+✓ Dùng _resolve_model() để lấy model từ registry
+✓ Query DWH để lấy features thực tế
+✓ Load model thật từ file .pkl
+✓ Predict bằng model.predict()
+✓ Tính latency thực tế
+
+
+3.4. STEP 4: Sửa online_sentiment() để dùng model thật
+--------------------------------------------------------------------------------
+File: backend/app/services/ml_service.py
+
+REPLACE lines 522-553 với:
+
+    async def online_sentiment(
+        self,
+        payload: OnlineSentimentRequest,
+    ) -> OnlineSentimentResponse:
+        """
+        Online sentiment analysis sử dụng model thật.
+        
+        Flow:
+        1. Resolve model từ registry
+        2. Load vectorizer + classifier
+        3. Transform text → predict_proba
+        4. Return label, score, latency
+        """
+        import time
+        import numpy as np
+        from app.ml_runtime import load_sentiment_pipeline
+        
+        t0 = time.perf_counter()
+
+        # 1) Resolve model từ registry
+        model_info = await self._resolve_model(
+            model_type="sentiment",
+            model_name=payload.model_name,
+            model_version=payload.model_version,
+        )
+
+        # 2) Load pipeline (vectorizer + classifier)
+        vectorizer, clf = load_sentiment_pipeline(
+            model_info.model_name,
+            model_info.model_version,
+        )
+
+        # 3) Transform & predict
+        X = vectorizer.transform([payload.review_text])
+        proba = clf.predict_proba(X)[0]
+        
+        # Lấy label có xác suất cao nhất
+        idx = int(np.argmax(proba))
+        label = str(clf.classes_[idx])
+        score = float(proba[idx])
+
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+
+        return OnlineSentimentResponse(
+            label=label,
+            score=score,
+            model_name=model_info.model_name,
+            model_version=model_info.model_version,
+            latency_ms=latency_ms,
+        )
+
+CHANGES:
+✓ Không còn rule "tốt"/"tệ" hardcoded
+✓ Dùng _resolve_model() để lấy model từ registry
+✓ Load TfidfVectorizer + LogisticRegression từ file
+✓ Dùng predict_proba() để lấy confidence score thực tế
+✓ Tính latency thực tế
+
+
+3.5. STEP 5: Update schema default values (Optional)
+--------------------------------------------------------------------------------
+File: backend/app/schemas/ml.py
+
+CHANGE line 69-72:
+    model_name: Optional[str] = Field(
+        "price_forecast_rf",  # ← Kiểm tra xem tên này có match với ml.dim_ml_model không
+        description="Tên model, mặc định 'price_forecast_rf'"
+    )
+
+CHANGE line 131-134:
+    model_name: Optional[str] = Field(
+        "sentiment_logreg",  # ← Đổi từ "sentiment_bert" sang tên thực tế
+        description="Tên model, mặc định 'sentiment_logreg'"
+    )
+
+LÝ DO: 
+- Tránh nhầm lẫn: nếu code train dùng LogisticRegression thì không nên gọi là "bert"
+- Default model_name phải match với records trong ml.dim_ml_model
+
+
+================================================================================
+4. DEPLOYMENT CHECKLIST
+================================================================================
+
+4.1. Prerequisites
+--------------------------------------------------------------------------------
+☐ Kiểm tra ml.dim_ml_model có records với:
+   - model_type = 'price', status = 'active'
+   - model_type = 'sentiment', status = 'active'
+
+☐ Chuẩn bị model files:
+   - Đặt trong thư mục models/ (hoặc set env ML_MODEL_DIR)
+   - Tên file: {model_name}_{model_version}.pkl
+   - Price model: sklearn model object
+   - Sentiment model: dict with keys "vectorizer", "model"
+
+☐ Test load models manually:
+   ```python
+   from backend.app.ml_runtime import load_price_model, load_sentiment_pipeline
+   
+   # Test price
+   model = load_price_model("price_forecast_rf", "v1.0")
+   print(model.predict([[100000, 120000, 50, 4.5]]))
+   
+   # Test sentiment
+   vec, clf = load_sentiment_pipeline("sentiment_logreg", "v1.0")
+   X = vec.transform(["Sản phẩm rất tốt"])
+   print(clf.predict_proba(X))
+   ```
+
+4.2. Testing Steps
+--------------------------------------------------------------------------------
+☐ Test /ml/price-predictions/online:
+   - Gửi request với đầy đủ features (current_price, avg_rating, review_count)
+   - Gửi request chỉ có product_key + platform_code (test DWH query)
+   - Verify: predicted_price không phải 1000000.0
+   - Verify: latency_ms > 5
+
+☐ Test /ml/sentiment/online:
+   - Gửi text: "Sản phẩm rất tốt, chất lượng cao"
+   - Verify: label không chỉ dựa vào keyword "tốt"
+   - Gửi text: "Tệ quá" vs "Sản phẩm này không tệ"
+   - Verify: model hiểu được ngữ cảnh
+
+☐ Test error handling:
+   - Request với model_name không tồn tại → 500 với message rõ ràng
+   - Request với product_key không có trong DWH → 500 với message rõ ràng
+
+4.3. Performance Notes
+--------------------------------------------------------------------------------
+- First request: chậm hơn do phải load model (100-500ms)
+- Subsequent requests: nhanh hơn nhờ @lru_cache (10-50ms)
+- Monitor memory: mỗi model ~50-200MB RAM
+- Production: consider moving to separate ML service (FastAPI + triton)
+
+
+================================================================================
+5. FUTURE IMPROVEMENTS
+================================================================================
+
+5.1. Short-term (trong đồ án)
+   - [ ] Add CI calculation cho price prediction
+   - [ ] Log prediction requests vào ml.fact_prediction_log
+   - [ ] Add metrics: request count, avg latency, error rate
+   - [ ] Support batch prediction (list of products)
+
+5.2. Long-term (nếu production)
+   - [ ] Tách ML inference thành microservice riêng
+   - [ ] Dùng ONNX Runtime thay vì pickle (faster, cross-platform)
+   - [ ] Add model versioning & A/B testing framework
+   - [ ] Implement model monitoring (drift detection)
+   - [ ] Add GPU support cho deep learning models
+
+================================================================================
+6. NOTES & WARNINGS
+================================================================================
+
+⚠️ Security:
+   - Model files (.pkl) có thể chứa malicious code
+   - Chỉ load models từ trusted sources
+   - Consider dùng joblib.load với mmap_mode='r' (read-only)
+
+⚠️ Dependencies:
+   - Cần install: numpy, scikit-learn (đã có trong requirements.txt)
+   - Version consistency: model train với sklearn==X.Y phải load với cùng version
+
+⚠️ Error Handling:
+   - RuntimeError từ _resolve_model → trả về 500 Internal Server Error
+   - FileNotFoundError từ load_model → trả về 500
+   - ValueError từ invalid input → trả về 400 Bad Request
+   - Frontend cần handle errors gracefully
+
+📝 Documentation:
+   - Update API docs (Swagger) với examples mới
+   - Update README với hướng dẫn setup model files
+   - Thêm docstrings cho các functions mới
+
+================================================================================
+END OF IMPLEMENTATION PLAN
+================================================================================

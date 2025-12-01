@@ -129,8 +129,8 @@ class OnlineSentimentRequest(BaseModel):
     product_key: Optional[str] = None
     review_text: str
     model_name: Optional[str] = Field(
-        "sentiment_bert",
-        description="Tên model, mặc định 'sentiment_bert'"
+        "sentiment_tfidf_logreg",
+        description="Tên model, mặc định 'sentiment_tfidf_logreg'"
     )
     model_version: Optional[str] = None
 
