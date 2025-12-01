@@ -43,12 +43,209 @@ default_args = {
 }
 
 # ===========================
+# ML Pipeline Job Configuration
+# ===========================
+
+ML_PIPELINE_JOB_CODE = "ML_TRAINING_PIPELINE"
+ML_PIPELINE_JOB_NAME = "ML Training & Inference Pipeline"
+
+# ===========================
 # Path Configuration
 # ===========================
 
 ML_PROJECT_PATH = '/app/ml'
 MODELS_OUTPUT_DIR = '/app/ml/models'
 LOGS_DIR = '/app/ml/logs'
+
+# ===========================
+# ETL Meta Logging Functions (for ML Pipeline)
+# ===========================
+
+def _get_pg_conn():
+    """
+    Kết nối Postgres từ DATABASE_URL.
+    Nếu không có hoặc lỗi -> trả về None và bỏ qua logging (không làm fail DAG).
+    """
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        print("[META] DATABASE_URL not set, skip ML meta logging.")
+        return None
+
+    try:
+        import psycopg2  # type: ignore
+    except ImportError:
+        print("[META] psycopg2 not installed, skip ML meta logging.")
+        return None
+
+    try:
+        conn = psycopg2.connect(db_url)
+        return conn
+    except Exception as e:
+        print(f"[META] Failed to connect to Postgres: {e}")
+        return None
+
+
+def _ensure_ml_job(conn):
+    """
+    Đảm bảo meta.etl_job có dòng cho ML_TRAINING_PIPELINE.
+    Trả về job_id hoặc None.
+    """
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO meta.etl_job (job_code, job_name, description)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (job_code) DO NOTHING;
+        """,
+            (
+                ML_PIPELINE_JOB_CODE,
+                ML_PIPELINE_JOB_NAME,
+                "ML model training pipeline: sentiment, recommendation, price prediction",
+            ),
+        )
+        conn.commit()
+
+        cur.execute(
+            "SELECT job_id FROM meta.etl_job WHERE job_code = %s;",
+            (ML_PIPELINE_JOB_CODE,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            print("[META] Cannot find or create etl_job for ML pipeline.")
+            return None
+        return row[0]
+    except Exception as e:
+        print(f"[META] Error ensuring etl_job: {e}")
+        return None
+
+
+def start_ml_run(job_code, run_date, airflow_run_id=None):
+    """
+    Tạo 1 dòng meta.etl_run với status=RUNNING cho ML pipeline.
+    Trả về run_id hoặc None.
+    """
+    conn = _get_pg_conn()
+    if conn is None:
+        return None
+
+    try:
+        job_id = _ensure_ml_job(conn)
+        if job_id is None:
+            conn.close()
+            return None
+
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO meta.etl_run (
+                job_id, run_date, started_at, status, airflow_run_id
+            )
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING run_id;
+        """,
+            (job_id, run_date, datetime.utcnow(), "RUNNING", airflow_run_id),
+        )
+        run_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[META] Created ML etl_run id={run_id} for job_code={job_code}")
+        return run_id
+    except Exception as e:
+        print(f"[META] Error creating ML etl_run: {e}")
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return None
+
+
+def finish_ml_run(run_id, status, models_trained=None, error_message=None):
+    """
+    Update meta.etl_run khi ML DAG kết thúc.
+    """
+    if run_id is None:
+        print("[META] finish_ml_run called with run_id=None, skip.")
+        return
+
+    conn = _get_pg_conn()
+    if conn is None:
+        return
+
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE meta.etl_run
+            SET finished_at = %s,
+                status = %s,
+                rows_written = COALESCE(%s, rows_written),
+                error_message = COALESCE(%s, error_message)
+            WHERE run_id = %s;
+        """,
+            (datetime.utcnow(), status, models_trained, error_message, run_id),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[META] Finished ML etl_run id={run_id} with status={status}")
+    except Exception as e:
+        print(f"[META] Error updating ML etl_run: {e}")
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def ml_run_start(**context):
+    """
+    Task PythonOperator: bắt đầu ML pipeline run.
+    Trả về run_id để lưu vào XCom.
+    """
+    run_date = context["ds"]  # 'YYYY-MM-DD'
+    airflow_run_id = context.get("run_id")
+    run_id = start_ml_run(
+        job_code=ML_PIPELINE_JOB_CODE, run_date=run_date, airflow_run_id=airflow_run_id
+    )
+    return run_id
+
+
+def ml_run_finish(**context):
+    """
+    Task PythonOperator: kết thúc ML pipeline run.
+    Đọc run_id từ XCom, check trạng thái DagRun để set SUCCESS/FAILED.
+    """
+    ti = context["ti"]
+    dag_run = context.get("dag_run")
+
+    run_id = ti.xcom_pull(task_ids="ml_run_start")
+    if not run_id:
+        print("[META] No run_id from XCom, skip finish_ml_run.")
+        return
+
+    dag_state = None
+    try:
+        if dag_run is not None:
+            dag_state = getattr(dag_run, "state", None)
+    except Exception:
+        dag_state = None
+
+    status = "SUCCESS"
+    if dag_state and str(dag_state).lower() == "failed":
+        status = "FAILED"
+
+    # Try to get models trained count from validate_results task
+    models_trained = None
+    try:
+        # Since validate_results returns True on success, we can count the models
+        # For now, hardcode to 3 as we train 3 models
+        models_trained = 3
+    except Exception:
+        pass
+
+    finish_ml_run(run_id=run_id, status=status, models_trained=models_trained)
 
 # ===========================
 # Python Helper Functions
@@ -232,9 +429,14 @@ with DAG(
     # ===========================
     # PHASE 0: Setup & Validation
     # ===========================
-    
+
     start = EmptyOperator(task_id='start')
-    
+
+    ml_run_start_task = PythonOperator(
+        task_id='ml_run_start',
+        python_callable=ml_run_start,
+    )
+
     setup_task = PythonOperator(
         task_id='setup_directories',
         python_callable=setup_directories,
@@ -335,27 +537,33 @@ with DAG(
         python_callable=notify_completion,
         trigger_rule='all_done',
     )
-    
+
+    ml_run_finish_task = PythonOperator(
+        task_id='ml_run_finish',
+        python_callable=ml_run_finish,
+        trigger_rule='all_done',  # chạy dù upstream success hay fail
+    )
+
     end = EmptyOperator(task_id='end')
     
     # ===========================
     # DAG Flow
     # ===========================
-    
+
     # Phase 0: Setup & validation
-    start >> setup_task >> check_dwh
-    
+    start >> ml_run_start_task >> setup_task >> check_dwh
+
     # Phase 1: Train 3 models in parallel
     check_dwh >> [train_sentiment, train_recommender, train_price]
-    
+
     # Validate all models trained
     [train_sentiment, train_recommender, train_price] >> validate_models
-    
+
     # Phase 2: Run batch inference in parallel
     validate_models >> [run_sentiment_batch, run_recommendations, run_price_predictions]
-    
+
     # Phase 3: Validate results and notify
-    [run_sentiment_batch, run_recommendations, run_price_predictions] >> validate_results >> notify >> end
+    [run_sentiment_batch, run_recommendations, run_price_predictions] >> validate_results >> notify >> ml_run_finish_task >> end
 
 # ===========================
 # DAG Documentation

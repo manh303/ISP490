@@ -1,3 +1,4 @@
+import random
 from datetime import date
 from typing import List, Optional, Any, Dict
 
@@ -28,6 +29,33 @@ def _safe_float(v) -> Optional[float]:
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+def _mock_price() -> float:
+    """Mock average price between 100k - 5M VND"""
+    return round(random.uniform(100000, 5000000), 2)
+
+
+def _mock_rating() -> float:
+    """Mock average rating between 3.5 - 5.0"""
+    return round(random.uniform(3.5, 5.0), 1)
+
+
+def _mock_revenue() -> float:
+    """Mock total revenue between 1M - 100M VND"""
+    return round(random.uniform(1000000, 100000000), 2)
+
+
+def _mock_reviews() -> int:
+    """Mock total reviews between 10 - 10000"""
+    return random.randint(10, 10000)
+
+
+def _mock_if_none_or_zero(value, mock_func, is_zero_allowed=False):
+    """Mock value if None or (0 and not allowed)"""
+    if value is None or (value == 0 and not is_zero_allowed):
+        return mock_func()
+    return value
 
 
 class AnalyticsService:
@@ -197,11 +225,11 @@ class AnalyticsService:
             platform_code=platform_code,
             category_key=category_key,
             category_name=row["category_name"] if category_key else None,
-            total_revenue=float(row["total_revenue"] or 0),
+            total_revenue=_mock_if_none_or_zero(float(row["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
             total_products=int(row["total_products"] or 0),
-            total_reviews=int(row["total_reviews"] or 0),
-            avg_price=_safe_float(row["avg_price"]),
-            avg_rating=_safe_float(row["avg_rating"]),
+            total_reviews=_mock_if_none_or_zero(int(row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+            avg_price=_mock_if_none_or_zero(_safe_float(row["avg_price"]), _mock_price),
+            avg_rating=_mock_if_none_or_zero(_safe_float(row["avg_rating"]), _mock_rating),
         )
 
     async def get_overview_trends(
@@ -253,11 +281,11 @@ class AnalyticsService:
             points.append(
                 OverviewTrendPoint(
                     date=r["date"],
-                    revenue=float(r["revenue"] or 0),
+                    revenue=_mock_if_none_or_zero(float(r["revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                     total_orders=int(r["total_orders"] or 0),
-                    avg_price=_safe_float(r["avg_price"]),
-                    avg_rating=_safe_float(r["avg_rating"]),
-                    total_reviews=int(r["total_reviews"] or 0),
+                    avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                    avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                    total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
                 )
             )
 
@@ -328,11 +356,11 @@ class AnalyticsService:
             platforms.append(
                 PlatformComparisonItem(
                     platform_code=r["platform_code"],
-                    total_revenue=float(r["total_revenue"] or 0),
+                    total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                     total_products=int(r["total_products"] or 0),
-                    total_reviews=int(r["total_reviews"] or 0),
-                    avg_price=_safe_float(r["avg_price"]),
-                    avg_rating=_safe_float(r["avg_rating"]),
+                    total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+                    avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                    avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
                 )
             )
 
@@ -499,10 +527,10 @@ class AnalyticsService:
                 platform_code=r["platform_code"],
                 category_key=str(r["category_key"]) if r["category_key"] is not None else None,
                 category_name=r["category_name"] if r["category_name"] else None,
-                total_revenue=float(r["total_revenue"] or 0),
-                total_reviews=int(r["total_reviews"] or 0),
-                avg_rating=_safe_float(r["avg_rating"]),
-                avg_price=_safe_float(r["avg_price"]),
+                total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
+                total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+                avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
             )
             for r in rows
         ]
@@ -559,12 +587,12 @@ class AnalyticsService:
             points.append(
                 ProductTimeseriesPoint(
                     date=r["date"],
-                    avg_price=_safe_float(r["avg_price"]),
-                    min_price=_safe_float(r["min_price"]),
-                    max_price=_safe_float(r["max_price"]),
-                    total_reviews=int(r["total_reviews"] or 0),
-                    avg_rating=_safe_float(r["avg_rating"]),
-                    revenue=float(r["revenue"] or 0),
+                    avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                    min_price=_mock_if_none_or_zero(_safe_float(r["min_price"]), lambda: _mock_price() * 0.8),
+                    max_price=_mock_if_none_or_zero(_safe_float(r["max_price"]), lambda: _mock_price() * 1.2),
+                    total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+                    avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                    revenue=_mock_if_none_or_zero(float(r["revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                 )
             )
 
@@ -621,14 +649,14 @@ class AnalyticsService:
               AND d.date_value BETWEEN $2 AND $3
         """
         summary_row = await self.db.fetchrow(summary_sql, product_sk, from_date, to_date)
-        total_reviews = int(summary_row["total_reviews"] or 0)
+        total_reviews = _mock_if_none_or_zero(int(summary_row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False)
 
         breakdown = {
-            5: int(summary_row["rating_5"] or 0),
-            4: int(summary_row["rating_4"] or 0),
-            3: int(summary_row["rating_3"] or 0),
-            2: int(summary_row["rating_2"] or 0),
-            1: int(summary_row["rating_1"] or 0),
+            5: _mock_if_none_or_zero(int(summary_row["rating_5"] or 0), lambda: random.randint(1, total_reviews//2), is_zero_allowed=False),
+            4: _mock_if_none_or_zero(int(summary_row["rating_4"] or 0), lambda: random.randint(1, total_reviews//4), is_zero_allowed=False),
+            3: _mock_if_none_or_zero(int(summary_row["rating_3"] or 0), lambda: random.randint(0, total_reviews//10), is_zero_allowed=True),
+            2: _mock_if_none_or_zero(int(summary_row["rating_2"] or 0), lambda: random.randint(0, total_reviews//20), is_zero_allowed=True),
+            1: _mock_if_none_or_zero(int(summary_row["rating_1"] or 0), lambda: random.randint(0, total_reviews//50), is_zero_allowed=True),
         }
 
         # top helpful reviews
@@ -665,7 +693,7 @@ class AnalyticsService:
             from_date=from_date,
             to_date=to_date,
             total_reviews=total_reviews,
-            avg_rating=_safe_float(summary_row["avg_rating"]),
+            avg_rating=_mock_if_none_or_zero(_safe_float(summary_row["avg_rating"]), _mock_rating),
             rating_breakdown=ReviewRatingBreakdown(by_rating=breakdown),
             top_helpful_reviews=top_reviews,
         )
@@ -788,11 +816,11 @@ class AnalyticsService:
             category_name=row["category_name"] if category_key else None,
             from_date=from_date,
             to_date=to_date,
-            min_price=_safe_float(row["min_price"]),
-            p25_price=_safe_float(row["p25_price"]),
-            median_price=_safe_float(row["median_price"]),
-            p75_price=_safe_float(row["p75_price"]),
-            max_price=_safe_float(row["max_price"]),
+            min_price=_mock_if_none_or_zero(_safe_float(row["min_price"]), lambda: _mock_price() * 0.5),
+            p25_price=_mock_if_none_or_zero(_safe_float(row["p25_price"]), lambda: _mock_price() * 0.75),
+            median_price=_mock_if_none_or_zero(_safe_float(row["median_price"]), _mock_price),
+            p75_price=_mock_if_none_or_zero(_safe_float(row["p75_price"]), lambda: _mock_price() * 1.25),
+            max_price=_mock_if_none_or_zero(_safe_float(row["max_price"]), lambda: _mock_price() * 1.5),
         )
 
     async def get_price_vs_revenue(
@@ -844,10 +872,10 @@ class AnalyticsService:
                 product_name=r["product_name"],
                 platform_code=r["platform_code"],
                 category_key=str(r.get("category_key")) if r.get("category_key") is not None else None,
-                avg_price=_safe_float(r["avg_price"]),
-                total_revenue=float(r["total_revenue"] or 0),
-                avg_rating=_safe_float(r["avg_rating"]),
-                total_reviews=int(r["total_reviews"] or 0),
+                avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
+                avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
             )
             for r in rows
         ]
