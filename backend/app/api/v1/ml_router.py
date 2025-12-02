@@ -1,6 +1,7 @@
 import os
 from datetime import date
 from typing import List, Optional
+from contextlib import asynccontextmanager
 from app.api.dependencies import require_role
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -25,6 +26,7 @@ router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
 # --------- DB dependency (asyncpg connection) ---------
 
+@asynccontextmanager
 async def get_db():
     """
     Tạo 1 kết nối asyncpg cho mỗi request ML.

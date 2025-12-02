@@ -5,6 +5,7 @@ AI-powered decision support endpoints for analysts
 
 import logging
 from typing import Dict, Any, Optional
+from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/dss", tags=["DSS - Decision Support System"])
 
 
+@asynccontextmanager
 async def get_db_connection():
     """
     Get a database connection from the pool for each DSS request.
@@ -58,6 +60,7 @@ async def get_db_connection():
                 detail=f"Database connection failed: {str(init_e)}"
             )
 
+    try:
         async with pool.acquire() as connection:
             yield connection
     except RuntimeError as e:

@@ -1,6 +1,7 @@
 import os
 from datetime import date
 from typing import Optional, List
+from contextlib import asynccontextmanager
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,6 +13,7 @@ from app.db_config import DATABASE_URL
 
 router = APIRouter()
 
+@asynccontextmanager
 async def get_db():
     """
     Dependency mở 1 connection asyncpg, dùng xong thì đóng.

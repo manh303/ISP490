@@ -1,6 +1,7 @@
 # app/api/v1/analytics.py
 from datetime import date
 from typing import Optional, List
+from contextlib import asynccontextmanager
 
 import asyncpg
 from fastapi import APIRouter, Depends, Query, HTTPException
@@ -36,6 +37,7 @@ import asyncio
 router = APIRouter(prefix="/analytics", tags=["Analytics / Analyst"])
 
 
+@asynccontextmanager
 async def get_db():
     """
     Tạo 1 kết nối asyncpg cho mỗi request analytics.
