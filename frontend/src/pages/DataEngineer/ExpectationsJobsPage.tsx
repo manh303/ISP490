@@ -224,9 +224,10 @@ const ExpectationsJobsPage: React.FC = () => {
               </div>
               <h4 className="font-medium mb-2">Results ({expectationResults.length})</h4>
               <div className="space-y-1 max-h-48 overflow-y-auto">
-                {expectationResults.map((result, index) => (
-                  <div key={index} className="text-sm p-2 bg-gray-50 rounded">
-                    {result.check_time}: {result.passed ? 'Passed' : 'Failed'} ({result.failed_count} failed)
+                {expectationResults.map((result) => (
+                  <div key={result.check_id} className="text-sm p-2 bg-gray-50 rounded">
+                    {result.check_date}: {result.passed ? 'Passed' : 'Failed'} ({result.failed_count}/{result.total_count})
+                    {result.error_message && <span className="text-red-600"> - {result.error_message}</span>}
                   </div>
                 ))}
               </div>

@@ -178,10 +178,13 @@ export interface Expectation {
 
 /** Expectation Result */
 export interface ExpectationResult {
-  check_time: string;
+  check_id: number;
+  check_date: string;
   passed: boolean;
   failed_count: number;
-  details: string;
+  total_count: number;
+  error_message: string | null;
+  created_at: string;
 }
 
 /** Job */
