@@ -8,7 +8,8 @@ from typing import Dict, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
-from app.db_config import DATABASE_URL
+from app.db_pool import get_pool
+from app.db_config import DATABASE_URL  # Needed for health check endpoints
 
 from app.schemas.dss import (
     PricePredictionRequest,
@@ -30,20 +31,52 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/dss", tags=["DSS - Decision Support System"])
 
 
-async def get_db():
+async def get_db_connection():
     """
-    Tạo 1 kết nối asyncpg cho mỗi request DSS.
-    DSSService đang dùng self.db.fetch / fetchrow / execute theo style asyncpg.
+    Get a database connection from the pool for each DSS request.
+    Uses connection pooling for better performance.
     """
-    conn = await asyncpg.connect(dsn=DATABASE_URL)
     try:
-        yield conn
-    finally:
-        await conn.close()
+        pool = await get_pool()
+        logger.debug("Pool retrieved successfully from get_pool()")
+    except RuntimeError as e:
+        logger.warning(f"Pool not initialized, attempting fallback initialization... Error: {e}")
+        # Fallback: try to initialize pool if not initialized
+        from app.db_config import DATABASE_URL
+        from app.db_pool import init_pool
+        try:
+            logger.info("Starting fallback pool initialization...")
+            await init_pool(DATABASE_URL, min_size=1, max_size=5)
+            pool = await get_pool()
+            if pool is None:
+                raise Exception("Pool is still None after initialization")
+            logger.info("Fallback pool initialization successful")
+        except Exception as init_e:
+            logger.error(f"Fallback pool initialization failed: {init_e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Database connection failed: {str(init_e)}"
+            )
+
+        async with pool.acquire() as connection:
+            yield connection
+    except RuntimeError as e:
+        if "Database connection pool not initialized" in str(e):
+            raise HTTPException(
+                status_code=500,
+                detail="Database connection pool not initialized. Server startup issue."
+            )
+        raise
+    except Exception as e:
+        logger.error(f"Database connection error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database connection error: {str(e)}"
+        )
 
 
-async def get_dss_service(db=Depends(get_db)) -> DSSService:
-    """Get DSS service instance"""
+async def get_dss_service(db=Depends(get_db_connection)) -> DSSService:
+    """Get DSS service instance with pooled connection"""
     return DSSService(db)
 
 

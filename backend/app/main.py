@@ -14,6 +14,9 @@ import bcrypt
 import requests
 from datetime import datetime, timedelta
 from typing import Dict, Optional
+from .db_pool import init_pool, close_pool
+from .db_config import DATABASE_URL
+from contextlib import asynccontextmanager
 
 # Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
@@ -113,6 +116,51 @@ except ImportError:
     except ImportError as e2:
         email_service_module = False
         print(f"WARNING: Email service not available: {e2}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # STARTUP
+    print("=== LIFESPAN STARTUP BEGIN ===")
+    print(f"DATABASE_URL: {DATABASE_URL[:50]}...")
+
+    try:
+        print("Initializing database connection pool...")
+        await init_pool(
+            database_url=DATABASE_URL,
+            min_size=5,
+            max_size=20,
+        )
+        print("✅ Database connection pool initialized successfully")
+
+        # Test the connection
+        from .db_pool import get_pool
+        pool = await get_pool()
+        if pool:
+            print("✅ Database connection pool is accessible")
+        else:
+            print("❌ Database connection pool is None after initialization")
+            raise RuntimeError("Pool initialization failed")
+
+        print("=== LIFESPAN STARTUP COMPLETE ===")
+
+    except Exception as e:
+        print(f"❌ Failed to initialize connection pool: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
+
+    yield
+
+    # SHUTDOWN
+    print("=== LIFESPAN SHUTDOWN BEGIN ===")
+    try:
+        await close_pool()
+        print("✅ Database connection pool closed")
+    except Exception as e:
+        print(f"Error closing connection pool: {e}")
+
+    print("=== LIFESPAN SHUTDOWN COMPLETE ===")
 
 # ====================================
 # CONFIGURATION
@@ -280,39 +328,29 @@ class DatabaseManager:
 db_manager = DatabaseManager()
 
 # ====================================
-# LIFESPAN EVENT HANDLER
+# FORCE POOL INITIALIZATION (WORKAROUND)
 # ====================================
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Starting Vietnam E-commerce DSS API...")
-    app.state.start_time = time.time()
-    
-    if DATABASE_AVAILABLE:
-        try:
-            await db_manager.connect()
-            if db_manager.is_connected:
-                logger.info("PostgreSQL database connected successfully!")
-                if IAM_AVAILABLE:
-                    try:
-                        init_iam_service(db_manager, settings.JWT_SECRET_KEY)
-                        logger.info("IAM service initialized successfully!")
-                    except Exception as e:
-                        logger.error(f"IAM service initialization failed: {e}")
-        except Exception as e:
-            logger.warning(f"PostgreSQL database connection failed: {e}")
-    
-    logger.info("API startup completed successfully!")
-    
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down API...")
+async def ensure_pool_initialized():
+    """Ensure database pool is initialized"""
     try:
-        await db_manager.disconnect()
+        from .db_pool import get_pool, init_pool
+        pool = await get_pool()
+        if pool is None:
+            print("Pool not initialized, initializing now...")
+            await init_pool(DATABASE_URL, min_size=5, max_size=20)
+            print("Pool initialized successfully")
+        else:
+            print("Pool already initialized")
     except Exception as e:
-        logger.error(f"Error during shutdown: {e}")
-    logger.info("API shutdown completed")
+        print(f"Failed to initialize pool: {e}")
+        import traceback
+        traceback.print_exc()
+
+# Pool initialization will happen in lifespan function
+
+# ====================================
+# LIFESPAN EVENT HANDLER (REMOVED - using the first one above)
+# ====================================
 
 # ====================================
 # FASTAPI APPLICATION
@@ -326,6 +364,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+print("FastAPI app created successfully")
+print(f"App lifespan: {app.router.lifespan_context}")
 
 # Remove custom OpenAPI to avoid duplicate security schemes
 # FastAPI will auto-generate based on dependencies
