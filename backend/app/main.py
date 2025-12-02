@@ -1106,15 +1106,16 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         # Log signin activity
         try:
-            activity_logger = ActivityLogger(db)
-            await activity_logger.log_activity(
-                user_id=user_data["user_id"],
-                email=user_data.get("email", request.email),
-                action="USER_SIGNIN",
-                resource="/api/v1/auth/signin",
-                details={"role": user_data.get("role", "unknown"), "method": "password"},
-                status="success"
-            )
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user_data["user_id"],
+                    email=user_data.get("email", request.email),
+                    action="USER_SIGNIN",
+                    resource="/api/v1/auth/signin",
+                    details={"role": user_data.get("role", "unknown"), "method": "password"},
+                    status="success"
+                )
         except Exception as e:
             logger.error(f"Failed to log signin activity: {e}")
 
@@ -1177,14 +1178,15 @@ async def forgot_password_otp(request: ForgotPasswordOTPRequest, db: DatabaseMan
 
         # Log password reset request
         try:
-            activity_logger = ActivityLogger(db)
-            await activity_logger.log_activity(
-                user_id=user['user_id'],
-                email=request.email,
-                action="PASSWORD_RESET_OTP_REQUEST",
-                details={"email": request.email},
-                status="success"
-            )
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user['user_id'],
+                    email=request.email,
+                    action="PASSWORD_RESET_OTP_REQUEST",
+                    details={"email": request.email},
+                    status="success"
+                )
         except Exception as e:
             logger.error(f"Failed to log activity: {e}")
 
@@ -1260,14 +1262,15 @@ async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, db: 
 
         # Log password reset success
         try:
-            activity_logger = ActivityLogger(db)
-            await activity_logger.log_activity(
-                user_id=user['user_id'],
-                email=request.email,
-                action="PASSWORD_RESET_SUCCESS",
-                details={"email": request.email},
-                status="success"
-            )
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user['user_id'],
+                    email=request.email,
+                    action="PASSWORD_RESET_SUCCESS",
+                    details={"email": request.email},
+                    status="success"
+                )
         except Exception as e:
             logger.error(f"Failed to log activity: {e}")
 
@@ -1307,15 +1310,16 @@ async def signout(request: Request):
                 
                 # Log signout activity
                 try:
-                    activity_logger = ActivityLogger(db_manager)
-                    await activity_logger.log_activity(
-                        user_id=user_id,
-                        email=user_email,
-                        action="USER_SIGNOUT",
-                        resource="/api/v1/auth/signout",
-                        details={"method": "manual"},
-                        status="success"
-                    )
+                    if ACTIVITY_AVAILABLE and ActivityLogger:
+                        activity_logger = ActivityLogger(db_manager)
+                        await activity_logger.log_activity(
+                            user_id=user_id,
+                            email=user_email,
+                            action="USER_SIGNOUT",
+                            resource="/api/v1/auth/signout",
+                            details={"method": "manual"},
+                            status="success"
+                        )
                 except Exception as e:
                     logger.error(f"Failed to log signout activity: {e}")
                 
@@ -1404,15 +1408,16 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
 
         # Log signup activity
         try:
-            activity_logger = ActivityLogger(db)
-            await activity_logger.log_activity(
-                user_id=user_id,
-                email=request.email.lower(),
-                action="USER_SIGNUP",
-                resource="/api/v1/auth/signup",
-                details={"full_name": request.name, "method": "email"},
-                status="success"
-            )
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user_id,
+                    email=request.email.lower(),
+                    action="USER_SIGNUP",
+                    resource="/api/v1/auth/signup",
+                    details={"full_name": request.name, "method": "email"},
+                    status="success"
+                )
         except Exception as e:
             logger.error(f"Failed to log signup activity: {e}")
 

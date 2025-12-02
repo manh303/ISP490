@@ -262,16 +262,19 @@ class AISummarizer:
     def __init__(self):
         # Initialize all available providers
         self.providers: List[AIProvider] = []
+        self.provider_stats: Dict[str, Dict[str, int]] = {}  # Track success/failure per provider
         
         # Try OpenAI first
         openai_provider = OpenAIProvider()
         if openai_provider.available:
             self.providers.append(openai_provider)
+            self.provider_stats[openai_provider.name] = {"success": 0, "failure": 0, "rate_limit": 0}
         
         # Try Gemini as fallback
         gemini_provider = GeminiProvider()
         if gemini_provider.available:
             self.providers.append(gemini_provider)
+            self.provider_stats[gemini_provider.name] = {"success": 0, "failure": 0, "rate_limit": 0}
         
         # Log available providers
         if self.providers:
@@ -284,9 +287,25 @@ class AISummarizer:
             self.available = False
             self.model = None
     
+    def _reorder_providers_by_success(self):
+        """Reorder providers by success rate to prioritize working providers"""
+        def provider_score(provider):
+            stats = self.provider_stats.get(provider.name, {})
+            total = stats.get("success", 0) + stats.get("failure", 0) + stats.get("rate_limit", 0)
+            if total == 0:
+                return 1  # New provider, put at end
+            success_rate = stats.get("success", 0) / total
+            has_rate_limit = stats.get("rate_limit", 0) > 0
+            # Deprioritize providers with rate limits
+            if has_rate_limit:
+                success_rate *= 0.5
+            return -success_rate  # Negative so higher success = earlier in sort
+        
+        self.providers.sort(key=provider_score)
+    
     def summarize_with_ai(self, scenario: str, dss_result_raw: Dict[str, Any]) -> Dict[str, List[str]]:
         """
-        Generate insights and actions for DSS result with multi-provider fallback
+        Generate insights and actions for DSS result with multi-provider fallback and retry logic
         
         Args:
             scenario: One of "price_prediction", "product_recommendation", "review_sentiment"
@@ -303,75 +322,95 @@ class AISummarizer:
             logger.info("No AI providers available, using rule-based fallback")
             return self._get_fallback_response(scenario, dss_result_raw)
         
+        # Reorder providers based on recent success/failure rates
+        self._reorder_providers_by_success()
+        
         # Get prompts for scenario
         system_prompt = self._get_system_prompt()
         user_prompt = self._build_user_prompt(scenario, dss_result_raw)
         
-        # Try each provider in order
+        # Try each provider in order with retry logic
         last_error = None
         for i, provider in enumerate(self.providers):
-            try:
-                logger.info(f"Trying {provider.name} for AI summarization...")
-                
-                # For OpenAI, use both prompts; for Gemini, use combined
-                if provider.name == "OpenAI":
-                    content = provider.generate(system_prompt, user_prompt)
-                else:
-                    # For other providers like Gemini, only use user prompt to avoid complexity
-                    content = provider.generate("", user_prompt)
-                
-                # Parse JSON response
-                # Handle potential markdown code blocks from Gemini
-                content = content.strip()
-                if content.startswith("```json"):
-                    content = content[7:]
-                if content.startswith("```"):
-                    content = content[3:]
-                if content.endswith("```"):
-                    content = content[:-3]
-                content = content.strip()
-                
-                result = json.loads(content)
-                
-                # Validate structure
-                if "summary_insights" not in result or "recommended_actions" not in result:
-                    logger.error(f"{provider.name} returned invalid structure: {result}")
-                    last_error = f"Invalid response structure from {provider.name}"
-                    continue
-                
-                logger.info(f"✅ AI summarization successful using {provider.name}")
-                return result
-                
-            except json.JSONDecodeError as e:
-                logger.error(f"{provider.name} returned invalid JSON: {e}")
-                last_error = f"Invalid JSON from {provider.name}: {str(e)}"
-                if i == len(self.providers) - 1:
-                    logger.warning("All AI providers failed, using rule-based fallback")
-                    return self._get_fallback_response(scenario, dss_result_raw)
-                continue
-                
-            except Exception as e:
-                error_msg = str(e)
-                is_rate_limit = provider.is_rate_limit_error(e)
-                is_safety_blocked = "safety" in error_msg.lower() or "blocked" in error_msg.lower() or "empty" in error_msg.lower()
-                
-                if is_rate_limit:
-                    logger.warning(f"⚠️  {provider.name} rate limit exceeded: {error_msg[:200]}")
-                    last_error = f"{provider.name} rate limited"
-                elif is_safety_blocked:
-                    logger.warning(f"⚠️  {provider.name} blocked by safety filters: {error_msg[:150]}")
-                    last_error = f"{provider.name} safety filter block"
-                else:
-                    logger.error(f"❌ {provider.name} error: {error_msg[:200]}")
-                    last_error = f"{provider.name} error: {error_msg[:100]}"
-                
-                # If this is the last provider, fall back to rule-based
-                if i == len(self.providers) - 1:
-                    logger.warning(f"❌ All AI providers failed (last error: {last_error}), using rule-based fallback")
-                    return self._get_fallback_response(scenario, dss_result_raw)
-                
-                # Otherwise, try next provider
-                continue
+            max_retries = 2 if provider.name == "OpenAI" else 1
+            retry_delay = 1  # seconds
+            
+            for attempt in range(max_retries):
+                try:
+                    if attempt == 0:
+                        logger.info(f"Trying {provider.name} for AI summarization...")
+                    else:
+                        logger.info(f"Retrying {provider.name} (attempt {attempt + 1}/{max_retries}) after {retry_delay}s delay...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                    
+                    # For OpenAI, use both prompts; for Gemini, use combined
+                    if provider.name == "OpenAI":
+                        content = provider.generate(system_prompt, user_prompt)
+                    else:
+                        # For other providers like Gemini, only use user prompt to avoid complexity
+                        content = provider.generate("", user_prompt)
+                    
+                    # Parse JSON response
+                    # Handle potential markdown code blocks from Gemini
+                    content = content.strip()
+                    if content.startswith("```json"):
+                        content = content[7:]
+                    if content.startswith("```"):
+                        content = content[3:]
+                    if content.endswith("```"):
+                        content = content[:-3]
+                    content = content.strip()
+                    
+                    result = json.loads(content)
+                    
+                    # Validate structure
+                    if "summary_insights" not in result or "recommended_actions" not in result:
+                        logger.error(f"{provider.name} returned invalid structure: {result}")
+                        last_error = f"Invalid response structure from {provider.name}"
+                        self.provider_stats[provider.name]["failure"] += 1
+                        break  # Don't retry invalid structures
+                    
+                    logger.info(f"✅ AI summarization successful using {provider.name}")
+                    self.provider_stats[provider.name]["success"] += 1
+                    return result
+                    
+                except json.JSONDecodeError as e:
+                    logger.error(f"{provider.name} returned invalid JSON: {e}")
+                    last_error = f"Invalid JSON from {provider.name}: {str(e)}"
+                    self.provider_stats[provider.name]["failure"] += 1
+                    break  # Don't retry JSON parse errors
+                    
+                except Exception as e:
+                    error_msg = str(e)
+                    is_rate_limit = provider.is_rate_limit_error(e)
+                    is_safety_blocked = "safety" in error_msg.lower() or "blocked" in error_msg.lower() or "empty" in error_msg.lower()
+                    
+                    if is_rate_limit:
+                        logger.warning(f"⚠️  {provider.name} rate limit (attempt {attempt + 1}/{max_retries}): {error_msg[:200]}")
+                        last_error = f"{provider.name} rate limited"
+                        self.provider_stats[provider.name]["rate_limit"] += 1
+                        # Retry on rate limit with exponential backoff
+                        if attempt < max_retries - 1:
+                            continue
+                        else:
+                            break  # Move to next provider
+                    elif is_safety_blocked:
+                        logger.warning(f"⚠️  {provider.name} blocked by safety filters: {error_msg[:150]}")
+                        last_error = f"{provider.name} safety filter block"
+                        self.provider_stats[provider.name]["failure"] += 1
+                        break  # Don't retry safety blocks
+                    else:
+                        logger.error(f"❌ {provider.name} error: {error_msg[:200]}")
+                        last_error = f"{provider.name} error: {error_msg[:100]}"
+                        self.provider_stats[provider.name]["failure"] += 1
+                        break  # Don't retry other errors
+            
+            # If this is the last provider and we've exhausted retries, fall back to rule-based
+            if i == len(self.providers) - 1:
+                logger.warning(f"❌ All AI providers failed (last error: {last_error}), using rule-based fallback")
+                logger.info(f"Provider statistics: {self.provider_stats}")
+                return self._get_fallback_response(scenario, dss_result_raw)
         
         # Should not reach here, but just in case
         logger.warning("Unexpected fallback to rule-based analysis")
