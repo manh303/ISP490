@@ -810,17 +810,43 @@ class AnalyticsService:
         """
         row = await self.db.fetchrow(sql, *params)
 
+        # Check if we need to mock the price distribution
+        # If any key price field is missing, generate a complete mock distribution with proper ordering
+        needs_mock = (
+            _safe_float(row["min_price"]) is None or
+            _safe_float(row["p25_price"]) is None or
+            _safe_float(row["median_price"]) is None or
+            _safe_float(row["p75_price"]) is None or
+            _safe_float(row["max_price"]) is None
+        )
+        
+        if needs_mock:
+            # Generate ONE base price and derive all percentiles from it to maintain ordering
+            base_price = _mock_price()
+            min_price = base_price * 0.5
+            p25_price = base_price * 0.75
+            median_price = base_price
+            p75_price = base_price * 1.25
+            max_price = base_price * 1.5
+        else:
+            # Use real data from database
+            min_price = _safe_float(row["min_price"])
+            p25_price = _safe_float(row["p25_price"])
+            median_price = _safe_float(row["median_price"])
+            p75_price = _safe_float(row["p75_price"])
+            max_price = _safe_float(row["max_price"])
+
         return PriceDistributionResponse(
             platform_code=platform_code,
             category_key=category_key,
             category_name=row["category_name"] if category_key else None,
             from_date=from_date,
             to_date=to_date,
-            min_price=_mock_if_none_or_zero(_safe_float(row["min_price"]), lambda: _mock_price() * 0.5),
-            p25_price=_mock_if_none_or_zero(_safe_float(row["p25_price"]), lambda: _mock_price() * 0.75),
-            median_price=_mock_if_none_or_zero(_safe_float(row["median_price"]), _mock_price),
-            p75_price=_mock_if_none_or_zero(_safe_float(row["p75_price"]), lambda: _mock_price() * 1.25),
-            max_price=_mock_if_none_or_zero(_safe_float(row["max_price"]), lambda: _mock_price() * 1.5),
+            min_price=min_price,
+            p25_price=p25_price,
+            median_price=median_price,
+            p75_price=p75_price,
+            max_price=max_price,
         )
 
     async def get_price_vs_revenue(

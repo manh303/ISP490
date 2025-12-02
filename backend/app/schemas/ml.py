@@ -152,3 +152,4 @@ class MLStatusSummary(BaseModel):
     models_training: int
     predictions_last_7_days: int
     recommendations_last_7_days: int
+    sentiment_reviews_last_7_days: int

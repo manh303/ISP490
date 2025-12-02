@@ -1458,12 +1458,14 @@ class DSSService:
             
             if from_date:
                 conditions.append(f"d.created_at >= ${param_idx}")
-                params.append(from_date)
+                # Convert string to date object for asyncpg
+                params.append(datetime.fromisoformat(from_date).date() if isinstance(from_date, str) else from_date)
                 param_idx += 1
             
             if to_date:
                 conditions.append(f"d.created_at <= ${param_idx}")
-                params.append(to_date)
+                # Convert string to date object for asyncpg
+                params.append(datetime.fromisoformat(to_date).date() if isinstance(to_date, str) else to_date)
                 param_idx += 1
             
             where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""

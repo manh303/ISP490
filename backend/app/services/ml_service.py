@@ -479,8 +479,9 @@ class MLService:
                 rec_dp.product_key AS recommended_product_key,
                 rec_dp.product_name AS recommended_product_name,
                 rnk.similarity_score,
-                fpd_snap.min_price,
-                fpd_snap.avg_rating
+                -- Add COALESCE to handle NULL values from fact_product_daily
+                COALESCE(fpd_snap.min_price, 1000000.0) AS min_price,
+                COALESCE(fpd_snap.avg_rating, 4.0) AS avg_rating
             FROM ml.fact_product_recommendation rnk
             JOIN ml.dim_ml_model m ON m.model_sk = rnk.model_sk
             JOIN dwh.dim_date d ON d.date_sk = rnk.date_sk
@@ -731,9 +732,16 @@ class MLService:
             JOIN dwh.dim_date d ON d.date_sk = r.date_sk
             WHERE d.date_value BETWEEN $1 AND $2
         """
+        sentiment_sql = """
+            SELECT COUNT(*) AS cnt
+            FROM ml.fact_review_sentiment s
+            JOIN dwh.dim_date d ON d.date_sk = s.date_sk
+            WHERE d.date_value BETWEEN $1 AND $2
+        """
 
         preds = await self.db.fetchrow(preds_sql, from_date, today)
         recs = await self.db.fetchrow(recs_sql, from_date, today)
+        sentiments = await self.db.fetchrow(sentiment_sql, from_date, today)
 
         return MLStatusSummary(
             models_total=models["total"],
@@ -742,4 +750,5 @@ class MLService:
             models_training=models["training"],
             predictions_last_7_days=preds["cnt"],
             recommendations_last_7_days=recs["cnt"],
+            sentiment_reviews_last_7_days=sentiments["cnt"],
         )
