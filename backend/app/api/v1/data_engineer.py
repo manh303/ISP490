@@ -128,7 +128,7 @@ async def get_etl_jobs_status():
                         started_at as last_run_started,
                         finished_at as last_run_finished,
                         status as last_run_status
-                    FROM meta.etl_run
+                    FROM metadata.etl_run
                     ORDER BY job_id, started_at DESC
                 ),
                 stats AS (
@@ -137,7 +137,7 @@ async def get_etl_jobs_status():
                         COUNT(*) as total_runs,
                         AVG(EXTRACT(EPOCH FROM (finished_at - started_at))/60) as avg_duration_minutes,
                         100.0 * SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) as success_rate
-                    FROM meta.etl_run
+                    FROM metadata.etl_run
                     WHERE started_at >= NOW() - INTERVAL '30 days'
                     GROUP BY job_id
                 )
@@ -151,7 +151,7 @@ async def get_etl_jobs_status():
                     COALESCE(s.total_runs, 0) as total_runs,
                     COALESCE(s.success_rate, 0) as success_rate,
                     s.avg_duration_minutes
-                FROM meta.etl_job j
+                FROM metadata.etl_job j
                 LEFT JOIN recent_runs r ON j.job_id = r.job_id
                 LEFT JOIN stats s ON j.job_id = s.job_id
                 ORDER BY j.job_code;
@@ -186,8 +186,8 @@ async def get_etl_run_history(
                     EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60 as duration_minutes,
                     r.error_message,
                     r.airflow_run_id
-                FROM meta.etl_run r
-                JOIN meta.etl_job j ON r.job_id = j.job_id
+                FROM metadata.etl_run r
+                JOIN metadata.etl_job j ON r.job_id = j.job_id
                 WHERE j.job_code = %s
             """
             params = [job_code]
@@ -224,7 +224,7 @@ async def get_etl_run_logs(run_id: int):
                     records_failed,
                     error_message,
                     created_at
-                FROM meta.etl_log
+                FROM metadata.etl_log
                 WHERE run_id = %s
                 ORDER BY created_at ASC;
             """, (run_id,))
@@ -255,7 +255,7 @@ async def get_table_health(
                         row_count,
                         size_bytes,
                         last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     ORDER BY schema_name, table_name, snapshot_date DESC
                 )
                 SELECT 
@@ -302,7 +302,7 @@ async def get_table_growth(schema_name: str, table_name: str, days: int = 30):
                     row_count,
                     ROUND(size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ROUND((size_bytes / 1024.0 / 1024.0) / NULLIF(row_count, 0), 4) as avg_row_size_kb
-                FROM meta.table_stats
+                FROM metadata.table_stats
                 WHERE schema_name = %s 
                   AND table_name = %s
                   AND snapshot_date >= CURRENT_DATE - %s
@@ -339,7 +339,7 @@ async def get_data_quality_issues(
                     affected_rows,
                     issue_description,
                     detected_at
-                FROM meta.data_quality_issue
+                FROM metadata.data_quality_issue
                 WHERE status = %s
             """
             params = [status]
@@ -374,7 +374,7 @@ async def get_data_quality_summary():
                     severity,
                     COUNT(*) as issue_count,
                     SUM(affected_rows) as total_affected_rows
-                FROM meta.data_quality_issue
+                FROM metadata.data_quality_issue
                 GROUP BY status, severity
                 ORDER BY severity, status;
             """)
@@ -405,7 +405,7 @@ async def get_database_health():
                     connection_usage_pct,
                     avg_query_time_ms,
                     slow_queries_count
-                FROM meta.db_connection_health
+                FROM metadata.db_connection_health
                 WHERE check_time >= NOW() - INTERVAL '2 minutes'
                 ORDER BY check_time DESC
                 LIMIT 1;
@@ -515,7 +515,7 @@ async def get_table_lineage(schema_name: str, table_name: str, direction: str = 
                         target_table,
                         transformation_type,
                         job_code
-                    FROM meta.data_lineage
+                    FROM metadata.data_lineage
                     WHERE target_schema = %s AND target_table = %s
                       AND is_active = TRUE
                 """, (schema_name, table_name))
@@ -533,7 +533,7 @@ async def get_table_lineage(schema_name: str, table_name: str, direction: str = 
                         target_table,
                         transformation_type,
                         job_code
-                    FROM meta.data_lineage
+                    FROM metadata.data_lineage
                     WHERE source_schema = %s AND source_table = %s
                       AND is_active = TRUE
                 """, (schema_name, table_name))
@@ -568,13 +568,13 @@ async def get_alert_summary():
                     MAX(ah.triggered_at) as last_triggered_at,
                     COALESCE((
                         SELECT status 
-                        FROM meta.alert_history 
+                        FROM metadata.alert_history 
                         WHERE alert_id = ac.alert_id 
                         ORDER BY triggered_at DESC 
                         LIMIT 1
                     ), 'NONE') as status
-                FROM meta.alert_config ac
-                LEFT JOIN meta.alert_history ah ON ac.alert_id = ah.alert_id
+                FROM metadata.alert_config ac
+                LEFT JOIN metadata.alert_history ah ON ac.alert_id = ah.alert_id
                 WHERE ac.is_active = TRUE
                 GROUP BY ac.alert_id, ac.alert_name, ac.alert_type, ac.severity, ac.target_name
                 ORDER BY triggered_count_24h DESC, ac.severity;
@@ -606,8 +606,8 @@ async def get_alert_history(
                     ah.status,
                     ah.acknowledged_by,
                     ah.resolved_by
-                FROM meta.alert_history ah
-                JOIN meta.alert_config ac ON ah.alert_id = ac.alert_id
+                FROM metadata.alert_history ah
+                JOIN metadata.alert_config ac ON ah.alert_id = ac.alert_id
                 WHERE ah.triggered_at >= NOW() - INTERVAL '%s hours'
             """
             params = [hours]
@@ -646,8 +646,8 @@ async def get_pipeline_performance(days: int = 7):
                     AVG(EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60) as avg_duration_minutes,
                     MIN(EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60) as min_duration_minutes,
                     MAX(EXTRACT(EPOCH FROM (r.finished_at - r.started_at))/60) as max_duration_minutes
-                FROM meta.etl_run r
-                JOIN meta.etl_job j ON r.job_id = j.job_id
+                FROM metadata.etl_run r
+                JOIN metadata.etl_job j ON r.job_id = j.job_id
                 WHERE r.started_at >= NOW() - INTERVAL '%s days'
                 GROUP BY j.job_code, j.job_name, DATE(r.started_at)
                 ORDER BY run_date DESC, j.job_code;
@@ -670,7 +670,7 @@ async def get_data_volume_trends(days: int = 30):
                     snapshot_date,
                     SUM(row_count) as total_rows,
                     ROUND(SUM(size_bytes) / 1024.0 / 1024.0 / 1024.0, 2) as total_size_gb
-                FROM meta.table_stats
+                FROM metadata.table_stats
                 WHERE snapshot_date >= CURRENT_DATE - %s
                 GROUP BY schema_name, snapshot_date
                 ORDER BY snapshot_date DESC, schema_name;
