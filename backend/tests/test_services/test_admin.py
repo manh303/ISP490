@@ -32,7 +32,6 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
 
     async def test_create_user(self):
         """Test create user - async method"""
-        # Create Pydantic model instead of dict
         user_data = UserCreateRequest(
             email="admin12ab123c@example.com",
             password="securepassword123",
@@ -53,7 +52,7 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
             "updated_at": "2025-11-30 00:00:00",
         }
         self.conn.fetchrow.return_value = fake_user_row
-        self.conn.fetchval.return_value = 100
+        self.conn.fetchval.return_value = 10  # Mock role_id
 
         result = await self.service.create_user(user_data)
 

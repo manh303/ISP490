@@ -26,10 +26,12 @@ def validate_phone(phone: Optional[str]) -> Optional[str]:
     
     return phone_clean
 
-def validate_password(password: str, min_length: int = 8) -> str:
+def validate_password(password: str, min_length: int = 8,max_length=65) -> str:
     """Validate password strength"""
-    if len(password) < min_length:
+    if len(password) < min_length :
         raise ValueError(f'Mật khẩu phải có tối thiểu {min_length} ký tự')
+    if len(password) > max_length:
+        raise ValueError(f'Mật khẩu không được vượt quá {max_length} ký tự')
     
     if not re.search(r'[a-zA-Z]', password):
         raise ValueError('Mật khẩu phải chứa ít nhất một chữ cái')
@@ -129,7 +131,11 @@ def validate_role_name(role_name: Optional[str]) -> Optional[str]:
     
     return name_clean
 
-def validate_email(email: str):
+def validate_email(email: str, max_length: int = 255) -> str:
+    # Check length (database limit)
+    if len(email) > max_length:
+        raise ValueError(f'Email không được vượt quá {max_length} ký tự')
+    
     # Check for exactly one @ sign
     if email.count('@') != 1:
         raise ValueError('Email phải có đúng 1 ký tự @')

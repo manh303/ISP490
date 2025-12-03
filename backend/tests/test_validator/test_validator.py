@@ -27,9 +27,17 @@ class TestValidator(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Email không hợp lệ"):
             self.validate_email("a,nc.    @   gmail..com")
 
-    def test_validate_password_length(self):
+    def test_validate_email_length(self):
+        with self.assertRaisesRegex(ValueError, "Email không được vượt quá 255 ký tự"):
+            self.validate_email("a" * 256 + "@example.com")
+
+    def test_validate_password_length_short(self):
         with self.assertRaisesRegex(ValueError, "Mật khẩu phải có tối thiểu 8 ký tự"):
             self.validate_password_strength("short")
+
+    def test_validate_password_length_long(self):
+        with self.assertRaisesRegex(ValueError, "Mật khẩu không được vượt quá 65 ký tự"):
+            self.validate_password_strength("a" * 66)
 
     def test_validate_password_have_letter(self):
         with self.assertRaisesRegex(ValueError, "Mật khẩu phải chứa ít nhất một chữ cái"):
