@@ -189,9 +189,15 @@ async def register(request: RegisterRequest, iam: IAMService = Depends(get_iam_s
 @router.post("/signin", response_model=LoginResponse)
 async def signin(request: LoginRequest, iam: IAMService = Depends(get_iam_service)):
     """Authenticate user and return tokens"""
+    import time
+    t0 = time.time()
+    logger.info(f"[SIGNIN] START for email: {request.email}")
+    
     try:
         # Authenticate user
+        t_auth_start = time.time()
         user = await iam.authenticate_user(request.email, request.password)
+        logger.info(f"[SIGNIN] Auth done in {time.time() - t_auth_start:.3f}s")
 
         if not user:
             raise HTTPException(
@@ -204,16 +210,21 @@ async def signin(request: LoginRequest, iam: IAMService = Depends(get_iam_servic
             )
 
         # Create tokens
+        t_token_start = time.time()
         access_token = await iam.create_access_token(user)
         refresh_token = await iam.create_refresh_token(user['user_id'])
+        logger.info(f"[SIGNIN] Token creation done in {time.time() - t_token_start:.3f}s")
 
         # Log successful login
+        t_log_start = time.time()
         await iam.log_user_action(
             user_id=user['user_id'],
             action="LOGIN_SUCCESS",
             details=f"Successful login from email: {request.email}"
         )
+        logger.info(f"[SIGNIN] Activity logging done in {time.time() - t_log_start:.3f}s")
 
+        logger.info(f"[SIGNIN] COMPLETE in {time.time() - t0:.3f}s")
         return {
             "success": True,
             "message": "Login successful",
@@ -240,7 +251,7 @@ async def signin(request: LoginRequest, iam: IAMService = Depends(get_iam_servic
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Login error: {e}")
+        logger.error(f"[SIGNIN] ERROR after {time.time() - t0:.3f}s: {e}")
         raise HTTPException(
             status_code=500,
             detail={

@@ -8,17 +8,26 @@ import time
 
 logger = logging.getLogger(__name__)
 
+# Global flag: Check table existence only once at startup instead of every request
+_ACTIVITY_TABLE_READY = None
+
 class ActivityLoggingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, db_manager):
         super().__init__(app)
         self.db_manager = db_manager
+        # Paths where activity logging should be skipped (to reduce latency)
+        # Skip auth endpoints to avoid duplicate logging (done in handler) and reduce database queries
+        self.skip_paths = [
+            "/docs", "/openapi.json", "/health", "/favicon.ico", "/static",
+            "/api/v1/auth/signin", "/api/v1/auth/signout", "/api/v1/auth/signup",
+            "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/logout"
+        ]
 
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
         
-        # Skip logging for certain paths
-        skip_paths = ["/docs", "/openapi.json", "/health", "/favicon.ico", "/static"]
-        if any(request.url.path.startswith(path) for path in skip_paths):
+        # Skip logging for certain paths to reduce latency
+        if any(request.url.path.startswith(path) for path in self.skip_paths):
             return await call_next(request)
 
         # Get user info from token if available
@@ -66,12 +75,17 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
         
         # Log the activity
         try:
-            # Check if table exists before logging
-            if self.db_manager.is_connected:
+            # Check if table exists before logging (using cached flag to avoid query per request)
+            global _ACTIVITY_TABLE_READY
+            if _ACTIVITY_TABLE_READY is None and self.db_manager.is_connected:
+                # Check table existence only once at first request
                 table_check = await self.db_manager.execute_query(
                     "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'iam' AND table_name = 'user_activity_logs')"
                 )
-                if table_check and table_check[0].get('exists'):
+                _ACTIVITY_TABLE_READY = bool(table_check and table_check[0].get('exists'))
+                logger.info(f"Activity logging: table exists = {_ACTIVITY_TABLE_READY}")
+            
+            if _ACTIVITY_TABLE_READY:
                     process_time = time.time() - start_time
                     
                     details = {

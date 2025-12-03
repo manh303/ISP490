@@ -493,12 +493,14 @@ app.add_middleware(
 )
 
 # Add activity logging middleware (only if available and table exists)
-# Disabled for now - user_activity_logs table doesn't exist yet
-if ACTIVITY_AVAILABLE:
+# TEMPORARILY DISABLED - causing slow signin on Render (multiple DB queries per request)
+# Issue: middleware queries information_schema for every request + duplicate logging
+# TODO: Re-enable after optimizations are implemented
+if False and ACTIVITY_AVAILABLE:  # Disabled for now
     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
     logger.info("Activity logging middleware enabled")
 else:
-    logger.warning("Activity logging middleware disabled - module not available")
+    logger.info("✅ Activity logging middleware DISABLED (optimization - high network latency on Render)")
 
 # Update security headers middleware
 @app.middleware("http")
