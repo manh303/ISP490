@@ -148,22 +148,28 @@ class AnalyticsService:
 
             display_name = " > ".join(parts) if parts else (std or "")
 
-            # CHỈ LẤY TÊN Ở LEVEL CUỐI
-            if lvl3:
+            # ƯU TIÊN LẤY category_std_key TRƯỚC
+            level = 1  # default level
+            if std:
+                display_name = std
+                # Xác định level dựa trên số lượng level có giá trị
+                if lvl3:
+                    level = 3
+                elif lvl2:
+                    level = 2
+                elif lvl1:
+                    level = 1
+            elif lvl3:
                 display_name = lvl3
-                level = 3          # vd: Smartphones
+                level = 3
             elif lvl2:
                 display_name = lvl2
-                level = 2         
+                level = 2
             elif lvl1:
                 display_name = lvl1
-                level = 1         
-            elif std:
-                display_name = std           
+                level = 1
             else:
                 display_name = ""
-          
-
             result.append(
                 CategoryFilterItem(
                     category_key=str(r["category_sk"]),
@@ -188,52 +194,92 @@ class AnalyticsService:
         platform_code: Optional[str] = None,
         category_key: Optional[str] = None,  # = category_sk
     ) -> OverviewKPIResponse:
-        conditions = ["d.date_value BETWEEN $1 AND $2"]
+        conditions = ["date_value BETWEEN $1 AND $2"]
         params: List[Any] = [from_date, to_date]
         param_index = 3
 
         if platform_code:
-            conditions.append(f"pl.platform_code = ${param_index}")
+            conditions.append(f"platform_code = ${param_index}")
             params.append(platform_code)
             param_index += 1
 
         if category_key:
-            conditions.append(f"p.category_sk = ${param_index}")
+            conditions.append(f"category_sk = ${param_index}")
             params.append(int(category_key))
             param_index += 1
 
         where_clause = "WHERE " + " AND ".join(conditions)
 
-        sql = f"""
+        # 1. Query aggregated metrics from Materialized View (Fast)
+        mv_sql = f"""
             SELECT
-                -- doanh thu ảo: avg_price * total_review_count
-                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
-                COUNT(DISTINCT f.product_sk) AS total_products,
-                COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
-                AVG(f.avg_price) AS avg_price,
-                AVG(f.avg_rating) AS avg_rating,
-                MAX(COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN')) AS category_name
-            FROM dwh.fact_product_daily f
-            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
-            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
-            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
-            LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
+                COALESCE(SUM(total_revenue), 0) AS total_revenue,
+                COALESCE(SUM(total_reviews), 0) AS total_reviews,
+                AVG(avg_price) AS avg_price,
+                AVG(avg_rating) AS avg_rating
+            FROM dwh.mv_daily_platform_category_summary
             {where_clause}
         """
+        
+        # 2. Query distinct products from Fact Table (Necessary for accuracy)
+        # We use the same conditions but need to map column names if they differ
+        # MV uses same column names for filters as Fact table (date_value, platform_code, category_sk)
+        # except for table aliases.
+        
+        fact_conditions = ["d.date_value BETWEEN $1 AND $2"]
+        fact_params = [from_date, to_date]
+        fact_idx = 3
+        
+        if platform_code:
+            fact_conditions.append(f"pl.platform_code = ${fact_idx}")
+            fact_params.append(platform_code)
+            fact_idx += 1
+            
+        if category_key:
+            fact_conditions.append(f"p.category_sk = ${fact_idx}")
+            fact_params.append(int(category_key))
+            fact_idx += 1
+            
+        fact_where = "WHERE " + " AND ".join(fact_conditions)
+        
+        prod_sql = f"""
+            SELECT COUNT(DISTINCT f.product_sk) AS total_products
+            FROM dwh.fact_product_daily f
+            JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+            JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+            {fact_where}
+        """
+
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow(sql, *params)
+            # Run in parallel
+            mv_row = await conn.fetchrow(mv_sql, *params)
+            prod_row = await conn.fetchrow(prod_sql, *fact_params)
+
+        # Get category name separately if category_key is provided
+        category_name = None
+        if category_key:
+            cat_sql = """
+                SELECT COALESCE(category_std_key, category_lvl3, category_lvl2, category_lvl1, 'UNKNOWN') AS category_name
+                FROM dwh.dim_category
+                WHERE category_sk = $1
+            """
+            async with self.pool.acquire() as conn:
+                cat_row = await conn.fetchrow(cat_sql, int(category_key))
+            if cat_row:
+                category_name = cat_row["category_name"]
 
         return OverviewKPIResponse(
             from_date=from_date,
             to_date=to_date,
             platform_code=platform_code,
             category_key=category_key,
-            category_name=row["category_name"] if category_key else None,
-            total_revenue=_mock_if_none_or_zero(float(row["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
-            total_products=int(row["total_products"] or 0),
-            total_reviews=_mock_if_none_or_zero(int(row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
-            avg_price=_mock_if_none_or_zero(_safe_float(row["avg_price"]), _mock_price),
-            avg_rating=_mock_if_none_or_zero(_safe_float(row["avg_rating"]), _mock_rating),
+            category_name=category_name,
+            total_revenue=_mock_if_none_or_zero(float(mv_row["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
+            total_products=int(prod_row["total_products"] or 0),
+            total_reviews=_mock_if_none_or_zero(int(mv_row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+            avg_price=_mock_if_none_or_zero(_safe_float(mv_row["avg_price"]), _mock_price),
+            avg_rating=_mock_if_none_or_zero(_safe_float(mv_row["avg_rating"]), _mock_rating),
         )
 
     async def get_overview_trends(
@@ -246,37 +292,35 @@ class AnalyticsService:
         """
         Trend theo ngày cho dashboard overview.
         """
-        conditions = ["d.date_value BETWEEN $1 AND $2"]
+        conditions = ["date_value BETWEEN $1 AND $2"]
         params: List[Any] = [from_date, to_date]
         param_index = 3
 
         if platform_code:
-            conditions.append(f"pl.platform_code = ${param_index}")
+            conditions.append(f"platform_code = ${param_index}")
             params.append(platform_code)
             param_index += 1
 
         if category_key:
-            conditions.append(f"p.category_sk = ${param_index}")
+            conditions.append(f"category_sk = ${param_index}")
             params.append(int(category_key))
             param_index += 1
 
         where_clause = "WHERE " + " AND ".join(conditions)
 
+        # Use Materialized View for faster performance
         sql = f"""
             SELECT
-                d.date_value AS date,
-                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS revenue,
-                COALESCE(SUM(f.total_review_count), 0) AS total_orders,
-                AVG(f.avg_price) AS avg_price,
-                AVG(f.avg_rating) AS avg_rating,
-                COALESCE(SUM(f.total_review_count), 0) AS total_reviews
-            FROM dwh.fact_product_daily f
-            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
-            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
-            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+                date_value AS date,
+                COALESCE(SUM(total_revenue), 0) AS revenue,
+                COALESCE(SUM(total_orders), 0) AS total_orders,
+                AVG(avg_price) AS avg_price,
+                AVG(avg_rating) AS avg_rating,
+                COALESCE(SUM(total_reviews), 0) AS total_reviews
+            FROM dwh.mv_daily_platform_category_summary
             {where_clause}
-            GROUP BY d.date_value
-            ORDER BY d.date_value
+            GROUP BY date_value
+            ORDER BY date_value
         """
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(sql, *params)
@@ -298,7 +342,7 @@ class AnalyticsService:
         category_name = None
         if category_key:
             cat_sql = """
-                SELECT COALESCE(full_path, category_std_key, category_lvl1, 'UNKNOWN') AS category_name
+                SELECT COALESCE(category_std_key, category_lvl3, category_lvl2, category_lvl1, 'UNKNOWN') AS category_name
                 FROM dwh.dim_category
                 WHERE category_sk = $1
             """
@@ -317,10 +361,6 @@ class AnalyticsService:
         )
 
 
-
-    # =========================
-    # PLATFORM COMPARISON
-    # =========================
 
     async def get_platform_comparison(
         self,
@@ -375,7 +415,7 @@ class AnalyticsService:
         category_name = None
         if category_key:
             cat_sql = """
-                SELECT COALESCE(full_path, category_std_key, category_lvl1, 'UNKNOWN') AS category_name
+                SELECT COALESCE(category_std_key, category_lvl3, category_lvl2, category_lvl1, 'UNKNOWN') AS category_name
                 FROM dwh.dim_category
                 WHERE category_sk = $1
             """
@@ -421,7 +461,7 @@ class AnalyticsService:
         sql = f"""
             SELECT
                 p.category_sk AS category_key,
-                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name,
+                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
                 pl.platform_code,
                 COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS revenue
             FROM dwh.fact_product_daily f
@@ -430,7 +470,7 @@ class AnalyticsService:
             JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
-            GROUP BY p.category_sk, c.full_path, c.category_std_key, c.category_lvl1, pl.platform_code
+            GROUP BY p.category_sk, c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, pl.platform_code
             ORDER BY revenue DESC
         """
         async with self.pool.acquire() as conn:
@@ -505,7 +545,7 @@ class AnalyticsService:
                 p.product_name,
                 pl.platform_code,
                 p.category_sk AS category_key,
-                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name,
+                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
                 COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
                 COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
                 AVG(f.avg_rating) AS avg_rating,
@@ -521,8 +561,9 @@ class AnalyticsService:
                 p.product_name,
                 pl.platform_code,
                 p.category_sk,
-                c.full_path,
                 c.category_std_key,
+                c.category_lvl3,
+                c.category_lvl2,
                 c.category_lvl1
             ORDER BY {metric_column} DESC
             LIMIT {limit}
@@ -756,7 +797,7 @@ class AnalyticsService:
                 p.product_key,
                 p.product_name,
                 p.category_sk,
-                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name
+                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name
             FROM dwh.dim_product p
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
@@ -816,7 +857,7 @@ class AnalyticsService:
                 PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY f.avg_price) AS median_price,
                 PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY f.avg_price) AS p75_price,
                 MAX(f.max_price) AS max_price,
-                MAX(COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN')) AS category_name
+                MAX(COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN')) AS category_name
             FROM dwh.fact_product_daily f
             JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
             JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
