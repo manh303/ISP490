@@ -98,7 +98,7 @@ except ImportError:
         import sys
         import os
         sys.path.append(os.path.dirname(__file__))
-        from api.v1.auth import router as auth_router, init_iam_service
+        from app.api.v1.auth import router as auth_router, init_iam_service
         IAM_AVAILABLE = True
         print("IAM system imported successfully (alternative path)")
     except ImportError as e2:

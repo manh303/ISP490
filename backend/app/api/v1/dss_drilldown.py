@@ -137,7 +137,7 @@ class ProductDrilldown(BaseModel):
 async def get_db():
     """Get database connection - inject from main.py"""
     try:
-        from app.main import db_manager
+        from backend.main import db_manager
     except ImportError:
         raise HTTPException(status_code=500, detail="Failed to get database connection")
     
