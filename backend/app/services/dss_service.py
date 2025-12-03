@@ -467,7 +467,10 @@ class DSSService:
                         "platform": row["platform"],
                         "category_name": row["category_name"],
                         "current_price": float(row["current_price"]),
-                        "predicted_price": float(row["predicted_price"]),
+
+                        # *** CHÍNH Ở ĐÂY ***
+                        "recommended_price": float(row["predicted_price"]),
+                        "predicted_price": float(row["predicted_price"]),  # giữ lại nếu FE đang dùng
                         "price_diff": float(row["price_diff"]),
                         "price_change_pct": float(row["price_change_pct"]),
                         "current_revenue": float(row["current_revenue"]),
@@ -507,13 +510,16 @@ class DSSService:
         items = data.get("items", [])
         if not items:
             return {
-                "num_products": 0,
-                "num_with_recommendation": 0,
-                "current_revenue": 0.0,
-                "projected_revenue": 0.0,
-                "expected_revenue_uplift_pct": 0.0,
-                "avg_confidence": 0.0,
-            }
+            "num_products": num_products,
+            "num_with_recommendation": num_with_reco,
+            "current_revenue": current_revenue,
+            "projected_revenue": projected_revenue,
+            # alias cho AI + docs
+            "current_total_revenue": current_revenue,
+            "projected_total_revenue": projected_revenue,
+            "expected_revenue_uplift_pct": expected_uplift_pct,
+            "avg_confidence": avg_confidence,
+    }
 
         num_products = len(items)
         num_with_reco = len([i for i in items if i["price_change_pct"] != 0])
