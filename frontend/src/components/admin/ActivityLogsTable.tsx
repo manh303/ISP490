@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { getActivityLogs, exportActivityLogs } from "../../services/adminApi";
+import { getActivityLogs, exportActivityLogs, getActivityLogDetail } from "../../services/adminApi";
 import { Button } from '../../components/ui/figma/button';
 import {
     Table,
@@ -29,6 +29,13 @@ interface ActivityLog {
     user_agent: string | null;
     message: string | null;
     created_at: string;
+}
+
+interface ActivityLogDetail extends ActivityLog {
+    request_payload: any;
+    before_data: any;
+    after_data: any;
+    details: any;
 }
 
 interface Pagination {
@@ -66,7 +73,9 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
 
     // Modal states
     const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
+    const [selectedLogDetail, setSelectedLogDetail] = useState<ActivityLogDetail | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
 
     // Fetch logs
     const fetchLogs = async (page = currentPage) => {
@@ -153,14 +162,31 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
         }
     };
 
-    const openDetailsModal = (log: ActivityLog) => {
+    const openDetailsModal = async (log: ActivityLog) => {
         setSelectedLog(log);
+        setSelectedLogDetail(null);
         setShowModal(true);
+        setDetailLoading(true);
+        
+        try {
+            const response = await getActivityLogDetail(log.log_id);
+            if (response.success) {
+                setSelectedLogDetail(response.data);
+            } else {
+                setError('Failed to fetch log details');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch log details');
+        } finally {
+            setDetailLoading(false);
+        }
     };
 
     const closeDetailsModal = () => {
         setSelectedLog(null);
+        setSelectedLogDetail(null);
         setShowModal(false);
+        setDetailLoading(false);
     };
 
     if (loading) {
@@ -370,7 +396,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
             {/* Details Modal */}
             {showModal && selectedLog && (
                 <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl border">
+                    <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">Chi tiết nhật ký #{selectedLog.log_id}</h3>
                             <Button variant="outline" size="sm" onClick={closeDetailsModal}>
@@ -378,75 +404,130 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                             </Button>
                         </div>
                         
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">ID Nhật ký</label>
-                                    <p className="text-sm">{selectedLog.log_id}</p>
+                        {detailLoading ? (
+                            <div className="text-center py-8">Đang tải chi tiết...</div>
+                        ) : selectedLogDetail ? (
+                            <div className="space-y-6">
+                                {/* Basic Information */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">ID Nhật ký</label>
+                                        <p className="text-sm">{selectedLogDetail.log_id}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">User ID</label>
+                                        <p className="text-sm">{selectedLogDetail.user_id || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Email</label>
+                                        <p className="text-sm">{selectedLogDetail.email || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Họ tên</label>
+                                        <p className="text-sm">{selectedLogDetail.full_name || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Vai trò</label>
+                                        <p className="text-sm">{selectedLogDetail.role_at_time || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Hành động</label>
+                                        <p className="text-sm">{selectedLogDetail.action.replace(/_/g, ' ')}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Module</label>
+                                        <p className="text-sm">{selectedLogDetail.module || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Loại tài nguyên</label>
+                                        <p className="text-sm">{selectedLogDetail.resource_type || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Tài nguyên</label>
+                                        <p className="text-sm">{selectedLogDetail.resource || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Phương thức</label>
+                                        <p className="text-sm">{selectedLogDetail.request_method || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Trạng thái</label>
+                                        <p className="text-sm">{selectedLogDetail.status === 'success' ? 'Thành công' : 'Thất bại'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Thời gian</label>
+                                        <p className="text-sm">{new Date(selectedLogDetail.created_at).toLocaleString()}</p>
+                                    </div>
                                 </div>
+                                
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">User ID</label>
-                                    <p className="text-sm">{selectedLog.user_id || 'N/A'}</p>
+                                    <label className="text-sm font-medium text-gray-600">IP Address</label>
+                                    <p className="text-sm">{selectedLogDetail.ip_address || 'N/A'}</p>
                                 </div>
+                                
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Email</label>
-                                    <p className="text-sm">{selectedLog.email || 'N/A'}</p>
+                                    <label className="text-sm font-medium text-gray-600">User Agent</label>
+                                    <p className="text-sm break-all">{selectedLogDetail.user_agent || 'N/A'}</p>
                                 </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Họ tên</label>
-                                    <p className="text-sm">{selectedLog.full_name || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Vai trò</label>
-                                    <p className="text-sm">{selectedLog.role_at_time || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Hành động</label>
-                                    <p className="text-sm">{selectedLog.action.replace(/_/g, ' ')}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Module</label>
-                                    <p className="text-sm">{selectedLog.module || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Loại tài nguyên</label>
-                                    <p className="text-sm">{selectedLog.resource_type || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Tài nguyên</label>
-                                    <p className="text-sm">{selectedLog.resource || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Phương thức</label>
-                                    <p className="text-sm">{selectedLog.request_method || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Trạng thái</label>
-                                    <p className="text-sm">{selectedLog.status === 'success' ? 'Thành công' : 'Thất bại'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Thời gian</label>
-                                    <p className="text-sm">{new Date(selectedLog.created_at).toLocaleString()}</p>
-                                </div>
+                                
+                                {selectedLogDetail.message && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Thông điệp</label>
+                                        <p className="text-sm">{selectedLogDetail.message}</p>
+                                    </div>
+                                )}
+                                
+                                {/* Request Payload */}
+                                {selectedLogDetail.request_payload && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Dữ liệu yêu cầu (Request Payload)</label>
+                                        <pre className="text-xs bg-gray-100 p-3 rounded mt-1 whitespace-pre-wrap overflow-x-auto">
+                                            {typeof selectedLogDetail.request_payload === 'string' 
+                                                ? selectedLogDetail.request_payload 
+                                                : JSON.stringify(selectedLogDetail.request_payload, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                                
+                                {/* Before Data */}
+                                {selectedLogDetail.before_data && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Dữ liệu trước khi thay đổi (Before Data)</label>
+                                        <pre className="text-xs bg-blue-50 p-3 rounded mt-1 whitespace-pre-wrap overflow-x-auto">
+                                            {typeof selectedLogDetail.before_data === 'string' 
+                                                ? selectedLogDetail.before_data 
+                                                : JSON.stringify(selectedLogDetail.before_data, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                                
+                                {/* After Data */}
+                                {selectedLogDetail.after_data && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Dữ liệu sau khi thay đổi (After Data)</label>
+                                        <pre className="text-xs bg-green-50 p-3 rounded mt-1 whitespace-pre-wrap overflow-x-auto">
+                                            {typeof selectedLogDetail.after_data === 'string' 
+                                                ? selectedLogDetail.after_data 
+                                                : JSON.stringify(selectedLogDetail.after_data, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                                
+                                {/* Details */}
+                                {selectedLogDetail.details && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Chi tiết kỹ thuật (Details)</label>
+                                        <pre className="text-xs bg-yellow-50 p-3 rounded mt-1 whitespace-pre-wrap overflow-x-auto">
+                                            {typeof selectedLogDetail.details === 'string' 
+                                                ? selectedLogDetail.details 
+                                                : JSON.stringify(selectedLogDetail.details, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
                             </div>
-                            
-                            <div>
-                                <label className="text-sm font-medium text-gray-600">IP Address</label>
-                                <p className="text-sm">{selectedLog.ip_address || 'N/A'}</p>
-                            </div>
-                            
-                            <div>
-                                <label className="text-sm font-medium text-gray-600">User Agent</label>
-                                <p className="text-sm break-all">{selectedLog.user_agent || 'N/A'}</p>
-                            </div>
-                            
-                            {selectedLog.message && (
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Thông điệp</label>
-                                    <p className="text-sm">{selectedLog.message}</p>
-                                </div>
-                            )}
-                        </div>
+                        ) : (
+                            <div className="text-center py-8 text-red-500">Không thể tải chi tiết nhật ký</div>
+                        )}
                         
                         <div className="flex justify-end mt-6">
                             <Button onClick={closeDetailsModal}>
