@@ -1,6 +1,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../ui/figma/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/figma/card';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface OverviewReport {
   trends: {
@@ -37,44 +38,74 @@ export default function AdminDashboardCharts({
   formatNumber,
   onMetricChange,
 }: AdminDashboardChartsProps) {
-  console.log('AdminDashboardCharts render:', {
-    overviewReport: overviewReport ? {
-      trendsPoints: overviewReport.trends.points.length,
-      platformComparison: overviewReport.platform_comparison.length,
-      categoryShare: overviewReport.category_share.length
-    } : null,
-    selectedMetric,
-    selectedPlatform
-  });
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Overview Trend Chart */}
       <div className="lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>Overview Trends</CardTitle>
+            <CardTitle>Tổng quan xu hướng</CardTitle>
             <Select value={selectedMetric} onValueChange={(value: any) => onMetricChange(value)}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="revenue">Revenue</SelectItem>
-                <SelectItem value="reviews">Reviews</SelectItem>
-                <SelectItem value="price">Price</SelectItem>
-                <SelectItem value="rating">Rating</SelectItem>
+                <SelectItem value="revenue">Doanh thu</SelectItem>
+                <SelectItem value="reviews">Đánh giá</SelectItem>
+                <SelectItem value="price">Giá</SelectItem>
+                <SelectItem value="rating">Đánh giá</SelectItem>
               </SelectContent>
             </Select>
           </CardHeader>
           <CardContent>
-            {overviewReport?.trends.points && (
+            {overviewReport?.trends.points && overviewReport.trends.points.length > 0 ? (
               <div className="h-64">
-                {/* Simple chart representation - replace with actual chart library */}
-                <div className="text-center text-gray-500 mt-20">
-                  Chart: {selectedMetric} over time
-                  <br />
-                  {overviewReport.trends.points.length} data points
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={overviewReport.trends.points}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('vi-VN')}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => {
+                        if (selectedMetric === 'revenue') return formatCurrency(value);
+                        if (selectedMetric === 'price') return formatCurrency(value);
+                        if (selectedMetric === 'rating') return value.toFixed(1);
+                        return formatNumber(value);
+                      }}
+                    />
+                    <Tooltip 
+                      labelFormatter={(value) => `Ngày: ${new Date(value).toLocaleDateString('vi-VN')}`}
+                      formatter={(value: number) => {
+                        if (selectedMetric === 'revenue') return [formatCurrency(value), 'Doanh thu'];
+                        if (selectedMetric === 'reviews') return [formatNumber(value), 'Đánh giá'];
+                        if (selectedMetric === 'price') return [formatCurrency(value), 'Giá TB'];
+                        if (selectedMetric === 'rating') return [value.toFixed(1), 'Đánh giá TB'];
+                        return [value, selectedMetric];
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey={
+                        selectedMetric === 'revenue' ? 'revenue' :
+                        selectedMetric === 'reviews' ? 'total_reviews' :
+                        selectedMetric === 'price' ? 'avg_price' :
+                        selectedMetric === 'rating' ? 'avg_rating' : 'revenue'
+                      } 
+                      stroke="#3b82f6" 
+                      strokeWidth={2}
+                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-gray-500">
+                Không có dữ liệu xu hướng
               </div>
             )}
           </CardContent>
@@ -86,12 +117,12 @@ export default function AdminDashboardCharts({
         {/* Platform Comparison */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Platform Comparison</CardTitle>
+            <CardTitle className="text-base">So sánh nền tảng</CardTitle>
           </CardHeader>
           <CardContent>
             {overviewReport?.platform_comparison.map(platform => (
               <div key={platform.platform_code} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                <span className="font-medium">{platform.platform_name}</span>
+                <span className="font-medium">{platform.platform_name || platform.platform_code.charAt(0).toUpperCase() + platform.platform_code.slice(1)}</span>
                 <span className="text-sm text-gray-600">
                   {selectedMetric === 'revenue' && formatCurrency(platform.total_revenue)}
                   {selectedMetric === 'reviews' && formatNumber(platform.total_reviews)}
@@ -106,7 +137,7 @@ export default function AdminDashboardCharts({
         {/* Category Share */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Category Share</CardTitle>
+            <CardTitle className="text-base">Tỷ lệ danh mục</CardTitle>
           </CardHeader>
           <CardContent>
             {selectedPlatform && selectedPlatform !== 'all-platforms' ? (
@@ -118,7 +149,7 @@ export default function AdminDashboardCharts({
               ))
             ) : (
               <div className="text-center text-gray-500 py-4">
-                Select a specific platform to view category share
+                Chọn một nền tảng cụ thể để xem tỷ lệ danh mục
               </div>
             )}
           </CardContent>

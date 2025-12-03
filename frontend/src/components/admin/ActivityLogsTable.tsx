@@ -77,6 +77,12 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
     const [showModal, setShowModal] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
 
+    // Unique actions for filter
+    const uniqueActions = useMemo(() => {
+        const actions = logs.map(log => log.action);
+        return Array.from(new Set(actions));
+    }, [logs]);
+
     // Fetch logs
     const fetchLogs = async (page = currentPage) => {
         setLoading(true);
@@ -213,12 +219,16 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                     </div>
                 </div>
                 
-                <Input
-                    placeholder="Hành động"
+                <select
                     value={selectedAction}
                     onChange={(e) => setSelectedAction(e.target.value)}
-                    className="w-32"
-                />
+                    className="px-3 py-2 border border-gray-300 rounded-md w-32"
+                >
+                    <option value="">Tất cả hành động</option>
+                    {uniqueActions.map(action => (
+                        <option key={action} value={action}>{action.replace(/_/g, ' ')}</option>
+                    ))}
+                </select>
                 
                 <select
                     value={selectedModule}

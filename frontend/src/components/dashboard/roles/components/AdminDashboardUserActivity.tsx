@@ -23,12 +23,12 @@ export default function AdminDashboardUserActivity({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            User Summary
+            Tóm tắt người dùng
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center text-gray-500">
-            User summary data would go here
+            Dữ liệu tóm tắt người dùng sẽ ở đây
           </div>
         </CardContent>
       </Card>
@@ -38,7 +38,7 @@ export default function AdminDashboardUserActivity({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="w-4 h-4" />
-            Recent Activity
+            Hoạt động gần đây
           </CardTitle>
         </CardHeader>
         <CardContent>

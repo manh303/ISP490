@@ -27,28 +27,28 @@ export default function AdminDashboardDSSDecisions({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>DSS Decisions</CardTitle>
+        <CardTitle>Quyết định DSS</CardTitle>
         <div className="flex gap-4">
           <Select value={decisionScenario} onValueChange={onScenarioChange}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="All Scenarios" />
+              <SelectValue placeholder="Tất cả kịch bản" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all-scenarios">All Scenarios</SelectItem>
-              <SelectItem value="price_prediction">Price Prediction</SelectItem>
-              <SelectItem value="product_recommendation">Recommendation</SelectItem>
-              <SelectItem value="review_sentiment">Review Sentiment</SelectItem>
+              <SelectItem value="all-scenarios">Tất cả kịch bản</SelectItem>
+              <SelectItem value="price_prediction">Dự đoán giá</SelectItem>
+              <SelectItem value="product_recommendation">Khuyến nghị</SelectItem>
+              <SelectItem value="review_sentiment">Cảm xúc đánh giá</SelectItem>
             </SelectContent>
           </Select>
           <Select value={decisionStatus} onValueChange={onStatusChange}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="All Status" />
+              <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all-status">All Status</SelectItem>
-              <SelectItem value="DRAFT">Draft</SelectItem>
-              <SelectItem value="APPROVED">Approved</SelectItem>
-              <SelectItem value="IMPLEMENTED">Implemented</SelectItem>
+              <SelectItem value="all-status">Tất cả trạng thái</SelectItem>
+              <SelectItem value="DRAFT">Nháp</SelectItem>
+              <SelectItem value="APPROVED">Đã phê duyệt</SelectItem>
+              <SelectItem value="IMPLEMENTED">Đã triển khai</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -58,12 +58,12 @@ export default function AdminDashboardDSSDecisions({
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Scenario</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Tiêu đề</TableHead>
+              <TableHead>Kịch bản</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead>Người tạo</TableHead>
+              <TableHead>Ngày tạo</TableHead>
+              <TableHead>Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -91,7 +91,7 @@ export default function AdminDashboardDSSDecisions({
                     onClick={() => onViewDecision(decision.decision_id)}
                   >
                     <Eye className="w-4 h-4 mr-1" />
-                    View
+                    Xem
                   </Button>
                 </TableCell>
               </TableRow>

@@ -48,50 +48,40 @@ export default function AdminDashboard() {
 
   // Load initial data
   useEffect(() => {
-    console.log('AdminDashboard: Initial useEffect triggered');
     loadFilters();
   }, []);
 
   // Load dashboard data when filters change
   useEffect(() => {
-    console.log('AdminDashboard: Dashboard data useEffect triggered, isFiltersLoaded:', isFiltersLoaded);
     if (isFiltersLoaded) {
-      console.log('AdminDashboard: Loading dashboard data');
       loadDashboardData();
-    } else {
-      console.log('AdminDashboard: Filters not loaded yet, skipping dashboard data load');
     }
   }, [fromDate, toDate, selectedPlatform, selectedCategory, isFiltersLoaded]);
 
   // Load DSS decisions
   useEffect(() => {
-    console.log('AdminDashboard: DSS decisions useEffect triggered');
     loadDSSDecisions();
   }, [decisionPage, decisionScenario, decisionStatus, fromDate, toDate]);
 
   const loadFilters = async () => {
-    console.log('AdminDashboard: loadFilters started');
     try {
       const [platformsRes, categoriesRes] = await Promise.all([
         getPlatforms(),
         getCategories()
       ]);
-      console.log('AdminDashboard: loadFilters success, platforms:', platformsRes.length, 'categories:', categoriesRes.length);
       setPlatforms(platformsRes);
       setCategories(categoriesRes);
     } catch (error) {
-      console.error('AdminDashboard: Failed to load filters:', error);
+      console.error('Failed to load filters:', error);
       // Set empty arrays to allow dashboard to load even if filters fail
       setPlatforms([]);
       setCategories([]);
     } finally {
-      console.log('AdminDashboard: Setting isFiltersLoaded to true');
       setIsFiltersLoaded(true);
     }
   };
 
   const loadDashboardData = async () => {
-    console.log('AdminDashboard: loadDashboardData started, setting loading to true');
     setLoading(true);
     try {
       const params = {
@@ -100,7 +90,6 @@ export default function AdminDashboard() {
         platform_code: selectedPlatform === 'all-platforms' ? undefined : selectedPlatform,
         category_key: selectedCategory === 'all-categories' ? undefined : selectedCategory,
       };
-      console.log('AdminDashboard: Calling APIs with params:', params);
 
       const [
         overviewRes,
@@ -114,15 +103,13 @@ export default function AdminDashboard() {
         getActivityLogs({ limit: 10, sort: '-created_at' })
       ]);
 
-      console.log('AdminDashboard: APIs completed successfully');
       setOverviewReport(overviewRes);
       setDssHealth(healthRes);
       setDataStatus(dataStatusRes);
       setActivityLogs(activityRes.data || []);
     } catch (error) {
-      console.error('AdminDashboard: Failed to load dashboard data:', error);
+      console.error('Failed to load dashboard data:', error);
     } finally {
-      console.log('AdminDashboard: Setting loading to false');
       setLoading(false);
     }
   };
@@ -170,14 +157,14 @@ export default function AdminDashboard() {
     return (
       <div>
         <PageMeta
-          title="Admin Dashboard"
-          description="Vietnam Electronics E-commerce Admin Dashboard"
+          title="Bảng điều khiển Quản trị"
+          description="Bảng điều khiển Quản trị Thương mại điện tử Điện tử Việt Nam"
         />
-        <PageBreadcrumb pageTitle="Admin Dashboard" />
+        <PageBreadcrumb pageTitle="Bảng điều khiển Quản trị" />
         <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading dashboard data...</span>
+            <span className="ml-3 text-gray-600">Đang tải dữ liệu bảng điều khiển...</span>
           </div>
         </div>
       </div>
@@ -187,10 +174,10 @@ export default function AdminDashboard() {
   return (
     <div>
       <PageMeta
-        title="Admin Dashboard"
-        description="Vietnam Electronics E-commerce Admin Dashboard"
+        title="Bảng điều khiển Quản trị"
+        description="Bảng điều khiển Quản trị Thương mại điện tử Điện tử Việt Nam"
       />
-      <PageBreadcrumb pageTitle="Admin Dashboard" />
+      <PageBreadcrumb pageTitle="Bảng điều khiển Quản trị" />
 
       <div className="rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12 space-y-8">
 

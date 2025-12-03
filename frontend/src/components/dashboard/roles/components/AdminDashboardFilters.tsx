@@ -44,12 +44,12 @@ export default function AdminDashboardFilters({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Filters</CardTitle>
+        <CardTitle>Bộ lọc</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium mb-1">From Date</label>
+            <label className="block text-sm font-medium mb-1">Từ ngày</label>
             <Input
               type="date"
               value={fromDate}
@@ -57,7 +57,7 @@ export default function AdminDashboardFilters({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">To Date</label>
+            <label className="block text-sm font-medium mb-1">Đến ngày</label>
             <Input
               type="date"
               value={toDate}
@@ -65,13 +65,13 @@ export default function AdminDashboardFilters({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Platform</label>
+            <label className="block text-sm font-medium mb-1">Nền tảng</label>
             <Select value={selectedPlatform} onValueChange={onPlatformChange}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Platforms" />
+                <SelectValue placeholder="Tất cả nền tảng" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all-platforms">All Platforms</SelectItem>
+                <SelectItem value="all-platforms">Tất cả nền tảng</SelectItem>
                 {platforms.map(platform => (
                   <SelectItem key={platform.platform_code} value={platform.platform_code}>
                     {platform.platform_name}
@@ -81,13 +81,13 @@ export default function AdminDashboardFilters({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
+            <label className="block text-sm font-medium mb-1">Danh mục</label>
             <Select value={selectedCategory} onValueChange={onCategoryChange}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder="Tất cả danh mục" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all-categories">All Categories</SelectItem>
+                <SelectItem value="all-categories">Tất cả danh mục</SelectItem>
                 {categories.slice(0, 50).map(category => (
                   <SelectItem key={category.category_key} value={category.category_key}>
                     {category.category_name}
@@ -96,7 +96,7 @@ export default function AdminDashboardFilters({
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={onApplyFilters}>Apply Filters</Button>
+          <Button onClick={onApplyFilters}>Áp dụng bộ lọc</Button>
         </div>
       </CardContent>
     </Card>
