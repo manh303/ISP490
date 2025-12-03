@@ -1,400 +1,82 @@
-. Luồng tổng thể của Activity Log
+﻿Toi uu /dss/reco/run cho bang ml.fact_product_recommendation (~2M record). Muc tieu: giam scan Postgres, them index, toi uu AI summarizer, va can nhac cache.
 
-Tóm tắt luồng:
+Flow hien tai:
+- Endpoint `POST /reco/run` goi `service.run_product_recommendation_dss`.
+- Service: (1) `_query_product_recommendations` (by_product/by_category). (2) `_calculate_reco_kpis`. (3) Build `dss_result_raw`. (4) Goi `ai_summarizer.summarize_with_ai(...)`. (5) Insert session -> return.
+- O DB: ca hai ham con deu co CTE `product_metrics` scan toan bo `dwh.fact_product_daily`, roi join `ml.fact_product_recommendation + dim_product + dim_category`. Sau do moi goi AI qua network. Voi ~2M record + full scan fact + LLM call nen dang cham.
 
-User gọi bất kỳ API (admin, analytics, dss, ml,…).
-
-Request đi qua ActivityLoggingMiddleware
-→ middleware tự bắt thông tin user, path, method, body,… rồi gọi ActivityLogger.log_activity(...).
-
-ActivityLogger insert 1 record vào bảng iam.user_activity_logs trong DB.
-
-Admin dùng màn Activity Log gọi các API:
-
-GET /admin/activity-logs → list + filter + pagination.
-
-GET /admin/activity-logs/{log_id} → detail 1 log.
-
-GET /admin/activity-logs/export → export CSV.
-
-Response của các API này được định nghĩa bởi các Pydantic model ActivityLogResponse, ActivityLogDetailResponse,… trong models.admin.
-
-2. Middleware: tự động ghi log mỗi request
-2.1. Class ActivityLoggingMiddleware
-class ActivityLoggingMiddleware(BaseHTTPMiddleware):
-    ...
-    async def dispatch(self, request: Request, call_next):
-        start_time = time.time()
-        
-        # 1. Skip một số path như /docs, /openapi.json,...
-        # 2. Lấy user_id, email, role từ JWT nếu có
-        # 3. Tự detect module & action từ URL + method
-        # 4. Nếu là POST/PUT/PATCH thì đọc body làm request_payload
-        # 5. call_next(request) để chạy handler thật
-        # 6. Sau khi có response -> log_activity(...)
-
-
-Các bước chính:
-
-Skip nếu path thuộc /docs, /openapi.json, /health, /favicon.ico, /static.
-
-Lấy user info từ token
-
-Đọc header Authorization: Bearer <token>
-
-Dùng decode_access_token(...) để giải JWT → lấy user_id, email, role (role_at_time).
-
-Tự detect module qua _detect_module(path):
-
-/admin/users hoặc /auth/... → "IAM"
-
-/analytics → "ANALYTICS"
-
-/dss → "DSS"
-
-/ml → "ML"
-
-/data-engineer → "DATA_PIPELINE"
-
-Tự detect action qua _detect_action(method, path):
-
-/auth/login → "LOGIN"
-
-/auth/logout → "LOGOUT"
-
-/auth/register → "REGISTER"
-
-/admin/users + GET → "VIEW_USERS"
-
-/admin/users + POST → "CREATE_USER"
-
-/dss/price → "RUN_PRICE_DSS"
-
-/dss/reco → "RUN_RECOMMENDATION_DSS"
-
-/analytics/... → "VIEW_ANALYTICS"
-
-Nếu không match rule nào → default "METHOD_LAST_PATH_SEGMENT", ví dụ GET_/ANALYTICS.
-
-Đọc request body (nếu là POST/PUT/PATCH) → parse JSON → mask các field nhạy cảm (password, token, access_token,…) bằng ***MASKED***.
-
-Gọi response = await call_next(request) để chạy API thật.
-
-Sau khi có response:
-
-Tính process_time
-
-Tạo details = {status_code, process_time, query_params}
-
-status = "success" nếu status_code < 400, ngược lại "error".
-
-Gọi:
-
-activity_logger = ActivityLogger(self.db_manager)
-await activity_logger.log_activity(
-    user_id=user_id,
-    email=email,
-    action=action,
-    module=module,
-    role_at_time=role_at_time,
-    request_method=request.method,
-    request_path=str(request.url.path),
-    request_payload=request_payload,
-    message=message,
-    details=details,
-    request=request,
-    status=status
+Toi uu DB (uu tien):
+1) Giam full scan `fact_product_daily` trong `product_metrics`
+- Cach A (nhanh): them filter ngay nhu price DSS.
+```
+WITH product_metrics AS (
+  SELECT f.product_sk,
+         AVG(f.avg_price) AS avg_price,
+         SUM(f.total_review_count) AS total_orders
+  FROM dwh.fact_product_daily f
+  JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
+  WHERE dd.date_value BETWEEN $1 AND $2  -- from_date, to_date (7-30 ngay gan nhat)
+  GROUP BY f.product_sk
 )
-
-
-Tức là: FE không phải truyền gì thêm, middleware tự generate full log.
-
-3. Class ActivityLogger: ghi vào DB & đọc ra
-3.1. Ghi log: log_activity(...)
-
-Khai báo:
-
-async def log_activity(
-    self,
-    user_id: Optional[int],
-    email: Optional[str],
-    action: str,
-    module: Optional[str] = None,
-    resource_type: Optional[str] = None,
-    resource_id: Optional[str] = None,
-    role_at_time: Optional[str] = None,
-    request_method: Optional[str] = None,
-    request_path: Optional[str] = None,
-    request_payload: Optional[Dict[Any, Any]] = None,
-    before_data: Optional[Dict[Any, Any]] = None,
-    after_data: Optional[Dict[Any, Any]] = None,
-    message: Optional[str] = None,
-    details: Optional[Dict[Any, Any]] = None,
-    request: Optional[Request] = None,
-    status: str = "success"
-)
-
-
-Ý nghĩa từng field quan trọng:
-
-user_id: ID user đang thao tác (từ token).
-
-email: email của user (từ token hoặc context).
-
-action: mã hành động, ví dụ: VIEW_USERS, RUN_PRICE_DSS, LOGIN_SUCCESS.
-
-module: phân hệ, ví dụ: IAM, ANALYTICS, DSS, ML, DATA_PIPELINE.
-
-resource_type: loại resource liên quan, ví dụ: "user", "decision", "dss_session".
-
-resource_id: id resource tương ứng, ví dụ "123".
-→ ghép thành resource = "user#123" để lưu trong 1 column.
-
-role_at_time: role của user tại thời điểm đó (ADMIN, ANALYST,…).
-
-request_method: GET, POST, PUT,…
-
-request_path: path API, ví dụ: /admin/users.
-
-request_payload: body request (JSON) đã được mask sensitive fields.
-
-before_data / after_data: snapshot trước/sau khi update resource (nếu bạn chủ động truyền).
-
-message: mô tả ngắn, thường dùng cho error / info custom.
-
-details: JSON chứa meta, ví dụ: {"status_code": 200, "process_time": 0.053, "query_params": {...}}.
-
-status: "success" / "error".
-
-request: để auto lấy ip_address, user_agent nếu có.
-
-Sau đó nó chạy query insert vào iam.user_activity_logs:
-
-INSERT INTO iam.user_activity_logs 
-(user_id, email, action, module, resource_type, resource, role_at_time,
- request_method, request_payload, before_data, after_data, message,
- details, ip_address, user_agent, status)
-VALUES (...)
-
-
-Toàn bộ request_payload, before_data, after_data, details đều được json.dumps(...) trước khi lưu.
-
-3.2. Đọc danh sách log: get_activity_logs(...)
-async def get_activity_logs(
-    page: int = 1,
-    limit: int = 50,
-    sort: str = "-created_at",
-    user_id: Optional[int] = None,
-    user_email: Optional[str] = None,
-    role: Optional[str] = None,
-    module: Optional[str] = None,
-    action: Optional[str] = None,
-    status: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    keyword: Optional[str] = None
-)
-
-
-page, limit: phân trang.
-
-sort: field sort, prefix - = DESC (mặc định -created_at = mới nhất trước).
-
-user_id: filter l.user_id = $x.
-
-user_email: filter l.email ILIKE '%...%'.
-
-role: filter l.role_at_time ILIKE '%...%'.
-
-module: filter l.module = 'DSS' hoặc 'ANALYTICS'.
-
-action: filter l.action ILIKE '%VIEW_USERS%'.
-
-status: success / error.
-
-start_date, end_date: filter theo l.created_at >= / <=.
-
-keyword: search full-text nhẹ trên resource, message, action.
-
-Query join với iam.iam_user để lấy full_name, rồi trả về:
-
-{
-  "logs": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 123,
-    "pages": 7
-  }
-}
-
-3.3. Đọc chi tiết 1 log: get_log_detail(log_id)
-
-Query 1 record theo log_id, join user để lấy full_name.
-
-Parse lại các field JSON:
-
-request_payload
-
-before_data
-
-after_data
-
-details
-
-Kết quả là 1 dict đầy đủ cho FE hiển thị chi tiết.
-
-3.4. Export CSV: export_logs(...)
-
-Gọi lại get_activity_logs(...) với limit=10000.
-
-Ghi ra CSV với các cột:
-
-Time
-
-User Email
-
-Full Name
-
-Role
-
-Action
-
-Module
-
-Resource Type
-
-Resource
-
-Status
-
-IP Address
-
-Message
-
-4. Các API Activity Log phía Admin
-4.1. GET /admin/activity-logs
-
-Định nghĩa:
-
-@router.get("/activity-logs", ...)
-async def get_activity_logs(
-    page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
-    sort: str = Query("-created_at"),
-    user_id: Optional[int] = Query(None),
-    user_email: Optional[str] = Query(None),
-    role: Optional[str] = Query(None),
-    module: Optional[str] = Query(None),
-    action: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    keyword: Optional[str] = Query(None),
-    db=Depends(get_database)
-)
-
-
-Endpoint này map 1–1 các query param sang ActivityLogger.get_activity_logs(...).
-
-Response:
-
-{
-  "success": true,
-  "data": [ ... danh sách log ... ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 120,
-    "pages": 6
-  }
-}
-
-
-Mỗi item trong data về mặt schema sẽ giống ActivityLogResponse:
-
-class ActivityLogResponse(BaseModel):
-    log_id: int
-    user_id: Optional[int]
-    email: Optional[str]
-    full_name: Optional[str]
-    role_at_time: Optional[str]
-    action: str
-    module: Optional[str]
-    resource_type: Optional[str]
-    resource: Optional[str]
-    request_method: Optional[str]
-    status: str
-    ip_address: Optional[str]
-    user_agent: Optional[str]
-    message: Optional[str]
-    created_at: datetime
-``` :contentReference[oaicite:15]{index=15}  
-
----
-
-### 4.2. `GET /admin/activity-logs/{log_id}`
-
-- Gọi `ActivityLogger.get_log_detail(log_id)`.
-- Nếu không tìm thấy → 404.
-- Nếu có → trả `{ "success": true, "data": log_detail }`. :contentReference[oaicite:16]{index=16}  
-
-`log_detail` tương ứng với `ActivityLogDetailResponse`:
-
-```python
-class ActivityLogDetailResponse(BaseModel):
-    log_id: int
-    user_id: Optional[int]
-    email: Optional[str]
-    full_name: Optional[str]
-    role_at_time: Optional[str]
-    action: str
-    module: Optional[str]
-    resource_type: Optional[str]
-    resource: Optional[str]
-    request_method: Optional[str]
-    request_payload: Optional[dict]
-    before_data: Optional[dict]
-    after_data: Optional[dict]
-    message: Optional[str]
-    details: Optional[dict]
-    status: str
-    ip_address: Optional[str]
-    user_agent: Optional[str]
-    created_at: datetime
-``` :contentReference[oaicite:17]{index=17}  
-
----
-
-### 4.3. `GET /admin/activity-logs/export`
-
-- Query param y hệt `GET /admin/activity-logs` (trừ page/limit). :contentReference[oaicite:18]{index=18}  
-- Gọi `ActivityLogger.export_logs(...)` → nhận về string CSV.
-- Trả `StreamingResponse` với `Content-Disposition: attachment; filename=activity_logs_<timestamp>.csv`. :contentReference[oaicite:19]{index=19}  
-
----
-
-## 5. Tóm lại: “Các trường dữ liệu truyền vào API” là gì?
-
-1. **Để sinh ra log (ghi xuống bảng)**  
-   → *FE không phải truyền*, back-end tự làm qua middleware và service.  
-   Những field được truyền vào `ActivityLogger.log_activity()` (và lưu DB):
-
-   - `user_id`, `email`, `role_at_time`
-   - `action`, `module`
-   - `resource_type`, `resource_id` → `resource`
-   - `request_method`, `request_path`
-   - `request_payload`, `before_data`, `after_data`
-   - `status`, `message`, `details`
-   - `ip_address`, `user_agent` (tự lấy từ `request`)
-
-2. **Để đọc log qua API /admin/activity-logs**  
-   FE truyền các **query param**:
-
-   - Phân trang: `page`, `limit`, `sort`
-   - Filter:  
-     `user_id`, `user_email`, `role`, `module`, `action`, `status`, `start_date`, `end_date`, `keyword`
-
-   Và nhận lại list log với đầy đủ field (id, user info, module, action, status, time, ip, ua,…).
-
-Nếu bạn muốn, mình có thể vẽ thêm 1 sơ đồ nhỏ (sequence diagram) cho luồng: *User → API → Middle
+```
+- Truyen `from_date`, `to_date` vao request (by_product & by_category).
+- Cach B (neu muon overall): precompute bang/materialized view.
+```
+CREATE TABLE IF NOT EXISTS dwh.product_metrics_global AS
+SELECT f.product_sk,
+       AVG(f.avg_price) AS avg_price,
+       SUM(f.total_review_count) AS total_orders
+FROM dwh.fact_product_daily f
+GROUP BY f.product_sk;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_product_metrics_global_pk
+  ON dwh.product_metrics_global(product_sk);
+```
+- Trong SQL reco: bo CTE, `LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk`. Cap nhat bang nay hang ngay bang Airflow.
+
+2) Index cho `ml.fact_product_recommendation`
+```
+CREATE INDEX IF NOT EXISTS idx_fact_product_reco_src_sim_rank
+  ON ml.fact_product_recommendation (source_product_sk, similarity_score DESC, rank);
+
+CREATE INDEX IF NOT EXISTS idx_fact_product_reco_rec_sim
+  ON ml.fact_product_recommendation (recommended_product_sk, similarity_score DESC);
+```
+Giup loc theo source_product va sort similarity/rank nhanh hon.
+
+3) Index cho `dwh.dim_product` & `dwh.fact_product_daily`
+```
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dim_product_product_key ON dwh.dim_product(product_key);
+CREATE INDEX IF NOT EXISTS idx_dim_product_category ON dwh.dim_product(category_sk);
+CREATE INDEX IF NOT EXISTS idx_dim_product_platform_category
+  ON dwh.dim_product(platform_sk, category_sk, product_sk);
+
+CREATE INDEX IF NOT EXISTS idx_fact_product_daily_date_product
+  ON dwh.fact_product_daily(date_sk, product_sk);
+```
+
+4) Tranh `SUBSTRING(product_key)` khi loc platform
+- Dam bao `dim_product` co `platform_sk`, join them `dwh.dim_platform`:
+```
+JOIN dwh.dim_platform dpl ON dp_rec.platform_sk = dpl.platform_sk
+SELECT dpl.platform_code AS platform, ...
+```
+- Filter platform: `dpl.platform_code = ANY($x)` thay vi `SUBSTRING(...)`. Index o buoc (3) ho tro.
+
+5) Gioi han tham so yeu cau
+- `top_k = min(request.get("top_k", 10), 50)`
+- `min_similarity = max(request.get("min_similarity", 0.5), 0.6)` (de xuat 0.6-0.7).
+
+Toi uu AI summarizer:
+- Them flag `ai_mode` (full|fast) trong schema:
+  - full: goi LLM neu `ai_summarizer.available`.
+  - fast: dung `_get_fallback_response(...)` rule-based (khong goi LLM).
+- Khi build prompt, chi gui top 10-20 recommendation vao table_data de giam token.
+
+Caching `/dss/reco/run`:
+- Cache ket qua `_query_product_recommendations` (hoac output cuoi) bang Redis ~1h theo key gom scope_mode + request JSON da sort.
+
+Uu tien trien khai:
+- Level 1 (bat buoc): filter ngay hoac precompute `product_metrics`, tao index `ml.fact_product_recommendation` + `dim_product` + `fact_product_daily`, gioi han `top_k`/`min_similarity`.
+- Level 2 (nen lam): bo SUBSTRING, join `dim_platform`, them index `(platform_sk, category_sk, product_sk)`.
+- Level 3 (toi uu p95): `ai_mode` fast/full + Redis cache.

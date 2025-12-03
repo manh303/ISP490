@@ -54,10 +54,10 @@ class ActivityLogger:
 
             resource = f"{resource_type}#{resource_id}" if resource_type and resource_id else None
 
-            # Vietnam Timezone (UTC+7)
-            from datetime import datetime, timezone, timedelta
-            tz_vn = timezone(timedelta(hours=7))
-            created_at = datetime.now(tz_vn)
+            # Vietnam Timezone (UTC+7) - Naive datetime for Postgres TIMESTAMP
+            from datetime import datetime, timedelta
+            # Use utcnow (naive) + 7 hours to get naive VN time directly
+            created_at = datetime.utcnow() + timedelta(hours=7)
 
             query = f"""
             INSERT INTO {self.table}

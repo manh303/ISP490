@@ -6,12 +6,14 @@ Queries data from Postgres (fact & ML tables) and structures results
 import logging
 import json
 import asyncio
+import hashlib
 from datetime import date, datetime
 from typing import Dict, Any, List, Optional
 import asyncpg
 
 from app.services.ai_summarizer import get_ai_summarizer
 from app.services.activity_logger import ACTIVITY_LOG_TABLE
+from app.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,12 @@ class DSSService:
         self.db = db
         # AI summarizer for DSS insights
         self.ai_summarizer = get_ai_summarizer()
+
+    def _build_cache_key(self, prefix: str, payload: Dict[str, Any]) -> str:
+        """Stable cache key from dict payload."""
+        serialized = json.dumps(payload, sort_keys=True, default=str)
+        digest = hashlib.md5(serialized.encode()).hexdigest()[:12]
+        return f"{prefix}:{digest}"
 
     # ============================================
     # HELPER METHODS
@@ -78,9 +86,16 @@ class DSSService:
         Now creates an analysis session and returns session_id for decision linking.
         """
         logger.info(f"Running Price Prediction DSS: {request}")
+        req = dict(request)
+
+        # Clamp heavy params
+        req["page_size"] = min(req.get("page_size", 50), 100)
+        req["top_n"] = min(req.get("top_n", 50), 100)
+        req["min_confidence"] = max(req.get("min_confidence", 0.70), 0.6)
+        ai_mode = req.get("ai_mode", "full")
 
         # 1. Query price predictions + fact data
-        data = await self._query_price_predictions(request)
+        data = await self._query_price_predictions(req)
 
         # 2. Calculate KPIs
         kpi_summary = self._calculate_price_kpis(data, request)
@@ -106,7 +121,11 @@ class DSSService:
         }
 
         # 4. Generate AI insights
-        ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", dss_result_raw)
+        ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
+        if ai_mode == "full" and self.ai_summarizer.available:
+            ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
+        else:
+            ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
         
         ai_summary_insights = ai_result.get("summary_insights", [])
         ai_recommended_actions = ai_result.get("recommended_actions", [])
@@ -810,9 +829,13 @@ class DSSService:
         """Run Product Recommendation DSS analysis"""
 
         logger.info(f"Running Product Recommendation DSS: {request}")
+        req = dict(request)
+        req["top_k"] = min(req.get("top_k", 10), 50)
+        req["min_similarity"] = max(req.get("min_similarity", 0.5), 0.6)
+        ai_mode = req.get("ai_mode", "full")
 
         # 1. Query recommendations
-        recommendations = await self._query_product_recommendations(request)
+        recommendations = await self._query_product_recommendations(req)
 
         # 2. Calculate KPIs
         kpi_summary = self._calculate_reco_kpis(recommendations, request)
@@ -832,9 +855,15 @@ class DSSService:
         }
 
         # 4. Generate AI insights
-        ai_result = self.ai_summarizer.summarize_with_ai(
-            "product_recommendation", dss_result_raw
-        )
+        ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:10]}
+        if ai_mode == "full" and self.ai_summarizer.available:
+            ai_result = self.ai_summarizer.summarize_with_ai(
+                "product_recommendation", ai_payload
+            )
+        else:
+            ai_result = self.ai_summarizer._get_fallback_response(
+                "product_recommendation", ai_payload
+            )
         
         ai_summary_insights = ai_result.get("summary_insights", [])
         ai_recommended_actions = ai_result.get("recommended_actions", [])
@@ -903,6 +932,26 @@ class DSSService:
 
         top_k = request.get("top_k", 10)
         min_similarity = request.get("min_similarity", 0.5)
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+
+        cache_key = self._build_cache_key(
+            "reco:by_product",
+            {
+                "source_product_key": source_product_key,
+                "top_k": top_k,
+                "min_similarity": min_similarity,
+                "from_date": from_date,
+                "to_date": to_date,
+            },
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         sql = """
             WITH product_metrics AS (
@@ -911,6 +960,8 @@ class DSSService:
                     AVG(f.avg_price) AS avg_price,
                     SUM(f.total_review_count) AS total_orders
                 FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
+                WHERE dd.date_value BETWEEN $4 AND $5
                 GROUP BY f.product_sk
             )
             SELECT
@@ -936,8 +987,10 @@ class DSSService:
         """
 
         try:
-            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k)
-            return [dict(row) for row in rows]
+            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, from_date, to_date)
+            result = [dict(row) for row in rows]
+            cache.set(cache_key, result, ttl=1800)
+            return result
         except Exception as e:
             logger.error(f"Error querying recommendations by product: {e}")
             return []
@@ -951,6 +1004,12 @@ class DSSService:
         categories = request.get("categories")
         top_k = request.get("top_k", 10)
         min_similarity = request.get("min_similarity", 0.5)
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
 
         params: List[Any] = [min_similarity]
         param_idx = 2
@@ -971,6 +1030,26 @@ class DSSService:
             params.append(categories)
             param_idx += 1
 
+        # Reserve positions for date filters in product_metrics
+        date_start_idx = param_idx
+        params.extend([from_date, to_date])
+        param_idx += 2
+
+        cache_key = self._build_cache_key(
+            "reco:by_category",
+            {
+                "platforms": platforms,
+                "categories": categories,
+                "top_k": top_k,
+                "min_similarity": min_similarity,
+                "from_date": from_date,
+                "to_date": to_date,
+            },
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         sql = f"""
             WITH product_metrics AS (
                 SELECT
@@ -978,6 +1057,8 @@ class DSSService:
                     AVG(f.avg_price) AS avg_price,
                     SUM(f.total_review_count) AS total_orders
                 FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
+                WHERE dd.date_value BETWEEN ${date_start_idx} AND ${date_start_idx + 1}
                 GROUP BY f.product_sk
             )
             SELECT
@@ -999,13 +1080,15 @@ class DSSService:
             WHERE rec.similarity_score >= $1
               {platform_filter}
               {category_filter}
-            ORDER BY pm_rec.total_orders DESC, rec.similarity_score DESC
+            ORDER BY pm_rec.total_orders DESC NULLS LAST, rec.similarity_score DESC
             LIMIT {top_k}
         """
 
         try:
             rows = await self.db.fetch(sql, *params)
-            return [dict(row) for row in rows]
+            result = [dict(row) for row in rows]
+            cache.set(cache_key, result, ttl=1800)
+            return result
         except Exception as e:
             logger.error(f"Error querying recommendations by category: {e}")
             return []
@@ -1050,9 +1133,11 @@ class DSSService:
         """Run Review Sentiment Analysis DSS"""
 
         logger.info(f"Running Review Sentiment DSS: {request}")
+        req = dict(request)
+        ai_mode = req.get("ai_mode", "full")
 
         # 1. Query sentiment data
-        sentiment_data = await self._query_review_sentiment(request)
+        sentiment_data = await self._query_review_sentiment(req)
 
         # 2. Calculate KPIs
         kpi_summary = self._calculate_sentiment_kpis(sentiment_data, request)
@@ -1071,9 +1156,15 @@ class DSSService:
         }
 
         # 4. Generate AI insights
-        ai_result = self.ai_summarizer.summarize_with_ai(
-            "review_sentiment", dss_result_raw
-        )
+        ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
+        if ai_mode == "full" and self.ai_summarizer.available:
+            ai_result = self.ai_summarizer.summarize_with_ai(
+                "review_sentiment", ai_payload
+            )
+        else:
+            ai_result = self.ai_summarizer._get_fallback_response(
+                "review_sentiment", ai_payload
+            )
         
         ai_summary_insights = ai_result.get("summary_insights", [])
         ai_recommended_actions = ai_result.get("recommended_actions", [])

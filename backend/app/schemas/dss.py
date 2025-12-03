@@ -4,7 +4,7 @@ Models for AI-powered decision support endpoints
 """
 
 from pydantic import BaseModel, Field, model_validator
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from datetime import date
 from enum import Enum
 
@@ -104,6 +104,7 @@ class PricePredictionRequest(BaseModel):
     min_margin_pct: Optional[float] = Field(0.10, ge=0, le=1.0, description="Min margin required (0.10 = 10%)")
     min_confidence: Optional[float] = Field(0.70, ge=0, le=1.0, description="Min confidence for recommendations")
     min_price_change_pct: Optional[float] = Field(0.02, ge=0, le=0.5, description="Min price change to include (0.02 = 2%)")
+    ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
     
     @model_validator(mode='after')
     def validate_scope_requirements(self):
@@ -199,6 +200,7 @@ class ProductRecommendationRequest(BaseModel):
     top_k: int = Field(10, ge=1, le=50, description="Number of recommendations per product")
     min_similarity: Optional[float] = Field(0.5, ge=0, le=1.0, description="Min similarity score")
     min_co_purchase_rate: Optional[float] = Field(0.05, ge=0, le=1.0, description="Min co-purchase rate")
+    ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
 
 
 class RecommendationPairDetail(BaseModel):
@@ -262,6 +264,7 @@ class ReviewSentimentRequest(BaseModel):
     
     # Thresholds
     negative_threshold: float = Field(0.25, ge=0, le=1.0, description="Products with negative_pct > threshold are flagged")
+    ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
 
 
 class ProductSentimentDetail(BaseModel):

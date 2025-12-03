@@ -1,41 +1,40 @@
 import asyncpg, asyncio, logging, os, re
 from contextlib import asynccontextmanager
+from app.db_pool import get_pool
+
 logger = logging.getLogger(__name__)
 
 class DatabaseManager:
     def __init__(self, dsn: str):
         self.dsn = dsn
-        self.connection: asyncpg.Connection | None = None
-        self.is_connected = False
+        # Connection is now managed by the pool, not locally
+        self.is_connected = True 
 
     async def connect(self, retries: int = 20, delay: float = 1.0):
-        for i in range(retries):
-            try:
-                self.connection = await asyncpg.connect(self.dsn)
-                self.is_connected = True
-                logger.info("DB connected")
-                return
-            except Exception as e:
-                logger.warning(f"DB connect failed ({i+1}/{retries}): {e}")
-                await asyncio.sleep(delay)
-        self.is_connected = False
-        logger.error("DB connect retries exhausted")
+        # No-op: Pool is initialized in main.py lifespan
+        pass
 
     async def ensure_connected(self):
-        if not self.is_connected or self.connection is None:
-            await self.connect()
-        else:
-            try:
-                await self.connection.execute('SELECT 1;')
-            except Exception:
-                await self.connect()
+        # No-op: Pool handles connections
+        pass
 
     async def execute_query(self, query, values=None):
-        await self.ensure_connected()
-        if not self.is_connected:
-            # đừng trả 503 mù mờ; log chi tiết để debug
-            raise RuntimeError("Database unavailable after reconnect attempts")
+        try:
+            pool = await get_pool()
+        except RuntimeError:
+            # Fallback for scripts or if pool not init (though main.py should init it)
+            # This is a safety net but ideally shouldn't happen in app context
+            logger.warning("Pool not initialized, creating temporary connection")
+            conn = await asyncpg.connect(self.dsn)
+            try:
+                return await self._execute_on_conn(conn, query, values)
+            finally:
+                await conn.close()
 
+        async with pool.acquire() as conn:
+            return await self._execute_on_conn(conn, query, values)
+
+    async def _execute_on_conn(self, conn, query, values):
         # --- HỖ TRỢ named params ':email' -> positional '$1' ---
         text = str(query)
         if isinstance(values, dict):
@@ -46,22 +45,27 @@ class DatabaseManager:
                 return f'${len(names)}'
             sql = pattern.sub(repl, text)
             params = tuple(values[n] for n in names)
-            rows = await self.connection.fetch(sql, *params)
+            rows = await conn.fetch(sql, *params)
         elif isinstance(values, (list, tuple)):
-            rows = await self.connection.fetch(text, *values)
+            rows = await conn.fetch(text, *values)
         else:
-            rows = await self.connection.fetch(text)
+            rows = await conn.fetch(text)
         return [dict(r) for r in rows]
     
     @asynccontextmanager
     async def transaction(self):
         """Context manager for database transactions with automatic rollback on error
         """
-        await self.ensure_connected()
-        if not self.is_connected:
-            raise RuntimeError("Database unavailable for transaction")
-        
-        # Start transaction
-        async with self.connection.transaction():
-            # Yield connection object để gọi fetchrow, execute, fetchval...
-            yield self.connection
+        try:
+            pool = await get_pool()
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    yield conn
+        except RuntimeError:
+            # Fallback for scripts
+            conn = await asyncpg.connect(self.dsn)
+            try:
+                async with conn.transaction():
+                    yield conn
+            finally:
+                await conn.close()
