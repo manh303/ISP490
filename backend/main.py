@@ -69,10 +69,10 @@ try:
     import asyncpg  # noqa: F401
 
     DATABASE_AVAILABLE = True
-    logger.info("Database modules imported successfully")
+    logger.info("✅ Database modules imported successfully")
 except ImportError:
     DATABASE_AVAILABLE = False
-    logger.warning("Database modules not available")
+    logger.warning("❌ Database modules not available")
 
 # Activity logging middleware (optional)
 try:
@@ -109,9 +109,9 @@ try:
     from app.api.v1.auth import router as iam_router, init_iam_service  # noqa: F401
 
     IAM_AVAILABLE = True
-    logger.info("IAM system imported successfully")
+    logger.info("✅ IAM system imported successfully")
 except ImportError as exc:
-    logger.warning("IAM system not available: %s", exc)
+    logger.warning("❌ IAM system not available: %s", exc)
 
 
 @asynccontextmanager
@@ -178,9 +178,9 @@ def include_router_if_available(router, name: str, prefix: str = settings.API_V1
 
     try:
         app.include_router(router, **kwargs)
-        logger.info("%s routes included", name)
+        logger.info("✅ %s routes included", name)
     except Exception as exc:
-        logger.error("%s routes failed to include: %s", name, exc)
+        logger.error("❌ %s routes failed to include: %s", name, exc)
 
 
 def include_router_from_module(module_path: str, name: str, prefix: str = settings.API_V1_PREFIX, tags=None):
@@ -192,11 +192,11 @@ def include_router_from_module(module_path: str, name: str, prefix: str = settin
     try:
         module = __import__(module_path, fromlist=["router"])
         app.include_router(module.router, **kwargs)
-        logger.info("%s routes included", name)
+        logger.info("✅ %s routes included", name)
     except ImportError as exc:
-        logger.warning("%s routes not available: %s", name, exc)
+        logger.warning("❌ %s routes not available: %s", name, exc)
     except Exception as exc:
-        logger.error("%s routes failed to include: %s", name, exc)
+        logger.error("❌ %s routes failed to include: %s", name, exc)
 
 
 # Include Auth router (new modular endpoints)
@@ -206,7 +206,7 @@ include_router_if_available(auth_router, "Auth")
 include_router_from_module("app.api.v1.admin", "Admin")
 include_router_from_module("app.api.v1.profile", "Profile")
 include_router_from_module("app.api.v1.roles", "Role Management")
-include_router_from_module("app.api.v1.analytics", "Analytics", tags=["Analytics"])
+include_router_from_module("app.api.v1.analytics", "Analytics", tags=["Analytics / Analyst"])
 include_router_from_module("app.api.v1.ml_router", "ML API", tags=["Machine Learning"])
 include_router_from_module("app.api.v1.data_engineer", "Data Engineer", tags=["Data Engineer"])
 include_router_from_module("app.api.v1.business_metadata", "Business Metadata", tags=["Business Metadata"])

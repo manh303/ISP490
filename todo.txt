@@ -1,246 +1,388 @@
-1. Đường đi của /api/v1/auth/signin hiện tại
-
-Endpoint mà FE gọi là:
-
-@app.post(f"{settings.API_V1_PREFIX}/auth/signin", response_model=SignInResponse)
-async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(get_database)):
-    ...
-
-
-Khi gọi /api/v1/auth/signin, pipeline thực tế như sau:
-
-(A) Middleware activity logging chạy trước
-
-ActivityLoggingMiddleware được add vào app:
-
-if ACTIVITY_AVAILABLE:
-    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
-    logger.info("Activity logging middleware enabled")
-
-
-Trong middleware:
-
-Đọc body của request để log:
-
-if request.method in ["POST", "PUT", "PATCH"]:
-    body = await request.body()
-    if body:
-        request_payload = json.loads(body)
-        ...
-
-
-Gọi response = await call_next(request) → lúc này mới chạy vào simple_signin.
-
-Sau khi có response, middleware lại query DB để xem table log có tồn tại không:
-
-table_check = await self.db_manager.execute_query(
-    "SELECT EXISTS (SELECT FROM information_schema.tables "
-    "WHERE table_schema = 'iam' AND table_name = 'user_activity_logs')"
-)
-
-
-Nếu tồn tại, nó INSERT log vào iam.user_activity_logs qua ActivityLogger.log_activity (thêm 1 query nữa):
-
-Tóm lại: mỗi request (kể cả signin) đều:
-
-1 SELECT ... information_schema...
-
-1 INSERT ... user_activity_logs (nếu table tồn tại)
-
-(B) Bên trong handler simple_signin
-
-Trong simple_signin:
-
-Query user từ DB (hàm authenticate_user_db) → ít nhất 1 SELECT (user) + 1 SELECT (role).
-
-bcrypt.checkpw để verify password (tương đối nặng CPU trên free instance).
-
-Update last_login thông qua IAMService.update_last_login → 1 UPDATE nữa:
-
-Ghi log hoạt động đăng nhập lần thứ 2 bằng ActivityLogger.log_activity → 1 INSERT nữa:
-
-=> Tổng số round-trip tới DB cho 1 lần signin (khi Activity logging bật):
-
-1 SELECT information_schema (middleware)
-
-1 SELECT user (auth)
-
-1 SELECT roles (auth)
-
-1 UPDATE last_login
-
-1 INSERT activity_log (trong handler)
-
-1 INSERT activity_log (trong middleware)
-
-~5–6 query + bcrypt trên Render (qua SSL, network xa, free tier CPU) → rất dễ bị >5–10s, nhất là lần đầu hoặc khi DB idle.
-
-Trên local thì tất cả đều rất nhanh nên bạn không cảm nhận được.
-
-2. Tại sao Render dễ bị “load lâu”
-
-Một số lý do thực tế:
-
-Postgres Render + SSL
-Trong lifespan, bạn luôn bật SSL "require" cho DB Render:
-Mỗi query đều phải đi qua network + SSL handshake/IO → latency cao hơn local rất nhiều.
-
-Nhiều query liên tiếp trong 1 request như phân tích ở trên.
-
-Free plan / shared CPU
-Nếu service “thức dậy” (cold start) hoặc đang bị share CPU, mỗi query/bcrypt càng tốn thời gian → FE cảm giác “load mãi”.
-
-Activity logging làm “nặng” riêng route signin
-Bạn vừa log trong middleware, vừa log trong handler → double work cho cùng 1 request.
-
-3. Việc nên làm ngay để kiểm chứng & giảm lag
-Bước 1: Test nhanh xem có phải do DB / logging không
-
-Tạm thời tắt activity logging middleware trong main.py:
-
-# if ACTIVITY_AVAILABLE:
-#     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
-#     logger.info("Activity logging middleware enabled")
-# else:
-#     logger.warning("Activity logging middleware disabled - module not available")
-
-
-Deploy lại và test /api/v1/auth/signin:
-
-Nếu login nhanh hẳn → chắc chắn bottleneck chính là middleware + log DB.
-
-Nếu vẫn chậm → tới bước 2.
-
-Bước 2: Giảm số lần query cho riêng signin
-
-Chỉ log 1 nơi: hoặc middleware, hoặc trong handler simple_signin, không nên cả hai.
-
-Cá nhân mình gợi ý:
-
-Đối với signin/signout, giữ log trong handler (vì bạn có đủ context như method, role, email…).
-
-Trong middleware, bỏ log cho auth bằng cách thêm path vào skip:
-
-skip_paths = [
-    "/docs", "/openapi.json", "/health", "/favicon.ico", "/static",
-    "/api/v1/auth/signin", "/api/v1/auth/signout", "/api/v1/auth/signup"
-]
-
-
-Bỏ check “table_exists” mỗi request
-
-Đoạn này đang query information_schema cho mọi request:
-
-table_check = await self.db_manager.execute_query(
-    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'iam' AND table_name = 'user_activity_logs')"
-)
-
-
-Cách tối ưu:
-
-Check một lần khi startup (lúc init app) rồi lưu vào biến global, vd: ACTIVITY_TABLE_READY = True/False.
-
-Trong middleware chỉ cần if ACTIVITY_TABLE_READY: là đủ, không gọi query nữa.
-
-Bước 3: Thêm log đo thời gian trong simple_signin
-
-Để thấy rõ phần nào chậm, bạn thêm đo thời gian:
-
-import time
-
-@app.post(f"{settings.API_V1_PREFIX}/auth/signin", response_model=SignInResponse)
-async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(get_database)):
-    t0 = time.time()
-    logger.info(f"Simple signin attempt for: {request.email}")
-
-    t_auth_start = time.time()
-    user_data = await authenticate_user_db(request.email, request.password, db)
-    logger.info(f"Auth DB done in {time.time() - t_auth_start:.3f}s")
-
-    if not user_data:
-        user_data = authenticate_user(request.email, request.password)
-    if not user_data:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    t_last_login = time.time()
-    try:
-        from app.services.iam_service import IAMService
-        iam_service = IAMService(db)
-        await iam_service.update_last_login(user_data["user_id"])
-    except Exception as e:
-        logger.error(f"Failed to update last login: {e}")
-    logger.info(f"Update last_login done in {time.time() - t_last_login:.3f}s")
-
-    t_log = time.time()
-    try:
-        if ACTIVITY_AVAILABLE and ActivityLogger:
-            activity_logger = ActivityLogger(db)
-            await activity_logger.log_activity(
-                user_id=user_data["user_id"],
-                email=user_data.get("email", request.email),
-                action="USER_SIGNIN",
-                request_path="/api/v1/auth/signin",
-                details={"role": user_data.get("role", "unknown"), "method": "password"},
-                status="success"
-            )
-    except Exception as e:
-        logger.error(f"Failed to log signin activity: {e}")
-    logger.info(f"Signin activity log done in {time.time() - t_log:.3f}s")
-
-    logger.info(f"Total signin handler time: {time.time() - t0:.3f}s")
-    ...
-
-
-Sau khi deploy Render, xem log:
-
-Nếu Auth DB done ~2–3s, Signin activity log ~2–3s → trai đẹp là query DB chậm.
-
-Nếu Total signin handler time <1s mà FE vẫn chờ lâu → vấn đề ở client, network, CORS, hoặc proxy.
-
-Bước 4: Một vài tối ưu nhỏ khác
-
-Không import IAMService mỗi request
-
-Hiện tại bạn import trong hàm:
-
-from app.services.iam_service import IAMService
-iam_service = IAMService(db)
-
-
-Import trong Python có cache, nên không phải cực kỳ nặng, nhưng tốt nhất vẫn đưa lên trên file, giữ cho handler nhẹ hơn.
-
-Giảm số query trong authenticate_user_db
-
-Gộp lấy user + role vào 1 query (JOIN) thay vì 2 query tách.
-
-Kiểm tra /debug connection trên Render
-
-Bạn đã có endpoint /debug/connection trong main.py (trước đây mình thấy bạn có). Gọi thử để xem thời gian query đơn giản (SELECT 1). Nếu SELECT 1 mất >500ms trên Render thì mọi query khác sẽ càng tệ.
-
-4. Tóm lại
-
-Từ code và log:
-
-App startup ok, pool DB Render ok, không lỗi.
-
-/api/v1/auth/signin hiện đang:
-
-bị chạy qua middleware log (đọc body, query information_schema, ghi log DB),
-
-bên trong handler lại query DB 3–4 lần + bcrypt + ghi log lần nữa.
-
-→ Trên Render (SSL + network xa + free tier) dễ khiến signin cực chậm hoặc time-out.
-
-Hướng xử lý cụ thể:
-
-Tạm tắt ActivityLoggingMiddleware để xác nhận bottleneck.
-
-Sau đó:
-
-Bỏ log duplicate (chỉ log ở 1 chỗ),
-
-Bỏ check information_schema mỗi request,
-
-Bỏ middleware cho các path /api/v1/auth/* nếu cần.
-
-Thêm log đo thời gian từng bước trong simple_signin để thấy đoạn nào chậm nhất.
+{
+  "scenario": "price_prediction",
+  "filters": {
+    "from_date": "2025-12-03",
+    "to_date": "2025-12-03",
+    "platforms": [
+      "tiki",
+      "lazada"
+    ],
+    "categories": [
+      "1",
+      "2"
+    ]
+  },
+  "kpi_summary": {
+    "num_products": 10,
+    "num_with_recommendation": 10,
+    "current_revenue": 1060398032,
+    "projected_revenue": 1179337063.25,
+    "expected_revenue_uplift_pct": 0.11216451526760274,
+    "avg_confidence": 0.9636690202457479
+  },
+  "table_data": [
+    {
+      "product_key": "lazada_3262622063",
+      "product_name": "điện thoại 0PP0 A93s 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 490000,
+      "predicted_price": 701454.55,
+      "price_diff": 211454.55,
+      "price_change_pct": 0.4315398979591837,
+      "current_revenue": 86730000,
+      "projected_revenue": 124157455.35000001,
+      "expected_revenue_change_pct": 0.4315398979591837,
+      "confidence": 0.9912297952875208,
+      "current_orders": 177,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3262511704",
+      "product_name": "điện thoại 0PP0 F11 (6GB/64GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 455000,
+      "predicted_price": 650125.15,
+      "price_diff": 195125.15,
+      "price_change_pct": 0.4288464835164835,
+      "current_revenue": 80080000,
+      "projected_revenue": 114422026.4,
+      "expected_revenue_change_pct": 0.4288464835164835,
+      "confidence": 0.994118240157299,
+      "current_orders": 176,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3262484815",
+      "product_name": "điện thoại 0PP0 A79 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 595000,
+      "predicted_price": 849739.08,
+      "price_diff": 254739.08,
+      "price_change_pct": 0.4281329075630252,
+      "current_revenue": 28560000,
+      "projected_revenue": 40787475.839999996,
+      "expected_revenue_change_pct": 0.4281329075630252,
+      "confidence": 0.9904754527707493,
+      "current_orders": 48,
+      "avg_rating": 4.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_2785991940",
+      "product_name": "Điện thoại Nokia 105 (2020) - 2sim - mới full box hot",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 349000,
+      "predicted_price": 298635.9,
+      "price_diff": -50364.1,
+      "price_change_pct": -0.14430974212034384,
+      "current_revenue": 26175000,
+      "projected_revenue": 22397692.5,
+      "expected_revenue_change_pct": -0.14430974212034384,
+      "confidence": 0.9918276402803547,
+      "current_orders": 75,
+      "avg_rating": 4.4,
+      "total_reviews": 1
+    },
+    {
+      "product_key": "lazada_3215878825",
+      "product_name": "Ailgely Ultra Thin 78 Keys Mini USB Wired Keyboard Stable Transmission for Desktop Laptop PC (Black)",
+      "platform": "lazada",
+      "category_name": "Computers",
+      "current_price": 166948,
+      "predicted_price": 190410.15,
+      "price_diff": 23462.15,
+      "price_change_pct": 0.1405356757792846,
+      "current_revenue": 22371032,
+      "projected_revenue": 25514960.1,
+      "expected_revenue_change_pct": 0.1405356757792846,
+      "confidence": 0.9744383374520739,
+      "current_orders": 134,
+      "avg_rating": 4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_2963016386",
+      "product_name": "Điện thoại Xiaomi Redmi Note 11 2sim ram 6G/128G, Cấu hình mạnh, cày game nặng siêu mượt, Vân tay ok",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 2234400,
+      "predicted_price": 2396857.55,
+      "price_diff": 162457.55,
+      "price_change_pct": 0.0727074606158253,
+      "current_revenue": 33516000,
+      "projected_revenue": 35952863.25,
+      "expected_revenue_change_pct": 0.0727074606158253,
+      "confidence": 0.9944402077628685,
+      "current_orders": 15,
+      "avg_rating": 4.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3200214563",
+      "product_name": "[Hcm, Long an] Xiaomi Mijia Refrigerator Cross Door 510L 4-Door Refrigerator | Super Thin | Large Capacity | Connect to App",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 14990000,
+      "predicted_price": 15989240.49,
+      "price_diff": 999240.49,
+      "price_change_pct": 0.066660472981988,
+      "current_revenue": 239840000,
+      "projected_revenue": 255827847.84,
+      "expected_revenue_change_pct": 0.066660472981988,
+      "confidence": 0.9995621893357363,
+      "current_orders": 16,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_1484432157",
+      "product_name": "Dây nối dài đèn năng lượng mặt trời, quạt năng lượng mặt trời dài 5M SOLAR LIGHT, và dây sạc 1 đầu USB dùng củ sạc điện thoại 5V cho đèn đầu nối chắc chắn, chống thấm nước cao, không dò gỉ điện",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 50990,
+      "predicted_price": 53103.02,
+      "price_diff": 2113.02,
+      "price_change_pct": 0.041439890174544025,
+      "current_revenue": 466558500,
+      "projected_revenue": 485892633,
+      "expected_revenue_change_pct": 0.041439890174544025,
+      "confidence": 0.8262556442175981,
+      "current_orders": 9150,
+      "avg_rating": 3.9,
+      "total_reviews": 122
+    },
+    {
+      "product_key": "lazada_2918390671",
+      "product_name": "TNW F9 Quạt tản nhiệt điện thoại sò lạnh thế hệ mới làm lạnh đóng băng hỗ trợ tăng fps gaming",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 36900,
+      "predicted_price": 35714.59,
+      "price_diff": -1185.41,
+      "price_change_pct": -0.032124932249322495,
+      "current_revenue": 47047500,
+      "projected_revenue": 45536102.25,
+      "expected_revenue_change_pct": -0.032124932249322495,
+      "confidence": 0.9445431124926815,
+      "current_orders": 1275,
+      "avg_rating": 4,
+      "total_reviews": 17
+    },
+    {
+      "product_key": "lazada_3223245071",
+      "product_name": "4 Port USB2.0 Hub Featuring 480Mbps Speed Speed Charging and Data Transfer for Desktop Laptops to Mouse Keyboard",
+      "platform": "lazada",
+      "category_name": "Computers",
+      "current_price": 80000,
+      "predicted_price": 78178.88,
+      "price_diff": -1821.12,
+      "price_change_pct": -0.022764,
+      "current_revenue": 29520000,
+      "projected_revenue": 28848006.72,
+      "expected_revenue_change_pct": -0.022764,
+      "confidence": 0.9297995827005964,
+      "current_orders": 369,
+      "avg_rating": 3.8,
+      "total_reviews": 0
+    }
+  ],
+  "date_adjustment_info": {
+    "requested_from_date": "2025-12-03",
+    "requested_to_date": "2025-12-03",
+    "actual_from_date": "2025-12-03",
+    "actual_to_date": "2025-12-03",
+    "date_adjusted": false
+  },
+  "items": [
+    {
+      "product_key": "lazada_3262622063",
+      "product_name": "điện thoại 0PP0 A93s 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 490000,
+      "predicted_price": 701454.55,
+      "price_diff": 211454.55,
+      "price_change_pct": 0.4315398979591837,
+      "current_revenue": 86730000,
+      "projected_revenue": 124157455.35000001,
+      "expected_revenue_change_pct": 0.4315398979591837,
+      "confidence": 0.9912297952875208,
+      "current_orders": 177,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3262511704",
+      "product_name": "điện thoại 0PP0 F11 (6GB/64GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 455000,
+      "predicted_price": 650125.15,
+      "price_diff": 195125.15,
+      "price_change_pct": 0.4288464835164835,
+      "current_revenue": 80080000,
+      "projected_revenue": 114422026.4,
+      "expected_revenue_change_pct": 0.4288464835164835,
+      "confidence": 0.994118240157299,
+      "current_orders": 176,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3262484815",
+      "product_name": "điện thoại 0PP0 A79 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 595000,
+      "predicted_price": 849739.08,
+      "price_diff": 254739.08,
+      "price_change_pct": 0.4281329075630252,
+      "current_revenue": 28560000,
+      "projected_revenue": 40787475.839999996,
+      "expected_revenue_change_pct": 0.4281329075630252,
+      "confidence": 0.9904754527707493,
+      "current_orders": 48,
+      "avg_rating": 4.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_2785991940",
+      "product_name": "Điện thoại Nokia 105 (2020) - 2sim - mới full box hot",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 349000,
+      "predicted_price": 298635.9,
+      "price_diff": -50364.1,
+      "price_change_pct": -0.14430974212034384,
+      "current_revenue": 26175000,
+      "projected_revenue": 22397692.5,
+      "expected_revenue_change_pct": -0.14430974212034384,
+      "confidence": 0.9918276402803547,
+      "current_orders": 75,
+      "avg_rating": 4.4,
+      "total_reviews": 1
+    },
+    {
+      "product_key": "lazada_3215878825",
+      "product_name": "Ailgely Ultra Thin 78 Keys Mini USB Wired Keyboard Stable Transmission for Desktop Laptop PC (Black)",
+      "platform": "lazada",
+      "category_name": "Computers",
+      "current_price": 166948,
+      "predicted_price": 190410.15,
+      "price_diff": 23462.15,
+      "price_change_pct": 0.1405356757792846,
+      "current_revenue": 22371032,
+      "projected_revenue": 25514960.1,
+      "expected_revenue_change_pct": 0.1405356757792846,
+      "confidence": 0.9744383374520739,
+      "current_orders": 134,
+      "avg_rating": 4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_2963016386",
+      "product_name": "Điện thoại Xiaomi Redmi Note 11 2sim ram 6G/128G, Cấu hình mạnh, cày game nặng siêu mượt, Vân tay ok",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 2234400,
+      "predicted_price": 2396857.55,
+      "price_diff": 162457.55,
+      "price_change_pct": 0.0727074606158253,
+      "current_revenue": 33516000,
+      "projected_revenue": 35952863.25,
+      "expected_revenue_change_pct": 0.0727074606158253,
+      "confidence": 0.9944402077628685,
+      "current_orders": 15,
+      "avg_rating": 4.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3200214563",
+      "product_name": "[Hcm, Long an] Xiaomi Mijia Refrigerator Cross Door 510L 4-Door Refrigerator | Super Thin | Large Capacity | Connect to App",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 14990000,
+      "predicted_price": 15989240.49,
+      "price_diff": 999240.49,
+      "price_change_pct": 0.066660472981988,
+      "current_revenue": 239840000,
+      "projected_revenue": 255827847.84,
+      "expected_revenue_change_pct": 0.066660472981988,
+      "confidence": 0.9995621893357363,
+      "current_orders": 16,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_1484432157",
+      "product_name": "Dây nối dài đèn năng lượng mặt trời, quạt năng lượng mặt trời dài 5M SOLAR LIGHT, và dây sạc 1 đầu USB dùng củ sạc điện thoại 5V cho đèn đầu nối chắc chắn, chống thấm nước cao, không dò gỉ điện",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 50990,
+      "predicted_price": 53103.02,
+      "price_diff": 2113.02,
+      "price_change_pct": 0.041439890174544025,
+      "current_revenue": 466558500,
+      "projected_revenue": 485892633,
+      "expected_revenue_change_pct": 0.041439890174544025,
+      "confidence": 0.8262556442175981,
+      "current_orders": 9150,
+      "avg_rating": 3.9,
+      "total_reviews": 122
+    },
+    {
+      "product_key": "lazada_2918390671",
+      "product_name": "TNW F9 Quạt tản nhiệt điện thoại sò lạnh thế hệ mới làm lạnh đóng băng hỗ trợ tăng fps gaming",
+      "platform": "lazada",
+      "category_name": "Mobile Phones",
+      "current_price": 36900,
+      "predicted_price": 35714.59,
+      "price_diff": -1185.41,
+      "price_change_pct": -0.032124932249322495,
+      "current_revenue": 47047500,
+      "projected_revenue": 45536102.25,
+      "expected_revenue_change_pct": -0.032124932249322495,
+      "confidence": 0.9445431124926815,
+      "current_orders": 1275,
+      "avg_rating": 4,
+      "total_reviews": 17
+    },
+    {
+      "product_key": "lazada_3223245071",
+      "product_name": "4 Port USB2.0 Hub Featuring 480Mbps Speed Speed Charging and Data Transfer for Desktop Laptops to Mouse Keyboard",
+      "platform": "lazada",
+      "category_name": "Computers",
+      "current_price": 80000,
+      "predicted_price": 78178.88,
+      "price_diff": -1821.12,
+      "price_change_pct": -0.022764,
+      "current_revenue": 29520000,
+      "projected_revenue": 28848006.72,
+      "expected_revenue_change_pct": -0.022764,
+      "confidence": 0.9297995827005964,
+      "current_orders": 369,
+      "avg_rating": 3.8,
+      "total_reviews": 0
+    }
+  ],
+  "total_count": 10,
+  "ai_summary_insights": [
+    "Tất cả các sản phẩm đều có giá hiện tại nhưng không có giá đề xuất, cho thấy khả năng tối ưu hóa giá còn rất lớn.",
+    "Độ tin cậy của các sản phẩm cao (99%), điều này cho thấy rằng khách hàng có thể tin tưởng vào chất lượng của các sản phẩm này.",
+    "Doanh thu hiện tại và dự kiến là 0 VND, cho thấy rằng cần phải thực hiện các biện pháp quyết liệt để kích thích doanh thu."
+  ],
+  "ai_recommended_actions": [
+    "Thiết lập giá đề xuất cho từng sản phẩm dựa trên phân tích giá từ thị trường và hành vi của khách hàng, nhằm tối đa hóa doanh thu.",
+    "Triển khai các chương trình khuyến mãi hoặc giảm giá đặc biệt cho các sản phẩm để thu hút khách hàng, nhất là khi giá hiện tại đã thấp.",
+    "Theo dõi liên tục phản hồi từ khách hàng về giá và chất lượng sản phẩm để điều chỉnh chiến lược giá một cách linh hoạt và tối ưu."
+  ],
+  "generated_at": "2025-12-03T19:42:08.656125",
+  "ai_model_used": "gpt-4o-mini",
+  "session_id": 30
+}
