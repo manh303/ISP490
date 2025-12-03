@@ -87,14 +87,14 @@ def _get_pg_conn():
 
 def _ensure_ml_job(conn):
     """
-    Đảm bảo meta.etl_job có dòng cho ML_TRAINING_PIPELINE.
+    Đảm bảo metadata.etl_job có dòng cho ML_TRAINING_PIPELINE.
     Trả về job_id hoặc None.
     """
     try:
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO meta.etl_job (job_code, job_name, description)
+            INSERT INTO metadata.etl_job (job_code, job_name, description)
             VALUES (%s, %s, %s)
             ON CONFLICT (job_code) DO NOTHING;
         """,
@@ -107,7 +107,7 @@ def _ensure_ml_job(conn):
         conn.commit()
 
         cur.execute(
-            "SELECT job_id FROM meta.etl_job WHERE job_code = %s;",
+            "SELECT job_id FROM metadata.etl_job WHERE job_code = %s;",
             (ML_PIPELINE_JOB_CODE,),
         )
         row = cur.fetchone()
@@ -123,7 +123,7 @@ def _ensure_ml_job(conn):
 
 def start_ml_run(job_code, run_date, airflow_run_id=None):
     """
-    Tạo 1 dòng meta.etl_run với status=RUNNING cho ML pipeline.
+    Tạo 1 dòng metadata.etl_run với status=RUNNING cho ML pipeline.
     Trả về run_id hoặc None.
     """
     conn = _get_pg_conn()
@@ -139,7 +139,7 @@ def start_ml_run(job_code, run_date, airflow_run_id=None):
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO meta.etl_run (
+            INSERT INTO metadata.etl_run (
                 job_id, run_date, started_at, status, airflow_run_id
             )
             VALUES (%s, %s, %s, %s, %s)
@@ -164,7 +164,7 @@ def start_ml_run(job_code, run_date, airflow_run_id=None):
 
 def finish_ml_run(run_id, status, models_trained=None, error_message=None):
     """
-    Update meta.etl_run khi ML DAG kết thúc.
+    Update metadata.etl_run khi ML DAG kết thúc.
     """
     if run_id is None:
         print("[META] finish_ml_run called with run_id=None, skip.")
@@ -178,7 +178,7 @@ def finish_ml_run(run_id, status, models_trained=None, error_message=None):
         cur = conn.cursor()
         cur.execute(
             """
-            UPDATE meta.etl_run
+            UPDATE metadata.etl_run
             SET finished_at = %s,
                 status = %s,
                 rows_written = COALESCE(%s, rows_written),

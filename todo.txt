@@ -1,388 +1,350 @@
+
+from enum import Enum
+from datetime import date
+from typing import List, Optional
+from pydantic import BaseModel, Field, root_validator  # hoặc model_validator nếu pydantic v2
+
+
+class PriceScopeMode(str, Enum):
+    BY_CATEGORY = "by_category"
+    BY_PRODUCT = "by_product"
+
+
+class PricePredictionRequest(BaseModel):
+    from_date: date
+    to_date: date
+
+    # Lọc theo platform/category (dùng cho BY_CATEGORY)
+    platforms: List[str] = Field(default_factory=list)
+    categories: List[str] = Field(default_factory=list)
+
+    # Lọc theo product cụ thể (dùng cho BY_PRODUCT)
+    product_keys: List[str] = Field(default_factory=list)
+
+    page: int = 1
+    page_size: int = 50
+
+    # Chế độ
+    scope_mode: PriceScopeMode = PriceScopeMode.BY_CATEGORY
+    top_n: int = 50  # chỉ có ý nghĩa khi BY_CATEGORY
+
+    max_discount_pct: float = 0.15
+    min_margin_pct: float = 0.10
+    min_confidence: float = 0.70
+    min_price_change_pct: float = 0.02
+
+    @root_validator
+    def validate_scope(cls, values):
+        scope_mode = values.get("scope_mode")
+        categories = values.get("categories") or []
+        product_keys = values.get("product_keys") or []
+
+        if scope_mode == PriceScopeMode.BY_CATEGORY:
+            if not categories:
+                raise ValueError("categories must not be empty when scope_mode='by_category'")
+        elif scope_mode == PriceScopeMode.BY_PRODUCT:
+            if not product_keys:
+                raise ValueError("product_keys must not be empty when scope_mode='by_product'")
+        return values
+Nếu bạn đang dùng Pydantic v2 thì đổi @root_validator thành @model_validator(mode="after"), logic tương tự.
+
+2. Cập nhật docstring / swagger cho endpoint /dss/price/run
+Trong dss.py, phần router của price DSS, thêm mô tả + 2 example:
+
+2.1. Example 1 – chạy theo category
+json
+Sao chép mã
 {
-  "scenario": "price_prediction",
-  "filters": {
-    "from_date": "2025-12-03",
-    "to_date": "2025-12-03",
-    "platforms": [
-      "tiki",
-      "lazada"
-    ],
-    "categories": [
-      "1",
-      "2"
-    ]
-  },
-  "kpi_summary": {
-    "num_products": 10,
-    "num_with_recommendation": 10,
-    "current_revenue": 1060398032,
-    "projected_revenue": 1179337063.25,
-    "expected_revenue_uplift_pct": 0.11216451526760274,
-    "avg_confidence": 0.9636690202457479
-  },
-  "table_data": [
-    {
-      "product_key": "lazada_3262622063",
-      "product_name": "điện thoại 0PP0 A93s 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 490000,
-      "predicted_price": 701454.55,
-      "price_diff": 211454.55,
-      "price_change_pct": 0.4315398979591837,
-      "current_revenue": 86730000,
-      "projected_revenue": 124157455.35000001,
-      "expected_revenue_change_pct": 0.4315398979591837,
-      "confidence": 0.9912297952875208,
-      "current_orders": 177,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3262511704",
-      "product_name": "điện thoại 0PP0 F11 (6GB/64GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 455000,
-      "predicted_price": 650125.15,
-      "price_diff": 195125.15,
-      "price_change_pct": 0.4288464835164835,
-      "current_revenue": 80080000,
-      "projected_revenue": 114422026.4,
-      "expected_revenue_change_pct": 0.4288464835164835,
-      "confidence": 0.994118240157299,
-      "current_orders": 176,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3262484815",
-      "product_name": "điện thoại 0PP0 A79 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 595000,
-      "predicted_price": 849739.08,
-      "price_diff": 254739.08,
-      "price_change_pct": 0.4281329075630252,
-      "current_revenue": 28560000,
-      "projected_revenue": 40787475.839999996,
-      "expected_revenue_change_pct": 0.4281329075630252,
-      "confidence": 0.9904754527707493,
-      "current_orders": 48,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2785991940",
-      "product_name": "Điện thoại Nokia 105 (2020) - 2sim - mới full box hot",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 349000,
-      "predicted_price": 298635.9,
-      "price_diff": -50364.1,
-      "price_change_pct": -0.14430974212034384,
-      "current_revenue": 26175000,
-      "projected_revenue": 22397692.5,
-      "expected_revenue_change_pct": -0.14430974212034384,
-      "confidence": 0.9918276402803547,
-      "current_orders": 75,
-      "avg_rating": 4.4,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "lazada_3215878825",
-      "product_name": "Ailgely Ultra Thin 78 Keys Mini USB Wired Keyboard Stable Transmission for Desktop Laptop PC (Black)",
-      "platform": "lazada",
-      "category_name": "Computers",
-      "current_price": 166948,
-      "predicted_price": 190410.15,
-      "price_diff": 23462.15,
-      "price_change_pct": 0.1405356757792846,
-      "current_revenue": 22371032,
-      "projected_revenue": 25514960.1,
-      "expected_revenue_change_pct": 0.1405356757792846,
-      "confidence": 0.9744383374520739,
-      "current_orders": 134,
-      "avg_rating": 4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2963016386",
-      "product_name": "Điện thoại Xiaomi Redmi Note 11 2sim ram 6G/128G, Cấu hình mạnh, cày game nặng siêu mượt, Vân tay ok",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2234400,
-      "predicted_price": 2396857.55,
-      "price_diff": 162457.55,
-      "price_change_pct": 0.0727074606158253,
-      "current_revenue": 33516000,
-      "projected_revenue": 35952863.25,
-      "expected_revenue_change_pct": 0.0727074606158253,
-      "confidence": 0.9944402077628685,
-      "current_orders": 15,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3200214563",
-      "product_name": "[Hcm, Long an] Xiaomi Mijia Refrigerator Cross Door 510L 4-Door Refrigerator | Super Thin | Large Capacity | Connect to App",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 14990000,
-      "predicted_price": 15989240.49,
-      "price_diff": 999240.49,
-      "price_change_pct": 0.066660472981988,
-      "current_revenue": 239840000,
-      "projected_revenue": 255827847.84,
-      "expected_revenue_change_pct": 0.066660472981988,
-      "confidence": 0.9995621893357363,
-      "current_orders": 16,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_1484432157",
-      "product_name": "Dây nối dài đèn năng lượng mặt trời, quạt năng lượng mặt trời dài 5M SOLAR LIGHT, và dây sạc 1 đầu USB dùng củ sạc điện thoại 5V cho đèn đầu nối chắc chắn, chống thấm nước cao, không dò gỉ điện",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 50990,
-      "predicted_price": 53103.02,
-      "price_diff": 2113.02,
-      "price_change_pct": 0.041439890174544025,
-      "current_revenue": 466558500,
-      "projected_revenue": 485892633,
-      "expected_revenue_change_pct": 0.041439890174544025,
-      "confidence": 0.8262556442175981,
-      "current_orders": 9150,
-      "avg_rating": 3.9,
-      "total_reviews": 122
-    },
-    {
-      "product_key": "lazada_2918390671",
-      "product_name": "TNW F9 Quạt tản nhiệt điện thoại sò lạnh thế hệ mới làm lạnh đóng băng hỗ trợ tăng fps gaming",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 36900,
-      "predicted_price": 35714.59,
-      "price_diff": -1185.41,
-      "price_change_pct": -0.032124932249322495,
-      "current_revenue": 47047500,
-      "projected_revenue": 45536102.25,
-      "expected_revenue_change_pct": -0.032124932249322495,
-      "confidence": 0.9445431124926815,
-      "current_orders": 1275,
-      "avg_rating": 4,
-      "total_reviews": 17
-    },
-    {
-      "product_key": "lazada_3223245071",
-      "product_name": "4 Port USB2.0 Hub Featuring 480Mbps Speed Speed Charging and Data Transfer for Desktop Laptops to Mouse Keyboard",
-      "platform": "lazada",
-      "category_name": "Computers",
-      "current_price": 80000,
-      "predicted_price": 78178.88,
-      "price_diff": -1821.12,
-      "price_change_pct": -0.022764,
-      "current_revenue": 29520000,
-      "projected_revenue": 28848006.72,
-      "expected_revenue_change_pct": -0.022764,
-      "confidence": 0.9297995827005964,
-      "current_orders": 369,
-      "avg_rating": 3.8,
-      "total_reviews": 0
-    }
-  ],
-  "date_adjustment_info": {
-    "requested_from_date": "2025-12-03",
-    "requested_to_date": "2025-12-03",
-    "actual_from_date": "2025-12-03",
-    "actual_to_date": "2025-12-03",
-    "date_adjusted": false
-  },
-  "items": [
-    {
-      "product_key": "lazada_3262622063",
-      "product_name": "điện thoại 0PP0 A93s 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 490000,
-      "predicted_price": 701454.55,
-      "price_diff": 211454.55,
-      "price_change_pct": 0.4315398979591837,
-      "current_revenue": 86730000,
-      "projected_revenue": 124157455.35000001,
-      "expected_revenue_change_pct": 0.4315398979591837,
-      "confidence": 0.9912297952875208,
-      "current_orders": 177,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3262511704",
-      "product_name": "điện thoại 0PP0 F11 (6GB/64GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 455000,
-      "predicted_price": 650125.15,
-      "price_diff": 195125.15,
-      "price_change_pct": 0.4288464835164835,
-      "current_revenue": 80080000,
-      "projected_revenue": 114422026.4,
-      "expected_revenue_change_pct": 0.4288464835164835,
-      "confidence": 0.994118240157299,
-      "current_orders": 176,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3262484815",
-      "product_name": "điện thoại 0PP0 A79 5G (8GB/256GB) | Cấu hình Cao Chiến mọi Game mượt - Hàng chính hãng Bảo hành 12 tháng có NFC",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 595000,
-      "predicted_price": 849739.08,
-      "price_diff": 254739.08,
-      "price_change_pct": 0.4281329075630252,
-      "current_revenue": 28560000,
-      "projected_revenue": 40787475.839999996,
-      "expected_revenue_change_pct": 0.4281329075630252,
-      "confidence": 0.9904754527707493,
-      "current_orders": 48,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2785991940",
-      "product_name": "Điện thoại Nokia 105 (2020) - 2sim - mới full box hot",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 349000,
-      "predicted_price": 298635.9,
-      "price_diff": -50364.1,
-      "price_change_pct": -0.14430974212034384,
-      "current_revenue": 26175000,
-      "projected_revenue": 22397692.5,
-      "expected_revenue_change_pct": -0.14430974212034384,
-      "confidence": 0.9918276402803547,
-      "current_orders": 75,
-      "avg_rating": 4.4,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "lazada_3215878825",
-      "product_name": "Ailgely Ultra Thin 78 Keys Mini USB Wired Keyboard Stable Transmission for Desktop Laptop PC (Black)",
-      "platform": "lazada",
-      "category_name": "Computers",
-      "current_price": 166948,
-      "predicted_price": 190410.15,
-      "price_diff": 23462.15,
-      "price_change_pct": 0.1405356757792846,
-      "current_revenue": 22371032,
-      "projected_revenue": 25514960.1,
-      "expected_revenue_change_pct": 0.1405356757792846,
-      "confidence": 0.9744383374520739,
-      "current_orders": 134,
-      "avg_rating": 4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2963016386",
-      "product_name": "Điện thoại Xiaomi Redmi Note 11 2sim ram 6G/128G, Cấu hình mạnh, cày game nặng siêu mượt, Vân tay ok",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2234400,
-      "predicted_price": 2396857.55,
-      "price_diff": 162457.55,
-      "price_change_pct": 0.0727074606158253,
-      "current_revenue": 33516000,
-      "projected_revenue": 35952863.25,
-      "expected_revenue_change_pct": 0.0727074606158253,
-      "confidence": 0.9944402077628685,
-      "current_orders": 15,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3200214563",
-      "product_name": "[Hcm, Long an] Xiaomi Mijia Refrigerator Cross Door 510L 4-Door Refrigerator | Super Thin | Large Capacity | Connect to App",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 14990000,
-      "predicted_price": 15989240.49,
-      "price_diff": 999240.49,
-      "price_change_pct": 0.066660472981988,
-      "current_revenue": 239840000,
-      "projected_revenue": 255827847.84,
-      "expected_revenue_change_pct": 0.066660472981988,
-      "confidence": 0.9995621893357363,
-      "current_orders": 16,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_1484432157",
-      "product_name": "Dây nối dài đèn năng lượng mặt trời, quạt năng lượng mặt trời dài 5M SOLAR LIGHT, và dây sạc 1 đầu USB dùng củ sạc điện thoại 5V cho đèn đầu nối chắc chắn, chống thấm nước cao, không dò gỉ điện",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 50990,
-      "predicted_price": 53103.02,
-      "price_diff": 2113.02,
-      "price_change_pct": 0.041439890174544025,
-      "current_revenue": 466558500,
-      "projected_revenue": 485892633,
-      "expected_revenue_change_pct": 0.041439890174544025,
-      "confidence": 0.8262556442175981,
-      "current_orders": 9150,
-      "avg_rating": 3.9,
-      "total_reviews": 122
-    },
-    {
-      "product_key": "lazada_2918390671",
-      "product_name": "TNW F9 Quạt tản nhiệt điện thoại sò lạnh thế hệ mới làm lạnh đóng băng hỗ trợ tăng fps gaming",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 36900,
-      "predicted_price": 35714.59,
-      "price_diff": -1185.41,
-      "price_change_pct": -0.032124932249322495,
-      "current_revenue": 47047500,
-      "projected_revenue": 45536102.25,
-      "expected_revenue_change_pct": -0.032124932249322495,
-      "confidence": 0.9445431124926815,
-      "current_orders": 1275,
-      "avg_rating": 4,
-      "total_reviews": 17
-    },
-    {
-      "product_key": "lazada_3223245071",
-      "product_name": "4 Port USB2.0 Hub Featuring 480Mbps Speed Speed Charging and Data Transfer for Desktop Laptops to Mouse Keyboard",
-      "platform": "lazada",
-      "category_name": "Computers",
-      "current_price": 80000,
-      "predicted_price": 78178.88,
-      "price_diff": -1821.12,
-      "price_change_pct": -0.022764,
-      "current_revenue": 29520000,
-      "projected_revenue": 28848006.72,
-      "expected_revenue_change_pct": -0.022764,
-      "confidence": 0.9297995827005964,
-      "current_orders": 369,
-      "avg_rating": 3.8,
-      "total_reviews": 0
-    }
-  ],
-  "total_count": 10,
-  "ai_summary_insights": [
-    "Tất cả các sản phẩm đều có giá hiện tại nhưng không có giá đề xuất, cho thấy khả năng tối ưu hóa giá còn rất lớn.",
-    "Độ tin cậy của các sản phẩm cao (99%), điều này cho thấy rằng khách hàng có thể tin tưởng vào chất lượng của các sản phẩm này.",
-    "Doanh thu hiện tại và dự kiến là 0 VND, cho thấy rằng cần phải thực hiện các biện pháp quyết liệt để kích thích doanh thu."
-  ],
-  "ai_recommended_actions": [
-    "Thiết lập giá đề xuất cho từng sản phẩm dựa trên phân tích giá từ thị trường và hành vi của khách hàng, nhằm tối đa hóa doanh thu.",
-    "Triển khai các chương trình khuyến mãi hoặc giảm giá đặc biệt cho các sản phẩm để thu hút khách hàng, nhất là khi giá hiện tại đã thấp.",
-    "Theo dõi liên tục phản hồi từ khách hàng về giá và chất lượng sản phẩm để điều chỉnh chiến lược giá một cách linh hoạt và tối ưu."
-  ],
-  "generated_at": "2025-12-03T19:42:08.656125",
-  "ai_model_used": "gpt-4o-mini",
-  "session_id": 30
+  "scope_mode": "by_category",
+  "from_date": "2025-12-01",
+  "to_date": "2025-12-03",
+  "platforms": ["tiki", "lazada"],
+  "categories": ["1", "2"],
+  "page": 1,
+  "page_size": 50,
+  "top_n": 50,
+  "max_discount_pct": 0.15,
+  "min_margin_pct": 0.10,
+  "min_confidence": 0.7,
+  "min_price_change_pct": 0.02
 }
+2.2. Example 2 – chạy theo product_key
+json
+Sao chép mã
+{
+  "scope_mode": "by_product",
+  "from_date": "2025-12-01",
+  "to_date": "2025-12-03",
+  "product_keys": [
+    "tiki_123456",
+    "lazada_987654"
+  ],
+  "max_discount_pct": 0.15,
+  "min_margin_pct": 0.10,
+  "min_confidence": 0.7,
+  "min_price_change_pct": 0.02
+}
+Nêu rõ trong doc:
+
+by_category → dùng platforms + categories + top_n.
+
+by_product → bắt buộc có product_keys, top_n không quan trọng (có thể bỏ qua trong logic).
+
+3. Sửa logic trong service run_price_prediction_dss
+Giả sử bạn có class DSSService với hàm:
+
+python
+Sao chép mã
+class DSSService:
+    def __init__(self, conn: asyncpg.Connection):
+        self.conn = conn
+
+    async def run_price_prediction_dss(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        ...
+3.1. Parse scope_mode
+python
+Sao chép mã
+async def run_price_prediction_dss(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    scope_mode = payload.get("scope_mode", "by_category")
+    from_date = payload["from_date"]
+    to_date = payload["to_date"]
+    platforms = payload.get("platforms", [])
+    categories = payload.get("categories", [])
+    product_keys = payload.get("product_keys", [])
+    top_n = payload.get("top_n", 50)
+
+    max_discount_pct = payload.get("max_discount_pct", 0.15)
+    min_margin_pct = payload.get("min_margin_pct", 0.10)
+    min_confidence = payload.get("min_confidence", 0.70)
+    min_price_change_pct = payload.get("min_price_change_pct", 0.02)
+
+    if scope_mode == "by_category":
+        result_rows = await self._run_price_by_category(
+            from_date, to_date,
+            platforms, categories,
+            top_n,
+            max_discount_pct, min_margin_pct,
+            min_confidence, min_price_change_pct,
+        )
+    elif scope_mode == "by_product":
+        result_rows = await self._run_price_by_product_keys(
+            from_date, to_date,
+            product_keys,
+            max_discount_pct, min_margin_pct,
+            min_confidence, min_price_change_pct,
+        )
+    else:
+        raise ValueError(f"Unsupported scope_mode: {scope_mode}")
+
+    # Ở dưới bạn build KPIs, summary, actions từ result_rows
+    summary = self._build_price_dss_summary(result_rows, scope_mode)
+    return summary
+3.2. Hàm con cho BY_CATEGORY
+Pseudo-SQL: (bạn map lại cho đúng tên bảng/column thực tế)
+
+python
+Sao chép mã
+async def _run_price_by_category(
+    self, from_date, to_date,
+    platforms, categories,
+    top_n,
+    max_discount_pct, min_margin_pct,
+    min_confidence, min_price_change_pct,
+):
+    sql = """
+    WITH candidate AS (
+        SELECT
+            p.product_key,
+            p.product_name,
+            pl.platform_code,
+            c.category_key,
+            c.category_name,
+            d.date_value,
+            f.current_price,
+            ml.predicted_price,
+            ml.confidence,
+            -- ví dụ tính % chênh
+            (ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0) AS price_change_pct,
+            -- revenue giả lập
+            (ml.predicted_price * f.sales_qty) AS predicted_revenue,
+            (f.current_price * f.sales_qty) AS current_revenue,
+            (ml.predicted_price * f.sales_qty) - (f.current_price * f.sales_qty) AS revenue_uplift
+        FROM dwh.fact_product_daily f
+        JOIN dwh.dim_product p   ON f.product_key = p.product_key
+        JOIN dwh.dim_platform pl ON p.platform_key = pl.platform_key
+        JOIN dwh.dim_category c  ON p.category_key = c.category_key
+        JOIN dwh.dim_date d      ON f.date_key = d.date_key
+        JOIN ml.fact_price_prediction ml
+          ON ml.product_key = f.product_key
+         AND ml.date_key = f.date_key
+        WHERE d.date_value BETWEEN $1 AND $2
+          AND ($3::text[] IS NULL OR pl.platform_code = ANY($3))
+          AND ($4::text[] IS NULL OR c.category_key = ANY($4))
+          AND ml.confidence >= $5
+          AND ABS((ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0)) >= $6
+          -- TODO: filter thêm max_discount_pct, min_margin_pct
+    )
+    SELECT *
+    FROM candidate
+    ORDER BY revenue_uplift DESC
+    LIMIT $7;
+    """
+    rows = await self.conn.fetch(
+        sql,
+        from_date, to_date,
+        platforms or None,
+        categories or None,
+        min_confidence,
+        min_price_change_pct,
+        top_n,
+    )
+    return rows
+Ý chính: lọc theo platform + category + rule ML → sort theo revenue_uplift DESC → lấy top_n.
+Sau đó bạn build response (list sản phẩm, gợi ý giá, uplift…).
+
+3.3. Hàm con cho BY_PRODUCT
+python
+Sao chép mã
+async def _run_price_by_product_keys(
+    self, from_date, to_date,
+    product_keys,
+    max_discount_pct, min_margin_pct,
+    min_confidence, min_price_change_pct,
+):
+    sql = """
+    SELECT
+        p.product_key,
+        p.product_name,
+        pl.platform_code,
+        c.category_key,
+        c.category_name,
+        d.date_value,
+        f.current_price,
+        ml.predicted_price,
+        ml.confidence,
+        (ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0) AS price_change_pct,
+        (ml.predicted_price * f.sales_qty) AS predicted_revenue,
+        (f.current_price * f.sales_qty) AS current_revenue,
+        (ml.predicted_price * f.sales_qty) - (f.current_price * f.sales_qty) AS revenue_uplift
+    FROM dwh.fact_product_daily f
+    JOIN dwh.dim_product p   ON f.product_key = p.product_key
+    JOIN dwh.dim_platform pl ON p.platform_key = pl.platform_key
+    JOIN dwh.dim_category c  ON p.category_key = c.category_key
+    JOIN dwh.dim_date d      ON f.date_key = d.date_key
+    JOIN ml.fact_price_prediction ml
+      ON ml.product_key = f.product_key
+     AND ml.date_key = f.date_key
+    WHERE d.date_value BETWEEN $1 AND $2
+      AND p.product_key = ANY($3::text[])
+      AND ml.confidence >= $4
+      AND ABS((ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0)) >= $5
+      -- TODO: filter max_discount_pct, min_margin_pct
+    ORDER BY p.product_key, d.date_value;
+    """
+    rows = await self.conn.fetch(
+        sql,
+        from_date, to_date,
+        product_keys,
+        min_confidence,
+        min_price_change_pct,
+    )
+    return rows
+Ở mode này:
+
+Không dùng top_n nữa, mà trả về hết các bản ghi của các product đó (trong range time).
+
+Analyst sẽ thấy toàn bộ lịch sử + gợi ý giá cho sản phẩm cần check.
+
+4. Cập nhật màn Analyst – chia rõ 2 “phần”
+4.1. Tab 1: Price DSS – theo Category
+Form:
+
+Date range
+
+Platforms (multi)
+
+Categories (multi)
+
+Top N
+
+min_confidence, min_price_change_pct,…
+
+Request body:
+
+json
+Sao chép mã
+{
+  "scope_mode": "by_category",
+  "from_date": "...",
+  "to_date": "...",
+  "platforms": ["tiki"],
+  "categories": ["1", "2"],
+  "top_n": 50,
+  "min_confidence": 0.7,
+  "min_price_change_pct": 0.02
+}
+Kết quả hiển thị:
+
+KPI cards (số sản phẩm được recommend, tổng revenue uplift,…)
+
+Bảng top N sản phẩm (current_price vs suggested_price, uplift…)
+
+AI summary (“Nên giảm X% nhóm A…, giữ nguyên nhóm B…”).
+
+4.2. Tab 2: Price DSS – theo Product
+Form:
+
+Date range
+
+Input: search product → chọn 1 hoặc nhiều product_key (autocomplete từ analytics filters)
+
+Param ML (min_confidence,…)
+
+Request body:
+
+json
+Sao chép mã
+{
+  "scope_mode": "by_product",
+  "from_date": "...",
+  "to_date": "...",
+  "product_keys": ["tiki_123456", "lazada_987654"],
+  "min_confidence": 0.7,
+  "min_price_change_pct": 0.02
+}
+Kết quả hiển thị:
+
+Mỗi product 1 block:
+
+Chart giá hiện tại vs giá đề xuất theo ngày
+
+Bảng chi tiết các ngày: date, current_price, suggested_price, price_change_pct, confidence, revenue_uplift
+
+AI summary ngắn cho từng product: “Với sản phẩm A, nên giảm X%, lợi nhuận tăng ~Y%…”
+
+5. Thứ tự làm để đỡ rối
+Sửa schema PricePredictionRequest như bước 1 (thêm scope_mode, validate categories vs product_keys).
+
+Cập nhật service run_price_prediction_dss:
+
+Thêm if scope_mode == "by_category" vs "by_product".
+
+Tách 2 hàm con _run_price_by_category và _run_price_by_product_keys.
+
+Kiểm tra lại router /dss/price/run:
+
+Cập nhật docstring + example request body.
+
+Test API bằng Postman/Swagger:
+
+1 request by_category, 1 request by_product → check kết quả.
+
+Update FE Analyst:
+
+Thêm 2 tab / 2 card cho Price DSS.
+
+Tab 1 gọi scope_mode=by_category, tab 2 gọi scope_mode=by_product.
+
+Viết log + activity (nếu muốn):
+
+Log nội dung: user nào chạy DSS theo mode nào, bao nhiêu sản phẩm.

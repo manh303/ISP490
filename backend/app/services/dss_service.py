@@ -155,8 +155,26 @@ class DSSService:
 
     async def _query_price_predictions(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Query price predictions from database (OPTIMIZED)
-
+        Query price predictions from database (OPTIMIZED with dual-mode support)
+        
+        Supports two modes:
+        - by_category: Filter by platforms/categories, get top N products
+        - by_product: Get predictions for specific product keys
+        """
+        scope_mode = request.get("scope_mode", "by_category")
+        
+        # Route to appropriate method based on scope_mode
+        if scope_mode == "by_product":
+            return await self._query_price_by_product_keys(request)
+        else:  # by_category (default)
+            return await self._query_price_by_category(request)
+    
+    async def _query_price_by_category(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Query price predictions BY_CATEGORY mode
+        
+        Filter by platforms + categories + ML rules → sort by revenue_uplift DESC → get top N
+        
         Optimizations:
         - Window function instead of DISTINCT ON
         - Parameterized queries for all filters
@@ -504,6 +522,244 @@ class DSSService:
                 "actual_from_date": from_date,
                 "actual_to_date": to_date,
             }
+
+    async def _query_price_by_product_keys(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Query price predictions BY_PRODUCT mode
+        
+        Get predictions for specific product keys - returns all records for those products
+       (không dùng top_n, mà trả về hết dữ liệu trong date range)
+        """
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        product_keys = request.get("product_keys", [])
+        
+        if not product_keys:
+            logger.error("product_keys is empty for BY_PRODUCT mode")
+            return {
+                "items": [],
+                "total_count": 0,
+                "date_adjusted": False,
+                "actual_from_date": from_date,
+                "actual_to_date": to_date,
+            }
+        
+        # Convert dates if needed
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+        
+        # Check and adjust dates
+        adjusted_to_date = await self._get_latest_available_date(to_date)
+        if adjusted_to_date is None:
+            logger.error("No data available in database")
+            return {
+                "items": [],
+                "total_count": 0,
+                "date_adjusted": False,
+                "actual_from_date": from_date,
+                "actual_to_date": to_date,
+            }
+        
+        if adjusted_to_date != to_date and from_date:
+            from_date = min(from_date, adjusted_to_date)
+        
+        min_confidence = request.get("min_confidence", 0.70)
+        min_price_change_pct = request.get("min_price_change_pct", 0.02)
+        
+        # Build parameterized query
+        params: List[Any] = [from_date, adjusted_to_date, product_keys]
+        
+        # Query for BY_PRODUCT mode - get all records for selected products
+        sql = """
+            WITH ranked_predictions AS (
+                SELECT 
+                    pred.product_sk,
+                    pred.platform_sk,
+                    pred.predicted_price,
+                    pred.ci_upper,
+                    pred.ci_lower,
+                    pred.created_at,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY pred.product_sk, pred.platform_sk
+                        ORDER BY pred.created_at DESC
+                    ) AS rn
+                FROM ml.fact_price_prediction pred
+            ),
+            latest_predictions AS (
+                SELECT
+                    product_sk,
+                    platform_sk,
+                    predicted_price,
+                    ci_upper,
+                    ci_lower,
+                    created_at,
+                    GREATEST(0.0, LEAST(1.0, 
+                        1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                    )) AS confidence
+                FROM ranked_predictions
+                WHERE rn = 1
+            ),
+            product_metrics AS (
+                SELECT
+                    f.product_sk,
+                    f.platform_sk,
+                    AVG(f.avg_price) AS current_price,
+                    SUM(f.total_review_count) AS total_reviews,
+                    AVG(f.avg_rating) AS avg_rating
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
+                WHERE dd.date_value BETWEEN $1 AND $2
+                GROUP BY f.product_sk, f.platform_sk
+            )
+            SELECT
+                dp.product_key,
+                dp.product_name,
+                dpl.platform_code AS platform,
+                COALESCE(
+                    dc.category_lvl2,
+                    dc.category_lvl1,
+                    'Uncategorized'
+                ) AS category_name,
+                COALESCE(pm.current_price, 0) AS current_price,
+                pred.predicted_price,
+                (pred.predicted_price - COALESCE(pm.current_price, 0)) AS price_diff,
+                CASE 
+                    WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
+                    ELSE (pred.predicted_price / pm.current_price - 1)
+                END AS price_change_pct,
+                
+                -- Calculate Orders (same logic as by_category)
+                CASE 
+                    WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                        CAST(pm.total_reviews * 75 AS INT)
+                    ELSE
+                        CAST(
+                            (CASE 
+                                WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
+                                WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
+                                WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                ELSE 20
+                            END) * 
+                            (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
+                        AS INT)
+                END AS current_orders,
+                
+                (
+                    CASE 
+                        WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                            CAST(pm.total_reviews * 75 AS INT)
+                        ELSE
+                            CAST(
+                                (CASE 
+                                    WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
+                                    WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
+                                    WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                    ELSE 20
+                                END) * 
+                                (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
+                            AS INT)
+                    END
+                ) * COALESCE(pm.current_price, 0) AS current_revenue,
+                
+                CASE 
+                    WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
+                    ELSE 
+                        (
+                            CASE 
+                                WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                                    CAST(pm.total_reviews * 75 AS INT)
+                                ELSE
+                                    CAST(
+                                        (CASE 
+                                            WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
+                                            WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
+                                            WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                            ELSE 20
+                                        END) * 
+                                        (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
+                                    AS INT)
+                            END
+                        ) * COALESCE(pm.current_price, 0) * (pred.predicted_price / pm.current_price)
+                END AS projected_revenue,
+                
+                CASE 
+                    WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
+                    ELSE (pred.predicted_price / pm.current_price - 1)
+                END AS expected_revenue_change_pct,
+                pred.confidence,
+                pm.avg_rating,
+                COALESCE(pm.total_reviews, 0) AS total_reviews
+            FROM latest_predictions pred
+            JOIN dwh.dim_product dp 
+                ON pred.product_sk = dp.product_sk
+            JOIN dwh.dim_platform dpl 
+                ON pred.platform_sk = dpl.platform_sk
+            LEFT JOIN dwh.dim_category dc 
+                ON dp.category_sk = dc.category_sk
+            LEFT JOIN product_metrics pm 
+                ON dp.product_sk = pm.product_sk 
+               AND pred.platform_sk = pm.platform_sk
+            WHERE dp.product_key = ANY($3::text[])
+              AND COALESCE(pm.current_price, 0) > 0
+              AND pred.confidence >= $4
+              AND ABS(
+                  (pred.predicted_price - COALESCE(pm.current_price, 0))
+                  / NULLIF(pm.current_price, 0)
+              ) > $5
+            ORDER BY dp.product_key, pred.confidence DESC
+        """
+        
+        params.extend([min_confidence, min_price_change_pct])
+        
+        try:
+            rows = await self.db.fetch(sql, *params)
+            
+            items = []
+            for row in rows:
+                items.append(
+                    {
+                        "product_key": row["product_key"],
+                        "product_name": row["product_name"],
+                        "platform": row["platform"],
+                        "category_name": row["category_name"],
+                        "current_price": float(row["current_price"]),
+                        "recommended_price": float(row["predicted_price"]),
+                        "predicted_price": float(row["predicted_price"]),
+                        "price_diff": float(row["price_diff"]),
+                        "price_change_pct": float(row["price_change_pct"]),
+                        "current_revenue": float(row["current_revenue"]),
+                        "projected_revenue": float(row["projected_revenue"]),
+                        "expected_revenue_change_pct": float(
+                            row["expected_revenue_change_pct"]
+                        ),
+                        "confidence": float(row["confidence"]),
+                        "current_orders": int(row["current_orders"]),
+                        "avg_rating": float(row["avg_rating"])
+                        if row["avg_rating"] is not None
+                        else round(3.5 + (abs(hash(row["product_key"])) % 100) / 100, 1),
+                        "total_reviews": int(row["total_reviews"]),
+                    }
+                )
+            
+            return {
+                "items": items,
+                "total_count": len(items),
+                "date_adjusted": adjusted_to_date != to_date,
+                "actual_from_date": from_date,
+                "actual_to_date": adjusted_to_date,
+            }
+        except Exception as e:
+            logger.exception(f"Error querying price predictions by product keys: {e}")
+            return {
+                "items": [],
+                "total_count": 0,
+                "date_adjusted": False,
+                "actual_from_date": from_date,
+                "actual_to_date": to_date,
+            }
+
 
     def _calculate_price_kpis(self, data: Dict[str, Any], request: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate KPI summary for price prediction scenario."""
