@@ -6,12 +6,14 @@ services:
     plan: free
     buildCommand: |
       cd backend &&
-      pip install --upgrade pip setuptools wheel &&
+      pip install --upgrade pip &&
       pip install -r requirements.txt
     startCommand: |
       cd backend &&
       uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
+      - key: RENDER
+        value: true
       # Redis Cloud Connection
       # ⚠️ SECURITY WARNING: Password is in this file!
       # For better security, set REDIS_URL in Render Dashboard → Environment tab instead

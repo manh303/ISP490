@@ -281,14 +281,14 @@ class DatabaseManager:
         query_id = secrets.token_hex(4)
         
         try:
-            # logger.debug(f"[{query_id}] Executing query: {query[:100]}...")
+            logger.debug(f"[{query_id}] Executing query: {query[:100]}...")
             
             from app.db_pool import get_pool
             pool = await get_pool()
             
-            # logger.debug(f"[{query_id}] Pool retrieved, acquiring connection...")
+            logger.debug(f"[{query_id}] Pool retrieved, acquiring connection...")
             async with pool.acquire() as conn:
-                # logger.debug(f"[{query_id}] Connection acquired")
+                logger.debug(f"[{query_id}] Connection acquired")
                 
                 if values:
                     if isinstance(values, (tuple, list)):
