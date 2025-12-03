@@ -276,11 +276,20 @@ class DatabaseManager:
 
     async def execute_query(self, query: str, values = None):
         """Execute a query safely using the connection pool"""
+        import time
+        start_time = time.time()
+        query_id = secrets.token_hex(4)
+        
         try:
+            # logger.debug(f"[{query_id}] Executing query: {query[:100]}...")
+            
             from app.db_pool import get_pool
             pool = await get_pool()
             
+            # logger.debug(f"[{query_id}] Pool retrieved, acquiring connection...")
             async with pool.acquire() as conn:
+                # logger.debug(f"[{query_id}] Connection acquired")
+                
                 if values:
                     if isinstance(values, (tuple, list)):
                         result = await conn.fetch(query, *values)
@@ -290,11 +299,16 @@ class DatabaseManager:
                 else:
                     result = await conn.fetch(query)
                 
+                duration = time.time() - start_time
+                if duration > 1.0:
+                    logger.warning(f"[{query_id}] Slow query ({duration:.3f}s): {query[:200]}...")
+                
                 return [dict(row) for row in result]
         except Exception as e:
-            logger.error(f"Query execution error: {e}")
-            logger.error(f"Query: {query}")
-            logger.error(f"Values: {values}")
+            duration = time.time() - start_time
+            logger.error(f"[{query_id}] Query execution error ({duration:.3f}s): {e}")
+            logger.error(f"[{query_id}] Query: {query}")
+            logger.error(f"[{query_id}] Values: {values}")
             return []
 
     def transaction(self):
@@ -613,6 +627,58 @@ async def test_roles():
         "message": "Roles router is working!",
         "timestamp": datetime.now().isoformat()
     }
+
+@app.get("/debug/connection")
+async def debug_connection():
+    """Debug database connection"""
+    import time
+    import asyncio
+    
+    steps = []
+    start_total = time.time()
+    
+    try:
+        steps.append(f"Start: {datetime.now().isoformat()}")
+        
+        # Check environment
+        steps.append(f"Render Env: {os.getenv('RENDER')}")
+        steps.append(f"DB URL: {DATABASE_URL[:20]}...")
+        
+        # Get pool
+        t0 = time.time()
+        from app.db_pool import get_pool
+        pool = await get_pool()
+        steps.append(f"Get Pool: {time.time() - t0:.4f}s")
+        
+        # Acquire connection
+        t1 = time.time()
+        try:
+            async with asyncio.timeout(5.0): # 5s timeout for acquisition
+                async with pool.acquire() as conn:
+                    steps.append(f"Acquire Connection: {time.time() - t1:.4f}s")
+                    
+                    # Execute query
+                    t2 = time.time()
+                    version = await conn.fetchval("SELECT version()")
+                    steps.append(f"Execute Query: {time.time() - t2:.4f}s")
+                    steps.append(f"DB Version: {version}")
+        except asyncio.TimeoutError:
+            steps.append("Acquire Connection: TIMED OUT (5s)")
+            raise Exception("Connection acquisition timed out")
+            
+        steps.append(f"Total Time: {time.time() - start_total:.4f}s")
+        
+        return {
+            "status": "success",
+            "steps": steps
+        }
+    except Exception as e:
+        steps.append(f"Error: {str(e)}")
+        return {
+            "status": "error",
+            "steps": steps,
+            "error": str(e)
+        }
 
 
 @app.get(f"{settings.API_V1_PREFIX}/dss/dashboard")
