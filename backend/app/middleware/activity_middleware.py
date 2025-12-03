@@ -72,6 +72,9 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
             except Exception:
                 pass
 
+        # Auto-detect resource based on route
+        resource_type, resource_id = self._detect_resource(request.url.path)
+
         # Process request
         response = await call_next(request)
         
@@ -123,6 +126,8 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
                     email=email,
                     action=action,
                     module=module,
+                    resource_type=resource_type,
+                    resource_id=resource_id,
                     role_at_time=role_at_time,
                     request_method=request.method,
                     request_path=str(request.url.path),
@@ -140,7 +145,7 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
     
     def _detect_module(self, path: str) -> str:
         """Detect module from request path"""
-        if "/admin/users" in path or "/auth/" in path:
+        if "/admin/users" in path or "/auth/" in path or "/roles" in path or "/profile" in path:
             return "IAM"
         elif "/analytics" in path:
             return "ANALYTICS"
@@ -150,16 +155,18 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
             return "ML"
         elif "/data-engineer" in path or "/airflow" in path:
             return "DATA_PIPELINE"
+        elif "/reports" in path:
+            return "REPORTS"
         return "GENERAL"
     
     def _detect_action(self, method: str, path: str) -> str:
         """Detect action from method and path"""
         # Authentication actions
-        if "/auth/login" in path:
+        if "/auth/login" in path or "/auth/signin" in path:
             return "LOGIN"
-        if "/auth/logout" in path:
+        if "/auth/logout" in path or "/auth/signout" in path:
             return "LOGOUT"
-        if "/auth/register" in path:
+        if "/auth/register" in path or "/auth/signup" in path:
             return "REGISTER"
         
         # User management
@@ -185,22 +192,51 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
                 return "RUN_RECOMMENDATION_DSS"
             elif "/review" in path:
                 return "RUN_REVIEW_DSS"
+            elif "/dashboard" in path:
+                return "VIEW_DASHBOARD"
         
         # ML operations
         if "/ml" in path:
             return "RUN_ML_MODEL"
         
         # Analytics/Reports
-        if "/analytics" in path or "/report" in path:
+        if "/analytics" in path or "/reports" in path:
             if "export" in path:
                 return "EXPORT_REPORT"
             return "VIEW_ANALYTICS"
         
         # Default action
         return f"{method}_{path.split('/')[-1].upper()}" if path.split('/')[-1] else f"{method}_REQUEST"
+
+    def _detect_resource(self, path: str):
+        """Detect resource type and ID from path"""
+        parts = path.strip("/").split("/")
+        resource_type = None
+        resource_id = None
+
+        if "users" in parts:
+            idx = parts.index("users")
+            resource_type = "user"
+            if len(parts) > idx + 1 and parts[idx+1].isdigit():
+                resource_id = parts[idx+1]
+        elif "roles" in parts:
+            idx = parts.index("roles")
+            resource_type = "role"
+            if len(parts) > idx + 1 and parts[idx+1].isdigit():
+                resource_id = parts[idx+1]
+        elif "products" in parts:
+            idx = parts.index("products")
+            resource_type = "product"
+            if len(parts) > idx + 1:
+                resource_id = parts[idx+1]
+        
+        return resource_type, resource_id
     
     def _mask_sensitive_fields(self, data: dict) -> dict:
         """Mask sensitive fields in request payload"""
+        if not isinstance(data, dict):
+            return data
+            
         masked = data.copy()
         sensitive_fields = ['password', 'token', 'secret', 'api_key', 'access_token', 'refresh_token']
         

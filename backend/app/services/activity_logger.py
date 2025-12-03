@@ -54,12 +54,17 @@ class ActivityLogger:
 
             resource = f"{resource_type}#{resource_id}" if resource_type and resource_id else None
 
+            # Vietnam Timezone (UTC+7)
+            from datetime import datetime, timezone, timedelta
+            tz_vn = timezone(timedelta(hours=7))
+            created_at = datetime.now(tz_vn)
+
             query = f"""
             INSERT INTO {self.table}
             (user_id, email, action, module, resource_type, resource, role_at_time,
              request_method, request_payload, before_data, after_data, message,
-             details, ip_address, user_agent, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+             details, ip_address, user_agent, status, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
             """
 
             await self.db.execute_query(
@@ -81,6 +86,7 @@ class ActivityLogger:
                     ip_address,
                     user_agent,
                     status,
+                    created_at,
                 ),
             )
         except Exception as e:
