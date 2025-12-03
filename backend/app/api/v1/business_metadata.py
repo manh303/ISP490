@@ -124,8 +124,8 @@ async def get_source_systems():
                     s.name,
                     s.owner_contact,
                     COUNT(d.dataset_id) as dataset_count
-                FROM meta.meta_source_system s
-                LEFT JOIN meta.meta_dataset d ON s.source_id = d.source_id
+                FROM metadata.meta_source_system s
+                LEFT JOIN metadata.meta_dataset d ON s.source_id = d.source_id
                 GROUP BY s.source_id, s.code, s.name, s.owner_contact
                 ORDER BY s.code;
             """)
@@ -152,8 +152,8 @@ async def get_source_system_detail(code: str):
                     s.name,
                     s.owner_contact,
                     COUNT(d.dataset_id) as dataset_count
-                FROM meta.meta_source_system s
-                LEFT JOIN meta.meta_dataset d ON s.source_id = d.source_id
+                FROM metadata.meta_source_system s
+                LEFT JOIN metadata.meta_dataset d ON s.source_id = d.source_id
                 WHERE s.code = %s
                 GROUP BY s.source_id, s.code, s.name, s.owner_contact;
             """, (code,))
@@ -172,7 +172,7 @@ async def get_source_system_detail(code: str):
                     d.dataset_type,
                     d.pii_class,
                     d.retention_days
-                FROM meta.meta_dataset d
+                FROM metadata.meta_dataset d
                 WHERE d.source_id = %s
                 ORDER BY d.layer, d.table_name;
             """, (source['source_id'],))
@@ -220,11 +220,11 @@ async def get_datasets(
                     ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ts.last_loaded_at,
                     EXTRACT(EPOCH FROM (NOW() - ts.last_loaded_at))/3600 as freshness_hours
-                FROM meta.meta_dataset d
-                LEFT JOIN meta.meta_source_system s ON d.source_id = s.source_id
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes, last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -281,11 +281,11 @@ async def get_dataset_detail(dataset_id: int):
                     ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ts.last_loaded_at,
                     EXTRACT(EPOCH FROM (NOW() - ts.last_loaded_at))/3600 as freshness_hours
-                FROM meta.meta_dataset d
-                LEFT JOIN meta.meta_source_system s ON d.source_id = s.source_id
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes, last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -301,7 +301,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get upstream sources
             cur.execute("""
                 SELECT CONCAT(source_schema, '.', source_table) as source_table
-                FROM meta.data_lineage
+                FROM metadata.data_lineage
                 WHERE target_schema = %s AND target_table = %s
                   AND is_active = TRUE;
             """, (dataset['schema_name'], dataset['table_name']))
@@ -310,7 +310,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get downstream targets
             cur.execute("""
                 SELECT CONCAT(target_schema, '.', target_table) as target_table
-                FROM meta.data_lineage
+                FROM metadata.data_lineage
                 WHERE source_schema = %s AND source_table = %s
                   AND is_active = TRUE;
             """, (dataset['schema_name'], dataset['table_name']))
@@ -319,7 +319,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get quality issues count
             cur.execute("""
                 SELECT COUNT(*) as count
-                FROM meta.data_quality_issue
+                FROM metadata.data_quality_issue
                 WHERE schema_name = %s AND table_name = %s
                   AND status IN ('OPEN', 'IN_PROGRESS');
             """, (dataset['schema_name'], dataset['table_name']))
@@ -328,7 +328,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get expectations count
             cur.execute("""
                 SELECT COUNT(*) as count
-                FROM meta.meta_expectation
+                FROM metadata.meta_expectation
                 WHERE dataset_id = %s;
             """, (dataset_id,))
             exp_count = cur.fetchone()['count']
@@ -372,11 +372,11 @@ async def search_catalog(
                     ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ts.last_loaded_at,
                     EXTRACT(EPOCH FROM (NOW() - ts.last_loaded_at))/3600 as freshness_hours
-                FROM meta.meta_dataset d
-                LEFT JOIN meta.meta_source_system s ON d.source_id = s.source_id
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes, last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -411,10 +411,10 @@ async def get_schemas():
                     COUNT(DISTINCT table_name) as table_count,
                     SUM(ts.row_count) as total_rows,
                     ROUND(SUM(ts.size_bytes) / 1024.0 / 1024.0 / 1024.0, 2) as total_size_gb
-                FROM meta.meta_dataset d
+                FROM metadata.meta_dataset d
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -447,11 +447,11 @@ async def get_schema_tables(schema_name: str):
                     ts.row_count,
                     ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ts.last_loaded_at
-                FROM meta.meta_dataset d
-                LEFT JOIN meta.meta_source_system s ON d.source_id = s.source_id
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes, last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -489,7 +489,7 @@ async def get_business_terms(
                     bt.steward,
                     bt.status,
                     ARRAY[]::TEXT[] as related_datasets
-                FROM meta.meta_business_term bt
+                FROM metadata.meta_business_term bt
                 WHERE 1=1
             """
             params = []
@@ -523,7 +523,7 @@ async def get_business_term_detail(term_id: int):
                     definition,
                     steward,
                     status
-                FROM meta.meta_business_term
+                FROM metadata.meta_business_term
                 WHERE term_id = %s;
             """, (term_id,))
             term = cur.fetchone()
@@ -538,7 +538,7 @@ async def get_business_term_detail(term_id: int):
                     d.schema_name,
                     d.table_name,
                     d.layer
-                FROM meta.meta_dataset d
+                FROM metadata.meta_dataset d
                 WHERE d.table_name ILIKE %s
                 ORDER BY d.layer, d.table_name;
             """, (f"%{term['term_name'].replace(' ', '_')}%",))
@@ -573,7 +573,7 @@ async def search_glossary(
                     definition,
                     steward,
                     status
-                FROM meta.meta_business_term
+                FROM metadata.meta_business_term
                 WHERE term_name ILIKE %s
                    OR definition ILIKE %s
                 ORDER BY 
@@ -602,7 +602,7 @@ async def create_business_term(
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                INSERT INTO meta.meta_business_term (term_name, definition, steward, status)
+                INSERT INTO metadata.meta_business_term (term_name, definition, steward, status)
                 VALUES (%s, %s, %s, %s)
                 RETURNING term_id, term_name, definition, steward, status;
             """, (term_name, definition, steward, status))
@@ -645,11 +645,11 @@ async def get_expectations(
                     e.tags,
                     cr.passed as last_check_passed,
                     cr.created_at as last_check_time
-                FROM meta.meta_expectation e
-                JOIN meta.meta_dataset d ON e.dataset_id = d.dataset_id
+                FROM metadata.meta_expectation e
+                JOIN metadata.meta_dataset d ON e.dataset_id = d.dataset_id
                 LEFT JOIN LATERAL (
                     SELECT passed, created_at
-                    FROM meta.data_quality_check_result
+                    FROM metadata.data_quality_check_result
                     WHERE rule_id = e.exp_id
                     ORDER BY created_at DESC
                     LIMIT 1
@@ -696,7 +696,7 @@ async def get_expectation_results(
                     cr.total_count,
                     cr.error_message,
                     cr.created_at
-                FROM meta.data_quality_check_result cr
+                FROM metadata.data_quality_check_result cr
                 WHERE cr.rule_id = %s
                 ORDER BY cr.created_at DESC
                 LIMIT %s;
@@ -723,7 +723,7 @@ async def create_expectation(
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                INSERT INTO meta.meta_expectation (dataset_id, name, severity, check_sql, owner, tags)
+                INSERT INTO metadata.meta_expectation (dataset_id, name, severity, check_sql, owner, tags)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING exp_id, dataset_id, name, severity, check_sql, owner, tags;
             """, (dataset_id, name, severity, check_sql, owner, tags))
@@ -758,8 +758,8 @@ async def get_jobs(active_only: bool = True):
                     j.schedule,
                     j.active,
                     ARRAY_AGG(DISTINCT d.table_name) FILTER (WHERE d.table_name IS NOT NULL) as related_datasets
-                FROM meta.meta_job j
-                LEFT JOIN meta.meta_dataset d ON 
+                FROM metadata.meta_job j
+                LEFT JOIN metadata.meta_dataset d ON 
                     j.job_name ILIKE '%' || REPLACE(d.table_name, '_', '%') || '%'
             """
             
@@ -794,7 +794,7 @@ async def get_job_detail(job_id: int):
                     owner,
                     schedule,
                     active
-                FROM meta.meta_job
+                FROM metadata.meta_job
                 WHERE job_id = %s;
             """, (job_id,))
             job = cur.fetchone()
