@@ -21,12 +21,12 @@ from app.schemas.ml import (
     MLStatusSummary,
 )
 from app.services.ml_service import MLService
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
 # --------- DB dependency (asyncpg connection) ---------
-
-@asynccontextmanager
 async def get_db():
     """
     Tạo 1 kết nối asyncpg cho mỗi request ML.

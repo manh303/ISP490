@@ -13,7 +13,7 @@ from app.models.admin import (
     PasswordChangeRequest, 
     UserActionResponse
 )
-from app.services.activity_logger import ActivityLogger
+from app.services.activity_logger import ActivityLogger, ACTIVITY_LOG_TABLE
 from app.services.iam_service import IAMService
 
 logger = logging.getLogger(__name__)
@@ -177,8 +177,10 @@ class AdminService:
 
                 # Log activity
                 await conn.execute(
-                    "INSERT INTO iam.user_activity_logs (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
-                    user_id, "USER_CREATED", f"Admin created user: {email} with role: {role_code}"
+                    f"INSERT INTO {ACTIVITY_LOG_TABLE} (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
+                    user_id,
+                    "USER_CREATED",
+                    f"Admin created user: {email} with role: {role_code}",
                 )
 
                 result = {
@@ -274,7 +276,7 @@ class AdminService:
             # Optional tables (may not exist)
             for table, condition in [
                 ("iam.iam_user_session", f"user_id = {user_id}"),
-                ("user_activity_logs", f"user_id = {user_id}"),
+                (ACTIVITY_LOG_TABLE, f"user_id = {user_id}"),
                 ("iam.iam_password_reset_token", f"user_id = {user_id}"),
                 ("iam.iam_email_verification_token", f"email = '{user['email']}'"),
             ]:
@@ -327,13 +329,16 @@ class AdminService:
         query = f"""
             SELECT log_id, user_id, email, action, resource, details, 
                    ip_address, status, created_at
-            FROM iam.user_activity_logs
+            FROM {ACTIVITY_LOG_TABLE}
             {where_clause}
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
         """
-        
-        count_query = f"SELECT COUNT(*) as total FROM iam.user_activity_logs {where_clause.replace('$3', '$1') if where_clause else ''}"
+
+        count_query = (
+            f"SELECT COUNT(*) as total FROM {ACTIVITY_LOG_TABLE} "
+            f"{where_clause.replace('$3', '$1') if where_clause else ''}"
+        )
         
         logs = await self.db.execute_query(query, params)
         count_params = [user_id] if user_id else []

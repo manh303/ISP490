@@ -108,7 +108,8 @@ class Job(BaseModel):
 # ===================================================================
 
 @router.get("/sources", response_model=List[SourceSystem], summary="Get All Source Systems",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_source_systems():
     """
     Get list of all registered source systems with dataset counts
@@ -134,7 +135,8 @@ async def get_source_systems():
         conn.close()
 
 @router.get("/sources/{code}", summary="Get Source System Details",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_source_system_detail(code: str):
     """
     Get detailed information about a specific source system
@@ -188,7 +190,8 @@ async def get_source_system_detail(code: str):
 # ===================================================================
 
 @router.get("/catalog/datasets", response_model=List[Dataset], summary="Get All Datasets",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_datasets(
     layer: Optional[str] = None,
     source_code: Optional[str] = None,
@@ -251,7 +254,8 @@ async def get_datasets(
         conn.close()
 
 @router.get("/catalog/datasets/{dataset_id}", response_model=DatasetDetail, summary="Get Dataset Details",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_dataset_detail(dataset_id: int):
     """
     Get detailed information about a specific dataset including lineage and quality
@@ -340,7 +344,8 @@ async def get_dataset_detail(dataset_id: int):
         conn.close()
 
 @router.get("/catalog/search", response_model=List[Dataset], summary="Search Data Catalog",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def search_catalog(
     q: str = Query(..., description="Search query"),
     limit: int = Query(default=50, le=100)
@@ -391,7 +396,8 @@ async def search_catalog(
         conn.close()
 
 @router.get("/catalog/schemas", summary="Get All Schemas",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_schemas():
     """
     Get list of all schemas with table counts
@@ -422,7 +428,8 @@ async def get_schemas():
         conn.close()
 
 @router.get("/catalog/schemas/{schema_name}/tables", summary="Get Tables in Schema",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_schema_tables(schema_name: str):
     """
     Get all tables in a specific schema
@@ -462,7 +469,8 @@ async def get_schema_tables(schema_name: str):
 # ===================================================================
 
 @router.get("/glossary/terms", response_model=List[BusinessTerm], summary="Get All Business Terms",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_business_terms(
     status: Optional[str] = None
 ):
@@ -499,7 +507,8 @@ async def get_business_terms(
         conn.close()
 
 @router.get("/glossary/terms/{term_id}", summary="Get Business Term Detail",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_business_term_detail(term_id: int):
     """
     Get detailed information about a specific business term
@@ -543,7 +552,8 @@ async def get_business_term_detail(term_id: int):
         conn.close()
 
 @router.get("/glossary/search", response_model=List[BusinessTerm], summary="Search Business Glossary",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def search_glossary(
     q: str = Query(..., description="Search query"),
     limit: int = Query(default=50, le=100)
@@ -577,7 +587,8 @@ async def search_glossary(
         conn.close()
 
 @router.post("/glossary/terms", summary="Create Business Term",
-             dependencies=[Depends(require_role(["DATA_ENGINEER", "ADMIN"]))])
+             dependencies=[Depends(require_role("DATA_ENGINEER", "ADMIN"))],
+             )
 async def create_business_term(
     term_name: str,
     definition: str,
@@ -609,7 +620,8 @@ async def create_business_term(
 # ===================================================================
 
 @router.get("/expectations", response_model=List[DataExpectation], summary="Get All Data Expectations",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_expectations(
     severity: Optional[str] = None,
     dataset_id: Optional[int] = None
@@ -663,7 +675,8 @@ async def get_expectations(
         conn.close()
 
 @router.get("/expectations/{exp_id}/results", summary="Get Expectation Check Results",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_expectation_results(
     exp_id: int,
     limit: int = Query(default=20, le=100)
@@ -693,7 +706,8 @@ async def get_expectation_results(
         conn.close()
 
 @router.post("/expectations", summary="Create Data Expectation",
-             dependencies=[Depends(require_role(["DATA_ENGINEER", "ADMIN"]))])
+             dependencies=[Depends(require_role("DATA_ENGINEER", "ADMIN"))],
+             )
 async def create_expectation(
     dataset_id: int,
     name: str,
@@ -727,7 +741,8 @@ async def create_expectation(
 # ===================================================================
 
 @router.get("/jobs", response_model=List[Job], summary="Get All Jobs",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_jobs(active_only: bool = True):
     """
     Get list of all registered jobs
@@ -763,7 +778,8 @@ async def get_jobs(active_only: bool = True):
         conn.close()
 
 @router.get("/jobs/{job_id}", summary="Get Job Details",
-            dependencies=[Depends(require_role(["DATA_ENGINEER", "ANALYST", "ADMIN"]))])
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_job_detail(job_id: int):
     """
     Get detailed information about a specific job

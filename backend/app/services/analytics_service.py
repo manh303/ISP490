@@ -61,9 +61,10 @@ def _mock_if_none_or_zero(value, mock_func, is_zero_allowed=False):
 class AnalyticsService:
     """Service layer cho Analyst, làm việc với schema dwh.*"""
 
-    def __init__(self, db):
-        # db: asyncpg connection/pool (có fetch, fetchrow, execute)
-        self.db = db
+    def __init__(self, pool):
+        # pool: asyncpg connection pool
+        # Mỗi method sẽ acquire connection từ pool khi cần
+        self.pool = pool
 
     # =========================
     # FILTER / METADATA
@@ -75,7 +76,8 @@ class AnalyticsService:
             FROM dwh.dim_platform
             ORDER BY platform_code
         """
-        rows = await self.db.fetch(sql)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql)
         return [
             PlatformFilterItem(
                 platform_code=r["platform_code"],
@@ -121,7 +123,8 @@ class AnalyticsService:
             FROM dwh.dim_category
             ORDER BY category_id
         """
-        rows = await self.db.fetch(sql)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql)
 
         result: List[CategoryFilterItem] = []
         for r in rows:
@@ -217,7 +220,8 @@ class AnalyticsService:
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
         """
-        row = await self.db.fetchrow(sql, *params)
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(sql, *params)
 
         return OverviewKPIResponse(
             from_date=from_date,
@@ -274,7 +278,8 @@ class AnalyticsService:
             GROUP BY d.date_value
             ORDER BY d.date_value
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         points: List[OverviewTrendPoint] = []
         for r in rows:
@@ -297,7 +302,8 @@ class AnalyticsService:
                 FROM dwh.dim_category
                 WHERE category_sk = $1
             """
-            cat_row = await self.db.fetchrow(cat_sql, int(category_key))
+            async with self.pool.acquire() as conn:
+                cat_row = await conn.fetchrow(cat_sql, int(category_key))
             if cat_row:
                 category_name = cat_row["category_name"]
 
@@ -349,7 +355,8 @@ class AnalyticsService:
             GROUP BY pl.platform_code
             ORDER BY total_revenue DESC
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         platforms: List[PlatformComparisonItem] = []
         for r in rows:
@@ -372,7 +379,8 @@ class AnalyticsService:
                 FROM dwh.dim_category
                 WHERE category_sk = $1
             """
-            cat_row = await self.db.fetchrow(cat_sql, int(category_key))
+            async with self.pool.acquire() as conn:
+                cat_row = await conn.fetchrow(cat_sql, int(category_key))
             if cat_row:
                 category_name = cat_row["category_name"]
 
@@ -425,7 +433,8 @@ class AnalyticsService:
             GROUP BY p.category_sk, c.full_path, c.category_std_key, c.category_lvl1, pl.platform_code
             ORDER BY revenue DESC
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         total_revenue = sum(float(r["revenue"] or 0) for r in rows) or 1.0
 
@@ -518,7 +527,8 @@ class AnalyticsService:
             ORDER BY {metric_column} DESC
             LIMIT {limit}
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         return [
             TopProductItem(
@@ -553,7 +563,8 @@ class AnalyticsService:
             FROM dwh.dim_product
             WHERE product_key = $1
         """
-        prod_row = await self.db.fetchrow(prod_sql, product_key)
+        async with self.pool.acquire() as conn:
+            prod_row = await conn.fetchrow(prod_sql, product_key)
         if not prod_row:
             return ProductTimeseriesResponse(
                 product_key=product_key,
@@ -580,7 +591,8 @@ class AnalyticsService:
             GROUP BY d.date_value
             ORDER BY d.date_value
         """
-        rows = await self.db.fetch(sql, product_sk, from_date, to_date)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, product_sk, from_date, to_date)
 
         points: List[ProductTimeseriesPoint] = []
         for r in rows:
@@ -619,7 +631,8 @@ class AnalyticsService:
             FROM dwh.dim_product
             WHERE product_key = $1
         """
-        prod_row = await self.db.fetchrow(prod_sql, product_key)
+        async with self.pool.acquire() as conn:
+            prod_row = await conn.fetchrow(prod_sql, product_key)
         if not prod_row:
             return ReviewSummaryResponse(
                 product_key=product_key,
@@ -648,7 +661,8 @@ class AnalyticsService:
             WHERE r.product_sk = $1
               AND d.date_value BETWEEN $2 AND $3
         """
-        summary_row = await self.db.fetchrow(summary_sql, product_sk, from_date, to_date)
+        async with self.pool.acquire() as conn:
+            summary_row = await conn.fetchrow(summary_sql, product_sk, from_date, to_date)
         total_reviews = _mock_if_none_or_zero(int(summary_row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False)
 
         breakdown = {
@@ -674,7 +688,8 @@ class AnalyticsService:
             ORDER BY r.helpful_votes DESC, d.date_value DESC
             LIMIT $4
         """
-        top_rows = await self.db.fetch(top_sql, product_sk, from_date, to_date, top_n)
+        async with self.pool.acquire() as conn:
+            top_rows = await conn.fetch(top_sql, product_sk, from_date, to_date, top_n)
         top_reviews: List[Dict[str, Any]] = []
         for r in top_rows:
             top_reviews.append(
@@ -748,7 +763,8 @@ class AnalyticsService:
             ORDER BY p.product_name
             LIMIT {limit}
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         result: List[ProductFilterItem] = []
         for r in rows:
@@ -808,7 +824,8 @@ class AnalyticsService:
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
         """
-        row = await self.db.fetchrow(sql, *params)
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(sql, *params)
 
         # Check if we need to mock the price distribution
         # If any key price field is missing, generate a complete mock distribution with proper ordering
@@ -890,7 +907,8 @@ class AnalyticsService:
             ORDER BY total_revenue DESC
             LIMIT {limit}
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         return [
             PriceVsRevenueItem(

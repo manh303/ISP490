@@ -13,7 +13,6 @@ from app.db_config import DATABASE_URL
 
 router = APIRouter()
 
-@asynccontextmanager
 async def get_db():
     """
     Dependency mở 1 connection asyncpg, dùng xong thì đóng.

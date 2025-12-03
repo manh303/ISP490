@@ -11,6 +11,7 @@ import json
 from app.services.analytics_service import AnalyticsService
 from app.core.cache import cache
 
+# Force reload to pick up new AnalyticsService
 class CachedAnalyticsService(AnalyticsService):
     """
     Analytics service with caching

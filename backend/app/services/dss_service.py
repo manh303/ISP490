@@ -11,6 +11,7 @@ from typing import Dict, Any, List, Optional
 import asyncpg
 
 from app.services.ai_summarizer import get_ai_summarizer
+from app.services.activity_logger import ACTIVITY_LOG_TABLE
 
 logger = logging.getLogger(__name__)
 
@@ -1403,20 +1404,22 @@ class DSSService:
                 
                 # Step 4: Log activity
                 await self.db.execute(
-                    """
-                    INSERT INTO iam.user_activity_logs (user_id, action, resource, details, status)
+                    f"""
+                    INSERT INTO {ACTIVITY_LOG_TABLE} (user_id, action, resource, details, status)
                     VALUES ($1, $2, $3, $4, $5)
                     """,
                     user_id,
                     "dss_save_decision",
                     "/dss/decisions",
-                    json.dumps({
-                        "decision_id": decision_id,
-                        "scenario_key": scenario_key,
-                        "num_actions": len(action_ids),
-                        "status": payload.get("status", "DRAFT")
-                    }),
-                    "success"
+                    json.dumps(
+                        {
+                            "decision_id": decision_id,
+                            "scenario_key": scenario_key,
+                            "num_actions": len(action_ids),
+                            "status": payload.get("status", "DRAFT"),
+                        }
+                    ),
+                    "success",
                 )
             
             # Transaction committed

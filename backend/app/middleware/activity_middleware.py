@@ -1,15 +1,17 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.services.activity_logger import ActivityLogger
-from app.core.config import settings
 import json
 import logging
+import os
 import time
+from app.services.activity_logger import ActivityLogger, ACTIVITY_LOG_TABLE
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 # Global flag: Check table existence only once at startup instead of every request
 _ACTIVITY_TABLE_READY = None
+_TABLE_NAME = ACTIVITY_LOG_TABLE  # default table (may include schema)
 
 class ActivityLoggingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, db_manager):
@@ -75,46 +77,61 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
         
         # Log the activity
         try:
-            # Check if table exists before logging (using cached flag to avoid query per request)
             global _ACTIVITY_TABLE_READY
             if _ACTIVITY_TABLE_READY is None and self.db_manager.is_connected:
-                # Check table existence only once at first request
-                table_check = await self.db_manager.execute_query(
-                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'iam' AND table_name = 'user_activity_logs')"
-                )
-                _ACTIVITY_TABLE_READY = bool(table_check and table_check[0].get('exists'))
-                logger.info(f"Activity logging: table exists = {_ACTIVITY_TABLE_READY}")
-            
+                # Check table existence only once at first request (support schema-qualified name)
+                table_name = _TABLE_NAME.split(".")[-1]
+                schema = _TABLE_NAME.split(".")[0] if "." in _TABLE_NAME else None
+                if schema:
+                    table_check_query = """
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.tables
+                            WHERE table_schema = $1 AND table_name = $2
+                        )
+                    """
+                    table_check = await self.db_manager.execute_query(table_check_query, (schema, table_name))
+                else:
+                    table_check_query = """
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.tables
+                            WHERE table_name = $1
+                        )
+                    """
+                    table_check = await self.db_manager.execute_query(table_check_query, (table_name,))
+
+                _ACTIVITY_TABLE_READY = bool(table_check and table_check[0].get("exists"))
+                logger.info(f"Activity logging: table {_TABLE_NAME} exists = {_ACTIVITY_TABLE_READY}")
+
             if _ACTIVITY_TABLE_READY:
-                    process_time = time.time() - start_time
-                    
-                    details = {
-                        "status_code": response.status_code,
-                        "process_time": round(process_time, 3),
-                    }
-                    if request.query_params:
-                        details["query_params"] = dict(request.query_params)
-                    
-                    status = "success" if response.status_code < 400 else "error"
-                    message = None
-                    if response.status_code >= 400:
-                        message = f"Request failed with status {response.status_code}"
-                    
-                    activity_logger = ActivityLogger(self.db_manager)
-                    await activity_logger.log_activity(
-                        user_id=user_id,
-                        email=email,
-                        action=action,
-                        module=module,
-                        role_at_time=role_at_time,
-                        request_method=request.method,
-                        request_path=str(request.url.path),
-                        request_payload=request_payload,
-                        message=message,
-                        details=details,
-                        request=request,
-                        status=status
-                    )
+                process_time = time.time() - start_time
+
+                details = {
+                    "status_code": response.status_code,
+                    "process_time": round(process_time, 3),
+                }
+                if request.query_params:
+                    details["query_params"] = dict(request.query_params)
+
+                status = "success" if response.status_code < 400 else "error"
+                message = None
+                if response.status_code >= 400:
+                    message = f"Request failed with status {response.status_code}"
+
+                activity_logger = ActivityLogger(self.db_manager)
+                await activity_logger.log_activity(
+                    user_id=user_id,
+                    email=email,
+                    action=action,
+                    module=module,
+                    role_at_time=role_at_time,
+                    request_method=request.method,
+                    request_path=str(request.url.path),
+                    request_payload=request_payload,
+                    message=message,
+                    details=details,
+                    request=request,
+                    status=status,
+                )
         except Exception as e:
             # Silently skip logging if table doesn't exist
             logger.error(f"Middleware logging error: {e}")

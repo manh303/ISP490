@@ -11,6 +11,8 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/data-engineer", tags=["Data Engineer"])
 
