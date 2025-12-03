@@ -91,6 +91,10 @@ export function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Thêm state để track lỗi của từng API riêng biệt
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [topProductsError, setTopProductsError] = useState<string | null>(null);
+
   // Filter states
   const [fromDate, setFromDate] = useState<Date>();
   const [toDate, setToDate] = useState<Date>();
@@ -106,7 +110,7 @@ export function AnalyticsDashboard() {
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setAnalyticsError(null); // Reset lỗi cục bộ
 
       const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
       const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
@@ -128,7 +132,9 @@ export function AnalyticsDashboard() {
       setOverviewReport(overviewData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
-      setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+      setAnalyticsError('Không thể tải dữ liệu phân tích. Hiển thị dữ liệu mẫu.');
+      // Vẫn sử dụng mock data
+      setOverviewReport(mockOverviewReport);
     } finally {
       setLoading(false);
     }
@@ -138,7 +144,7 @@ export function AnalyticsDashboard() {
   const loadTopProducts = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setTopProductsError(null); // Reset lỗi cục bộ
 
       const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
       const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
@@ -156,18 +162,20 @@ export function AnalyticsDashboard() {
       setTopProducts(topProductsData);
     } catch (err) {
       console.error('Error loading top products:', err);
-      setError('Không thể tải dữ liệu top sản phẩm. Vui lòng thử lại.');
+      setTopProductsError('Không thể tải dữ liệu top sản phẩm. Hiển thị dữ liệu mẫu.');
+      // Vẫn sử dụng mock data
+      setTopProducts(mockTopProducts);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Set default date range (last 30 days)
+    // Set default date range (last 7 days)
     const now = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(now.getDate() - 30);
-    setFromDate(thirtyDaysAgo);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    setFromDate(sevenDaysAgo);
     setToDate(now);
   }, []);
 
@@ -187,6 +195,8 @@ export function AnalyticsDashboard() {
   }, [fromDate, toDate, platformCode, categoryKey, metric]);
 
   const handleRefresh = () => {
+    setAnalyticsError(null);
+    setTopProductsError(null);
     window.location.reload();
   };
 
@@ -201,20 +211,8 @@ export function AnalyticsDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="border border-red-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
-        <div className="text-center p-8">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Thử lại
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Không còn hiển thị error component global nữa
+  // Thay vào đó, hiển thị dashboard với thông báo lỗi cục bộ
 
   return (
     <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm" style={{ minHeight: '800px' }}>
@@ -239,6 +237,17 @@ export function AnalyticsDashboard() {
                   Export Data
                 </Button>
               </div>
+              {/* Hiển thị thông báo lỗi cục bộ nếu có */}
+              {(analyticsError || topProductsError) && (
+                <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-md">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>
+                    {analyticsError && topProductsError 
+                      ? 'Một số dữ liệu không thể tải. Hiển thị dữ liệu mẫu.' 
+                      : analyticsError || topProductsError}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

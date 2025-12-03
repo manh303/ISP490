@@ -19,10 +19,10 @@ export function TableHealth() {
         <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="text-left p-4 text-slate-700">Table</th>
-              <th className="text-left p-4 text-slate-700">Rows</th>
-              <th className="text-left p-4 text-slate-700">Size</th>
-              <th className="text-left p-4 text-slate-700">Status</th>
+              <th className="text-left p-4 text-slate-700">Bảng</th>
+              <th className="text-left p-4 text-slate-700">Hàng</th>
+              <th className="text-left p-4 text-slate-700">Kích thước</th>
+              <th className="text-left p-4 text-slate-700">Trạng thái</th>
             </tr>
           </thead>
           <tbody>

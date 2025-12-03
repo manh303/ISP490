@@ -70,17 +70,17 @@ export function ProductDetailAnalytics() {
     } catch (err) {
       console.error('Error loading product detail analytics data:', err);
       setError('Không thể tải dữ liệu chi tiết sản phẩm. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
-    // Set default date range (last 30 days)
+    // Set default date range (last 7 days)
     const now = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(now.getDate() - 30);
-    setFromDate(thirtyDaysAgo);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    setFromDate(sevenDaysAgo);
     setToDate(now);
   }, []);
 
@@ -91,9 +91,7 @@ export function ProductDetailAnalytics() {
       setProductReport(null);
       setLoading(false);
     }
-  }, [fromDate, toDate, platformCode, categoryKey, productId]);
-
-  const handleRefresh = () => {
+  }, [fromDate, toDate, platformCode, categoryKey, productId]);  const handleRefresh = () => {
     window.location.reload();
   };
 

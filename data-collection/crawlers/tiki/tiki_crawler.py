@@ -146,9 +146,31 @@ class MassCrawler:
                     # Process each product
                     for product in products:
                         try:
+                            # ✅ FIX: Extract actual category from Tiki API response
+                            # Priority: breadcrumbs > categories > search term
+                            actual_category = None
+                            
+                            # Try breadcrumbs first (most accurate)
+                            breadcrumbs = product.get('breadcrumbs', [])
+                            if breadcrumbs and len(breadcrumbs) > 0:
+                                # Get the last breadcrumb (most specific category)
+                                actual_category = breadcrumbs[-1].get('name', '')
+                            
+                            # Fallback to categories field
+                            if not actual_category:
+                                categories = product.get('categories', {})
+                                if isinstance(categories, dict):
+                                    actual_category = categories.get('name', '')
+                                elif isinstance(categories, list) and len(categories) > 0:
+                                    actual_category = categories[-1].get('name', '')
+                            
+                            # Last resort: use search term
+                            if not actual_category:
+                                actual_category = category
+                            
                             processed = {
                                 "source": "tiki",
-                                "category": category,
+                                "category": actual_category,  # ✅ Now using actual category!
                                 "product_id": str(product.get('id', '')),
                                 "product_name": product.get('name', ''),
                                 "price_current": product.get('price', 0),

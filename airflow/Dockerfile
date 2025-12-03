@@ -10,7 +10,6 @@ FROM apache/airflow:2.8.1-python3.9
 USER root
 
 # Install system dependencies + Chromium + Chromedriver
-# - Thêm libs chrome hay cần: fonts-liberation, libnss3, libxss1, libasound2, libatk-bridge2.0-0, libgtk-3-0
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -27,7 +26,7 @@ RUN set -eux; \
         libasound2 \
         libatk-bridge2.0-0 \
         libgtk-3-0; \
-    # Cài Chromium & Chromedriver (tên gói khác nhau tùy distro)
+    # Install Chromium & Chromedriver
     if apt-cache show chromium >/dev/null 2>&1; then \
         apt-get install -y --no-install-recommends chromium chromium-driver; \
         ln -sf /usr/bin/chromium /usr/bin/chromium-browser || true; \
@@ -36,57 +35,33 @@ RUN set -eux; \
     fi; \
     rm -rf /var/lib/apt/lists/*
 
-# Env cho Selenium/Chrome
+# Env for Selenium/Chrome
 ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 ENV DISPLAY=:99
 
-<<<<<<< HEAD
-# Allow pip to run as root for base image (Airflow requirement)
-ENV PIP_USER=false
-
 # -------------------------------
-# 2) Python requirements as airflow user (Airflow requirement)
+# 2) Python requirements as airflow user
 # -------------------------------
 USER airflow
 
-=======
-# -------------------------------
-# 2) Back to airflow user
-# -------------------------------
-USER airflow
-
-# -------------------------------
-# 3) Python requirements
-# -------------------------------
->>>>>>> f990657e46599176c49ea15f7f4ba09c3ad15e5a
 COPY requirements.txt /opt/airflow/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /opt/airflow/requirements.txt
 
-<<<<<<< HEAD
-# Install playwright browsers (needs root access for system libs)
-USER root
-RUN python -m playwright install --with-deps chromium
-
-# Back to airflow user for runtime
-=======
-# Install playwright browsers as root (needs sudo access)
-USER root
-RUN python -m playwright install --with-deps chromium
->>>>>>> f990657e46599176c49ea15f7f4ba09c3ad15e5a
-USER airflow
+# -------------------------------
+# 3) Playwright (optional, if needed by your code)
+# -------------------------------
+# Install playwright browsers
+# Note: We install playwright as airflow user (via pip above).
+# We skip --with-deps because we already installed system deps in step 1.
+RUN python -m playwright install chromium
 
 # -------------------------------
 # 4) Folders (dags/plugins/config)
 # -------------------------------
 RUN mkdir -p /opt/airflow/dags /opt/airflow/plugins /opt/airflow/config
-
-# COPY nếu bạn muốn đóng gói sẵn thay vì mount volumes
-# COPY dags/ /opt/airflow/dags/
-# COPY plugins/ /opt/airflow/plugins/
-# COPY config/ /opt/airflow/config/
 
 # -------------------------------
 # 5) Airflow env

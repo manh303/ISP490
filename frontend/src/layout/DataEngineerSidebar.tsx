@@ -28,37 +28,37 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Data Engineering Dashboard",
+    name: "Dashboard",
     path: "/dataengineer/dashboard",
   },
   {
     icon: <TableIcon />,
     name: "Data Pipeline",
+    path: "/dataengineer/pipelines",
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Data Quality",
     subItems: [
-      { name: "ETL Processes", path: "/dataengineer/etl", pro: false },
-      { name: "Data Ingestion", path: "/dataengineer/ingestion", pro: false },
-      { name: "Data Transformation", path: "/dataengineer/transformation", pro: false },
-      { name: "Data Quality", path: "/dataengineer/quality", pro: false },
+      { name: "Quality Overview", path: "/dataengineer/quality", pro: false },
+      { name: "Quality Summary", path: "/dataengineer/data-quality-summary", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Data Storage",
+    name: "Table Management",
     subItems: [
-      { name: "Database Management", path: "/dataengineer/database", pro: false },
-      { name: "Data Warehouse", path: "/dataengineer/warehouse", pro: false },
-      { name: "Data Lakes", path: "/dataengineer/lakes", pro: false },
-      { name: "Backup & Recovery", path: "/dataengineer/backup", pro: false },
+      { name: "Table Growth", path: "/dataengineer/table-growth", pro: false },
+      { name: "Table Lineage", path: "/dataengineer/table-lineage", pro: false },
+      { name: "Data Volume Trends", path: "/dataengineer/data-volume-trends", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
-    name: "Data Monitoring",
+    name: "Monitoring & Alerts",
     subItems: [
-      { name: "Performance Metrics", path: "/dataengineer/metrics", pro: false },
-      { name: "Data Lineage", path: "/dataengineer/lineage", pro: false },
-      { name: "System Health", path: "/dataengineer/health", pro: false },
-      { name: "Error Logs", path: "/dataengineer/logs", pro: false },
+      { name: "Pipeline Performance", path: "/dataengineer/pipeline-performance", pro: false },
+      { name: "Alert History", path: "/dataengineer/alert-history", pro: false },
     ],
   },
 ];
