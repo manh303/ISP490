@@ -67,10 +67,10 @@ export default function AdminDashboardFilters({
           <div>
             <label className="block text-sm font-medium mb-1">Nền tảng</label>
             <Select value={selectedPlatform} onValueChange={onPlatformChange}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40 bg-white">
                 <SelectValue placeholder="Tất cả nền tảng" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white max-h-60 overflow-y-auto">
                 <SelectItem value="all-platforms">Tất cả nền tảng</SelectItem>
                 {platforms.map(platform => (
                   <SelectItem key={platform.platform_code} value={platform.platform_code}>
@@ -83,10 +83,10 @@ export default function AdminDashboardFilters({
           <div>
             <label className="block text-sm font-medium mb-1">Danh mục</label>
             <Select value={selectedCategory} onValueChange={onCategoryChange}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40 bg-white">
                 <SelectValue placeholder="Tất cả danh mục" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white max-h-60 overflow-y-auto">
                 <SelectItem value="all-categories">Tất cả danh mục</SelectItem>
                 {categories.slice(0, 50).map(category => (
                   <SelectItem key={category.category_key} value={category.category_key}>
@@ -96,7 +96,7 @@ export default function AdminDashboardFilters({
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={onApplyFilters}>Áp dụng bộ lọc</Button>
+          <Button variant="default" onClick={onApplyFilters}>Áp dụng bộ lọc</Button>
         </div>
       </CardContent>
     </Card>
