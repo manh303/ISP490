@@ -536,16 +536,23 @@ async def health_check():
         "uptime_seconds": time.time() - getattr(app.state, 'start_time', 0)
     }
 
-    # Check database
-    if db_manager.is_connected:
-        try:
-            result = await db_manager.execute_query("SELECT 1 as test")
-            health_status["services"]["postgresql"] = "healthy"
-        except Exception as e:
-            health_status["services"]["postgresql"] = f"unhealthy: {str(e)}"
-            health_status["status"] = "degraded"
-    else:
-        health_status["services"]["postgresql"] = "not connected"
+    # Check database using the connection pool
+    try:
+        from app.db_pool import get_pool
+        pool = await get_pool()
+        
+        # Test the connection
+        async with pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        
+        health_status["services"]["postgresql"] = "healthy"
+    except RuntimeError as e:
+        # Pool not initialized
+        health_status["services"]["postgresql"] = f"not connected: {str(e)}"
+        health_status["status"] = "degraded"
+    except Exception as e:
+        # Connection failed
+        health_status["services"]["postgresql"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
 
     return health_status
@@ -553,11 +560,22 @@ async def health_check():
 @app.get(f"{settings.API_V1_PREFIX}/status")
 async def api_status():
     """API status endpoint"""
+    # Check database connection using pool
+    database_connected = False
+    try:
+        from app.db_pool import get_pool
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        database_connected = True
+    except Exception:
+        database_connected = False
+    
     return {
         "api": "Vietnam E-commerce DSS - Simplified",
         "version": settings.VERSION,
         "status": "operational",
-        "database_connected": db_manager.is_connected,
+        "database_connected": database_connected,
         "features": {
             "database": DATABASE_AVAILABLE,
             "authentication": IAM_AVAILABLE
@@ -1099,7 +1117,7 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
                     user_id=user_data["user_id"],
                     email=user_data.get("email", request.email),
                     action="USER_SIGNIN",
-                    resource="/api/v1/auth/signin",
+                    request_path="/api/v1/auth/signin",
                     details={"role": user_data.get("role", "unknown"), "method": "password"},
                     status="success"
                 )
@@ -1303,7 +1321,7 @@ async def signout(request: Request):
                             user_id=user_id,
                             email=user_email,
                             action="USER_SIGNOUT",
-                            resource="/api/v1/auth/signout",
+                            request_path="/api/v1/auth/signout",
                             details={"method": "manual"},
                             status="success"
                         )
@@ -1401,7 +1419,7 @@ async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_datab
                     user_id=user_id,
                     email=request.email.lower(),
                     action="USER_SIGNUP",
-                    resource="/api/v1/auth/signup",
+                    request_path="/api/v1/auth/signup",
                     details={"full_name": request.name, "method": "email"},
                     status="success"
                 )

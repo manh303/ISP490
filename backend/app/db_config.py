@@ -1,6 +1,14 @@
 import os
 
 
+# Load .env file FIRST before getting database URL
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+
 def _ensure_sslmode(url: str) -> str:
     """Append sslmode=require if missing to keep Render TLS happy."""
     if "sslmode=" in url:
@@ -16,14 +24,24 @@ def get_database_url() -> str:
     """
     env_url = os.getenv("DATABASE_URL")
     if env_url:
+        print(f"✅ Using DATABASE_URL from environment")
         return _ensure_sslmode(env_url.strip())
-    host = os.getenv("DB_HOST", "dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com")
+    
+    # Fallback to individual components
+    host = os.getenv("DB_HOST")
     port = os.getenv("DB_PORT", "5432")
-    name = os.getenv("DB_NAME", "ecommerce_dss_1")
-    user = os.getenv("DB_USER", "dss_user")
-    password = os.getenv("DB_PASSWORD", "6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G")
+    name = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+    
+    if not all([host, name, user, password]):
+        raise ValueError(
+            "❌ Missing database configuration. "
+            "Set either DATABASE_URL or all of: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD"
+        )
 
     url = f"postgresql://{user}:{password}@{host}:{port}/{name}"
+    print(f"✅ Built DATABASE_URL from components")
     return _ensure_sslmode(url)
 
 

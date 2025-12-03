@@ -34,7 +34,7 @@ security = HTTPBearer()
 async def get_database():
     """Get database connection"""
     try:
-        from app.main import db_manager
+        from backend.main import db_manager
         if not db_manager.is_connected:
             await db_manager.connect()
         return db_manager
