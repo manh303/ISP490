@@ -54,11 +54,13 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <PieChartIcon />,
-    name: "Monitoring & Alerts",
+    icon: <TableIcon />,
+    name: "Business Metadata",
     subItems: [
-      { name: "Pipeline Performance", path: "/dataengineer/pipeline-performance", pro: false },
-      { name: "Alert History", path: "/dataengineer/alert-history", pro: false },
+      { name: "Sources", path: "/dataengineer/sources", pro: false },
+      { name: "Catalog", path: "/dataengineer/catalog", pro: false },
+      { name: "Glossary", path: "/dataengineer/glossary", pro: false },
+      { name: "Expectations & Jobs", path: "/dataengineer/expectations-jobs", pro: false },
     ],
   },
 ];

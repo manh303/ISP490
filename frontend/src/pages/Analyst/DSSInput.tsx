@@ -12,11 +12,9 @@ import {
   runPricePredictionDSS,
   runProductRecommendationDSS,
   runReviewSentimentDSS,
-  getAISummary,
   PricePredictionRequest,
   ProductRecommendationRequest,
   ReviewSentimentRequest,
-  AISummarizeRequest
 } from '../../services/DSSApi';
 import { getCategories, type Category } from '../../services/analyticsApi';
 interface DSSInputData {
@@ -199,7 +197,6 @@ const DSSInput: React.FC = () => {
 
     try {
       let dssResponse: any;
-      let aiRequest: AISummarizeRequest;
 
       // Step 4: Call DSS API based on model type
       switch (modelId) {
