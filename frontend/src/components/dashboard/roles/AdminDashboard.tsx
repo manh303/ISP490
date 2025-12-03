@@ -24,8 +24,8 @@ export default function AdminDashboard() {
     return date.toISOString().split('T')[0];
   });
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('all-platforms');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all-categories');
   
   // Data states
   const [platforms, setPlatforms] = useState<Platform[]>([]);
@@ -39,51 +39,68 @@ export default function AdminDashboard() {
   
   // UI states
   const [loading, setLoading] = useState(true);
+  const [isFiltersLoaded, setIsFiltersLoaded] = useState(false);
   const [showDecisionModal, setShowDecisionModal] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<'revenue' | 'reviews' | 'price' | 'rating'>('revenue');
   const [decisionPage, setDecisionPage] = useState(1);
-  const [decisionScenario, setDecisionScenario] = useState('');
-  const [decisionStatus, setDecisionStatus] = useState('');
+  const [decisionScenario, setDecisionScenario] = useState('all-scenarios');
+  const [decisionStatus, setDecisionStatus] = useState('all-status');
 
   // Load initial data
   useEffect(() => {
+    console.log('AdminDashboard: Initial useEffect triggered');
     loadFilters();
   }, []);
 
   // Load dashboard data when filters change
   useEffect(() => {
-    if (platforms.length > 0) {
+    console.log('AdminDashboard: Dashboard data useEffect triggered, isFiltersLoaded:', isFiltersLoaded);
+    if (isFiltersLoaded) {
+      console.log('AdminDashboard: Loading dashboard data');
       loadDashboardData();
+    } else {
+      console.log('AdminDashboard: Filters not loaded yet, skipping dashboard data load');
     }
-  }, [fromDate, toDate, selectedPlatform, selectedCategory]);
+  }, [fromDate, toDate, selectedPlatform, selectedCategory, isFiltersLoaded]);
 
   // Load DSS decisions
   useEffect(() => {
+    console.log('AdminDashboard: DSS decisions useEffect triggered');
     loadDSSDecisions();
   }, [decisionPage, decisionScenario, decisionStatus, fromDate, toDate]);
 
   const loadFilters = async () => {
+    console.log('AdminDashboard: loadFilters started');
     try {
       const [platformsRes, categoriesRes] = await Promise.all([
         getPlatforms(),
         getCategories()
       ]);
+      console.log('AdminDashboard: loadFilters success, platforms:', platformsRes.length, 'categories:', categoriesRes.length);
       setPlatforms(platformsRes);
       setCategories(categoriesRes);
     } catch (error) {
-      console.error('Failed to load filters:', error);
+      console.error('AdminDashboard: Failed to load filters:', error);
+      // Set empty arrays to allow dashboard to load even if filters fail
+      setPlatforms([]);
+      setCategories([]);
+    } finally {
+      console.log('AdminDashboard: Setting isFiltersLoaded to true');
+      setIsFiltersLoaded(true);
     }
   };
 
   const loadDashboardData = async () => {
+    console.log('AdminDashboard: loadDashboardData started, setting loading to true');
     setLoading(true);
     try {
       const params = {
         from_date: fromDate,
         to_date: toDate,
-        platform_code: selectedPlatform || undefined,
-        category_key: selectedCategory || undefined,
+        platform_code: selectedPlatform === 'all-platforms' ? undefined : selectedPlatform,
+        category_key: selectedCategory === 'all-categories' ? undefined : selectedCategory,
       };
+      console.log('AdminDashboard: Calling APIs with params:', params);
 
       const [
         overviewRes,
@@ -97,13 +114,15 @@ export default function AdminDashboard() {
         getActivityLogs({ limit: 10, sort: '-created_at' })
       ]);
 
+      console.log('AdminDashboard: APIs completed successfully');
       setOverviewReport(overviewRes);
       setDssHealth(healthRes);
       setDataStatus(dataStatusRes);
       setActivityLogs(activityRes.data || []);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      console.error('AdminDashboard: Failed to load dashboard data:', error);
     } finally {
+      console.log('AdminDashboard: Setting loading to false');
       setLoading(false);
     }
   };
@@ -116,8 +135,8 @@ export default function AdminDashboard() {
         page: decisionPage,
         page_size: 10,
       };
-      if (decisionScenario) params.scenario_key = decisionScenario;
-      if (decisionStatus) params.status = decisionStatus;
+      if (decisionScenario !== 'all-scenarios') params.scenario_key = decisionScenario;
+      if (decisionStatus !== 'all-status') params.status = decisionStatus;
 
       const response = await listDSSDecisions(params);
       setDssDecisions(response.items);

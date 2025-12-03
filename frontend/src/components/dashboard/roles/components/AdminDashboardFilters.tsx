@@ -71,7 +71,7 @@ export default function AdminDashboardFilters({
                 <SelectValue placeholder="All Platforms" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Platforms</SelectItem>
+                <SelectItem value="all-platforms">All Platforms</SelectItem>
                 {platforms.map(platform => (
                   <SelectItem key={platform.platform_code} value={platform.platform_code}>
                     {platform.platform_name}
@@ -87,7 +87,7 @@ export default function AdminDashboardFilters({
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all-categories">All Categories</SelectItem>
                 {categories.slice(0, 50).map(category => (
                   <SelectItem key={category.category_key} value={category.category_key}>
                     {category.category_name}

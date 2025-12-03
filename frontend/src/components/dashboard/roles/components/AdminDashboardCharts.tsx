@@ -37,6 +37,16 @@ export default function AdminDashboardCharts({
   formatNumber,
   onMetricChange,
 }: AdminDashboardChartsProps) {
+  console.log('AdminDashboardCharts render:', {
+    overviewReport: overviewReport ? {
+      trendsPoints: overviewReport.trends.points.length,
+      platformComparison: overviewReport.platform_comparison.length,
+      categoryShare: overviewReport.category_share.length
+    } : null,
+    selectedMetric,
+    selectedPlatform
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Overview Trend Chart */}
@@ -99,7 +109,7 @@ export default function AdminDashboardCharts({
             <CardTitle className="text-base">Category Share</CardTitle>
           </CardHeader>
           <CardContent>
-            {selectedPlatform ? (
+            {selectedPlatform && selectedPlatform !== 'all-platforms' ? (
               overviewReport?.category_share.map(category => (
                 <div key={category.category_name} className="flex justify-between items-center py-2 border-b last:border-b-0">
                   <span className="text-sm">{category.category_name}</span>
@@ -108,7 +118,7 @@ export default function AdminDashboardCharts({
               ))
             ) : (
               <div className="text-center text-gray-500 py-4">
-                Select a platform to view category share
+                Select a specific platform to view category share
               </div>
             )}
           </CardContent>

@@ -34,7 +34,7 @@ export default function AdminDashboardDSSDecisions({
               <SelectValue placeholder="All Scenarios" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Scenarios</SelectItem>
+              <SelectItem value="all-scenarios">All Scenarios</SelectItem>
               <SelectItem value="price_prediction">Price Prediction</SelectItem>
               <SelectItem value="product_recommendation">Recommendation</SelectItem>
               <SelectItem value="review_sentiment">Review Sentiment</SelectItem>
@@ -45,7 +45,7 @@ export default function AdminDashboardDSSDecisions({
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all-status">All Status</SelectItem>
               <SelectItem value="DRAFT">Draft</SelectItem>
               <SelectItem value="APPROVED">Approved</SelectItem>
               <SelectItem value="IMPLEMENTED">Implemented</SelectItem>
