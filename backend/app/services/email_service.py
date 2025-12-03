@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EmailConfig:
     """Email configuration settings"""
-    mailjet_api_key: str = os.getenv("MAILJET_API_KEY")
-    mailjet_api_secret: str = os.getenv("MAILJET_API_SECRET")
-    sender_email: str = os.getenv("EMAIL_FROM")
+    mailjet_api_key: str = os.getenv("MAILJET_API_KEY","0577893665068e154a703ae532f617ed")
+    mailjet_api_secret: str = os.getenv("MAILJET_API_SECRET","a518e0492ff0ba92d1d304570cb97840")
+    sender_email: str = os.getenv("EMAIL_FROM","mtminh1606@gmail.com")
     sender_name: str = os.getenv("EMAIL_FROM_NAME", "DSS E-commerce")
     mailjet_url: str = "https://api.mailjet.com/v3.1/send"
     timeout: int = 30

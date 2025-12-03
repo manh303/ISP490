@@ -1,350 +1,400 @@
+. Luồng tổng thể của Activity Log
 
-from enum import Enum
-from datetime import date
-from typing import List, Optional
-from pydantic import BaseModel, Field, root_validator  # hoặc model_validator nếu pydantic v2
+Tóm tắt luồng:
+
+User gọi bất kỳ API (admin, analytics, dss, ml,…).
+
+Request đi qua ActivityLoggingMiddleware
+→ middleware tự bắt thông tin user, path, method, body,… rồi gọi ActivityLogger.log_activity(...).
+
+ActivityLogger insert 1 record vào bảng iam.user_activity_logs trong DB.
+
+Admin dùng màn Activity Log gọi các API:
+
+GET /admin/activity-logs → list + filter + pagination.
+
+GET /admin/activity-logs/{log_id} → detail 1 log.
+
+GET /admin/activity-logs/export → export CSV.
+
+Response của các API này được định nghĩa bởi các Pydantic model ActivityLogResponse, ActivityLogDetailResponse,… trong models.admin.
+
+2. Middleware: tự động ghi log mỗi request
+2.1. Class ActivityLoggingMiddleware
+class ActivityLoggingMiddleware(BaseHTTPMiddleware):
+    ...
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        
+        # 1. Skip một số path như /docs, /openapi.json,...
+        # 2. Lấy user_id, email, role từ JWT nếu có
+        # 3. Tự detect module & action từ URL + method
+        # 4. Nếu là POST/PUT/PATCH thì đọc body làm request_payload
+        # 5. call_next(request) để chạy handler thật
+        # 6. Sau khi có response -> log_activity(...)
 
 
-class PriceScopeMode(str, Enum):
-    BY_CATEGORY = "by_category"
-    BY_PRODUCT = "by_product"
+Các bước chính:
+
+Skip nếu path thuộc /docs, /openapi.json, /health, /favicon.ico, /static.
+
+Lấy user info từ token
+
+Đọc header Authorization: Bearer <token>
+
+Dùng decode_access_token(...) để giải JWT → lấy user_id, email, role (role_at_time).
+
+Tự detect module qua _detect_module(path):
+
+/admin/users hoặc /auth/... → "IAM"
+
+/analytics → "ANALYTICS"
+
+/dss → "DSS"
+
+/ml → "ML"
+
+/data-engineer → "DATA_PIPELINE"
+
+Tự detect action qua _detect_action(method, path):
+
+/auth/login → "LOGIN"
+
+/auth/logout → "LOGOUT"
+
+/auth/register → "REGISTER"
+
+/admin/users + GET → "VIEW_USERS"
+
+/admin/users + POST → "CREATE_USER"
+
+/dss/price → "RUN_PRICE_DSS"
+
+/dss/reco → "RUN_RECOMMENDATION_DSS"
+
+/analytics/... → "VIEW_ANALYTICS"
+
+Nếu không match rule nào → default "METHOD_LAST_PATH_SEGMENT", ví dụ GET_/ANALYTICS.
+
+Đọc request body (nếu là POST/PUT/PATCH) → parse JSON → mask các field nhạy cảm (password, token, access_token,…) bằng ***MASKED***.
+
+Gọi response = await call_next(request) để chạy API thật.
+
+Sau khi có response:
+
+Tính process_time
+
+Tạo details = {status_code, process_time, query_params}
+
+status = "success" nếu status_code < 400, ngược lại "error".
+
+Gọi:
+
+activity_logger = ActivityLogger(self.db_manager)
+await activity_logger.log_activity(
+    user_id=user_id,
+    email=email,
+    action=action,
+    module=module,
+    role_at_time=role_at_time,
+    request_method=request.method,
+    request_path=str(request.url.path),
+    request_payload=request_payload,
+    message=message,
+    details=details,
+    request=request,
+    status=status
+)
 
 
-class PricePredictionRequest(BaseModel):
-    from_date: date
-    to_date: date
+Tức là: FE không phải truyền gì thêm, middleware tự generate full log.
 
-    # Lọc theo platform/category (dùng cho BY_CATEGORY)
-    platforms: List[str] = Field(default_factory=list)
-    categories: List[str] = Field(default_factory=list)
+3. Class ActivityLogger: ghi vào DB & đọc ra
+3.1. Ghi log: log_activity(...)
 
-    # Lọc theo product cụ thể (dùng cho BY_PRODUCT)
-    product_keys: List[str] = Field(default_factory=list)
+Khai báo:
 
-    page: int = 1
-    page_size: int = 50
+async def log_activity(
+    self,
+    user_id: Optional[int],
+    email: Optional[str],
+    action: str,
+    module: Optional[str] = None,
+    resource_type: Optional[str] = None,
+    resource_id: Optional[str] = None,
+    role_at_time: Optional[str] = None,
+    request_method: Optional[str] = None,
+    request_path: Optional[str] = None,
+    request_payload: Optional[Dict[Any, Any]] = None,
+    before_data: Optional[Dict[Any, Any]] = None,
+    after_data: Optional[Dict[Any, Any]] = None,
+    message: Optional[str] = None,
+    details: Optional[Dict[Any, Any]] = None,
+    request: Optional[Request] = None,
+    status: str = "success"
+)
 
-    # Chế độ
-    scope_mode: PriceScopeMode = PriceScopeMode.BY_CATEGORY
-    top_n: int = 50  # chỉ có ý nghĩa khi BY_CATEGORY
 
-    max_discount_pct: float = 0.15
-    min_margin_pct: float = 0.10
-    min_confidence: float = 0.70
-    min_price_change_pct: float = 0.02
+Ý nghĩa từng field quan trọng:
 
-    @root_validator
-    def validate_scope(cls, values):
-        scope_mode = values.get("scope_mode")
-        categories = values.get("categories") or []
-        product_keys = values.get("product_keys") or []
+user_id: ID user đang thao tác (từ token).
 
-        if scope_mode == PriceScopeMode.BY_CATEGORY:
-            if not categories:
-                raise ValueError("categories must not be empty when scope_mode='by_category'")
-        elif scope_mode == PriceScopeMode.BY_PRODUCT:
-            if not product_keys:
-                raise ValueError("product_keys must not be empty when scope_mode='by_product'")
-        return values
-Nếu bạn đang dùng Pydantic v2 thì đổi @root_validator thành @model_validator(mode="after"), logic tương tự.
+email: email của user (từ token hoặc context).
 
-2. Cập nhật docstring / swagger cho endpoint /dss/price/run
-Trong dss.py, phần router của price DSS, thêm mô tả + 2 example:
+action: mã hành động, ví dụ: VIEW_USERS, RUN_PRICE_DSS, LOGIN_SUCCESS.
 
-2.1. Example 1 – chạy theo category
-json
-Sao chép mã
+module: phân hệ, ví dụ: IAM, ANALYTICS, DSS, ML, DATA_PIPELINE.
+
+resource_type: loại resource liên quan, ví dụ: "user", "decision", "dss_session".
+
+resource_id: id resource tương ứng, ví dụ "123".
+→ ghép thành resource = "user#123" để lưu trong 1 column.
+
+role_at_time: role của user tại thời điểm đó (ADMIN, ANALYST,…).
+
+request_method: GET, POST, PUT,…
+
+request_path: path API, ví dụ: /admin/users.
+
+request_payload: body request (JSON) đã được mask sensitive fields.
+
+before_data / after_data: snapshot trước/sau khi update resource (nếu bạn chủ động truyền).
+
+message: mô tả ngắn, thường dùng cho error / info custom.
+
+details: JSON chứa meta, ví dụ: {"status_code": 200, "process_time": 0.053, "query_params": {...}}.
+
+status: "success" / "error".
+
+request: để auto lấy ip_address, user_agent nếu có.
+
+Sau đó nó chạy query insert vào iam.user_activity_logs:
+
+INSERT INTO iam.user_activity_logs 
+(user_id, email, action, module, resource_type, resource, role_at_time,
+ request_method, request_payload, before_data, after_data, message,
+ details, ip_address, user_agent, status)
+VALUES (...)
+
+
+Toàn bộ request_payload, before_data, after_data, details đều được json.dumps(...) trước khi lưu.
+
+3.2. Đọc danh sách log: get_activity_logs(...)
+async def get_activity_logs(
+    page: int = 1,
+    limit: int = 50,
+    sort: str = "-created_at",
+    user_id: Optional[int] = None,
+    user_email: Optional[str] = None,
+    role: Optional[str] = None,
+    module: Optional[str] = None,
+    action: Optional[str] = None,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    keyword: Optional[str] = None
+)
+
+
+page, limit: phân trang.
+
+sort: field sort, prefix - = DESC (mặc định -created_at = mới nhất trước).
+
+user_id: filter l.user_id = $x.
+
+user_email: filter l.email ILIKE '%...%'.
+
+role: filter l.role_at_time ILIKE '%...%'.
+
+module: filter l.module = 'DSS' hoặc 'ANALYTICS'.
+
+action: filter l.action ILIKE '%VIEW_USERS%'.
+
+status: success / error.
+
+start_date, end_date: filter theo l.created_at >= / <=.
+
+keyword: search full-text nhẹ trên resource, message, action.
+
+Query join với iam.iam_user để lấy full_name, rồi trả về:
+
 {
-  "scope_mode": "by_category",
-  "from_date": "2025-12-01",
-  "to_date": "2025-12-03",
-  "platforms": ["tiki", "lazada"],
-  "categories": ["1", "2"],
-  "page": 1,
-  "page_size": 50,
-  "top_n": 50,
-  "max_discount_pct": 0.15,
-  "min_margin_pct": 0.10,
-  "min_confidence": 0.7,
-  "min_price_change_pct": 0.02
+  "logs": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 123,
+    "pages": 7
+  }
 }
-2.2. Example 2 – chạy theo product_key
-json
-Sao chép mã
+
+3.3. Đọc chi tiết 1 log: get_log_detail(log_id)
+
+Query 1 record theo log_id, join user để lấy full_name.
+
+Parse lại các field JSON:
+
+request_payload
+
+before_data
+
+after_data
+
+details
+
+Kết quả là 1 dict đầy đủ cho FE hiển thị chi tiết.
+
+3.4. Export CSV: export_logs(...)
+
+Gọi lại get_activity_logs(...) với limit=10000.
+
+Ghi ra CSV với các cột:
+
+Time
+
+User Email
+
+Full Name
+
+Role
+
+Action
+
+Module
+
+Resource Type
+
+Resource
+
+Status
+
+IP Address
+
+Message
+
+4. Các API Activity Log phía Admin
+4.1. GET /admin/activity-logs
+
+Định nghĩa:
+
+@router.get("/activity-logs", ...)
+async def get_activity_logs(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    sort: str = Query("-created_at"),
+    user_id: Optional[int] = Query(None),
+    user_email: Optional[str] = Query(None),
+    role: Optional[str] = Query(None),
+    module: Optional[str] = Query(None),
+    action: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
+    db=Depends(get_database)
+)
+
+
+Endpoint này map 1–1 các query param sang ActivityLogger.get_activity_logs(...).
+
+Response:
+
 {
-  "scope_mode": "by_product",
-  "from_date": "2025-12-01",
-  "to_date": "2025-12-03",
-  "product_keys": [
-    "tiki_123456",
-    "lazada_987654"
-  ],
-  "max_discount_pct": 0.15,
-  "min_margin_pct": 0.10,
-  "min_confidence": 0.7,
-  "min_price_change_pct": 0.02
+  "success": true,
+  "data": [ ... danh sách log ... ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 120,
+    "pages": 6
+  }
 }
-Nêu rõ trong doc:
 
-by_category → dùng platforms + categories + top_n.
 
-by_product → bắt buộc có product_keys, top_n không quan trọng (có thể bỏ qua trong logic).
+Mỗi item trong data về mặt schema sẽ giống ActivityLogResponse:
 
-3. Sửa logic trong service run_price_prediction_dss
-Giả sử bạn có class DSSService với hàm:
+class ActivityLogResponse(BaseModel):
+    log_id: int
+    user_id: Optional[int]
+    email: Optional[str]
+    full_name: Optional[str]
+    role_at_time: Optional[str]
+    action: str
+    module: Optional[str]
+    resource_type: Optional[str]
+    resource: Optional[str]
+    request_method: Optional[str]
+    status: str
+    ip_address: Optional[str]
+    user_agent: Optional[str]
+    message: Optional[str]
+    created_at: datetime
+``` :contentReference[oaicite:15]{index=15}  
 
-python
-Sao chép mã
-class DSSService:
-    def __init__(self, conn: asyncpg.Connection):
-        self.conn = conn
+---
 
-    async def run_price_prediction_dss(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        ...
-3.1. Parse scope_mode
-python
-Sao chép mã
-async def run_price_prediction_dss(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-    scope_mode = payload.get("scope_mode", "by_category")
-    from_date = payload["from_date"]
-    to_date = payload["to_date"]
-    platforms = payload.get("platforms", [])
-    categories = payload.get("categories", [])
-    product_keys = payload.get("product_keys", [])
-    top_n = payload.get("top_n", 50)
+### 4.2. `GET /admin/activity-logs/{log_id}`
 
-    max_discount_pct = payload.get("max_discount_pct", 0.15)
-    min_margin_pct = payload.get("min_margin_pct", 0.10)
-    min_confidence = payload.get("min_confidence", 0.70)
-    min_price_change_pct = payload.get("min_price_change_pct", 0.02)
+- Gọi `ActivityLogger.get_log_detail(log_id)`.
+- Nếu không tìm thấy → 404.
+- Nếu có → trả `{ "success": true, "data": log_detail }`. :contentReference[oaicite:16]{index=16}  
 
-    if scope_mode == "by_category":
-        result_rows = await self._run_price_by_category(
-            from_date, to_date,
-            platforms, categories,
-            top_n,
-            max_discount_pct, min_margin_pct,
-            min_confidence, min_price_change_pct,
-        )
-    elif scope_mode == "by_product":
-        result_rows = await self._run_price_by_product_keys(
-            from_date, to_date,
-            product_keys,
-            max_discount_pct, min_margin_pct,
-            min_confidence, min_price_change_pct,
-        )
-    else:
-        raise ValueError(f"Unsupported scope_mode: {scope_mode}")
+`log_detail` tương ứng với `ActivityLogDetailResponse`:
 
-    # Ở dưới bạn build KPIs, summary, actions từ result_rows
-    summary = self._build_price_dss_summary(result_rows, scope_mode)
-    return summary
-3.2. Hàm con cho BY_CATEGORY
-Pseudo-SQL: (bạn map lại cho đúng tên bảng/column thực tế)
+```python
+class ActivityLogDetailResponse(BaseModel):
+    log_id: int
+    user_id: Optional[int]
+    email: Optional[str]
+    full_name: Optional[str]
+    role_at_time: Optional[str]
+    action: str
+    module: Optional[str]
+    resource_type: Optional[str]
+    resource: Optional[str]
+    request_method: Optional[str]
+    request_payload: Optional[dict]
+    before_data: Optional[dict]
+    after_data: Optional[dict]
+    message: Optional[str]
+    details: Optional[dict]
+    status: str
+    ip_address: Optional[str]
+    user_agent: Optional[str]
+    created_at: datetime
+``` :contentReference[oaicite:17]{index=17}  
 
-python
-Sao chép mã
-async def _run_price_by_category(
-    self, from_date, to_date,
-    platforms, categories,
-    top_n,
-    max_discount_pct, min_margin_pct,
-    min_confidence, min_price_change_pct,
-):
-    sql = """
-    WITH candidate AS (
-        SELECT
-            p.product_key,
-            p.product_name,
-            pl.platform_code,
-            c.category_key,
-            c.category_name,
-            d.date_value,
-            f.current_price,
-            ml.predicted_price,
-            ml.confidence,
-            -- ví dụ tính % chênh
-            (ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0) AS price_change_pct,
-            -- revenue giả lập
-            (ml.predicted_price * f.sales_qty) AS predicted_revenue,
-            (f.current_price * f.sales_qty) AS current_revenue,
-            (ml.predicted_price * f.sales_qty) - (f.current_price * f.sales_qty) AS revenue_uplift
-        FROM dwh.fact_product_daily f
-        JOIN dwh.dim_product p   ON f.product_key = p.product_key
-        JOIN dwh.dim_platform pl ON p.platform_key = pl.platform_key
-        JOIN dwh.dim_category c  ON p.category_key = c.category_key
-        JOIN dwh.dim_date d      ON f.date_key = d.date_key
-        JOIN ml.fact_price_prediction ml
-          ON ml.product_key = f.product_key
-         AND ml.date_key = f.date_key
-        WHERE d.date_value BETWEEN $1 AND $2
-          AND ($3::text[] IS NULL OR pl.platform_code = ANY($3))
-          AND ($4::text[] IS NULL OR c.category_key = ANY($4))
-          AND ml.confidence >= $5
-          AND ABS((ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0)) >= $6
-          -- TODO: filter thêm max_discount_pct, min_margin_pct
-    )
-    SELECT *
-    FROM candidate
-    ORDER BY revenue_uplift DESC
-    LIMIT $7;
-    """
-    rows = await self.conn.fetch(
-        sql,
-        from_date, to_date,
-        platforms or None,
-        categories or None,
-        min_confidence,
-        min_price_change_pct,
-        top_n,
-    )
-    return rows
-Ý chính: lọc theo platform + category + rule ML → sort theo revenue_uplift DESC → lấy top_n.
-Sau đó bạn build response (list sản phẩm, gợi ý giá, uplift…).
+---
 
-3.3. Hàm con cho BY_PRODUCT
-python
-Sao chép mã
-async def _run_price_by_product_keys(
-    self, from_date, to_date,
-    product_keys,
-    max_discount_pct, min_margin_pct,
-    min_confidence, min_price_change_pct,
-):
-    sql = """
-    SELECT
-        p.product_key,
-        p.product_name,
-        pl.platform_code,
-        c.category_key,
-        c.category_name,
-        d.date_value,
-        f.current_price,
-        ml.predicted_price,
-        ml.confidence,
-        (ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0) AS price_change_pct,
-        (ml.predicted_price * f.sales_qty) AS predicted_revenue,
-        (f.current_price * f.sales_qty) AS current_revenue,
-        (ml.predicted_price * f.sales_qty) - (f.current_price * f.sales_qty) AS revenue_uplift
-    FROM dwh.fact_product_daily f
-    JOIN dwh.dim_product p   ON f.product_key = p.product_key
-    JOIN dwh.dim_platform pl ON p.platform_key = pl.platform_key
-    JOIN dwh.dim_category c  ON p.category_key = c.category_key
-    JOIN dwh.dim_date d      ON f.date_key = d.date_key
-    JOIN ml.fact_price_prediction ml
-      ON ml.product_key = f.product_key
-     AND ml.date_key = f.date_key
-    WHERE d.date_value BETWEEN $1 AND $2
-      AND p.product_key = ANY($3::text[])
-      AND ml.confidence >= $4
-      AND ABS((ml.predicted_price - f.current_price) / NULLIF(f.current_price, 0)) >= $5
-      -- TODO: filter max_discount_pct, min_margin_pct
-    ORDER BY p.product_key, d.date_value;
-    """
-    rows = await self.conn.fetch(
-        sql,
-        from_date, to_date,
-        product_keys,
-        min_confidence,
-        min_price_change_pct,
-    )
-    return rows
-Ở mode này:
+### 4.3. `GET /admin/activity-logs/export`
 
-Không dùng top_n nữa, mà trả về hết các bản ghi của các product đó (trong range time).
+- Query param y hệt `GET /admin/activity-logs` (trừ page/limit). :contentReference[oaicite:18]{index=18}  
+- Gọi `ActivityLogger.export_logs(...)` → nhận về string CSV.
+- Trả `StreamingResponse` với `Content-Disposition: attachment; filename=activity_logs_<timestamp>.csv`. :contentReference[oaicite:19]{index=19}  
 
-Analyst sẽ thấy toàn bộ lịch sử + gợi ý giá cho sản phẩm cần check.
+---
 
-4. Cập nhật màn Analyst – chia rõ 2 “phần”
-4.1. Tab 1: Price DSS – theo Category
-Form:
+## 5. Tóm lại: “Các trường dữ liệu truyền vào API” là gì?
 
-Date range
+1. **Để sinh ra log (ghi xuống bảng)**  
+   → *FE không phải truyền*, back-end tự làm qua middleware và service.  
+   Những field được truyền vào `ActivityLogger.log_activity()` (và lưu DB):
 
-Platforms (multi)
+   - `user_id`, `email`, `role_at_time`
+   - `action`, `module`
+   - `resource_type`, `resource_id` → `resource`
+   - `request_method`, `request_path`
+   - `request_payload`, `before_data`, `after_data`
+   - `status`, `message`, `details`
+   - `ip_address`, `user_agent` (tự lấy từ `request`)
 
-Categories (multi)
+2. **Để đọc log qua API /admin/activity-logs**  
+   FE truyền các **query param**:
 
-Top N
+   - Phân trang: `page`, `limit`, `sort`
+   - Filter:  
+     `user_id`, `user_email`, `role`, `module`, `action`, `status`, `start_date`, `end_date`, `keyword`
 
-min_confidence, min_price_change_pct,…
+   Và nhận lại list log với đầy đủ field (id, user info, module, action, status, time, ip, ua,…).
 
-Request body:
-
-json
-Sao chép mã
-{
-  "scope_mode": "by_category",
-  "from_date": "...",
-  "to_date": "...",
-  "platforms": ["tiki"],
-  "categories": ["1", "2"],
-  "top_n": 50,
-  "min_confidence": 0.7,
-  "min_price_change_pct": 0.02
-}
-Kết quả hiển thị:
-
-KPI cards (số sản phẩm được recommend, tổng revenue uplift,…)
-
-Bảng top N sản phẩm (current_price vs suggested_price, uplift…)
-
-AI summary (“Nên giảm X% nhóm A…, giữ nguyên nhóm B…”).
-
-4.2. Tab 2: Price DSS – theo Product
-Form:
-
-Date range
-
-Input: search product → chọn 1 hoặc nhiều product_key (autocomplete từ analytics filters)
-
-Param ML (min_confidence,…)
-
-Request body:
-
-json
-Sao chép mã
-{
-  "scope_mode": "by_product",
-  "from_date": "...",
-  "to_date": "...",
-  "product_keys": ["tiki_123456", "lazada_987654"],
-  "min_confidence": 0.7,
-  "min_price_change_pct": 0.02
-}
-Kết quả hiển thị:
-
-Mỗi product 1 block:
-
-Chart giá hiện tại vs giá đề xuất theo ngày
-
-Bảng chi tiết các ngày: date, current_price, suggested_price, price_change_pct, confidence, revenue_uplift
-
-AI summary ngắn cho từng product: “Với sản phẩm A, nên giảm X%, lợi nhuận tăng ~Y%…”
-
-5. Thứ tự làm để đỡ rối
-Sửa schema PricePredictionRequest như bước 1 (thêm scope_mode, validate categories vs product_keys).
-
-Cập nhật service run_price_prediction_dss:
-
-Thêm if scope_mode == "by_category" vs "by_product".
-
-Tách 2 hàm con _run_price_by_category và _run_price_by_product_keys.
-
-Kiểm tra lại router /dss/price/run:
-
-Cập nhật docstring + example request body.
-
-Test API bằng Postman/Swagger:
-
-1 request by_category, 1 request by_product → check kết quả.
-
-Update FE Analyst:
-
-Thêm 2 tab / 2 card cho Price DSS.
-
-Tab 1 gọi scope_mode=by_category, tab 2 gọi scope_mode=by_product.
-
-Viết log + activity (nếu muốn):
-
-Log nội dung: user nào chạy DSS theo mode nào, bao nhiêu sản phẩm.
+Nếu bạn muốn, mình có thể vẽ thêm 1 sơ đồ nhỏ (sequence diagram) cho luồng: *User → API → Middle

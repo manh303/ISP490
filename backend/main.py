@@ -225,11 +225,11 @@ app.add_middleware(
 )
 
 # Add activity logging middleware (only if available and enabled)
-if False and ACTIVITY_AVAILABLE:  # Disabled for now
+if ACTIVITY_AVAILABLE:  # Enabled
     app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
-    logger.info("Activity logging middleware enabled")
+    logger.info("✅ Activity logging middleware enabled")
 else:
-    logger.info("Activity logging middleware disabled (performance)")
+    logger.info("❌ Activity logging middleware disabled (not available)")
 
 
 @app.middleware("http")
@@ -483,7 +483,15 @@ async def setup_activity_logs_direct(db: DatabaseManager = Depends(get_database)
             user_id INTEGER,
             email VARCHAR(255),
             action VARCHAR(100) NOT NULL,
-            resource VARCHAR(100),
+            module VARCHAR(100),
+            resource_type VARCHAR(100),
+            resource VARCHAR(255),
+            role_at_time VARCHAR(50),
+            request_method VARCHAR(20),
+            request_payload JSONB,
+            before_data JSONB,
+            after_data JSONB,
+            message TEXT,
             details JSONB,
             ip_address INET,
             user_agent TEXT,
@@ -503,13 +511,13 @@ async def setup_activity_logs_direct(db: DatabaseManager = Depends(get_database)
             await db.execute_query(index_query)
 
         test_data_query = """
-        INSERT INTO user_activity_logs (user_id, email, action, resource, details, ip_address, status)
+        INSERT INTO user_activity_logs (user_id, email, action, module, resource, role_at_time, request_method, details, ip_address, status)
         VALUES 
-            (1, 'admin@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
-            (2, 'analyst@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
-            (3, 'customer@dss.com', 'GET /api/v1/dss/dashboard', '/api/v1/dss/dashboard', '{"status_code": 200}', '127.0.0.1', 'success'),
-            (1, 'admin@dss.com', 'GET /api/v1/admin/users', '/api/v1/admin/users', '{"status_code": 200}', '127.0.0.1', 'success'),
-            (2, 'analyst@dss.com', 'USER_SIGNOUT', '/api/v1/auth/signout', '{"method": "manual"}', '127.0.0.1', 'success')
+            (1, 'admin@dss.com', 'USER_SIGNIN', 'AUTH', '/api/v1/auth/signin', 'ADMIN', 'POST', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNIN', 'AUTH', '/api/v1/auth/signin', 'ANALYST', 'POST', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
+            (3, 'customer@dss.com', 'VIEW_DASHBOARD', 'DSS', '/api/v1/dss/dashboard', 'CUSTOMER', 'GET', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (1, 'admin@dss.com', 'VIEW_USERS', 'ADMIN', '/api/v1/admin/users', 'ADMIN', 'GET', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNOUT', 'AUTH', '/api/v1/auth/signout', 'ANALYST', 'POST', '{"method": "manual"}', '127.0.0.1', 'success')
         """
         await db.execute_query(test_data_query)
 
