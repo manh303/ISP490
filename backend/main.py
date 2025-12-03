@@ -122,10 +122,21 @@ async def lifespan(app: FastAPI):
 
     try:
         print("Initializing database connection pool...")
+        
+        # Determine SSL requirements
+        # Render requires SSL for external connections
+        ssl_mode = None
+        if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+            ssl_mode = "require"
+            print("🔒 SSL enabled for database connection (Render environment detected)")
+        else:
+            print("🔓 SSL disabled for database connection (Local/Internal)")
+
         await init_pool(
             database_url=DATABASE_URL,
             min_size=5,
             max_size=20,
+            ssl=ssl_mode
         )
         print("✅ Database connection pool initialized successfully")
 
@@ -312,7 +323,14 @@ async def ensure_pool_initialized():
         pool = await get_pool()
         if pool is None:
             print("Pool not initialized, initializing now...")
-            await init_pool(DATABASE_URL, min_size=5, max_size=20)
+            
+            # Determine SSL requirements
+            ssl_mode = None
+            if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+                ssl_mode = "require"
+                print("🔒 SSL enabled for database connection (Render environment detected)")
+            
+            await init_pool(DATABASE_URL, min_size=5, max_size=20, ssl=ssl_mode)
             print("Pool initialized successfully")
         else:
             print("Pool already initialized")

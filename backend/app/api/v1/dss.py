@@ -46,7 +46,15 @@ async def get_db_connection():
         from app.db_pool import init_pool
         try:
             logger.info("Starting fallback pool initialization...")
-            await init_pool(DATABASE_URL, min_size=1, max_size=5)
+            
+            # Determine SSL requirements
+            import os
+            ssl_mode = None
+            if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+                ssl_mode = "require"
+                logger.info("🔒 SSL enabled for fallback database connection (Render environment detected)")
+            
+            await init_pool(DATABASE_URL, min_size=1, max_size=5, ssl=ssl_mode)
             pool = await get_pool()
             if pool is None:
                 raise Exception("Pool is still None after initialization")
@@ -326,9 +334,15 @@ async def dss_health_check():
         "components": {},
     }
 
+    # Determine SSL requirements
+    import os
+    ssl_mode = None
+    if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+        ssl_mode = "require"
+
     # Check database
     try:
-        conn = await asyncpg.connect(dsn=DATABASE_URL)
+        conn = await asyncpg.connect(dsn=DATABASE_URL, ssl=ssl_mode)
         await conn.fetchval("SELECT 1")
         await conn.close()
         health_status["components"]["database"] = "healthy"
@@ -354,7 +368,7 @@ async def dss_health_check():
 
     # Check ML tables
     try:
-        conn = await asyncpg.connect(dsn=DATABASE_URL)
+        conn = await asyncpg.connect(dsn=DATABASE_URL, ssl=ssl_mode)
         tables = await conn.fetch(
             """
             SELECT table_name 
@@ -405,8 +419,14 @@ async def get_data_status():
     }
 
     try:
+        # Determine SSL requirements
+        import os
+        ssl_mode = None
+        if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+            ssl_mode = "require"
+
         async with asyncpg.create_pool(
-            dsn=DATABASE_URL, min_size=1, max_size=1
+            dsn=DATABASE_URL, min_size=1, max_size=1, ssl=ssl_mode
         ) as pool:
             async with pool.acquire() as conn:
                 # Check latest fact_product_daily

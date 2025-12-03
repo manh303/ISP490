@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 _pool: Optional[asyncpg.Pool] = None
 
 
-async def init_pool(database_url: str, min_size: int = 5, max_size: int = 20) -> asyncpg.Pool:
+async def init_pool(database_url: str, min_size: int = 5, max_size: int = 20, ssl=None) -> asyncpg.Pool:
     """
     Initialize the global database connection pool
 
@@ -21,9 +21,7 @@ async def init_pool(database_url: str, min_size: int = 5, max_size: int = 20) ->
         database_url: PostgreSQL connection string
         min_size: Minimum number of connections to maintain
         max_size: Maximum number of connections to create
-
-    Returns:
-        The created connection pool
+        ssl: SSL context or string (e.g. 'require') for the connection
     """
     global _pool
 
@@ -31,7 +29,7 @@ async def init_pool(database_url: str, min_size: int = 5, max_size: int = 20) ->
         logger.warning("Connection pool already initialized")
         return _pool
 
-    logger.info(f"Attempting to connect to database: {database_url[:50]}...")
+    logger.info(f"Attempting to connect to database: {database_url[:50]}... (SSL: {ssl})")
 
     try:
         _pool = await asyncpg.create_pool(
@@ -40,6 +38,7 @@ async def init_pool(database_url: str, min_size: int = 5, max_size: int = 20) ->
             max_size=max_size,
             max_inactive_connection_lifetime=300,  # Close idle connections after 5 min
             command_timeout=60,  # Commands timeout after 60 seconds
+            ssl=ssl
         )
 
         # Test the connection
