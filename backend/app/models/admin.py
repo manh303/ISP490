@@ -4,8 +4,17 @@ Admin Management Pydantic Models
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
-from utils.validators import validate_phone, validate_password, validate_full_name,validate_email
-from models.shared import UserResponse  # Import from shared models
+from app.utils.validators import validate_phone, validate_password, validate_full_name,validate_email
+
+try:
+    from models.shared import UserResponse  # Import from shared models
+except ImportError:
+    from app.models.shared import UserResponse  # Fallback for test environments
+
+try:
+    from constants.roles import VALID_ROLES
+except ImportError:
+    from app.constants.roles import VALID_ROLES
 
 class UserCreateRequest(BaseModel):
     """Create user request"""
@@ -35,6 +44,13 @@ class UserCreateRequest(BaseModel):
     @classmethod
     def validate_email_field(cls, v):
         return validate_email(v)
+    
+    @field_validator('role')
+    @classmethod
+    def validate_role_field(cls, v):
+        if v not in VALID_ROLES:
+            raise ValueError(f'Role không hợp lệ. Phải là một trong: {VALID_ROLES}')
+        return v
 
 class UserUpdateRequest(BaseModel):
     """Update user request"""

@@ -26,7 +26,7 @@ def validate_phone(phone: Optional[str]) -> Optional[str]:
     
     return phone_clean
 
-def validate_password(password: str, min_length: int = 6) -> str:
+def validate_password(password: str, min_length: int = 8) -> str:
     """Validate password strength"""
     if len(password) < min_length:
         raise ValueError(f'Mật khẩu phải có tối thiểu {min_length} ký tự')
@@ -130,6 +130,13 @@ def validate_role_name(role_name: Optional[str]) -> Optional[str]:
     return name_clean
 
 def validate_email(email: str):
-    if not re.match(r'^[^@]+@[^@]+\.[^@.]+(\.[^@.]+)*$', email):
+    # Check for exactly one @ sign
+    if email.count('@') != 1:
+        raise ValueError('Email phải có đúng 1 ký tự @')
+    
+    # Validate email format: alphanumeric, dots, hyphens, underscores only
+    # Format: local@domain.tld
+    if not re.match(r'^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
         raise ValueError('Email không hợp lệ')
+    
     return email

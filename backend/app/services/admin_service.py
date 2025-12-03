@@ -7,14 +7,27 @@ import datetime
 from typing import List, Dict, Any, Optional, Tuple
 from fastapi import HTTPException
 
-from models.admin import (
-    UserCreateRequest, 
-    UserUpdateRequest, 
-    PasswordChangeRequest, 
-    UserActionResponse
-)
-from app.services.activity_logger import ActivityLogger
-from app.services.iam_service import IAMService
+try:
+    from models.admin import (
+        UserCreateRequest, 
+        UserUpdateRequest, 
+        PasswordChangeRequest, 
+        UserActionResponse
+    )
+except ImportError:
+    from app.models.admin import (
+        UserCreateRequest, 
+        UserUpdateRequest, 
+        PasswordChangeRequest, 
+        UserActionResponse
+    )
+
+try:
+    from app.services.activity_logger import ActivityLogger
+    from app.services.iam_service import IAMService
+except ImportError:
+    from services.activity_logger import ActivityLogger
+    from services.iam_service import IAMService
 
 logger = logging.getLogger(__name__)
 
