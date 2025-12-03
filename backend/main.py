@@ -14,9 +14,14 @@ import bcrypt
 import requests
 from datetime import datetime, timedelta
 from typing import Dict, Optional
-from .db_pool import init_pool, close_pool
-from .db_config import DATABASE_URL
 from contextlib import asynccontextmanager
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(__file__))
+
+# Absolute imports
+from app.db_pool import init_pool, close_pool
+from app.db_config import DATABASE_URL
 
 # Setup logging FIRST (before other imports)
 logging.basicConfig(level=logging.INFO)
@@ -38,8 +43,8 @@ if parent_dir not in sys.path:
 # Now import after path setup
 try:
         # Try alternative import path for Render deployment
-        from middleware.activity_middleware import ActivityLoggingMiddleware
-        from services.activity_logger import ActivityLogger
+        from app.middleware.activity_middleware import ActivityLoggingMiddleware
+        from app.services.activity_logger import ActivityLogger
         ACTIVITY_AVAILABLE = True
 except ImportError:
         ACTIVITY_AVAILABLE = False
@@ -84,7 +89,7 @@ except ImportError:
 
 # Import IAM system
 try:
-    from .api.v1.auth import router as auth_router, init_iam_service
+    from .app.api.v1.auth import router as auth_router, init_iam_service
     IAM_AVAILABLE = True
     print("IAM system imported successfully")
 except ImportError:
@@ -102,20 +107,12 @@ except ImportError:
 
 # Import email service
 try:
-    from services.email_service import EmailService, send_otp_email, verify_otp
+    from app.services.email_service import EmailService, send_otp_email, verify_otp
     email_service_module = True
     print("Email service imported successfully")
-except ImportError:
-    try:
-        import sys
-        import os
-        sys.path.append(os.path.dirname(__file__))
-        from services.email_service import EmailService, send_otp_email, verify_otp
-        email_service_module = True
-        print("Email service imported successfully (alternative path)")
-    except ImportError as e2:
-        email_service_module = False
-        print(f"WARNING: Email service not available: {e2}")
+except ImportError as e2:
+    email_service_module = False
+    print(f"WARNING: Email service not available: {e2}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -133,7 +130,7 @@ async def lifespan(app: FastAPI):
         print("✅ Database connection pool initialized successfully")
 
         # Test the connection
-        from .db_pool import get_pool
+        from app.db_pool import get_pool
         pool = await get_pool()
         if pool:
             print("✅ Database connection pool is accessible")
@@ -333,7 +330,7 @@ db_manager = DatabaseManager()
 async def ensure_pool_initialized():
     """Ensure database pool is initialized"""
     try:
-        from .db_pool import get_pool, init_pool
+        from app.db_pool import get_pool, init_pool
         pool = await get_pool()
         if pool is None:
             print("Pool not initialized, initializing now...")
@@ -383,10 +380,7 @@ print(f"App lifespan: {app.router.lifespan_context}")
 
 # Include Admin router
 try:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(__file__))
-    from api.v1.admin import router as admin_router
+    from app.api.v1.admin import router as admin_router
     app.include_router(admin_router, prefix=f"{settings.API_V1_PREFIX}")
     logger.info("Admin routes included")
 except ImportError as e:
@@ -394,10 +388,7 @@ except ImportError as e:
 
 # Include Profile router
 try:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(__file__))
-    from api.v1.profile import router as profile_router
+    from app.api.v1.profile import router as profile_router
     app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
     logger.info("✅ Profile routes included successfully")
 except Exception as e:
@@ -405,7 +396,7 @@ except Exception as e:
 
 # Include Role Management router
 try:
-    from api.v1.roles import router as roles_router
+    from app.api.v1.roles import router as roles_router
     app.include_router(roles_router, prefix=f"{settings.API_V1_PREFIX}")
     logger.info("Role Management routes included")
 except ImportError as e:
@@ -413,28 +404,30 @@ except ImportError as e:
 
 # Include Analytics router
 try:
-    from api.v1.analytics import router as analytics_router
-    app.include_router(analytics_router, prefix=f"{settings.API_V1_PREFIX}")
-    logger.info("Analytics routes included")
+    from app.api.v1.analytics import router as analytics_router
+    app.include_router(
+        analytics_router, 
+        prefix=f"{settings.API_V1_PREFIX}",
+        tags=["Analytics"]
+    )
+    logger.info("✅ Analytics API routes included")
 except ImportError as e:
-    logger.warning(f"Analytics routes not available: {e}")
+    logger.warning(f"⚠️ Analytics routes not available: {e}")
 
 # Include ML API router
 try:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(__file__))
-
-    from api.v1.ml_router import router as ml_router
-    # ml_router nên có prefix = "/ml" bên trong, nên ở đây chỉ thêm API_V1_PREFIX
-    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["Machine Learning"] )
+    from app.api.v1.ml_router import router as ml_router
+    app.include_router(
+        ml_router, 
+        prefix=f"{settings.API_V1_PREFIX}", 
+        tags=["Machine Learning"] )
     logger.info("✅ ML API routes included")
 except ImportError as e:
-    logger.warning(f"ML API routes not available: {e}")
+    logger.warning(f"⚠️ML API routes not available: {e}")
 
 # Include Data Engineer API router
 try:
-    from api.v1.data_engineer import router as data_engineer_router
+    from app.api.v1.data_engineer import router as data_engineer_router
     app.include_router(
         data_engineer_router,
         prefix=f"{settings.API_V1_PREFIX}",
@@ -458,7 +451,7 @@ except ImportError as e:
 
 # Include DSS (Decision Support System) API router
 try:
-    from api.v1.dss import router as dss_router
+    from app.api.v1.dss import router as dss_router
     app.include_router(
         dss_router,
         prefix=f"{settings.API_V1_PREFIX}",
@@ -470,7 +463,7 @@ except ImportError as e:
 
 # Include Reports API (v1)
 try:
-    from api.v1.reports import router as reports_router
+    from app.api.v1.reports import router as reports_router
     app.include_router(
         reports_router,
         prefix=f"{settings.API_V1_PREFIX}/reports",
@@ -868,10 +861,7 @@ def authenticate_user(email: str, password: str):
     return user_data
 
 # Use shared auth helpers
-try:
-    from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
-except ImportError:
-    from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
 
 def create_access_token(user_data: dict, email: str):
     """Create JWT access token using shared helper"""
@@ -1093,10 +1083,7 @@ async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(ge
 
         # Update last login time
         try:
-            try:
-                from app.services.iam_service import IAMService
-            except ImportError:
-                from services.iam_service import IAMService
+            from app.services.iam_service import IAMService
             iam_service = IAMService(db)
             await iam_service.update_last_login(user_data["user_id"])
         except Exception as e:
@@ -1163,7 +1150,7 @@ async def forgot_password_otp(request: ForgotPasswordOTPRequest, db: DatabaseMan
         user = user_result[0]
 
         # Generate and send OTP via email
-        from services.email_service import send_otp_email
+        from app.services.email_service import send_otp_email
         
         result = await send_otp_email(
             email=request.email,
@@ -1230,7 +1217,7 @@ async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, db: 
         user = user_result[0]
 
         # Verify OTP
-        from services.email_service import verify_otp
+        from app.services.email_service import verify_otp
         
         otp_result = await verify_otp(request.email, request.otp)
         

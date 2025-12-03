@@ -7,7 +7,7 @@ import datetime
 from typing import List, Dict, Any, Optional, Tuple
 from fastapi import HTTPException
 
-from models.admin import (
+from app.models.admin import (
     UserCreateRequest, 
     UserUpdateRequest, 
     PasswordChangeRequest, 

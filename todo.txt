@@ -1,453 +1,1524 @@
-# IMPLEMENTATION PLAN: Fix Hardcoded ML Online APIs
-# Target APIs: /ml/price-predictions/online và /ml/sentiment/online
-# Date: 2025-12-01
-
-================================================================================
-1. PROBLEM STATEMENT
-================================================================================
-
-Hiện tại 2 API sau đang trả về kết quả HARDCODED, không sử dụng model thật:
-
-1.1. /ml/price-predictions/online (ml_service.py lines 300-325)
-   - Trả về dummy_price = 1000000.0 cố định
-   - CI bounds = dummy_price * 0.9/1.1
-   - latency_ms = 5 (fake)
-   - Không tải model thật, không predict
-
-1.2. /ml/sentiment/online (ml_service.py lines 522-553)
-   - Logic đơn giản: if "tốt"/"ngon" → positive, "tệ"/"dở" → negative
-   - Score cố định 0.9 hoặc 0.6
-   - Không dùng model ML thật
-
-VẤN ĐỀ: 
-- Không thể demo được khả năng ML của hệ thống
-- Kết quả không realistic, không thể validate
-- Không tận dụng model registry (ml.dim_ml_model)
-
-================================================================================
-2. SOLUTION ARCHITECTURE
-================================================================================
-
-2.1. Nguyên tắc thiết kế
-   - Tận dụng Model Registry (ml.dim_ml_model) để quản lý models
-   - Load models động từ file system hoặc database
-   - Cache models trong memory để tránh reload liên tục
-   - Lấy features từ DWH hoặc từ request payload
-   - Tính toán latency thực tế
-
-2.2. Components cần thêm
-   - Helper method: _resolve_model() để chọn model từ registry
-   - Module mới: app/ml_runtime.py để load & cache models
-   - Update ml_service.py: thay stub logic bằng real prediction
-
-================================================================================
-3. IMPLEMENTATION STEPS
-================================================================================
-
-3.1. STEP 1: Tạo helper _resolve_model() trong MLService
---------------------------------------------------------------------------------
-File: backend/app/services/ml_service.py
-
-Thêm method mới vào class MLService:
-
-    async def _resolve_model(
-        self,
-        model_type: str,
-        model_name: Optional[str],
-        model_version: Optional[str],
-    ) -> MLModelResponse:
-        """
-        Chọn model từ ml.dim_ml_model theo logic:
-        - Nếu truyền model_name/model_version → dùng exact match
-        - Nếu không → lấy model mới nhất có status='active' cho model_type
-        
-        Raises RuntimeError nếu không tìm thấy model phù hợp.
-        """
-        query = """
-            SELECT model_sk, model_name, model_type, model_version,
-                   training_data_until, metrics, status, created_at
-            FROM ml.dim_ml_model
-            WHERE model_type = $1
-              AND status = 'active'
-        """
-        params = [model_type]
-
-        if model_name:
-            query += f" AND model_name = ${len(params)+1}"
-            params.append(model_name)
-        if model_version:
-            query += f" AND model_version = ${len(params)+1}"
-            params.append(model_version)
-
-        query += " ORDER BY created_at DESC LIMIT 1"
-
-        row = await self.db.fetchrow(query, *params)
-        if not row:
-            raise RuntimeError(f"No active model found for type={model_type}")
-
-        metrics = row["metrics"]
-        if isinstance(metrics, str):
-            metrics = json.loads(metrics)
-
-        return MLModelResponse(
-            model_sk=row["model_sk"],
-            model_name=row["model_name"],
-            model_type=row["model_type"],
-            model_version=row["model_version"],
-            training_data_until=row["training_data_until"],
-            metrics=metrics,
-            status=row["status"],
-            created_at=row["created_at"],
-        )
-
-BENEFIT: 
-- Tự động chọn model mới nhất nếu FE không chỉ định
-- Support A/B testing: FE có thể chọn specific version
-- Centralized error handling khi không có model
-
-
-3.2. STEP 2: Tạo module ml_runtime.py để load & cache models
---------------------------------------------------------------------------------
-File: backend/app/ml_runtime.py (NEW FILE)
+#!/usr/bin/env python3
+"""
+Simplified Vietnam E-commerce DSS Backend
+Only essential APIs for dashboard and authentication
+"""
 
 import os
-import pickle
-from functools import lru_cache
-from pathlib import Path
-from typing import Tuple, Any
+import sys
+import time
+import logging
+import secrets
+import hashlib
+import bcrypt
+import requests
+from datetime import datetime, timedelta
+from typing import Dict, Optional
+from .db_pool import init_pool, close_pool
+from .db_config import DATABASE_URL
+from contextlib import asynccontextmanager
 
-# Đọc từ env variable, mặc định là thư mục "models" trong root
-MODEL_DIR = Path(os.getenv("ML_MODEL_DIR", "models"))
+# Setup logging FIRST (before other imports)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-@lru_cache(maxsize=10)
-def load_price_model(model_name: str, model_version: str) -> Any:
-    """
-    Load price prediction model từ file .pkl
-    Quy ước tên file: {model_name}_{model_version}.pkl
-    VD: price_forecast_rf_v1.0.pkl
-    
-    Cache 10 models gần nhất để tránh reload
-    """
-    path = MODEL_DIR / f"{model_name}_{model_version}.pkl"
-    if not path.exists():
-        raise FileNotFoundError(f"Model file not found: {path}")
-    
-    with open(path, "rb") as f:
-        model = pickle.load(f)
-    return model
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger.info("✅ Loaded .env file")
+except ImportError:
+    logger.warning("python-dotenv not installed, using system environment variables")
 
-@lru_cache(maxsize=10)
-def load_sentiment_pipeline(model_name: str, model_version: str) -> Tuple[Any, Any]:
-    """
-    Load sentiment model bundle từ file .pkl
-    Bundle format: {"vectorizer": TfidfVectorizer, "model": LogisticRegression}
-    
-    Returns: (vectorizer, classifier)
-    """
-    path = MODEL_DIR / f"{model_name}_{model_version}.pkl"
-    if not path.exists():
-        raise FileNotFoundError(f"Model file not found: {path}")
-    
-    with open(path, "rb") as f:
-        bundle = pickle.load(f)
-    
-    # Validate bundle structure
-    if not isinstance(bundle, dict) or "vectorizer" not in bundle or "model" not in bundle:
-        raise ValueError(f"Invalid model bundle format in {path}")
-    
-    return bundle["vectorizer"], bundle["model"]
+# Ensure parent directory of `app` is on sys.path
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
-NOTES:
-- @lru_cache giúp model được load một lần, reuse cho các requests sau
-- maxsize=10: cache tối đa 10 models (đủ cho dev/staging)
-- Production: có thể tăng maxsize hoặc dùng Redis cache
-- Error handling: raise FileNotFoundError rõ ràng nếu file không tồn tại
-
-
-3.3. STEP 3: Sửa online_price_prediction() để dùng model thật
---------------------------------------------------------------------------------
-File: backend/app/services/ml_service.py
-
-REPLACE lines 300-325 với:
-
-    async def online_price_prediction(
-        self, payload: OnlinePricePredictionRequest
-    ) -> OnlinePricePredictionResponse:
-        """
-        Online price prediction sử dụng model thật từ registry + file.
+# Now import after path setup
+try:
+        # Try alternative import path for Render deployment
+        from middleware.activity_middleware import ActivityLoggingMiddleware
+        from services.activity_logger import ActivityLogger
+        ACTIVITY_AVAILABLE = True
+except ImportError:
+        ACTIVITY_AVAILABLE = False
+        ActivityLoggingMiddleware = None
+        ActivityLogger = None
+        logger.warning("Activity logging not available")
         
-        Flow:
-        1. Resolve model từ registry
-        2. Lấy features (từ payload hoặc query DWH)
-        3. Load model & predict
-        4. Return kết quả + latency
-        """
-        import time
-        import numpy as np
-        from app.ml_runtime import load_price_model
-        
-        t0 = time.perf_counter()
+try:
+    from pydantic import field_validator
+    from app.utils.validators import validate_phone, validate_password, validate_email
+    from app.constants.roles import ROLE_MENUS, get_role_menu
+    VALIDATORS_AVAILABLE = True
+except ImportError:
+    VALIDATORS_AVAILABLE = False
+    field_validator = lambda x: lambda f: f
+    validate_phone = lambda x: x
+    def validate_password(x, **kwargs):
+        return x
+    def validate_email(email: str):
+        return email
+    ROLE_MENUS = {}
+    get_role_menu = lambda x: {}
 
-        # 1) Resolve model từ registry
-        model_info = await self._resolve_model(
-            model_type="price",
-            model_name=payload.model_name,
-            model_version=payload.model_version,
+# FastAPI and async
+from fastapi import FastAPI, HTTPException, Depends, Request
+from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+
+from pydantic import BaseModel, Field, EmailStr
+import uvicorn
+
+# Database connections
+try:
+    from databases import Database
+    import asyncpg
+    DATABASE_AVAILABLE = True
+    print("Database modules imported successfully")
+except ImportError:
+    DATABASE_AVAILABLE = False
+    print("WARNING: Database modules not available")
+
+# Import IAM system
+try:
+    from .api.v1.auth import router as auth_router, init_iam_service
+    IAM_AVAILABLE = True
+    print("IAM system imported successfully")
+except ImportError:
+    try:
+        # Try alternative import path
+        import sys
+        import os
+        sys.path.append(os.path.dirname(__file__))
+        from api.v1.auth import router as auth_router, init_iam_service
+        IAM_AVAILABLE = True
+        print("IAM system imported successfully (alternative path)")
+    except ImportError as e2:
+        IAM_AVAILABLE = False
+        print(f"WARNING: IAM system not available: {e2}")
+
+# Import email service
+try:
+    from services.email_service import EmailService, send_otp_email, verify_otp
+    email_service_module = True
+    print("Email service imported successfully")
+except ImportError:
+    try:
+        import sys
+        import os
+        sys.path.append(os.path.dirname(__file__))
+        from services.email_service import EmailService, send_otp_email, verify_otp
+        email_service_module = True
+        print("Email service imported successfully (alternative path)")
+    except ImportError as e2:
+        email_service_module = False
+        print(f"WARNING: Email service not available: {e2}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # STARTUP
+    print("=== LIFESPAN STARTUP BEGIN ===")
+    print(f"DATABASE_URL: {DATABASE_URL[:50]}...")
+
+    try:
+        print("Initializing database connection pool...")
+        await init_pool(
+            database_url=DATABASE_URL,
+            min_size=5,
+            max_size=20,
         )
+        print("✅ Database connection pool initialized successfully")
 
-        # 2) Chuẩn hoá features
-        # Ưu tiên lấy từ payload, nếu thiếu thì query DWH
-        current_price = payload.current_price
-        avg_rating = payload.avg_rating
-        review_count = payload.review_count
-
-        if current_price is None or avg_rating is None or review_count is None:
-            # Query snapshot mới nhất từ fact_product_daily
-            snap_sql = """
-                SELECT fpd.min_price, fpd.max_price,
-                       fpd.total_review_count, fpd.avg_rating
-                FROM dwh.fact_product_daily fpd
-                JOIN dwh.dim_product dp ON dp.product_sk = fpd.product_sk
-                JOIN dwh.dim_platform pl ON pl.platform_sk = fpd.platform_sk
-                JOIN dwh.dim_date d ON d.date_sk = fpd.date_sk
-                WHERE dp.product_key = $1
-                  AND pl.platform_code = $2
-                ORDER BY d.date_value DESC
-                LIMIT 1
-            """
-            snap = await self.db.fetchrow(
-                snap_sql,
-                payload.product_key,
-                payload.platform_code,
-            )
-            if not snap:
-                raise ValueError(f"No snapshot found for product {payload.product_key}")
-
-            min_price = float(snap["min_price"])
-            max_price = float(snap["max_price"])
-            total_review_count = int(snap["total_review_count"] or 0)
-            avg_rating = float(snap["avg_rating"] or 0.0)
+        # Test the connection
+        from .db_pool import get_pool
+        pool = await get_pool()
+        if pool:
+            print("✅ Database connection pool is accessible")
         else:
-            # Dùng current_price cho cả min/max (simplified)
-            min_price = max_price = float(current_price)
-            total_review_count = int(review_count or 0)
-            avg_rating = float(avg_rating or 0.0)
+            print("❌ Database connection pool is None after initialization")
+            raise RuntimeError("Pool initialization failed")
 
-        # Tạo feature vector (tuỳ model, có thể cần thêm features)
-        X = np.array([[min_price, max_price, total_review_count, avg_rating]])
+        print("=== LIFESPAN STARTUP COMPLETE ===")
 
-        # 3) Load model & predict
-        model = load_price_model(model_info.model_name, model_info.model_version)
-        pred = float(model.predict(X)[0])
+    except Exception as e:
+        print(f"❌ Failed to initialize connection pool: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
 
-        # Optional: tính CI nếu model support (quantile regression, etc)
-        ci_lower = None
-        ci_upper = None
-        # TODO: implement CI calculation if needed
+    yield
 
-        latency_ms = int((time.perf_counter() - t0) * 1000)
+    # SHUTDOWN
+    print("=== LIFESPAN SHUTDOWN BEGIN ===")
+    try:
+        await close_pool()
+        print("✅ Database connection pool closed")
+    except Exception as e:
+        print(f"Error closing connection pool: {e}")
 
-        return OnlinePricePredictionResponse(
-            predicted_price=pred,
-            ci_lower=ci_lower,
-            ci_upper=ci_upper,
-            model_name=model_info.model_name,
-            model_version=model_info.model_version,
-            latency_ms=latency_ms,
-        )
+    print("=== LIFESPAN SHUTDOWN COMPLETE ===")
 
-CHANGES:
-✓ Không còn dummy_price = 1000000.0
-✓ Dùng _resolve_model() để lấy model từ registry
-✓ Query DWH để lấy features thực tế
-✓ Load model thật từ file .pkl
-✓ Predict bằng model.predict()
-✓ Tính latency thực tế
+# ====================================
+# CONFIGURATION
+# ====================================
+class Settings:
+    # Environment
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")  # Use production to connect to Render
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-
-3.4. STEP 4: Sửa online_sentiment() để dùng model thật
---------------------------------------------------------------------------------
-File: backend/app/services/ml_service.py
-
-REPLACE lines 522-553 với:
-
-    async def online_sentiment(
-        self,
-        payload: OnlineSentimentRequest,
-    ) -> OnlineSentimentResponse:
-        """
-        Online sentiment analysis sử dụng model thật.
-        
-        Flow:
-        1. Resolve model từ registry
-        2. Load vectorizer + classifier
-        3. Transform text → predict_proba
-        4. Return label, score, latency
-        """
-        import time
-        import numpy as np
-        from app.ml_runtime import load_sentiment_pipeline
-        
-        t0 = time.perf_counter()
-
-        # 1) Resolve model từ registry
-        model_info = await self._resolve_model(
-            model_type="sentiment",
-            model_name=payload.model_name,
-            model_version=payload.model_version,
-        )
-
-        # 2) Load pipeline (vectorizer + classifier)
-        vectorizer, clf = load_sentiment_pipeline(
-            model_info.model_name,
-            model_info.model_version,
-        )
-
-        # 3) Transform & predict
-        X = vectorizer.transform([payload.review_text])
-        proba = clf.predict_proba(X)[0]
-        
-        # Lấy label có xác suất cao nhất
-        idx = int(np.argmax(proba))
-        label = str(clf.classes_[idx])
-        score = float(proba[idx])
-
-        latency_ms = int((time.perf_counter() - t0) * 1000)
-
-        return OnlineSentimentResponse(
-            label=label,
-            score=score,
-            model_name=model_info.model_name,
-            model_version=model_info.model_version,
-            latency_ms=latency_ms,
-        )
-
-CHANGES:
-✓ Không còn rule "tốt"/"tệ" hardcoded
-✓ Dùng _resolve_model() để lấy model từ registry
-✓ Load TfidfVectorizer + LogisticRegression từ file
-✓ Dùng predict_proba() để lấy confidence score thực tế
-✓ Tính latency thực tế
-
-
-3.5. STEP 5: Update schema default values (Optional)
---------------------------------------------------------------------------------
-File: backend/app/schemas/ml.py
-
-CHANGE line 69-72:
-    model_name: Optional[str] = Field(
-        "price_forecast_rf",  # ← Kiểm tra xem tên này có match với ml.dim_ml_model không
-        description="Tên model, mặc định 'price_forecast_rf'"
+    # Database URLs - Always use Render database (has data)
+    POSTGRES_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
     )
 
-CHANGE line 131-134:
-    model_name: Optional[str] = Field(
-        "sentiment_logreg",  # ← Đổi từ "sentiment_bert" sang tên thực tế
-        description="Tên model, mặc định 'sentiment_logreg'"
+    # API Configuration
+    API_V1_PREFIX: str = "/api/v1"
+    PROJECT_NAME: str = "Vietnam E-commerce DSS API"
+    VERSION: str = "2.0.0"
+    HOST: str = os.getenv("API_HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", 8000))
+
+    # Security
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "sY-A335Mj9qloyUE94maevhmrg25MZ3RxbVhBYAhmu5QnIS1qsCKIiiGjRshkZA4OSwZN2k2O5VSzDn3XdZo5A")
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "KvyFNJHBkDzgAwCsx659EvNCa9tWUsOlIKpoQZztIyg")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_EXPIRATION_HOURS: int = int(os.getenv("JWT_EXPIRATION_HOURS", 24))
+
+    # CORS
+    CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "*").split(",")
+
+settings = Settings()
+
+# ====================================
+# PYDANTIC MODELS
+# ====================================
+class HealthCheck(BaseModel):
+    status: str
+    timestamp: str
+    services: Dict[str, str]
+
+# Signup models
+class SignupRequest(BaseModel):
+    name: str = Field(..., description="Full name")
+    email: str = Field(..., description="Email address")
+    password: str = Field(..., min_length=8, description="Password (min 8 chars)")
+    confirm_password: str = Field(..., description="Confirm password")
+    phone: Optional[str] = Field(None, description="Phone number")
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_field(cls, v):
+        return validate_password(v, min_length=8)
+    
+    @field_validator('phone')
+    @classmethod
+    def validate_phone_field(cls, v):
+        return validate_phone(v)
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email_field(cls, v):
+        return validate_email(v)
+
+class SignupResponse(BaseModel):
+    success: bool
+    message: str
+    verification_sent: bool
+    email: str
+
+class VerifyEmailRequest(BaseModel):
+    email: str = Field(..., description="Email address")
+    verification_code: str = Field(..., description="6-digit verification code")
+
+class VerifyEmailResponse(BaseModel):
+    success: bool
+    message: str
+    user_created: bool
+    user_id: Optional[int]
+
+# ====================================
+# DATABASE CONNECTION
+# ====================================
+class DatabaseManager:
+    def __init__(self):
+        self.database = None
+        self.is_connected = False
+
+    async def connect(self):
+        """Connect to PostgreSQL database"""
+        if not DATABASE_AVAILABLE:
+            logger.warning("Database modules not available, running in mock mode")
+            return
+
+        try:
+            self.database = Database(settings.POSTGRES_URL)
+            await self.database.connect()
+            self.is_connected = True
+            logger.info("Connected to PostgreSQL database")
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            self.is_connected = False
+
+    async def disconnect(self):
+        """Disconnect from database"""
+        if self.database and self.is_connected:
+            await self.database.disconnect()
+            self.is_connected = False
+            logger.info("Disconnected from database")
+
+    async def execute_query(self, query: str, values = None):
+        """Execute a query safely - supports both dict and tuple parameters"""
+        if not self.is_connected:
+            return []
+
+        try:
+            if values:
+                if isinstance(values, (tuple, list)):
+                    # Convert positional parameters to named parameters for databases library
+                    # Find $1, $2, etc. and replace with :param1, :param2, etc.
+                    import re
+                    converted_query = query
+                    converted_values = {}
+
+                    # Find all $n parameters
+                    param_matches = re.findall(r'\$(\d+)', query)
+                    if param_matches:
+                        for param_num in param_matches:
+                            param_name = f"param{param_num}"
+                            converted_query = converted_query.replace(f"${param_num}", f":{param_name}")
+                            param_index = int(param_num) - 1  # Convert to 0-based index
+                            if param_index < len(values):
+                                converted_values[param_name] = values[param_index]
+
+                        result = await self.database.fetch_all(converted_query, converted_values)
+                    else:
+                        # No positional parameters, use as-is
+                        result = await self.database.fetch_all(query, dict(zip(range(len(values)), values)))
+                else:
+                    # Dict parameters (original behavior)
+                    result = await self.database.fetch_all(query, values)
+            else:
+                result = await self.database.fetch_all(query)
+            return [dict(row) for row in result]
+        except Exception as e:
+            logger.error(f"Query execution error: {e}")
+            logger.error(f"Query: {query}")
+            logger.error(f"Values: {values}")
+            return []
+
+    def transaction(self):
+        """Return transaction context manager for atomic operations"""
+        @asynccontextmanager
+        async def _transaction():
+            # Access raw asyncpg pool from databases library
+            pool = self.database._backend._pool
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    yield conn
+        return _transaction()
+
+# ====================================
+# INITIALIZE COMPONENTS
+# ====================================
+db_manager = DatabaseManager()
+
+# ====================================
+# FORCE POOL INITIALIZATION (WORKAROUND)
+# ====================================
+async def ensure_pool_initialized():
+    """Ensure database pool is initialized"""
+    try:
+        from .db_pool import get_pool, init_pool
+        pool = await get_pool()
+        if pool is None:
+            print("Pool not initialized, initializing now...")
+            await init_pool(DATABASE_URL, min_size=5, max_size=20)
+            print("Pool initialized successfully")
+        else:
+            print("Pool already initialized")
+    except Exception as e:
+        print(f"Failed to initialize pool: {e}")
+        import traceback
+        traceback.print_exc()
+
+# Pool initialization will happen in lifespan function
+
+# ====================================
+# LIFESPAN EVENT HANDLER (REMOVED - using the first one above)
+# ====================================
+
+# ====================================
+# FASTAPI APPLICATION
+# ====================================
+from fastapi.openapi.utils import get_openapi
+
+app = FastAPI(
+    title="Vietnam E-commerce DSS API",
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan
+)
+
+print("FastAPI app created successfully")
+print(f"App lifespan: {app.router.lifespan_context}")
+
+# Remove custom OpenAPI to avoid duplicate security schemes
+# FastAPI will auto-generate based on dependencies
+
+# Include IAM Auth router (disabled - using inline endpoints instead)
+# try:
+#     from api.v1.auth import router as auth_router, init_iam_service
+#     # Initialize IAM service with database manager
+#     init_iam_service(db_manager, settings.JWT_SECRET_KEY)
+#     app.include_router(auth_router, prefix=f"{settings.API_V1_PREFIX}")
+#     logger.info("✅ IAM Auth routes included successfully")
+# except Exception as e:
+#     logger.warning(f"⚠️ IAM Auth routes not available: {e}")
+
+# Include Admin router
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from api.v1.admin import router as admin_router
+    app.include_router(admin_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Admin routes included")
+except ImportError as e:
+    logger.warning(f"Admin routes not available: {e}")
+
+# Include Profile router
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from api.v1.profile import router as profile_router
+    app.include_router(profile_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("✅ Profile routes included successfully")
+except Exception as e:
+    logger.error(f"❌ Profile routes failed: {e}")
+
+# Include Role Management router
+try:
+    from api.v1.roles import router as roles_router
+    app.include_router(roles_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Role Management routes included")
+except ImportError as e:
+    logger.warning(f"Role Management routes not available: {e}")
+
+# Include Analytics router
+try:
+    from api.v1.analytics import router as analytics_router
+    app.include_router(analytics_router, prefix=f"{settings.API_V1_PREFIX}")
+    logger.info("Analytics routes included")
+except ImportError as e:
+    logger.warning(f"Analytics routes not available: {e}")
+
+# Include ML API router
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+
+    from api.v1.ml_router import router as ml_router
+    # ml_router nên có prefix = "/ml" bên trong, nên ở đây chỉ thêm API_V1_PREFIX
+    app.include_router(ml_router, prefix=f"{settings.API_V1_PREFIX}", tags=["Machine Learning"] )
+    logger.info("✅ ML API routes included")
+except ImportError as e:
+    logger.warning(f"ML API routes not available: {e}")
+
+# Include Data Engineer API router
+try:
+    from api.v1.data_engineer import router as data_engineer_router
+    app.include_router(
+        data_engineer_router,
+        prefix=f"{settings.API_V1_PREFIX}",
+        tags=["Data Engineer"]
+    )
+    logger.info("✅ Data Engineer API routes included")
+except ImportError as e:
+    logger.warning(f"⚠️  Data Engineer API routes not available: {e}")
+
+try:
+    from app.api.v1.business_metadata import router as business_metadata_router
+    app.include_router(
+        business_metadata_router, 
+        prefix=f"{settings.API_V1_PREFIX}", 
+        tags=["Business Metadata"]
+    )
+    logger.info("✅ Business Metadata API routes included")
+except ImportError as e:
+    logger.warning(f"⚠️  Business Metadata API routes not available: {e}")
+
+
+# Include DSS (Decision Support System) API router
+try:
+    from api.v1.dss import router as dss_router
+    app.include_router(
+        dss_router,
+        prefix=f"{settings.API_V1_PREFIX}",
+        tags=["DSS - Decision Support System"]
+    )
+    logger.info("✅ DSS API routes included")
+except ImportError as e:
+    logger.warning(f"⚠️  DSS API routes not available: {e}")
+
+# Include Reports API (v1)
+try:
+    from api.v1.reports import router as reports_router
+    app.include_router(
+        reports_router,
+        prefix=f"{settings.API_V1_PREFIX}/reports",
+        tags=["Reports"],
+    )
+    logger.info("Reports API routes included")
+except ImportError as e:
+    logger.warning(f"Reports API routes not available: {e}")
+    
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS if not settings.DEBUG else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Add activity logging middleware (only if available and table exists)
+# Disabled for now - user_activity_logs table doesn't exist yet
+if ACTIVITY_AVAILABLE:
+    app.add_middleware(ActivityLoggingMiddleware, db_manager=db_manager)
+    logger.info("Activity logging middleware enabled")
+else:
+    logger.warning("Activity logging middleware disabled - module not available")
+
+# Update security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.update({
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; font-src 'self' data: https:;",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-XSS-Protection": "1; mode=block"
+    })
+    return response
+
+# Startup/shutdown events now handled by lifespan context manager above
+
+# ====================================
+# DEPENDENCY INJECTION
+# ====================================
+async def get_database():
+    """Get database connection"""
+    return db_manager
+
+# ====================================
+# ESSENTIAL ENDPOINTS
+# ====================================
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "Vietnam E-commerce DSS API",
+        "version": settings.VERSION,
+        "timestamp": datetime.now().isoformat(),
+        "status": "running"
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "services": {},
+        "uptime_seconds": time.time() - getattr(app.state, 'start_time', 0)
+    }
+
+    # Check database
+    if db_manager.is_connected:
+        try:
+            result = await db_manager.execute_query("SELECT 1 as test")
+            health_status["services"]["postgresql"] = "healthy"
+        except Exception as e:
+            health_status["services"]["postgresql"] = f"unhealthy: {str(e)}"
+            health_status["status"] = "degraded"
+    else:
+        health_status["services"]["postgresql"] = "not connected"
+        health_status["status"] = "degraded"
+
+    return health_status
+
+@app.get(f"{settings.API_V1_PREFIX}/status")
+async def api_status():
+    """API status endpoint"""
+    return {
+        "api": "Vietnam E-commerce DSS - Simplified",
+        "version": settings.VERSION,
+        "status": "operational",
+        "database_connected": db_manager.is_connected,
+        "features": {
+            "database": DATABASE_AVAILABLE,
+            "authentication": IAM_AVAILABLE
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get(f"{settings.API_V1_PREFIX}/check-roles")
+async def check_database_roles():
+    """Check roles in database"""
+    try:
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get all roles from database
+        query = "SELECT role_id, role_code, role_name, description FROM iam.iam_role ORDER BY role_code"
+        roles = await db_manager.execute_query(query)
+        
+        return {
+            "success": True,
+            "total_roles": len(roles),
+            "roles": roles,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+
+@app.get(f"{settings.API_V1_PREFIX}/test-roles")
+async def test_roles():
+    """Test endpoint to check if roles router is working"""
+    return {
+        "message": "Roles router is working!",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.get(f"{settings.API_V1_PREFIX}/dss/dashboard")
+async def get_dss_dashboard(request: Request, db: DatabaseManager = Depends(get_database)):
+    """Get DSS dashboard data. If Authorization header with valid JWT is provided,
+    return a role-specific dashboard and allowed actions/menus for that role.
+    """
+    try:
+        # Use shared role definitions
+        ROLE_DASHBOARDS = ROLE_MENUS
+
+        # Default (unauthenticated) dashboard
+        default_dashboard = {
+            "status": "success",
+            "dashboard": {
+                "summary_metrics": {
+                    "total_users": 1247,
+                    "total_orders": 15420,
+                    "total_revenue": 45670000,
+                    "conversion_rate": 3.2,
+                    "system_health": "Excellent"
+                },
+                "recommendations": [],
+                "action_plans": []
+            },
+            "timestamp": datetime.now().isoformat(),
+            "menu": {
+                "modules": ["Dashboard"],
+                "actions": ["view"],
+                "admin_features": {
+                    "user_management": False,
+                    "activity_logs": False,
+                    "system_settings": False,
+                    "user_creation": False,
+                    "user_deletion": False
+                }
+            }
+        }
+
+        # Check Authorization header
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            return default_dashboard
+
+        # Expect "Bearer <token>"
+        try:
+            token = auth_header.split()[1]
+        except Exception:
+            return default_dashboard
+
+        payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+        if not payload or "role" not in payload:
+            return default_dashboard
+
+        role = payload.get("role")
+        role_cfg = get_role_menu(role)
+
+        # Role-specific dashboard data
+        role_dashboard = {
+            "status": "success",
+            "dashboard": {
+                "summary_metrics": {
+                    "role": role,
+                    "total_users": 1247 if role != "CUSTOMER" else 1,
+                    "total_orders": 15420 if role in ("ADMIN","ANALYST") else 12,
+                    "total_revenue": 45670000 if role != "CUSTOMER" else 120000,
+                    "conversion_rate": 3.2
+                },
+                "recommendations": [],
+                "action_plans": []
+            },
+            "timestamp": datetime.now().isoformat(),
+            "menu": role_cfg
+        }
+
+        return role_dashboard
+
+    except Exception as e:
+        logger.error(f"DSS dashboard error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Removed duplicate setup endpoint - use /setup-activity-logs instead
+
+@app.post("/setup-activity-logs")
+async def setup_activity_logs_direct(db: DatabaseManager = Depends(get_database)):
+    """Create activity logs table and insert test data - Direct endpoint"""
+    try:
+        # Create table
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS user_activity_logs (
+            log_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            email VARCHAR(255),
+            action VARCHAR(100) NOT NULL,
+            resource VARCHAR(100),
+            details JSONB,
+            ip_address INET,
+            user_agent TEXT,
+            status VARCHAR(20) DEFAULT 'success',
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+        """
+        await db.execute_query(create_table_query)
+        
+        # Create indexes
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON user_activity_logs(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON user_activity_logs(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON user_activity_logs(action)"
+        ]
+        
+        for index_query in indexes:
+            await db.execute_query(index_query)
+        
+        # Insert test data
+        test_data_query = """
+        INSERT INTO user_activity_logs (user_id, email, action, resource, details, ip_address, status)
+        VALUES 
+            (1, 'admin@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ADMIN"}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNIN', '/api/v1/auth/signin', '{"role": "ANALYST"}', '127.0.0.1', 'success'),
+            (3, 'customer@dss.com', 'GET /api/v1/dss/dashboard', '/api/v1/dss/dashboard', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (1, 'admin@dss.com', 'GET /api/v1/admin/users', '/api/v1/admin/users', '{"status_code": 200}', '127.0.0.1', 'success'),
+            (2, 'analyst@dss.com', 'USER_SIGNOUT', '/api/v1/auth/signout', '{"method": "manual"}', '127.0.0.1', 'success')
+        """
+        await db.execute_query(test_data_query)
+        
+        return {
+            "success": True,
+            "message": "Activity logs table created and test data inserted successfully!",
+            "table_created": True,
+            "test_data_inserted": 5
+        }
+        
+    except Exception as e:
+        logger.error(f"Setup activity logs error: {e}")
+        return {
+            "success": False,
+            "message": f"Setup failed: {str(e)}",
+            "error": str(e)
+        }
+
+# ====================================
+# SIMPLE AUTHENTICATION (Temporary Fix)
+# ====================================
+import bcrypt
+import jwt
+
+class SignInRequest(BaseModel):
+    email: str = Field(..., description="User email")
+    password: str = Field(..., description="User password")
+
+class SignInResponse(BaseModel):
+    success: bool
+    message: str
+    access_token: str
+    user: dict
+
+# Forgot password models
+class ForgotPasswordOTPRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+
+class ForgotPasswordOTPResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[dict] = None
+
+class VerifyOTPResetPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
+    confirm_password: str = Field(..., min_length=8, description="Confirm new password")
+
+class VerifyOTPResetPasswordResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[dict] = None
+
+class SignOutResponse(BaseModel):
+    success: bool
+    message: str
+
+# Define valid users for authentication - 3 main roles
+# Note: user_ids must match database values
+VALID_USERS = {
+    "admin@dss.com": {
+        "user_id": 1,
+        "password": "admin123",
+        "full_name": "System Administrator",
+        "role": "ADMIN"
+    },
+    "analyst@dss.com": {
+        "user_id": 3,
+        "password": "analyst123",
+        "full_name": "Data Analyst",
+        "role": "ANALYST"
+    },
+    "ml@dss.com": {
+        "user_id": 4,
+        "password": "mleng123",
+        "full_name": "ML Engineer",
+        "role": "ML"
+    },
+    "dataeng@dss.com": {
+        "user_id": 2,
+        "password": "dataeng123",
+        "full_name": "Data Engineer",
+        "role": "DATA_ENGINEER"
+    }
+}
+
+async def authenticate_user_db(email: str, password: str, db: DatabaseManager):
+    """Authenticate user from database"""
+    try:
+        query = """
+        SELECT user_id, email, password_hash, full_name, status
+        FROM iam.iam_user
+        WHERE email = $1 AND status = 'active'
+        """
+        result = await db.execute_query(query, (email.lower(),))
+        
+        if not result or len(result) == 0:
+            return None
+        
+        user = result[0]
+        password_hash = user['password_hash']
+        
+        # Verify password using bcrypt
+        if not bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
+            return None
+        
+        # Get user roles
+        role_query = """
+        SELECT r.role_code, r.role_name
+        FROM iam.iam_user_role ur
+        JOIN iam.iam_role r ON ur.role_id = r.role_id
+        WHERE ur.user_id = $1
+        """
+        roles_result = await db.execute_query(role_query, (user['user_id'],))
+        role_codes = [r['role_code'] for r in roles_result] if roles_result else []
+        
+        # Determine main role (first role or CUSTOMER by default)
+        main_role = role_codes[0] if role_codes else 'CUSTOMER'
+        
+        return {
+            'user_id': user['user_id'],
+            'email': user['email'],
+            'full_name': user['full_name'],
+            'role': main_role,
+            'roles': role_codes
+        }
+    except Exception as e:
+        logger.error(f"Database authentication error: {e}")
+        return None
+
+def authenticate_user(email: str, password: str):
+    """Fallback: authenticate user with hardcoded users"""
+    user_data = VALID_USERS.get(email.lower())
+    if not user_data or user_data["password"] != password:
+        return None
+    return user_data
+
+# Use shared auth helpers
+try:
+    from app.utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+except ImportError:
+    from utils.auth_helpers import create_access_token as create_jwt_token, decode_access_token
+
+def create_access_token(user_data: dict, email: str):
+    """Create JWT access token using shared helper"""
+    jwt_exp_hours = getattr(settings, 'JWT_EXPIRATION_HOURS', 24)
+    jwt_exp_minutes_env = os.getenv("JWT_EXPIRE_MINUTES")
+    
+    if jwt_exp_minutes_env:
+        try:
+            expire_hours = int(jwt_exp_minutes_env) / 60
+        except Exception:
+            expire_hours = jwt_exp_hours
+    else:
+        expire_hours = jwt_exp_hours
+    
+    return create_jwt_token(user_data, email, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM, expire_hours)
+
+# ====================================
+# EMAIL SERVICE (Mailjet)
+# ====================================
+try:
+    import requests
+    EMAIL_AVAILABLE = True
+    logger.info("Email service available (Mailjet)")
+except ImportError:
+    EMAIL_AVAILABLE = False
+    logger.warning("Email service not available: No module named 'requests'")
+
+class EmailService:
+    """Email service using Mailjet HTTP API"""
+
+    def __init__(self):
+        self.api_key = os.getenv("MAILJET_API_KEY")
+        self.api_secret = os.getenv("MAILJET_API_SECRET")
+        self.from_email = os.getenv("EMAIL_FROM")
+        self.from_name = os.getenv("EMAIL_FROM_NAME", "E-commerce DSS")
+        self.mailjet_url = "https://api.mailjet.com/v3.1/send"
+
+    def send_verification_email(self, to_email: str, verification_code: str, user_name: str) -> bool:
+        """Send email verification code using Mailjet API"""
+        try:
+            # Nếu thiếu config thì bật dev mode, không gửi thật
+            if not self.api_key or not self.api_secret or not self.from_email:
+                logger.warning(
+                    f"DEV MODE (Mailjet): Missing MAILJET_API_KEY / MAILJET_API_SECRET / EMAIL_FROM. "
+                    f"Verification code for {to_email}: {verification_code}"
+                )
+                return True
+
+            html_content = f"""
+            <html>
+            <body>
+                <h2>Welcome to E-commerce DSS, {user_name}!</h2>
+                <p>Please verify your email address by entering the following code:</p>
+                <h1 style="color: #4CAF50; font-size: 32px; letter-spacing: 5px;">{verification_code}</h1>
+                <p>This code will expire in 10 minutes.</p>
+                <p>If you didn't request this verification, please ignore this email.</p>
+                <br>
+                <p>Best regards,<br>E-commerce DSS Team</p>
+            </body>
+            </html>
+            """
+
+            payload = {
+                "Messages": [
+                    {
+                        "From": {
+                            "Email": self.from_email,
+                            "Name": self.from_name
+                        },
+                        "To": [
+                            {
+                                "Email": to_email,
+                                "Name": user_name or to_email
+                            }
+                        ],
+                        "Subject": "Verify Your Email - E-commerce DSS",
+                        "HTMLPart": html_content
+                    }
+                ]
+            }
+
+            # Mailjet dùng Basic Auth
+            auth = (self.api_key, self.api_secret)
+
+            response = requests.post(
+                self.mailjet_url,
+                json=payload,
+                auth=auth,
+                timeout=10
+            )
+
+            if 200 <= response.status_code < 300:
+                logger.info(f"[Mailjet] Verification email sent to {to_email}")
+                return True
+            else:
+                logger.error(
+                    f"[Mailjet] Failed to send email to {to_email}. "
+                    f"Status: {response.status_code}, Body: {response.text}"
+                )
+                return False
+
+        except Exception as e:
+            logger.error(f"[Mailjet] Exception while sending verification email: {e}")
+            return False
+
+# Initialize email service
+email_service = EmailService()
+
+
+# ====================================
+# DATABASE HELPERS
+# ====================================
+async def create_user_in_db(db: DatabaseManager, name: str, email: str, password_hash: str) -> int:
+    """Create new user in database"""
+    if not db.is_connected:
+        raise HTTPException(status_code=500, detail="Database not connected")
+
+    # Insert user
+    query = """
+    INSERT INTO iam.iam_user (email, password_hash, full_name, status, created_at, updated_at)
+    VALUES ($1, $2, $3, 'active', NOW(), NOW())
+    RETURNING user_id
+    """
+    result = await db.execute_query(query, (email, password_hash, name))
+
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to create user")
+
+    user_id = result[0]['user_id']
+
+    # Assign default CUSTOMER role
+    role_query = """
+    INSERT INTO iam.iam_user_role (user_id, role_id, assigned_at)
+    SELECT $1, role_id, NOW() FROM iam.iam_role WHERE role_code = 'CUSTOMER'
+    """
+    await db.execute_query(role_query, (user_id,))
+
+    return user_id
+
+async def store_verification_token(db: DatabaseManager, email: str, token_hash: str) -> None:
+    # Nếu đã có token trước đó, upsert hoặc ghi đè
+    await db.execute_query(
+        """
+        INSERT INTO iam.iam_email_verification (email, token_hash, created_at, expires_at, consumed)
+        VALUES ($1, $2, NOW(), NOW() + INTERVAL '15 minutes', false)
+        ON CONFLICT (email) DO UPDATE
+        SET token_hash = EXCLUDED.token_hash,
+            created_at = NOW(),
+            expires_at = NOW() + INTERVAL '15 minutes',
+            consumed = false
+        """,
+        (email, token_hash)
+    )
+async def verify_email_token(db: DatabaseManager, email: str, token_hash: str) -> bool:
+    """Verify email verification token"""
+    if not db.is_connected:
+        return False
+
+    query = """
+    SELECT token_id FROM iam.iam_email_verification_token
+    WHERE email = $1 AND token_hash = $2 AND expires_at > NOW() AND used_at IS NULL
+    """
+    result = await db.execute_query(query, (email, token_hash))
+
+    if result:
+        # Mark token as used
+        update_query = """
+        UPDATE iam.iam_email_verification_token
+        SET used_at = NOW()
+        WHERE token_id = $1
+        """
+        await db.execute_query(update_query, (result[0]['token_id'],))
+        return True
+
+    return False
+
+async def activate_user(db: DatabaseManager, email: str) -> int:
+    """Activate user account"""
+    if not db.is_connected:
+        raise HTTPException(status_code=500, detail="Database not connected")
+
+    query = """
+    UPDATE iam.iam_user
+    SET status = 'active', updated_at = NOW()
+    WHERE email = $1 AND status = 'pending'
+    RETURNING user_id
+    """
+    result = await db.execute_query(query, (email,))
+
+    if not result:
+        raise HTTPException(status_code=400, detail="User not found or already activated")
+
+    return result[0]['user_id']
+
+async def check_email_exists(db: DatabaseManager, email: str) -> bool:
+    """Check if email already exists"""
+    if not db.is_connected:
+        return False
+
+    query = "SELECT user_id FROM iam.iam_user WHERE email = $1"
+    result = await db.execute_query(query, (email,))
+    return len(result) > 0
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/signin", response_model=SignInResponse)
+async def simple_signin(request: SignInRequest, db: DatabaseManager = Depends(get_database)):
+    """Simple database signin endpoint - matches frontend expectations"""
+    try:
+        logger.info(f"Simple signin attempt for: {request.email}")
+
+        # Try database authentication first
+        user_data = await authenticate_user_db(request.email, request.password, db)
+        
+        # Fallback to hardcoded users if DB auth fails
+        if not user_data:
+            user_data = authenticate_user(request.email, request.password)
+        
+        if not user_data:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        # Update last login time
+        try:
+            try:
+                from app.services.iam_service import IAMService
+            except ImportError:
+                from services.iam_service import IAMService
+            iam_service = IAMService(db)
+            await iam_service.update_last_login(user_data["user_id"])
+        except Exception as e:
+            logger.error(f"Failed to update last login: {e}")
+
+        access_token = create_access_token(user_data, request.email)
+
+        # Log signin activity
+        try:
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user_data["user_id"],
+                    email=user_data.get("email", request.email),
+                    action="USER_SIGNIN",
+                    resource="/api/v1/auth/signin",
+                    details={"role": user_data.get("role", "unknown"), "method": "password"},
+                    status="success"
+                )
+        except Exception as e:
+            logger.error(f"Failed to log signin activity: {e}")
+
+        logger.info(f"Successful signin for: {request.email} with role: {user_data['role']}")
+
+        # Use shared role menu definitions
+
+        role_cfg = get_role_menu(user_data['role'])
+
+        return SignInResponse(
+            success=True,
+            message=f"Welcome back, {user_data['full_name']}!",
+            access_token=access_token,
+            user={
+                "user_id": user_data['user_id'],
+                "email": request.email,
+                "full_name": user_data['full_name'],
+                "role": user_data['role'],
+                "menu": role_cfg
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Signin error: {e}")
+        raise HTTPException(status_code=500, detail="Signin failed")
+
+# Forgot Password with OTP endpoints
+@app.post(f"{settings.API_V1_PREFIX}/auth/forgot-password-otp", response_model=ForgotPasswordOTPResponse)
+async def forgot_password_otp(request: ForgotPasswordOTPRequest, db: DatabaseManager = Depends(get_database)):
+    """Request OTP for password reset via email"""
+    try:
+        # Check if user exists
+        user_query = "SELECT user_id, email, full_name FROM iam.iam_user WHERE email = $1 AND status = 'active'"
+        user_result = await db.execute_query(user_query, (request.email,))
+        
+        if not user_result:
+            # Don't reveal if email exists for security
+            return ForgotPasswordOTPResponse(
+                success=True,
+                message="If your email is registered, you will receive an OTP code to reset your password."
+            )
+        
+        user = user_result[0]
+
+        # Generate and send OTP via email
+        from services.email_service import send_otp_email
+        
+        result = await send_otp_email(
+            email=request.email,
+            name=user.get('full_name', 'User')
+        )
+
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send OTP email"
+            )
+
+        # Log password reset request
+        try:
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user['user_id'],
+                    email=request.email,
+                    action="PASSWORD_RESET_OTP_REQUEST",
+                    details={"email": request.email},
+                    status="success"
+                )
+        except Exception as e:
+            logger.error(f"Failed to log activity: {e}")
+
+        return ForgotPasswordOTPResponse(
+            success=True,
+            message="If your email is registered, you will receive an OTP code to reset your password.",
+            data={
+                "email": request.email,
+                "expires_in_minutes": 10,
+                "note": "Please check your email for the 6-digit OTP code"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Forgot password OTP error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process password reset request")
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/verify-otp-reset-password", response_model=VerifyOTPResetPasswordResponse)
+async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, db: DatabaseManager = Depends(get_database)):
+    """Verify OTP and reset password"""
+    try:
+        # Validate password confirmation
+        if request.new_password != request.confirm_password:
+            raise HTTPException(
+                status_code=400,
+                detail="Passwords do not match"
+            )
+
+        # Check if user exists
+        user_query = "SELECT user_id, email FROM iam.iam_user WHERE email = $1 AND status = 'active'"
+        user_result = await db.execute_query(user_query, (request.email,))
+        
+        if not user_result:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+        
+        user = user_result[0]
+
+        # Verify OTP
+        from services.email_service import verify_otp
+        
+        otp_result = await verify_otp(request.email, request.otp)
+        
+        if not otp_result.get('valid'):
+            raise HTTPException(
+                status_code=400,
+                detail=otp_result.get('message', 'Invalid or expired OTP')
+            )
+
+        # Hash new password
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(request.new_password.encode('utf-8'), salt).decode('utf-8')
+
+        # Update password in database
+        update_query = """
+            UPDATE iam.iam_user 
+            SET password_hash = $1, updated_at = NOW()
+            WHERE email = $2
+            RETURNING user_id, email
+        """
+        
+        result = await db.execute_query(update_query, (hashed_password, request.email))
+        
+        if not result:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to reset password"
+            )
+
+        # Log password reset success
+        try:
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user['user_id'],
+                    email=request.email,
+                    action="PASSWORD_RESET_SUCCESS",
+                    details={"email": request.email},
+                    status="success"
+                )
+        except Exception as e:
+            logger.error(f"Failed to log activity: {e}")
+
+        return VerifyOTPResetPasswordResponse(
+            success=True,
+            message="Password reset successfully. You can now sign in with your new password.",
+            data={
+                "email": request.email
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Verify OTP reset password error: {e}")
+        raise HTTPException(status_code=500, detail="Password reset failed")
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/signout", response_model=SignOutResponse)
+async def signout(request: Request):
+    """Sign out user - invalidate token on client side"""
+    try:
+        # Check Authorization header
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            return SignOutResponse(
+                success=True,
+                message="Signed out successfully"
+            )
+
+        # Expect "Bearer <token>"
+        try:
+            token = auth_header.split()[1]
+            payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+            if payload:
+                user_email = payload.get("email", "unknown")
+                user_id = payload.get("user_id")
+                
+                # Log signout activity
+                try:
+                    if ACTIVITY_AVAILABLE and ActivityLogger:
+                        activity_logger = ActivityLogger(db_manager)
+                        await activity_logger.log_activity(
+                            user_id=user_id,
+                            email=user_email,
+                            action="USER_SIGNOUT",
+                            resource="/api/v1/auth/signout",
+                            details={"method": "manual"},
+                            status="success"
+                        )
+                except Exception as e:
+                    logger.error(f"Failed to log signout activity: {e}")
+                
+                logger.info(f"User signed out: {user_email}")
+        except Exception:
+            pass  # Token invalid, but still return success
+
+        return SignOutResponse(
+            success=True,
+            message="Signed out successfully"
+        )
+
+    except Exception as e:
+        logger.error(f"Signout error: {e}")
+        return SignOutResponse(
+            success=True,
+            message="Signed out successfully"
+        )
+
+@app.get("/api/auth/profile")
+async def get_auth_profile(request: Request):
+    """Get current user profile from token"""
+    try:
+        # Check Authorization header
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if not auth_header:
+            raise HTTPException(status_code=401, detail="Authorization header missing")
+
+        # Expect "Bearer <token>"
+        try:
+            token = auth_header.split()[1]
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid authorization format")
+
+        payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+        if not payload:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+        # Return user profile from token
+        return {
+            "success": True,
+            "user": {
+                "user_id": payload.get("user_id"),
+                "email": payload.get("email"),
+                "full_name": payload.get("full_name", "User"),  # Add full_name
+                "role": payload.get("role"),
+                "roles": payload.get("roles", []),
+                "permissions": payload.get("permissions", [])
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Profile error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get profile")
+
+# ====================================
+# SIGNUP ENDPOINTS
+# ====================================
+@app.post(f"{settings.API_V1_PREFIX}/auth/signup", response_model=SignupResponse)
+async def signup(request: SignupRequest, db: DatabaseManager = Depends(get_database)):
+    """User registration endpoint with email verification"""
+    try:
+        # Validate input
+        if request.password != request.confirm_password:
+            raise HTTPException(status_code=400, detail="Passwords do not match")
+
+        if len(request.password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu phải có tối thiểu 6 ký tự")
+
+        # Check if email already exists
+        email_exists = await check_email_exists(db, request.email.lower())
+        if email_exists:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        # Generate verification code
+        verification_code = f"{secrets.randbelow(900000) + 100000:06d}"  # 6-digit code
+        token_hash = hashlib.sha256(verification_code.encode()).hexdigest()
+
+        # Hash password
+        password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        # Create user in database (pending status)
+        user_id = await create_user_in_db(db, request.name, request.email.lower(), password_hash)
+
+        # Log signup activity
+        try:
+            if ACTIVITY_AVAILABLE and ActivityLogger:
+                activity_logger = ActivityLogger(db)
+                await activity_logger.log_activity(
+                    user_id=user_id,
+                    email=request.email.lower(),
+                    action="USER_SIGNUP",
+                    resource="/api/v1/auth/signup",
+                    details={"full_name": request.name, "method": "email"},
+                    status="success"
+                )
+        except Exception as e:
+            logger.error(f"Failed to log signup activity: {e}")
+
+        # Store verification token
+        # Temporarily disabled: email verification storage requires table iam_email_verification
+        # await store_verification_token(db, request.email.lower(), token_hash)
+
+        # Send verification email
+        # Temporarily disabled email sending to avoid dependency during active-by-default signup
+        email_sent = False
+
+        logger.info(f"User signup: {request.email} (ID: {user_id}) - Email sent: {email_sent}")
+
+        return SignupResponse(
+            success=True,
+            message="Account created successfully. You can now sign in.",
+            verification_sent=email_sent,
+            email=request.email
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Signup error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+@app.post(f"{settings.API_V1_PREFIX}/auth/verify-email", response_model=VerifyEmailResponse)
+async def verify_email(request: VerifyEmailRequest, db: DatabaseManager = Depends(get_database)):
+    """Verify email with verification code"""
+    try:
+        # Hash the provided code
+        token_hash = hashlib.sha256(request.verification_code.encode()).hexdigest()
+
+        # Verify token
+        token_valid = await verify_email_token(db, request.email.lower(), token_hash)
+
+        if not token_valid:
+            raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+
+        # Activate user account
+        user_id = await activate_user(db, request.email.lower())
+
+        logger.info(f"Email verified and account activated: {request.email} (ID: {user_id})")
+
+        return VerifyEmailResponse(
+            success=True,
+            message="Email verified successfully! Your account is now active.",
+            user_created=True,
+            user_id=user_id
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Email verification error: {e}")
+        raise HTTPException(status_code=500, detail="Email verification failed")
+
+# ====================================
+# ERROR HANDLERS
+# ====================================
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "message": "The requested endpoint was not found",
+            "path": str(request.url.path),
+            "timestamp": datetime.now().isoformat(),
+            "available_endpoints": [
+            "/", "/health", "/api/v1/status",
+            "/api/v1/auth/signin", "/api/v1/auth/signup","/api/v1/auth/signout", "/api/v1/auth/verify-email",
+            "/api/v1/dss/dashboard", "/api/v1/admin/users", "/api/v1/profile",
+            "/api/v1/admin/activity-logs", "/api/v1/admin/activity-stats", "/api/v1/admin/user-activity/{user_id}",
+            "/setup-activity-logs", "/api/v1/test-admin/users", "/api/v1/test-admin/profile/{user_id}", "/api/v1/test-admin/get-token",
+            "/api/v1/roles", "/api/v1/roles/{role_id}", "/docs"
+
+            ]
+        }
     )
 
-LÝ DO: 
-- Tránh nhầm lẫn: nếu code train dùng LogisticRegression thì không nên gọi là "bert"
-- Default model_name phải match với records trong ml.dim_ml_model
+@app.exception_handler(500)
+async def internal_error_handler(request: Request, exc: Exception):
+    logger.error(f"Internal server error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "message": "An unexpected error occurred",
+            "timestamp": datetime.now().isoformat()
+        }
+    )
 
-
-================================================================================
-4. DEPLOYMENT CHECKLIST
-================================================================================
-
-4.1. Prerequisites
---------------------------------------------------------------------------------
-☐ Kiểm tra ml.dim_ml_model có records với:
-   - model_type = 'price', status = 'active'
-   - model_type = 'sentiment', status = 'active'
-
-☐ Chuẩn bị model files:
-   - Đặt trong thư mục models/ (hoặc set env ML_MODEL_DIR)
-   - Tên file: {model_name}_{model_version}.pkl
-   - Price model: sklearn model object
-   - Sentiment model: dict with keys "vectorizer", "model"
-
-☐ Test load models manually:
-   ```python
-   from backend.app.ml_runtime import load_price_model, load_sentiment_pipeline
-   
-   # Test price
-   model = load_price_model("price_forecast_rf", "v1.0")
-   print(model.predict([[100000, 120000, 50, 4.5]]))
-   
-   # Test sentiment
-   vec, clf = load_sentiment_pipeline("sentiment_logreg", "v1.0")
-   X = vec.transform(["Sản phẩm rất tốt"])
-   print(clf.predict_proba(X))
-   ```
-
-4.2. Testing Steps
---------------------------------------------------------------------------------
-☐ Test /ml/price-predictions/online:
-   - Gửi request với đầy đủ features (current_price, avg_rating, review_count)
-   - Gửi request chỉ có product_key + platform_code (test DWH query)
-   - Verify: predicted_price không phải 1000000.0
-   - Verify: latency_ms > 5
-
-☐ Test /ml/sentiment/online:
-   - Gửi text: "Sản phẩm rất tốt, chất lượng cao"
-   - Verify: label không chỉ dựa vào keyword "tốt"
-   - Gửi text: "Tệ quá" vs "Sản phẩm này không tệ"
-   - Verify: model hiểu được ngữ cảnh
-
-☐ Test error handling:
-   - Request với model_name không tồn tại → 500 với message rõ ràng
-   - Request với product_key không có trong DWH → 500 với message rõ ràng
-
-4.3. Performance Notes
---------------------------------------------------------------------------------
-- First request: chậm hơn do phải load model (100-500ms)
-- Subsequent requests: nhanh hơn nhờ @lru_cache (10-50ms)
-- Monitor memory: mỗi model ~50-200MB RAM
-- Production: consider moving to separate ML service (FastAPI + triton)
-
-
-================================================================================
-5. FUTURE IMPROVEMENTS
-================================================================================
-
-5.1. Short-term (trong đồ án)
-   - [ ] Add CI calculation cho price prediction
-   - [ ] Log prediction requests vào ml.fact_prediction_log
-   - [ ] Add metrics: request count, avg latency, error rate
-   - [ ] Support batch prediction (list of products)
-
-5.2. Long-term (nếu production)
-   - [ ] Tách ML inference thành microservice riêng
-   - [ ] Dùng ONNX Runtime thay vì pickle (faster, cross-platform)
-   - [ ] Add model versioning & A/B testing framework
-   - [ ] Implement model monitoring (drift detection)
-   - [ ] Add GPU support cho deep learning models
-
-================================================================================
-6. NOTES & WARNINGS
-================================================================================
-
-⚠️ Security:
-   - Model files (.pkl) có thể chứa malicious code
-   - Chỉ load models từ trusted sources
-   - Consider dùng joblib.load với mmap_mode='r' (read-only)
-
-⚠️ Dependencies:
-   - Cần install: numpy, scikit-learn (đã có trong requirements.txt)
-   - Version consistency: model train với sklearn==X.Y phải load với cùng version
-
-⚠️ Error Handling:
-   - RuntimeError từ _resolve_model → trả về 500 Internal Server Error
-   - FileNotFoundError từ load_model → trả về 500
-   - ValueError từ invalid input → trả về 400 Bad Request
-   - Frontend cần handle errors gracefully
-
-📝 Documentation:
-   - Update API docs (Swagger) với examples mới
-   - Update README với hướng dẫn setup model files
-   - Thêm docstrings cho các functions mới
-
-================================================================================
-END OF IMPLEMENTATION PLAN
-================================================================================
+# ====================================
+# DEVELOPMENT SERVER
+# ====================================
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8000)),
+        reload=False,
+        workers=1
+    )

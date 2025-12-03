@@ -3,7 +3,7 @@ User Profile Management Pydantic Models
 """
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from models.shared import BaseUserRequest
+from app.models.shared import BaseUserRequest
 
 # Use shared UserResponse instead of duplicate ProfileResponse
 

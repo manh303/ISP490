@@ -8,14 +8,14 @@ import logging
 from datetime import datetime
 from app.services.activity_logger import ActivityLogger
 from app.services.admin_service import AdminService
-from models.admin import (
+from app.models.admin import (
     UserCreateRequest, 
     UserUpdateRequest, 
     UserPasswordUpdateRequest,
     UserListResponse, 
     UserActionResponse
 )
-from models.shared import UserResponse
+from app.models.shared import UserResponse
 from app.constants.roles import validate_role_code
 from app.api.dependencies import require_role
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ router = APIRouter(
 async def get_database():
     """Get database connection from main app"""
     try:
-        from main import db_manager
+        from app.main import db_manager
         if not db_manager.is_connected:
             await db_manager.connect()
         return db_manager

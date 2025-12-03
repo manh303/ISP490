@@ -4,8 +4,8 @@ Admin Management Pydantic Models
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional
 from datetime import datetime
-from utils.validators import validate_phone, validate_password, validate_full_name,validate_email
-from models.shared import UserResponse  # Import from shared models
+from app.utils.validators import validate_phone, validate_password, validate_full_name, validate_email
+from app.models.shared import UserResponse  # Import from shared models
 
 class UserCreateRequest(BaseModel):
     """Create user request"""

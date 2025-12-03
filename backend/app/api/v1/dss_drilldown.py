@@ -139,10 +139,7 @@ async def get_db():
     try:
         from app.main import db_manager
     except ImportError:
-        import sys
-        import os
-        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        from main import db_manager
+        raise HTTPException(status_code=500, detail="Failed to get database connection")
     
     if not db_manager.is_connected:
         await db_manager.connect()

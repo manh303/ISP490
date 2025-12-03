@@ -3,7 +3,7 @@ Role Service - Business Logic
 """
 import logging
 from typing import List, Dict, Any, Optional, Tuple
-from models.role import RoleResponse, RoleDetailResponse, RoleCreateRequest, RoleUpdateRequest
+from app.models.role import RoleResponse, RoleDetailResponse, RoleCreateRequest, RoleUpdateRequest
 
 logger = logging.getLogger(__name__)
 

@@ -3,12 +3,12 @@ Profile Service - Business Logic
 """
 import logging
 from typing import Dict, Optional
-from models.user import ProfileUpdateRequest
+from app.models.user import ProfileUpdateRequest
 import secrets
 from datetime import datetime, timedelta
 import bcrypt
 from fastapi import HTTPException
-from services.email_service import email_service
+from app.services.email_service import email_service
 logger = logging.getLogger(__name__)
 
 class ProfileService:

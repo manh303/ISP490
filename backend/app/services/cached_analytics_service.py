@@ -8,8 +8,8 @@ from typing import List, Optional
 import hashlib
 import json
 
-from services.analytics_service import AnalyticsService
-from core.cache import cache
+from app.services.analytics_service import AnalyticsService
+from app.core.cache import cache
 
 class CachedAnalyticsService(AnalyticsService):
     """

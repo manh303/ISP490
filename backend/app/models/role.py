@@ -3,7 +3,7 @@ Role Pydantic Models
 """
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional
-from utils.validators import validate_role_code, validate_role_name
+from app.utils.validators import validate_role_code, validate_role_name
 
 class RoleResponse(BaseModel):
     """Role response model"""

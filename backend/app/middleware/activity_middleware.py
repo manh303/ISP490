@@ -1,10 +1,7 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from services.activity_logger import ActivityLogger
-try:
-    from app.core.config import settings
-except ImportError:
-    from core.config import settings
+from app.services.activity_logger import ActivityLogger
+from app.core.config import settings
 import json
 import logging
 import time
@@ -37,7 +34,7 @@ class ActivityLoggingMiddleware(BaseHTTPMiddleware):
                 try:
                     from app.utils.auth_helpers import decode_access_token
                 except ImportError:
-                    from utils.auth_helpers import decode_access_token
+                    from app.utils.auth_helpers import decode_access_token
                 payload = decode_access_token(token, settings.jwt_secret)
                 if payload:
                     user_id = payload.get("user_id")
