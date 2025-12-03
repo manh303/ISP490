@@ -243,65 +243,43 @@ class VerifyEmailResponse(BaseModel):
 # ====================================
 class DatabaseManager:
     def __init__(self):
-        self.database = None
-        self.is_connected = False
+        pass
+
+    @property
+    def is_connected(self):
+        """
+        Check if database is connected.
+        For the pool-based system, we assume it's connected if initialized.
+        This property is kept for backward compatibility.
+        """
+        return True
 
     async def connect(self):
-        """Connect to PostgreSQL database"""
-        if not DATABASE_AVAILABLE:
-            logger.warning("Database modules not available, running in mock mode")
-            return
-
-        try:
-            self.database = Database(settings.POSTGRES_URL)
-            await self.database.connect()
-            self.is_connected = True
-            logger.info("Connected to PostgreSQL database")
-        except Exception as e:
-            logger.error(f"Failed to connect to database: {e}")
-            self.is_connected = False
+        """Connect to PostgreSQL database - No-op as pool is managed globally"""
+        # Pool is initialized in lifespan
+        pass
 
     async def disconnect(self):
-        """Disconnect from database"""
-        if self.database and self.is_connected:
-            await self.database.disconnect()
-            self.is_connected = False
-            logger.info("Disconnected from database")
+        """Disconnect from database - No-op as pool is managed globally"""
+        pass
 
     async def execute_query(self, query: str, values = None):
-        """Execute a query safely - supports both dict and tuple parameters"""
-        if not self.is_connected:
-            return []
-
+        """Execute a query safely using the connection pool"""
         try:
-            if values:
-                if isinstance(values, (tuple, list)):
-                    # Convert positional parameters to named parameters for databases library
-                    # Find $1, $2, etc. and replace with :param1, :param2, etc.
-                    import re
-                    converted_query = query
-                    converted_values = {}
-
-                    # Find all $n parameters
-                    param_matches = re.findall(r'\$(\d+)', query)
-                    if param_matches:
-                        for param_num in param_matches:
-                            param_name = f"param{param_num}"
-                            converted_query = converted_query.replace(f"${param_num}", f":{param_name}")
-                            param_index = int(param_num) - 1  # Convert to 0-based index
-                            if param_index < len(values):
-                                converted_values[param_name] = values[param_index]
-
-                        result = await self.database.fetch_all(converted_query, converted_values)
+            from app.db_pool import get_pool
+            pool = await get_pool()
+            
+            async with pool.acquire() as conn:
+                if values:
+                    if isinstance(values, (tuple, list)):
+                        result = await conn.fetch(query, *values)
                     else:
-                        # No positional parameters, use as-is
-                        result = await self.database.fetch_all(query, dict(zip(range(len(values)), values)))
+                        # Handle single value or other iterables
+                        result = await conn.fetch(query, values)
                 else:
-                    # Dict parameters (original behavior)
-                    result = await self.database.fetch_all(query, values)
-            else:
-                result = await self.database.fetch_all(query)
-            return [dict(row) for row in result]
+                    result = await conn.fetch(query)
+                
+                return [dict(row) for row in result]
         except Exception as e:
             logger.error(f"Query execution error: {e}")
             logger.error(f"Query: {query}")
@@ -312,8 +290,8 @@ class DatabaseManager:
         """Return transaction context manager for atomic operations"""
         @asynccontextmanager
         async def _transaction():
-            # Access raw asyncpg pool from databases library
-            pool = self.database._backend._pool
+            from app.db_pool import get_pool
+            pool = await get_pool()
             async with pool.acquire() as conn:
                 async with conn.transaction():
                     yield conn
