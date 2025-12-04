@@ -303,18 +303,6 @@ class DSSService:
                 FROM ranked_predictions
                 WHERE rn = 1
             ),
-            product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    f.platform_sk,
-                    AVG(f.avg_price) AS current_price,
-                    SUM(f.total_review_count) AS total_reviews,
-                    AVG(f.avg_rating) AS avg_rating
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN $1 AND $2
-                GROUP BY f.product_sk, f.platform_sk
-            ),
             filtered_results AS (
                 SELECT
                     dp.product_key,
@@ -463,33 +451,6 @@ class DSSService:
             product_metrics AS (
                 SELECT
                     f.product_sk,
-                    f.platform_sk,
-                    AVG(f.avg_price) AS current_price
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN $1 AND $2
-                GROUP BY f.product_sk, f.platform_sk
-            )
-            SELECT COUNT(*)
-            FROM latest_predictions pred
-            JOIN dwh.dim_product dp ON pred.product_sk = dp.product_sk
-            JOIN dwh.dim_platform dpl ON pred.platform_sk = dpl.platform_sk
-            LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm 
-                ON dp.product_sk = pm.product_sk
-               AND pred.platform_sk = pm.platform_sk
-            WHERE {where_clause}
-              AND COALESCE(pm.current_price, 0) > 0
-              AND pred.confidence >= {confidence_param}
-              AND ABS(
-                  (pred.predicted_price - COALESCE(pm.current_price, 0))
-                  / NULLIF(pm.current_price, 0)
-              ) > {price_change_param}
-        """
-
-        # Params for count_sql = params without LIMIT/OFFSET
-        count_params = params[:-2]
-
         try:
             rows = await self.db.fetch(sql, *params)
             total_count_row = await self.db.fetchrow(count_sql, *count_params)
@@ -953,23 +914,14 @@ class DSSService:
         if cached is not None:
             return cached
 
+        # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
         sql = """
-            WITH product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    AVG(f.avg_price) AS avg_price,
-                    SUM(f.total_review_count) AS total_orders
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN $4 AND $5
-                GROUP BY f.product_sk
-            )
             SELECT
                 dp_src.product_key AS source_product_key,
                 dp_src.product_name AS source_product_name,
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
-                SUBSTRING(dp_rec.product_key FROM '^(.*?)_') AS platform,
+                dpl_rec.platform_code AS platform,
                 COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
@@ -978,8 +930,9 @@ class DSSService:
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+            LEFT JOIN dwh.dim_platform dpl_rec ON dp_rec.platform_sk = dpl_rec.platform_sk
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm_rec ON dp_rec.product_sk = pm_rec.product_sk
+            LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE dp_src.product_key = $1
               AND rec.similarity_score >= $2
             ORDER BY rec.similarity_score DESC, rec.rank ASC
@@ -987,9 +940,11 @@ class DSSService:
         """
 
         try:
-            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, from_date, to_date)
+            # No longer need from_date/to_date parameters with product_metrics_global
+            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k)
             result = [dict(row) for row in rows]
-            cache.set(cache_key, result, ttl=1800)
+            # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
+            cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
             logger.error(f"Error querying recommendations by product: {e}")
@@ -1016,24 +971,16 @@ class DSSService:
 
         platform_filter = ""
         if platforms:
-            platform_filter = (
-                f"AND SUBSTRING(dp_rec.product_key FROM '^(.*?)_') = ANY(${param_idx})"
-            )
+            # OPTIMIZED: Use platform_sk instead of SUBSTRING for better index usage
+            platform_filter = f"AND dpl_rec.platform_code = ANY(${param_idx})"
             params.append(platforms)
             param_idx += 1
 
         category_filter = ""
         if categories:
-            category_filter = (
-                f"AND CAST(dc.category_sk AS TEXT) = ANY(${param_idx})"
-            )
+            category_filter = f"AND CAST(dc.category_sk AS TEXT) = ANY(${param_idx})"
             params.append(categories)
             param_idx += 1
-
-        # Reserve positions for date filters in product_metrics
-        date_start_idx = param_idx
-        params.extend([from_date, to_date])
-        param_idx += 2
 
         cache_key = self._build_cache_key(
             "reco:by_category",
@@ -1050,23 +997,14 @@ class DSSService:
         if cached is not None:
             return cached
 
+        # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
         sql = f"""
-            WITH product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    AVG(f.avg_price) AS avg_price,
-                    SUM(f.total_review_count) AS total_orders
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN ${date_start_idx} AND ${date_start_idx + 1}
-                GROUP BY f.product_sk
-            )
             SELECT
                 dp_src.product_key AS source_product_key,
                 dp_src.product_name AS source_product_name,
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
-                SUBSTRING(dp_rec.product_key FROM '^(.*?)_') AS platform,
+                dpl_rec.platform_code AS platform,
                 COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
@@ -1075,8 +1013,9 @@ class DSSService:
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+            LEFT JOIN dwh.dim_platform dpl_rec ON dp_rec.platform_sk = dpl_rec.platform_sk
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm_rec ON dp_rec.product_sk = pm_rec.product_sk
+            LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE rec.similarity_score >= $1
               {platform_filter}
               {category_filter}
@@ -1087,7 +1026,8 @@ class DSSService:
         try:
             rows = await self.db.fetch(sql, *params)
             result = [dict(row) for row in rows]
-            cache.set(cache_key, result, ttl=1800)
+            # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
+            cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
             logger.error(f"Error querying recommendations by category: {e}")

@@ -1,82 +1,238 @@
-﻿Toi uu /dss/reco/run cho bang ml.fact_product_recommendation (~2M record). Muc tieu: giam scan Postgres, them index, toi uu AI summarizer, va can nhac cache.
+﻿Nhưng để chạy mượt trên môi trường deploy (Render, Postgres, Redis, LLM), phương án tối ưu nhất thực tế là combo:
 
-Flow hien tai:
-- Endpoint `POST /reco/run` goi `service.run_product_recommendation_dss`.
-- Service: (1) `_query_product_recommendations` (by_product/by_category). (2) `_calculate_reco_kpis`. (3) Build `dss_result_raw`. (4) Goi `ai_summarizer.summarize_with_ai(...)`. (5) Insert session -> return.
-- O DB: ca hai ham con deu co CTE `product_metrics` scan toan bo `dwh.fact_product_daily`, roi join `ml.fact_product_recommendation + dim_product + dim_category`. Sau do moi goi AI qua network. Voi ~2M record + full scan fact + LLM call nen dang cham.
 
-Toi uu DB (uu tien):
-1) Giam full scan `fact_product_daily` trong `product_metrics`
-- Cach A (nhanh): them filter ngay nhu price DSS.
-```
-WITH product_metrics AS (
-  SELECT f.product_sk,
-         AVG(f.avg_price) AS avg_price,
-         SUM(f.total_review_count) AS total_orders
-  FROM dwh.fact_product_daily f
-  JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-  WHERE dd.date_value BETWEEN $1 AND $2  -- from_date, to_date (7-30 ngay gan nhat)
-  GROUP BY f.product_sk
-)
-```
-- Truyen `from_date`, `to_date` vao request (by_product & by_category).
-- Cach B (neu muon overall): precompute bang/materialized view.
-```
+Index chuẩn trên các bảng to (ml.fact_product_recommendation, fact_product_daily, dim_product)
+
+
+Pre-aggregate product_metrics bằng materialized view hoặc bảng tổng hợp
+
+
+(Tuỳ chọn) Cache kết quả / cache AI summary cho các request lặp lại nhiều
+
+
+Dưới đây mình phân tích từng cái + gợi ý cụ thể cho case của bạn.
+
+1. Index – cái phải có, làm trước
+Tác dụng
+
+
+Giảm chi phí mỗi query: scan ít row hơn, dùng index để ORDER BY.
+
+
+Không phải đổi API, FE không cần biết.
+
+
+Đặc biệt quan trọng với bảng ~2 triệu bản ghi như ml.fact_product_recommendation.
+
+
+Với query hiện tại của bạn
+By product:
+FROM ml.fact_product_recommendation rec
+JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
+...
+WHERE dp_src.product_key = $1
+  AND rec.similarity_score >= $2
+ORDER BY rec.similarity_score DESC, rec.rank ASC
+LIMIT $3;
+
+→ Nên có:
+CREATE INDEX IF NOT EXISTS idx_fact_product_reco_src_sim_rank
+ON ml.fact_product_recommendation (source_product_sk, similarity_score DESC, rank);
+
+By category:
+WHERE rec.similarity_score >= $1
+  {platform_filter}
+  {category_filter}
+ORDER BY pm_rec.total_orders DESC, rec.similarity_score DESC
+LIMIT {top_k}
+
+→ Nên có thêm index theo pattern bạn filter + sort, ví dụ:
+CREATE INDEX IF NOT EXISTS idx_fact_product_reco_sim_src_rec
+ON ml.fact_product_recommendation (similarity_score DESC, source_product_sk, recommended_product_sk);
+
+dim_product:
+
+
+Bạn filter dp_src.product_key = $1 → cần index:
+
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dim_product_product_key
+ON dwh.dim_product(product_key);
+
+
+
+Nếu sau này lọc theo platform/category, có thể thêm:
+
+
+CREATE INDEX IF NOT EXISTS idx_dim_product_platform_category
+ON dwh.dim_product(platform_sk, category_sk, product_sk);
+
+fact_product_daily (dùng trong product_metrics):
+CREATE INDEX IF NOT EXISTS idx_fact_product_daily_date_product
+ON dwh.fact_product_daily(date_sk, product_sk);
+
+➡ Index gần như không có nhược điểm với hệ thống đọc nhiều – chỉ tốn thêm disk + chút overhead khi insert/update, nhưng với DW/ML (insert theo batch) thì ổn.
+👉 Kết luận: Index là thứ nên làm đầu tiên, bắt buộc phải có để mọi thứ còn lại phát huy hiệu quả.
+
+2. View vs Materialized View – cái nào giúp nhanh?
+View thường
+
+
+Chỉ là “query được đặt tên lại”.
+
+
+Mỗi lần SELECT từ view → Postgres chạy lại query gốc, không lưu sẵn dữ liệu.
+
+
+→ Không giúp gì về performance, chỉ gọn code hơn.
+
+
+=> Trong case của bạn, nếu chỉ tạo view thường cho product_metrics thì không giải quyết được vấn đề chậm.
+Materialized View / Bảng aggregate riêng
+Đây mới là thứ giúp nhanh thực sự:
+CREATE MATERIALIZED VIEW dwh.mv_product_metrics AS
+SELECT
+    f.product_sk,
+    AVG(f.avg_price) AS avg_price,
+    SUM(f.total_review_count) AS total_orders
+FROM dwh.fact_product_daily f
+GROUP BY f.product_sk;
+
+Hoặc bảng:
 CREATE TABLE IF NOT EXISTS dwh.product_metrics_global AS
-SELECT f.product_sk,
-       AVG(f.avg_price) AS avg_price,
-       SUM(f.total_review_count) AS total_orders
+SELECT
+    f.product_sk,
+    AVG(f.avg_price) AS avg_price,
+    SUM(f.total_review_count) AS total_orders
 FROM dwh.fact_product_daily f
 GROUP BY f.product_sk;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_product_metrics_global_pk
-  ON dwh.product_metrics_global(product_sk);
-```
-- Trong SQL reco: bo CTE, `LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk`. Cap nhat bang nay hang ngay bang Airflow.
+ON dwh.product_metrics_global(product_sk);
 
-2) Index cho `ml.fact_product_recommendation`
-```
-CREATE INDEX IF NOT EXISTS idx_fact_product_reco_src_sim_rank
-  ON ml.fact_product_recommendation (source_product_sk, similarity_score DESC, rank);
+Sau đó trong reco query:
+LEFT JOIN dwh.product_metrics_global pm_rec 
+    ON dp_rec.product_sk = pm_rec.product_sk
 
-CREATE INDEX IF NOT EXISTS idx_fact_product_reco_rec_sim
-  ON ml.fact_product_recommendation (recommended_product_sk, similarity_score DESC);
-```
-Giup loc theo source_product va sort similarity/rank nhanh hon.
 
-3) Index cho `dwh.dim_product` & `dwh.fact_product_daily`
-```
-CREATE UNIQUE INDEX IF NOT EXISTS idx_dim_product_product_key ON dwh.dim_product(product_key);
-CREATE INDEX IF NOT EXISTS idx_dim_product_category ON dwh.dim_product(category_sk);
-CREATE INDEX IF NOT EXISTS idx_dim_product_platform_category
-  ON dwh.dim_product(platform_sk, category_sk, product_sk);
 
-CREATE INDEX IF NOT EXISTS idx_fact_product_daily_date_product
-  ON dwh.fact_product_daily(date_sk, product_sk);
-```
+Thay vì mỗi request đều GROUP BY toàn bộ fact_product_daily, bạn chỉ join 1 bảng nhỏ đã tổng hợp sẵn.
 
-4) Tranh `SUBSTRING(product_key)` khi loc platform
-- Dam bao `dim_product` co `platform_sk`, join them `dwh.dim_platform`:
-```
-JOIN dwh.dim_platform dpl ON dp_rec.platform_sk = dpl.platform_sk
-SELECT dpl.platform_code AS platform, ...
-```
-- Filter platform: `dpl.platform_code = ANY($x)` thay vi `SUBSTRING(...)`. Index o buoc (3) ho tro.
 
-5) Gioi han tham so yeu cau
-- `top_k = min(request.get("top_k", 10), 50)`
-- `min_similarity = max(request.get("min_similarity", 0.5), 0.6)` (de xuat 0.6-0.7).
+Bảng này bạn có thể refresh 1 lần/ngày bằng Airflow, rất nhẹ.
 
-Toi uu AI summarizer:
-- Them flag `ai_mode` (full|fast) trong schema:
-  - full: goi LLM neu `ai_summarizer.available`.
-  - fast: dung `_get_fallback_response(...)` rule-based (khong goi LLM).
-- Khi build prompt, chi gui top 10-20 recommendation vao table_data de giam token.
 
-Caching `/dss/reco/run`:
-- Cache ket qua `_query_product_recommendations` (hoac output cuoi) bang Redis ~1h theo key gom scope_mode + request JSON da sort.
+➡ Với pattern của bạn (fact lớn, aggregate dùng lặp đi lặp lại), materialized view / bảng aggregate cho product_metrics là cực kỳ hiệu quả, giảm thời gian query thêm một nấc nữa sau khi đã có index.
 
-Uu tien trien khai:
-- Level 1 (bat buoc): filter ngay hoac precompute `product_metrics`, tao index `ml.fact_product_recommendation` + `dim_product` + `fact_product_daily`, gioi han `top_k`/`min_similarity`.
-- Level 2 (nen lam): bo SUBSTRING, join `dim_platform`, them index `(platform_sk, category_sk, product_sk)`.
-- Level 3 (toi uu p95): `ai_mode` fast/full + Redis cache.
+3. Cache (Redis / in-app) – mượt hơn nhưng không thay thế DB optimize
+Cache phù hợp khi:
+
+
+Cùng request (cùng scope_mode, platforms, categories, top_k, min_similarity,…) được gọi đi gọi lại.
+
+
+Bạn muốn giảm load trên DB và giảm latency total, nhất là khi có gọi AI.
+
+
+Ví dụ cache theo request:
+cache_key = f"reco:{json.dumps(request, sort_keys=True)}"
+data = await redis.get(cache_key)
+if data:
+    return json.loads(data)
+
+rows = await self._query_product_recommendations(request)
+await redis.setex(cache_key, 3600, json.dumps(rows))
+return rows
+
+Ưu điểm:
+
+
+Lần 1 chậm, lần 2 trở đi gần như chỉ mất vài ms.
+
+
+Rất hợp với màn hình analyst xem đi xem lại 1 bộ filter cố định.
+
+
+Nhược điểm:
+
+
+Nếu mỗi lần user gọi là một bộ filter rất khác nhau (JMeter test random input, hoặc product_key luôn khác) → cache hit rate thấp, lợi ích ít.
+
+
+Phải lo thêm chuyện hết hạn cache, invalidation khi retrain model.
+
+
+👉 Nên dùng cache như tầng cuối để “bo mượt”, chứ không dùng để che hết vấn đề index / query nặng.
+Đặc biệt với bạn, cache AI summary còn đáng tiền hơn cache raw data, vì gọi LLM mới là phần chậm và tốn tiền.
+
+4. Vậy ưu tiên thế nào cho case DSS / reco của bạn?
+Nếu mục tiêu là “deploy mượt mà, ổn định, có scale” thì mình gợi ý:
+Bước 1 – BẮT BUỘC
+
+
+Thêm index cho:
+
+
+ml.fact_product_recommendation (source_product_sk, similarity_score, rank…)
+
+
+dwh.dim_product(product_key, platform_sk, category_sk)
+
+
+dwh.fact_product_daily(date_sk, product_sk)
+
+
+
+
+(Nếu được) sửa query bỏ SUBSTRING(product_key) để join với dim_platform cho đúng index.
+
+
+👉 Chỉ riêng bước này đã giúp giảm thời gian query SQL rất nhiều.
+Bước 2 – NÊN LÀM
+
+
+Tách product_metrics khỏi CTE:
+
+
+Dùng materialized view hoặc bảng aggregate được refresh định kỳ.
+
+
+
+
+Sau đó mọi DSS (reco, price, v.v.) join lên đó.
+
+
+👉 Đây là “tối ưu cấu trúc dữ liệu”, giúp hệ thống ổn định, scale được khi fact_product_daily tăng lên vài chục triệu dòng.
+Bước 3 – LÀM THÊM ĐỂ MƯỢT
+
+
+Thêm cache:
+
+
+Cache kết quả /dss/reco/run theo bộ filter (nhất là cho màn analyst).
+
+
+Cache riêng phần AI summary (ví dụ key theo scenario + filter) để không gọi LLM lại cho cùng 1 kết quả.
+
+
+
+
+
+Kết luận ngắn gọn
+
+
+Index: là thứ ưu tiên số 1, bắt buộc phải có → tối ưu từng query.
+
+
+Materialized view/bảng aggregate: là thứ ưu tiên số 2, rất mạnh nếu bạn đang dùng CTE aggregate nặng như product_metrics.
+
+
+Cache: là ưu tiên số 3, dùng để mượt hơn, giảm latency p95/p99 và giảm chi phí LLM, nhưng không thay thế được 2 bước trên.
+
+
+Nếu bạn muốn, ở bước tiếp theo mình có thể:
+
+
+Viết luôn script SQL cụ thể (tạo index + tạo bảng product_metrics_global + ví dụ Airflow task refresh),
+để bạn copy vào môi trường Render và test EXPLAIN ANALYZE xem tốc độ cải thiện thế nào.
+
