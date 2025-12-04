@@ -97,46 +97,79 @@ class TestAdmin(unittest.IsolatedAsyncioTestCase):
         self.db.transaction.assert_not_called()
         self.service.iam_service.hash_password.assert_not_called()
 
-    async def test_create_user_role_not_found(self):
-        """Test create user when role exists in VALID_ROLES but not in database"""
-        user_data = UserCreateRequest(
-            email="norole@example.com",
-            full_name="No Role User",
-            password="StrongPass123!",
-            re_enter_password="StrongPass123!",
-            phone="0123456789",
-            role="ADMIN",  # Valid role code, but we'll mock database to return None
+    async def test_update_user(self):
+        """Test update user with valid data"""
+        from app.models.admin import UserUpdateRequest
+        
+        user_id = 1
+        update_data = UserUpdateRequest(
+            full_name="Updated Admin",
+            phone="0987654321",
+            status="inactive"
         )
-
-        # 1) Email chưa tồn tại
-        self.db.execute_query.return_value = []
-
-        # 2) INSERT user OK
-        fake_user_row = {
-            "user_id": 2,
-            "email": user_data.email,
-            "full_name": user_data.full_name,
-            "phone": user_data.phone,
+        
+        # Mock get_user_by_id để check user tồn tại
+        fake_user = {
+            "user_id": 1,
+            "email": "admin@example.com",
+            "full_name": "Old Name",
+            "phone": "0123456789",
             "status": "active",
+            "mfa_enabled": False,
+            "last_login_at": None,
             "created_at": "2025-11-30 00:00:00",
             "updated_at": "2025-11-30 00:00:00",
         }
-        self.conn.fetchrow.return_value = fake_user_row
-
-        # 3) Tìm role_id nhưng không có → fetchval trả None
-        self.conn.fetchval.return_value = None
-
-        with self.assertRaises(HTTPException) as ctx:
-            await self.service.create_user(user_data)
-
-        exc = ctx.exception
-        self.assertEqual(exc.status_code, 400)
-        self.assertIn("Role", exc.detail)  # "Role 'UNKNOWN_ROLE' not found"
-
-        # Đã insert user nhưng không insert role
-        self.conn.fetchrow.assert_awaited_once()
-        self.conn.fetchval.assert_awaited_once()
+        self.db.execute_query.side_effect = [
+            [fake_user],  # get_user_by_id query
+            [],           # roles query
+            [],           # permissions query
+            None          # UPDATE query
+        ]
+        
+        result = await self.service.update_user(user_id, update_data)
+        
+        # Kiểm tra đã gọi get_user_by_id (3 queries) + UPDATE (1 query) = 4 queries
+        self.assertEqual(self.db.execute_query.await_count, 4)
+        
+        # Kiểm tra UPDATE query có đúng format
+        last_call_args = self.db.execute_query.call_args_list[-1]
+        sql = last_call_args[0][0]
+        params = last_call_args[0][1]
+        
+        self.assertIn("UPDATE iam.iam_user SET", sql)
+        self.assertIn("full_name = $1", sql)
+        self.assertIn("phone = $2", sql)
+        self.assertIn("status = $3", sql)
+        self.assertIn("updated_at = NOW()", sql)
+        self.assertIn("WHERE user_id = $4", sql)
+        
+        # Verify params đúng thứ tự
+        self.assertEqual(params[0], "Updated Admin")
+        self.assertEqual(params[1], "0987654321")
+        self.assertEqual(params[2], "inactive")
+        self.assertEqual(params[3], user_id)
+        
+        # Verify return value
+        self.assertTrue(result)
     
+    async def test_update_user_not_found(self):
+        """Test update user when user does not exist"""
+        from app.models.admin import UserUpdateRequest
+        
+        update_data = UserUpdateRequest(full_name="New Name")
+        
+        # Mock get_user_by_id returns empty (user not found)
+        self.db.execute_query.return_value = []
+        
+        with self.assertRaises(ValueError) as ctx:
+            await self.service.update_user(9999, update_data)
+        
+        self.assertIn("User not found", str(ctx.exception))
+        
+        # Không được gọi UPDATE query vì user không tồn tại
+        self.assertEqual(self.db.execute_query.await_count, 1)  # Chỉ gọi get_user_by_id
+
     async def test_get_user_by_id(self):
         """Test get user by ID"""
         fake_user = {

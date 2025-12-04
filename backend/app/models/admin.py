@@ -21,6 +21,7 @@ class UserCreateRequest(BaseModel):
     email: EmailStr = Field(..., description="Email address")
     full_name: str = Field(..., min_length=2, max_length=100, description="Full name")
     password: str = Field(..., min_length=8, description="Password")
+    re_enter_password: str = Field(..., min_length=8, description="Re-enter password")
     phone: Optional[str] = Field(None, description="Phone number")
     role: str = Field(..., description="User role")
     
@@ -34,6 +35,14 @@ class UserCreateRequest(BaseModel):
     @classmethod
     def validate_password_field(cls, v):
         return validate_password(v, min_length=8)
+    
+    @field_validator('re_enter_password')
+    @classmethod
+    def validate_re_enter_password_field(cls, v, info):
+        password = info.data.get('password')
+        if password and v != password:
+            raise ValueError('Mật khẩu nhập lại không khớp')
+        return v
     
     @field_validator('phone')
     @classmethod

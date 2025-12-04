@@ -47,6 +47,11 @@ class TestValidator(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Mật khẩu phải chứa ít nhất một chữ số"):
             self.validate_password_strength("abcdefgh")
     
+    def test_full_name_empty(self):
+        """Test empty full name"""
+        with self.assertRaisesRegex(ValueError, "Tên không được để trống"):
+            self.validate_full_name("   ")
+            
     def test_validate_full_name_invalid_characters(self):
         """Test full name with invalid characters"""
         with self.assertRaisesRegex(ValueError, "Tên chỉ được chứa chữ cái và khoảng trắng, không được chứa số hoặc ký tự đặc biệt"):
