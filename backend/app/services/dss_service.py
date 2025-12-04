@@ -314,29 +314,29 @@ class DSSService:
                         dc.category_lvl1,
                         'Uncategorized'
                     ) AS category_name,
-                    COALESCE(pm.current_price, 0) AS current_price,
+                    COALESCE(pm.avg_price, 0) AS current_price,
                     pred.predicted_price,
-                    (pred.predicted_price - COALESCE(pm.current_price, 0)) AS price_diff,
+                    (pred.predicted_price - COALESCE(pm.avg_price, 0)) AS price_diff,
                     CASE 
-                        WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                        ELSE (pred.predicted_price / pm.current_price - 1)
+                        WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                        ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS price_change_pct,
                     
                     -- CALCULATE ORDERS & REVENUE WITH RANDOMNESS
                     -- 1. Calculate Mock Orders
                     CASE 
-                        WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
+                        WHEN COALESCE(pm.total_orders, 0) > 0 THEN
                             -- Has reviews: 1 review ≈ 75 sales
-                            CAST(pm.total_reviews * 75 AS INT)
+                            CAST(pm.total_orders * 75 AS INT)
                         ELSE
                             -- No reviews: Mock based on price + randomness
                             -- Base: <100k=300, <500k=150, <2M=50, >2M=20
                             -- Random: +/- 30% using hash of product_key
                             CAST(
                                 (CASE 
-                                    WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                    WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                    WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                    WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
+                                    WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
+                                    WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
                                     ELSE 20
                                 END) * 
                                 (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
@@ -346,51 +346,51 @@ class DSSService:
                     -- 2. Calculate Revenue from Orders
                     (
                         CASE 
-                            WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                                CAST(pm.total_reviews * 75 AS INT)
+                            WHEN COALESCE(pm.total_orders, 0) > 0 THEN
+                                CAST(pm.total_orders * 75 AS INT)
                             ELSE
                                 CAST(
                                     (CASE 
-                                        WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                        WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                        WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                        WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
+                                        WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
+                                        WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
                                         ELSE 20
                                     END) * 
                                     (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
                                 AS INT)
                         END
-                    ) * COALESCE(pm.current_price, 0) AS current_revenue,
+                    ) * COALESCE(pm.avg_price, 0) AS current_revenue,
 
                     CASE 
-                        WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
+                        WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
                         ELSE 
                             -- Projected Revenue = Current Revenue * (Predicted Price / Current Price)
                             (
                                 CASE 
-                                    WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                                        CAST(pm.total_reviews * 75 AS INT)
+                                    WHEN COALESCE(pm.total_orders, 0) > 0 THEN
+                                        CAST(pm.total_orders * 75 AS INT)
                                     ELSE
                                         CAST(
                                             (CASE 
-                                                WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                                WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                                WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                                WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
+                                                WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
+                                                WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
                                                 ELSE 20
                                             END) * 
                                             (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
                                         AS INT)
                                 END
-                            ) * COALESCE(pm.current_price, 0) * (pred.predicted_price / pm.current_price)
+                            ) * COALESCE(pm.avg_price, 0) * (pred.predicted_price / pm.avg_price)
                     END AS projected_revenue,
                     
                     CASE 
-                        WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                        ELSE (pred.predicted_price / pm.current_price - 1)
+                        WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                        ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS expected_revenue_change_pct,
                     pred.confidence,
                     pm.avg_rating,
-                    COALESCE(pm.total_reviews, 0) AS total_reviews,
-                    ABS(pred.predicted_price / NULLIF(pm.current_price, 0) - 1)
+                    COALESCE(pm.total_orders, 0) AS total_reviews,
+                    ABS(pred.predicted_price / NULLIF(pm.avg_price, 0) - 1)
                         AS abs_revenue_change
                 FROM latest_predictions pred
                 JOIN dwh.dim_product dp 
@@ -399,15 +399,13 @@ class DSSService:
                     ON pred.platform_sk = dpl.platform_sk
                 LEFT JOIN dwh.dim_category dc 
                     ON dp.category_sk = dc.category_sk
-                LEFT JOIN product_metrics pm 
-                    ON dp.product_sk = pm.product_sk 
-                   AND pred.platform_sk = pm.platform_sk
+                LEFT JOIN dwh.product_metrics_global pm ON dp.product_sk = pm.product_sk
                 WHERE {where_clause}
-                  AND COALESCE(pm.current_price, 0) > 0
+                  AND COALESCE(pm.avg_price, 0) > 0
                   AND pred.confidence >= {confidence_param}
                   AND ABS(
-                      (pred.predicted_price - COALESCE(pm.current_price, 0))
-                      / NULLIF(pm.current_price, 0)
+                      (pred.predicted_price - COALESCE(pm.avg_price, 0))
+                      / NULLIF(pm.avg_price, 0)
                   ) > {price_change_param}
             )
             SELECT
@@ -447,10 +445,27 @@ class DSSService:
                     )) AS confidence
                 FROM ranked_predictions
                 WHERE rn = 1
-            ),
-            product_metrics AS (
-                SELECT
-                    f.product_sk,
+            )
+            SELECT COUNT(*)
+            FROM latest_predictions pred
+            JOIN dwh.dim_product dp ON pred.product_sk = dp.product_sk
+            JOIN dwh.dim_platform dpl ON pred.platform_sk = dpl.platform_sk
+            LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
+            -- OPTIMIZED: Use product_metrics_global instead of CTE
+            LEFT JOIN dwh.product_metrics_global pm 
+                ON dp.product_sk = pm.product_sk
+            WHERE {where_clause}
+              AND COALESCE(pm.avg_price, 0) > 0
+              AND pred.confidence >= {confidence_param}
+              AND ABS(
+                  (pred.predicted_price - COALESCE(pm.avg_price, 0))
+                  / NULLIF(pm.avg_price, 0)
+              ) > {price_change_param}
+        """
+
+        # Params for count_sql = params without LIMIT/OFFSET
+        count_params = params[:-2]
+
         try:
             rows = await self.db.fetch(sql, *params)
             total_count_row = await self.db.fetchrow(count_sql, *count_params)
@@ -602,24 +617,24 @@ class DSSService:
                     dc.category_lvl1,
                     'Uncategorized'
                 ) AS category_name,
-                COALESCE(pm.current_price, 0) AS current_price,
+                COALESCE(pm.avg_price, 0) AS current_price,
                 pred.predicted_price,
-                (pred.predicted_price - COALESCE(pm.current_price, 0)) AS price_diff,
+                (pred.predicted_price - COALESCE(pm.avg_price, 0)) AS price_diff,
                 CASE 
-                    WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                    ELSE (pred.predicted_price / pm.current_price - 1)
+                    WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                    ELSE (pred.predicted_price / pm.avg_price - 1)
                 END AS price_change_pct,
                 
                 -- Calculate Orders (same logic as by_category)
                 CASE 
-                    WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                        CAST(pm.total_reviews * 75 AS INT)
+                    WHEN COALESCE(pm.total_orders, 0) > 0 THEN
+                        CAST(pm.total_orders * 75 AS INT)
                     ELSE
                         CAST(
                             (CASE 
-                                WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
+                                WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
+                                WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
                                 ELSE 20
                             END) * 
                             (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
@@ -628,49 +643,49 @@ class DSSService:
                 
                 (
                     CASE 
-                        WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                            CAST(pm.total_reviews * 75 AS INT)
+                        WHEN COALESCE(pm.total_orders, 0) > 0 THEN
+                            CAST(pm.total_orders * 75 AS INT)
                         ELSE
                             CAST(
                                 (CASE 
-                                    WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                    WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                    WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                    WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
+                                    WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
+                                    WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
                                     ELSE 20
                                 END) * 
                                 (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
                             AS INT)
                     END
-                ) * COALESCE(pm.current_price, 0) AS current_revenue,
+                ) * COALESCE(pm.avg_price, 0) AS current_revenue,
                 
                 CASE 
-                    WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
+                    WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
                     ELSE 
                         (
                             CASE 
-                                WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                                    CAST(pm.total_reviews * 75 AS INT)
+                                WHEN COALESCE(pm.total_orders, 0) > 0 THEN
+                                    CAST(pm.total_orders * 75 AS INT)
                                 ELSE
                                     CAST(
                                         (CASE 
-                                            WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                            WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                            WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
+                                            WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
+                                            WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
+                                            WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
                                             ELSE 20
                                         END) * 
                                         (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
                                     AS INT)
                             END
-                        ) * COALESCE(pm.current_price, 0) * (pred.predicted_price / pm.current_price)
+                        ) * COALESCE(pm.avg_price, 0) * (pred.predicted_price / pm.avg_price)
                 END AS projected_revenue,
                 
                 CASE 
-                    WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                    ELSE (pred.predicted_price / pm.current_price - 1)
+                    WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                    ELSE (pred.predicted_price / pm.avg_price - 1)
                 END AS expected_revenue_change_pct,
                 pred.confidence,
                 pm.avg_rating,
-                COALESCE(pm.total_reviews, 0) AS total_reviews
+                COALESCE(pm.total_orders, 0) AS total_reviews
             FROM latest_predictions pred
             JOIN dwh.dim_product dp 
                 ON pred.product_sk = dp.product_sk
@@ -678,15 +693,13 @@ class DSSService:
                 ON pred.platform_sk = dpl.platform_sk
             LEFT JOIN dwh.dim_category dc 
                 ON dp.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm 
-                ON dp.product_sk = pm.product_sk 
-               AND pred.platform_sk = pm.platform_sk
+            LEFT JOIN dwh.product_metrics_global pm ON dp.product_sk = pm.product_sk
             WHERE dp.product_key = ANY($3::text[])
-              AND COALESCE(pm.current_price, 0) > 0
+              AND COALESCE(pm.avg_price, 0) > 0
               AND pred.confidence >= $4
               AND ABS(
-                  (pred.predicted_price - COALESCE(pm.current_price, 0))
-                  / NULLIF(pm.current_price, 0)
+                  (pred.predicted_price - COALESCE(pm.avg_price, 0))
+                  / NULLIF(pm.avg_price, 0)
               ) > $5
             ORDER BY dp.product_key, pred.confidence DESC
         """
