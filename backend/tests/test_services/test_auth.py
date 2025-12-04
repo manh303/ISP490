@@ -136,34 +136,16 @@ class TestAuthService(unittest.IsolatedAsyncioTestCase):
         self.iam_service.create_access_token.assert_not_awaited()
         self.iam_service.create_refresh_token.assert_not_awaited()
         self.iam_service.log_user_action.assert_not_awaited()
-    
-    async def test_verify_password_success(self):
-        """Test verify password with correct password"""
-        # Mock bcrypt.checkpw to return True
-        import bcrypt
-        original_checkpw = bcrypt.checkpw
-        bcrypt.checkpw = lambda pwd, hashed: True
-        
-        try:
-            result = await self.iam_service.verify_password("correct_password", "hashed_password_123")
-            self.assertTrue(result)
-        finally:
-            # Restore original function
-            bcrypt.checkpw = original_checkpw
-    
-    async def test_verify_password_wrong(self):
-        """Test verify password with wrong password"""
-        # Mock bcrypt.checkpw to return False
-        import bcrypt
-        original_checkpw = bcrypt.checkpw
-        bcrypt.checkpw = lambda pwd, hashed: False
-        
-        try:
-            result = await self.iam_service.verify_password("wrong_password", "hashed_password_123")
-            self.assertFalse(result)
-        finally:
-            # Restore original function
-            bcrypt.checkpw = original_checkpw
+
+    def test_verify_password_success(self):
+        plain = "StrongPass123!"
+        hashed = self.iam_service.hash_password(plain)
+        self.assertTrue(self.iam_service.verify_password(plain, hashed))
+
+    def test_verify_password_wrong(self):
+        plain = "StrongPass123!"
+        hashed = self.iam_service.hash_password(plain)
+        self.assertFalse(self.iam_service.verify_password("WrongPass123!", hashed)) 
 
 if __name__ == '__main__':
     unittest.main()
