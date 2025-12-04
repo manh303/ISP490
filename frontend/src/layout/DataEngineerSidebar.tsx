@@ -28,37 +28,39 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Data Engineering Dashboard",
+    name: "Bảng điều khiển",
     path: "/dataengineer/dashboard",
   },
   {
     icon: <TableIcon />,
-    name: "Data Pipeline",
+    name: "Pipeline Dữ liệu",
+    path: "/dataengineer/pipelines",
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Chất lượng Dữ liệu",
     subItems: [
-      { name: "ETL Processes", path: "/dataengineer/etl", pro: false },
-      { name: "Data Ingestion", path: "/dataengineer/ingestion", pro: false },
-      { name: "Data Transformation", path: "/dataengineer/transformation", pro: false },
-      { name: "Data Quality", path: "/dataengineer/quality", pro: false },
+      { name: "Tổng quan Chất lượng", path: "/dataengineer/quality", pro: false },
+      { name: "Tóm tắt Chất lượng", path: "/dataengineer/data-quality-summary", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Data Storage",
+    name: "Quản lý Bảng",
     subItems: [
-      { name: "Database Management", path: "/dataengineer/database", pro: false },
-      { name: "Data Warehouse", path: "/dataengineer/warehouse", pro: false },
-      { name: "Data Lakes", path: "/dataengineer/lakes", pro: false },
-      { name: "Backup & Recovery", path: "/dataengineer/backup", pro: false },
+      { name: "Tăng trưởng Bảng", path: "/dataengineer/table-growth", pro: false },
+      { name: "Phả hệ Bảng", path: "/dataengineer/table-lineage", pro: false },
+      { name: "Xu hướng Khối lượng Dữ liệu", path: "/dataengineer/data-volume-trends", pro: false },
     ],
   },
   {
-    icon: <PieChartIcon />,
-    name: "Data Monitoring",
+    icon: <TableIcon />,
+    name: "Siêu dữ liệu Kinh doanh",
     subItems: [
-      { name: "Performance Metrics", path: "/dataengineer/metrics", pro: false },
-      { name: "Data Lineage", path: "/dataengineer/lineage", pro: false },
-      { name: "System Health", path: "/dataengineer/health", pro: false },
-      { name: "Error Logs", path: "/dataengineer/logs", pro: false },
+      { name: "Nguồn", path: "/dataengineer/sources", pro: false },
+      { name: "Danh mục", path: "/dataengineer/catalog", pro: false },
+      { name: "Bảng thuật ngữ", path: "/dataengineer/glossary", pro: false },
+      { name: "Kỳ vọng & Công việc", path: "/dataengineer/expectations-jobs", pro: false },
     ],
   },
 ];
@@ -66,22 +68,22 @@ const navItems: NavItem[] = [
 const toolsItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
-    name: "Engineering Tools",
+    name: "Công cụ Kỹ thuật",
     subItems: [
-      { name: "SQL Editor", path: "/dataengineer/sql-editor", pro: false },
-      { name: "Data Connectors", path: "/dataengineer/connectors", pro: false },
-      { name: "API Management", path: "/dataengineer/api", pro: false },
-      { name: "Schema Designer", path: "/dataengineer/schema", pro: false },
+      { name: "Trình chỉnh sửa SQL", path: "/dataengineer/sql-editor", pro: false },
+      { name: "Kết nối Dữ liệu", path: "/dataengineer/connectors", pro: false },
+      { name: "Quản lý API", path: "/dataengineer/api", pro: false },
+      { name: "Thiết kế Schema", path: "/dataengineer/schema", pro: false },
     ],
   },
   {
     icon: <CalenderIcon />,
-    name: "Job Management",
+    name: "Quản lý Công việc",
     subItems: [
-      { name: "Scheduled Jobs", path: "/dataengineer/jobs", pro: false },
-      { name: "Job Monitoring", path: "/dataengineer/job-monitor", pro: false },
-      { name: "Workflow Automation", path: "/dataengineer/workflow", pro: false },
-      { name: "Task Scheduling", path: "/dataengineer/tasks", pro: false },
+      { name: "Công việc Định kỳ", path: "/dataengineer/jobs", pro: false },
+      { name: "Giám sát Công việc", path: "/dataengineer/job-monitor", pro: false },
+      { name: "Tự động hóa Quy trình", path: "/dataengineer/workflow", pro: false },
+      { name: "Lập lịch Nhiệm vụ", path: "/dataengineer/tasks", pro: false },
     ],
   },
 ];
@@ -302,14 +304,14 @@ const DataEngineerSidebar: React.FC = () => {
               <img
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
-                alt="Data Engineering Panel"
+                alt="Bảng điều khiển Kỹ thuật Dữ liệu"
                 width={150}
                 height={40}
               />
               <img
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
-                alt="Data Engineering Panel"
+                alt="Bảng điều khiển Kỹ thuật Dữ liệu"
                 width={150}
                 height={40}
               />
@@ -317,7 +319,7 @@ const DataEngineerSidebar: React.FC = () => {
           ) : (
             <img
               src="/images/logo/logo-icon.svg"
-              alt="Data Engineering"
+              alt="Kỹ thuật Dữ liệu"
               width={32}
               height={32}
             />
@@ -336,7 +338,7 @@ const DataEngineerSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Data Engineering"
+                  "Kỹ thuật Dữ liệu"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -352,7 +354,7 @@ const DataEngineerSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Engineering Tools"
+                  "Công cụ Kỹ thuật"
                 ) : (
                   <HorizontaLDots />
                 )}

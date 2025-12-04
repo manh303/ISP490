@@ -16,7 +16,7 @@ export function Header() {
       navigate('/admin/dashboard');
     } else if (hasRole('analyst')) {
       navigate('/analyst/dashboard');
-    } else if (hasRole('dataengineer')) {
+    } else if (hasRole('data_engineer')) {
       navigate('/dataengineer/dashboard');
     } else if (hasRole('ML')) {
       navigate('/ml/dashboard');
@@ -31,7 +31,7 @@ export function Header() {
       return 'Admin Dashboard';
     } else if (hasRole('analyst')) {
       return 'Analyst Dashboard';
-    } else if (hasRole('dataengineer')) {
+    } else if (hasRole('data_engineer')) {
       return 'Engineer Dashboard';
        } else if (hasRole('ML')) {
       return 'ML Dashboard';

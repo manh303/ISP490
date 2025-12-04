@@ -108,17 +108,17 @@ export function ProductAnalytics() {
     } catch (err) {
       console.error('Error loading analytics data:', err);
       setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
-    // Set default date range (last 30 days)
+    // Set default date range (last 7 days)
     const now = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(now.getDate() - 30);
-    setFromDate(thirtyDaysAgo);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    setFromDate(sevenDaysAgo);
     setToDate(now);
   }, []);
 
@@ -126,9 +126,7 @@ export function ProductAnalytics() {
     if (fromDate && toDate) {
       loadAnalyticsData();
     }
-  }, [fromDate, toDate, platformCode, categoryKey, metric]);
-
-  const handleRefresh = () => {
+  }, [fromDate, toDate, platformCode, categoryKey, metric]);  const handleRefresh = () => {
     loadAnalyticsData();
   };
 

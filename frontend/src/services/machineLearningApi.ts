@@ -143,6 +143,20 @@ export interface OnlineSentimentResponse {
   latency_ms: number;
 }
 
+export interface DSSRunRequest {
+  model_type: 'price_prediction' | 'product_recommendation' | 'review_sentiment';
+  input_data: Record<string, any>;
+}
+
+export interface DSSRunResponse {
+  model_results: Record<string, any>;
+  charts_data?: any[];
+  tables_data?: any[];
+  metrics?: Record<string, any>;
+}
+
+
+// Thêm interface cho kết quả /v1/ml/status/summary
 export interface StatusSummary {
   models_total: number;
   models_active: number;

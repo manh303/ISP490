@@ -1,89 +1,428 @@
-import { RefreshCw, Settings } from 'lucide-react';
-import { KpiCard } from './components/kpi-card';
-import { EtlJobCard } from './components/etl-job-card';
-import { DataQuality } from './components/data-quality';
-import { PerformanceChart } from './components/performance-chart';
-import { TableHealth } from './components/table-health';
+import React, { useState, useEffect } from 'react';
+import {
+  Activity,
+  Database,
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Server,
+  BarChart3,
+  RefreshCw
+} from 'lucide-react';
+import {
+  getHealth,
+  getETLJobs,
+  getTableHealth,
+  getDataQualityIssues,
+  getDatabaseHealth,
+  getAlertSummary,
+  HealthResponse,
+  ETLJob,
+  TableHealth,
+  DataQualityIssue,
+  DatabaseHealth,
+  AlertSummary
+} from '../../services/dataEngineerApi';
 
-export default function App() {
-  const handleRefresh = () => {
-    console.log('Refreshing dashboard...');
+const DataEngineerDashboard: React.FC = () => {
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [etlJobs, setEtlJobs] = useState<ETLJob[]>([]);
+  const [tableHealth, setTableHealth] = useState<TableHealth[]>([]);
+  const [dataQualityIssues, setDataQualityIssues] = useState<DataQualityIssue[]>([]);
+  const [databaseHealth, setDatabaseHealth] = useState<DatabaseHealth | null>(null);
+  const [alerts, setAlerts] = useState<AlertSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [
+        healthData,
+        etlJobsData,
+        tableHealthData,
+        dataQualityData,
+        dbHealthData,
+        alertsData
+      ] = await Promise.all([
+        getHealth(),
+        getETLJobs(),
+        getTableHealth(),
+        getDataQualityIssues(),
+        getDatabaseHealth(),
+        getAlertSummary()
+      ]);
+
+      setHealth(healthData);
+      setEtlJobs(etlJobsData);
+      setTableHealth(tableHealthData);
+      setDataQualityIssues(dataQualityData);
+      setDatabaseHealth(dbHealthData);
+      setAlerts(alertsData);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+          setError('Không thể tải dữ liệu bảng điều khiển');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'healthy':
+      case 'success':
+      case 'active':
+        return 'text-green-600 bg-green-100';
+      case 'warning':
+      case 'running':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'error':
+      case 'failed':
+      case 'critical':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical':
+      case 'high':
+        return 'text-red-600 bg-red-100';
+      case 'warning':
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'low':
+        return 'text-blue-600 bg-blue-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Bảng điều khiển Kỹ sư Dữ liệu
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
+            Giám sát đường ống ETL, chất lượng dữ liệu và sức khỏe hệ thống
+          </p>
+        </div>
+        <button
+          onClick={fetchData}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Làm mới
+        </button>
+      </div>
+
+      {/* System Health Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
           <div className="flex items-center justify-between">
-            <h1 className="flex items-center gap-2">
-              📊 Data Engineer Dashboard
-            </h1>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleRefresh}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
-              <button className="p-2 hover:bg-slate-100 rounded-md transition-colors">
-                <Settings className="w-5 h-5 text-slate-600" />
-              </button>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sức khỏe Hệ thống</p>
+              <p className={`text-2xl font-bold ${health?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}`}>
+                {health?.status === 'healthy' ? 'Khỏe mạnh' : 'Không khỏe mạnh'}
+              </p>
+            </div>
+            <Activity className={`w-8 h-8 ${health?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}`} />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Trạng thái Cơ sở Dữ liệu</p>
+              <p className={`text-2xl font-bold ${databaseHealth?.status?.toLowerCase() === 'healthy' ? 'text-green-600' : 'text-red-600'}`}>
+                {databaseHealth?.status ? databaseHealth.status.charAt(0) + databaseHealth.status.slice(1).toLowerCase() : 'Unknown'}
+              </p>
+            </div>
+            <Database className={`w-8 h-8 ${databaseHealth?.status?.toLowerCase() === 'healthy' ? 'text-green-600' : 'text-red-600'}`} />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Công việc ETL Đang hoạt động</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {etlJobs.filter(job => job.is_active).length}
+              </p>
+            </div>
+            <Server className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Chất lượng Dữ liệu</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {dataQualityIssues.length}
+              </p>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-orange-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* ETL Jobs Status */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+            <Server className="w-5 h-5 mr-2" />
+            Trạng thái Đường ống ETL
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tên Công việc</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Trạng thái</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Chạy Lần cuối</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tỷ lệ Thành công</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Thời lượng</th>
+                </tr>
+              </thead>
+              <tbody>
+                {etlJobs.map((job) => (
+                  <tr key={job.job_code} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{job.job_name}</p>
+                        <p className="text-sm text-gray-500">{job.job_code}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(job.last_run_status)}`}>
+                        {job.last_run_status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
+                      {job.last_run_date}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`font-medium ${job.success_rate >= 80 ? 'text-green-600' : job.success_rate >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                        {job.success_rate.toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
+                      {job.last_run_duration_minutes ? `${job.last_run_duration_minutes.toFixed(1)}m` : 'N/A'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Quality Issues */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+            <AlertTriangle className="w-5 h-5 mr-2" />
+            Vấn đề Chất lượng Dữ liệu
+          </h2>
+        </div>
+        <div className="p-6">
+          {dataQualityIssues.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
+              <p>Không tìm thấy vấn đề chất lượng dữ liệu</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {dataQualityIssues.slice(0, 5).map((issue) => (
+                <div key={issue.issue_id} className="flex items-start justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getSeverityColor(issue.severity)}`}>
+                        {issue.severity}
+                      </span>
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(issue.status)}`}>
+                        {issue.status}
+                      </span>
+                    </div>
+                    <p className="font-medium text-gray-900 dark:text-white">{issue.issue_description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {issue.schema_name}.{issue.table_name} • {issue.affected_rows} rows affected
+                    </p>
+                  </div>
+                  <div className="text-right text-sm text-gray-500">
+                    {new Date(issue.detected_at).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Database Health & Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Database Health */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+              <Database className="w-5 h-5 mr-2" />
+              Sức khỏe Cơ sở Dữ liệu
+            </h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Kết nối Đang hoạt động</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {databaseHealth?.active_connections || 0}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Sử dụng Kết nối</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {databaseHealth?.connection_usage_pct?.toFixed(1) || 0}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Thời gian Truy vấn Trung bình</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {databaseHealth?.avg_query_time_ms?.toFixed(1) || 0}ms
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Truy vấn Chậm</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {databaseHealth?.slow_queries_count || 0}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <KpiCard icon="📦" label="Jobs" value="4" />
-          <KpiCard icon="⏱️" label="Avg Duration" value="14.2min" />
-          <KpiCard icon="✅" label="Success Rate" value="95.8%" />
-          <KpiCard icon="⚠️" label="Alerts" value="4" variant="warning" />
-          <KpiCard icon="📊" label="Tables" value="23" />
-          <KpiCard icon="💾" label="Data Size" value="2.5GB" />
-        </div>
-
-        {/* Running Jobs Badge */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-green-800">🔄 0 Jobs Running</span>
+        {/* Recent Alerts */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              Cảnh báo Gần đây (24h)
+            </h2>
+          </div>
+          <div className="p-6">
+            {alerts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                <p>Không có cảnh báo trong 24 giờ qua</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {alerts.slice(0, 5).map((alert, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white">{alert.alert_name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{alert.target_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getSeverityColor(alert.severity)}`}>
+                        {alert.severity}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {alert.triggered_count_24h} kích hoạt
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* ETL Jobs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <EtlJobCard
-            name="DWH Pipeline"
-            status="SUCCESS"
-            successRate={95.8}
-          />
-          <EtlJobCard
-            name="ML Training"
-            status="SUCCESS"
-            successRate={88.9}
-          />
-          <EtlJobCard
-            name="Crawlers"
-            status="DEGRADED"
-            successRate={85.0}
-          />
+      {/* Table Health Summary */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Tóm tắt Sức khỏe Bảng
+          </h2>
         </div>
-
-        {/* Data Quality & Performance Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-1">
-            <DataQuality />
-          </div>
-          <div className="lg:col-span-2">
-            <PerformanceChart />
+        <div className="p-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Bảng</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Hàng</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Kích thước</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Tính mới</th>
+                  <th className="text-left py-2 px-4 font-medium text-gray-700 dark:text-gray-300">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableHealth.slice(0, 10).map((table, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{table.table_name}</p>
+                        <p className="text-sm text-gray-500">{table.schema_name}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                      {table.row_count.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                      {table.size_mb.toFixed(1)} MB
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                      {table.freshness_hours}h ago
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusColor(table.health_status)}`}>
+                        {table.health_status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        {/* Table Health */}
-        <TableHealth />
       </div>
     </div>
   );
-}
+};
+
+export default DataEngineerDashboard;

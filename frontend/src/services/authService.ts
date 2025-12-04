@@ -40,7 +40,7 @@ class AuthService {
   private token: string | null;
 
   constructor() {
-    this.baseURL = (import.meta as any).env?.VITE_API_URL || 'https://ecommerce-dss-backend.onrender.com';
+    this.baseURL = (import.meta as any).env?.VITE_API_URL || 'https://isp490.onrender.com';
     this.token = Cookies.get('access_token') || null;
   }
 

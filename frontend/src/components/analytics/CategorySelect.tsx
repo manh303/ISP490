@@ -53,10 +53,10 @@ export function CategorySelect({ value, onValueChange, platformCode, parentCateg
 
   return (
     <Select value={value} onValueChange={(val) => onValueChange(val === 'all' ? undefined : val)}>
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[200px] bg-white">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white max-h-60 overflow-y-auto">
         <SelectItem value="all">Tất cả danh mục</SelectItem>
         {categories.map((category) => (
           <SelectItem key={category.category_key} value={category.category_key}>

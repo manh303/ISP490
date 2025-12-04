@@ -74,17 +74,17 @@ export function CategoryAnalytics() {
     } catch (err) {
       console.error('Error loading category analytics data:', err);
       setError('Không thể tải dữ liệu phân tích danh mục. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
-    // Set default date range (last 30 days)
+    // Set default date range (last 7 days)
     const now = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(now.getDate() - 30);
-    setFromDate(thirtyDaysAgo);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    setFromDate(sevenDaysAgo);
     setToDate(now);
   }, []);
 
@@ -99,9 +99,7 @@ export function CategoryAnalytics() {
       });
       loadAnalyticsData();
     }
-  }, [fromDate, toDate, platformCode, selectedCategory, selectedParentCategory]);
-
-  const handleRefresh = () => {
+  }, [fromDate, toDate, platformCode, selectedCategory, selectedParentCategory]);  const handleRefresh = () => {
     window.location.reload();
   };
 

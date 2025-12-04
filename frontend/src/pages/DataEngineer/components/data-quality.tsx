@@ -14,7 +14,7 @@ export function DataQuality() {
         Data Quality
       </h2>
       <div className="mb-4">
-        <div className="text-slate-900 text-2xl">⚠️ 4 Issues</div>
+        <div className="text-slate-900 text-2xl">⚠️ 4 Vấn đề</div>
       </div>
       <div className="space-y-3">
         {issues.map((issue) => {
