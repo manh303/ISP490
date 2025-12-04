@@ -94,41 +94,92 @@ class DSSService:
         req["min_confidence"] = max(req.get("min_confidence", 0.70), 0.6)
         ai_mode = req.get("ai_mode", "full")
 
-        # 1. Query price predictions + fact data
-        data = await self._query_price_predictions(req)
-
-        # 2. Calculate KPIs
-        kpi_summary = self._calculate_price_kpis(data, request)
-
-        # 3. Build DSS_RESULT_RAW (input cho AI summarizer)
-        dss_result_raw = {
-            "scenario": "price_prediction",
-            "filters": {
-                "from_date": str(request.get("from_date")),
-                "to_date": str(request.get("to_date")),
-                "platforms": request.get("platforms", []),
-                "categories": request.get("categories", []),
-            },
-            "kpi_summary": kpi_summary,
-            "table_data": data["items"],
-            "date_adjustment_info": {
-                "requested_from_date": str(request.get("from_date")),
-                "requested_to_date": str(request.get("to_date")),
-                "actual_from_date": str(data.get("actual_from_date")),
-                "actual_to_date": str(data.get("actual_to_date")),
-                "date_adjusted": data.get("date_adjusted", False),
-            },
-        }
-
-        # 4. Generate AI insights
-        ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
-        if ai_mode == "full" and self.ai_summarizer.available:
-            ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
-        else:
-            ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
+        # 0. Check Cache
+        # Cache key based on request filters (excluding user_id/pagination if needed, but pagination affects result so keep it)
+        cache_key = self._build_cache_key("dss_price", req)
+        cached_result = await cache.get(cache_key)
         
-        ai_summary_insights = ai_result.get("summary_insights", [])
-        ai_recommended_actions = ai_result.get("recommended_actions", [])
+        if cached_result:
+            logger.info(f"Cache HIT for Price DSS: {cache_key}")
+            dss_result_raw = cached_result["dss_result_raw"]
+            ai_summary_insights = cached_result["ai_summary_insights"]
+            ai_recommended_actions = cached_result["ai_recommended_actions"]
+            # Handle backward compatibility for cached results without ai_input_stats
+            ai_input_stats = cached_result.get("ai_input_stats")
+            if ai_input_stats is None:
+                kpi_summary = dss_result_raw["kpi_summary"]
+                ai_input_stats = {
+                    "scenario": "price_prediction",
+                    "kpi_keys": list(kpi_summary.keys()),
+                    "table_rows_for_ai": len(dss_result_raw.get("table_data", [])),
+                }
+            else:
+                kpi_summary = dss_result_raw["kpi_summary"]
+            # Rehydrate data structure for response consistency
+            table_items = dss_result_raw.get("table_data", [])
+            date_info = dss_result_raw.get("date_adjustment_info", {})
+            data = {
+                "items": table_items,
+                "total_count": dss_result_raw.get("total_count") or len(table_items),
+                "date_adjusted": date_info.get("date_adjusted"),
+                "actual_from_date": date_info.get("actual_from_date"),
+                "actual_to_date": date_info.get("actual_to_date"),
+            }
+        else:
+            logger.info(f"Cache MISS for Price DSS: {cache_key}")
+            
+            # 1. Query price predictions + fact data
+            data = await self._query_price_predictions(req)
+
+            # 2. Calculate KPIs
+            kpi_summary = self._calculate_price_kpis(data, request)
+
+            # 3. Build DSS_RESULT_RAW (input cho AI summarizer)
+            dss_result_raw = {
+                "scenario": "price_prediction",
+                "filters": {
+                    "from_date": str(request.get("from_date")),
+                    "to_date": str(request.get("to_date")),
+                    "platforms": request.get("platforms", []),
+                    "categories": request.get("categories", []),
+                },
+                "kpi_summary": kpi_summary,
+                "table_data": data["items"],
+                "total_count": data.get("total_count", len(data["items"])),
+                "date_adjustment_info": {
+                    "requested_from_date": str(request.get("from_date")),
+                    "requested_to_date": str(request.get("to_date")),
+                    "actual_from_date": str(data.get("actual_from_date")),
+                    "actual_to_date": str(data.get("actual_to_date")),
+                    "date_adjusted": data.get("date_adjusted", False),
+                },
+            }
+
+            # 4. Generate AI insights
+            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
+            if ai_mode == "full" and self.ai_summarizer.available:
+                ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
+            else:
+                ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+
+            # NEW: summarize what AI actually received
+            ai_input_stats = {
+                "scenario": "price_prediction",
+                "kpi_keys": list(kpi_summary.keys()),
+                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
+            }
+
+            # Cache the result (TTL 1 hour)
+            cache_payload = {
+                "dss_result_raw": dss_result_raw,
+                "ai_summary_insights": ai_summary_insights,
+                "ai_recommended_actions": ai_recommended_actions,
+                "ai_input_stats": ai_input_stats
+            }
+            await cache.set(cache_key, cache_payload, ttl=3600)
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -170,6 +221,7 @@ class DSSService:
             if self.ai_summarizer.available
             else "rule-based-fallback",
             "session_id": session_id,  # NEW: Session ID for decision linking
+            "ai_input_stats": ai_input_stats,   # 👈 NEW
         }
 
     async def _query_price_predictions(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -238,8 +290,9 @@ class DSSService:
         offset = (page - 1) * page_size
 
         # Build parameterized query
-        params: List[Any] = [from_date, adjusted_to_date]
-        param_idx = 3
+        # OPTIMIZATION: Removed from_date/to_date from params as they are not used in product_metrics_global join
+        params: List[Any] = []
+        param_idx = 1
         conditions: List[str] = []
 
         if platforms:
@@ -759,16 +812,15 @@ class DSSService:
         items = data.get("items", [])
         if not items:
             return {
-            "num_products": num_products,
-            "num_with_recommendation": num_with_reco,
-            "current_revenue": current_revenue,
-            "projected_revenue": projected_revenue,
-            # alias cho AI + docs
-            "current_total_revenue": current_revenue,
-            "projected_total_revenue": projected_revenue,
-            "expected_revenue_uplift_pct": expected_uplift_pct,
-            "avg_confidence": avg_confidence,
-    }
+                "num_products": 0,
+                "num_with_recommendation": 0,
+                "current_revenue": 0.0,
+                "projected_revenue": 0.0,
+                "current_total_revenue": 0.0,
+                "projected_total_revenue": 0.0,
+                "expected_revenue_uplift_pct": 0.0,
+                "avg_confidence": 0.0,
+            }
 
         num_products = len(items)
         num_with_reco = len([i for i in items if i["price_change_pct"] != 0])
@@ -808,39 +860,85 @@ class DSSService:
         req["min_similarity"] = max(req.get("min_similarity", 0.5), 0.6)
         ai_mode = req.get("ai_mode", "full")
 
-        # 1. Query recommendations
-        recommendations = await self._query_product_recommendations(req)
-
-        # 2. Calculate KPIs
-        kpi_summary = self._calculate_reco_kpis(recommendations, request)
-
-        # 3. Build DSS_RESULT_RAW
-        dss_result_raw = {
-            "scenario": "product_recommendation",
-            "filters": {
-                "from_date": str(request.get("from_date")),
-                "to_date": str(request.get("to_date")),
-                "platforms": request.get("platforms", []),
-                "categories": request.get("categories", []),
-                "scope_mode": request.get("scope_mode", "by_category"),
-            },
-            "kpi_summary": kpi_summary,
-            "table_data": recommendations,
-        }
-
-        # 4. Generate AI insights
-        ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:10]}
-        if ai_mode == "full" and self.ai_summarizer.available:
-            ai_result = self.ai_summarizer.summarize_with_ai(
-                "product_recommendation", ai_payload
-            )
-        else:
-            ai_result = self.ai_summarizer._get_fallback_response(
-                "product_recommendation", ai_payload
-            )
+        # 0. Check Cache
+        cache_key = self._build_cache_key("dss_reco", req)
+        cached_result = await cache.get(cache_key)
         
-        ai_summary_insights = ai_result.get("summary_insights", [])
-        ai_recommended_actions = ai_result.get("recommended_actions", [])
+        if cached_result:
+            logger.info(f"Cache HIT for Reco DSS: {cache_key}")
+            dss_result_raw = cached_result["dss_result_raw"]
+            ai_summary_insights = cached_result["ai_summary_insights"]
+            ai_recommended_actions = cached_result["ai_recommended_actions"]
+            # Handle backward compatibility for cached results without ai_input_stats
+            ai_input_stats = cached_result.get("ai_input_stats")
+            if ai_input_stats is None:
+                kpi_summary = dss_result_raw["kpi_summary"]
+                ai_input_stats = {
+                    "scenario": "product_recommendation",
+                    "kpi_keys": list(kpi_summary.keys()),
+                    "table_rows_for_ai": len(dss_result_raw.get("table_data", [])),
+                }
+            else:
+                kpi_summary = dss_result_raw["kpi_summary"]
+        else:
+            logger.info(f"Cache MISS for Reco DSS: {cache_key}")
+            
+            # 1. Query recommendations
+            recommendations = await self._query_product_recommendations(req)
+
+            # 2. Calculate KPIs (convert Decimals for JSON safety)
+            kpi_summary = self._convert_decimals_to_float(
+                self._calculate_reco_kpis(recommendations, request)
+            )
+            # Convert table data to avoid Decimal in AI payload/cache
+            recommendations = self._convert_decimals_to_float(recommendations)
+
+            # 3. Build DSS_RESULT_RAW
+            dss_result_raw = {
+                "scenario": "product_recommendation",
+                "filters": {
+                    "from_date": str(request.get("from_date")),
+                    "to_date": str(request.get("to_date")),
+                    "platforms": request.get("platforms", []),
+                    "categories": request.get("categories", []),
+                    "scope_mode": request.get("scope_mode", "by_category"),
+                },
+                "kpi_summary": kpi_summary,
+                "table_data": recommendations,
+            }
+
+            # 4. Generate AI insights (send a moderate sample for context)
+            ai_payload = {
+                **dss_result_raw,
+                "table_data": dss_result_raw["table_data"][:15],
+            }
+            if ai_mode == "full" and self.ai_summarizer.available:
+                ai_result = self.ai_summarizer.summarize_with_ai(
+                    "product_recommendation", ai_payload
+                )
+            else:
+                ai_result = self.ai_summarizer._get_fallback_response(
+                    "product_recommendation", ai_payload
+                )
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+
+            # NEW: summarize AI input
+            ai_input_stats = {
+                "scenario": "product_recommendation",
+                "kpi_keys": list(kpi_summary.keys()),
+                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
+            }
+
+            # Cache the result
+            cache_payload = {
+                "dss_result_raw": dss_result_raw,
+                "ai_summary_insights": ai_summary_insights,
+                "ai_recommended_actions": ai_recommended_actions,
+                "ai_input_stats": ai_input_stats
+            }
+            await cache.set(cache_key, cache_payload, ttl=3600)
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -878,6 +976,7 @@ class DSSService:
             if self.ai_summarizer.available
             else "rule-based-fallback",
             "session_id": session_id,  # NEW: Session ID for decision linking
+            "ai_input_stats": ai_input_stats,  # 👈 NEW
         }
 
     async def _query_product_recommendations(
@@ -923,7 +1022,7 @@ class DSSService:
                 "to_date": to_date,
             },
         )
-        cached = cache.get(cache_key)
+        cached = await cache.get(cache_key)
         if cached is not None:
             return cached
 
@@ -934,7 +1033,7 @@ class DSSService:
                 dp_src.product_name AS source_product_name,
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
-                dpl_rec.platform_code AS platform,
+                COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) AS platform,
                 COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
@@ -943,7 +1042,7 @@ class DSSService:
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
-            LEFT JOIN dwh.dim_platform dpl_rec ON dp_rec.platform_sk = dpl_rec.platform_sk
+            LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
             LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE dp_src.product_key = $1
@@ -957,7 +1056,7 @@ class DSSService:
             rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k)
             result = [dict(row) for row in rows]
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
-            cache.set(cache_key, result, ttl=3600)
+            await cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
             logger.error(f"Error querying recommendations by product: {e}")
@@ -984,8 +1083,8 @@ class DSSService:
 
         platform_filter = ""
         if platforms:
-            # OPTIMIZED: Use platform_sk instead of SUBSTRING for better index usage
-            platform_filter = f"AND dpl_rec.platform_code = ANY(${param_idx})"
+            # Platform derived from product_key prefix (dim_product has no platform_sk)
+            platform_filter = f"AND COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) = ANY(${param_idx})"
             params.append(platforms)
             param_idx += 1
 
@@ -1006,7 +1105,7 @@ class DSSService:
                 "to_date": to_date,
             },
         )
-        cached = cache.get(cache_key)
+        cached = await cache.get(cache_key)
         if cached is not None:
             return cached
 
@@ -1017,7 +1116,7 @@ class DSSService:
                 dp_src.product_name AS source_product_name,
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
-                dpl_rec.platform_code AS platform,
+                COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) AS platform,
                 COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
@@ -1026,7 +1125,7 @@ class DSSService:
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
-            LEFT JOIN dwh.dim_platform dpl_rec ON dp_rec.platform_sk = dpl_rec.platform_sk
+            LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
             LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE rec.similarity_score >= $1
@@ -1040,7 +1139,7 @@ class DSSService:
             rows = await self.db.fetch(sql, *params)
             result = [dict(row) for row in rows]
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
-            cache.set(cache_key, result, ttl=3600)
+            await cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
             logger.error(f"Error querying recommendations by category: {e}")
@@ -1064,8 +1163,21 @@ class DSSService:
         source_products = {r["source_product_key"] for r in recommendations}
         num_source_products = len(source_products)
 
-        avg_similarity = sum(r["similarity_score"] for r in recommendations) / num_recommendations
-        avg_orders = sum(r["total_orders"] for r in recommendations) / num_recommendations
+        # Robust numeric casts to avoid str/Decimal issues from DB driver
+        similarity_values: List[float] = []
+        order_values: List[float] = []
+        for r in recommendations:
+            try:
+                similarity_values.append(float(r.get("similarity_score", 0) or 0))
+            except (TypeError, ValueError):
+                similarity_values.append(0.0)
+            try:
+                order_values.append(float(r.get("total_orders", 0) or 0))
+            except (TypeError, ValueError):
+                order_values.append(0.0)
+
+        avg_similarity = sum(similarity_values) / num_recommendations if num_recommendations else 0.0
+        avg_orders = sum(order_values) / num_recommendations if num_recommendations else 0.0
 
         return {
             "num_source_products": num_source_products,
@@ -1089,38 +1201,59 @@ class DSSService:
         req = dict(request)
         ai_mode = req.get("ai_mode", "full")
 
-        # 1. Query sentiment data
-        sentiment_data = await self._query_review_sentiment(req)
-
-        # 2. Calculate KPIs
-        kpi_summary = self._calculate_sentiment_kpis(sentiment_data, request)
-
-        # 3. Build DSS_RESULT_RAW
-        dss_result_raw = {
-            "scenario": "review_sentiment",
-            "filters": {
-                "from_date": str(request.get("from_date")),
-                "to_date": str(request.get("to_date")),
-                "platforms": request.get("platforms", []),
-                "categories": request.get("categories", []),
-            },
-            "kpi_summary": kpi_summary,
-            "table_data": sentiment_data,
-        }
-
-        # 4. Generate AI insights
-        ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
-        if ai_mode == "full" and self.ai_summarizer.available:
-            ai_result = self.ai_summarizer.summarize_with_ai(
-                "review_sentiment", ai_payload
-            )
-        else:
-            ai_result = self.ai_summarizer._get_fallback_response(
-                "review_sentiment", ai_payload
-            )
+        # 0. Check Cache
+        cache_key = self._build_cache_key("dss_sentiment", req)
+        cached_result = await cache.get(cache_key)
         
-        ai_summary_insights = ai_result.get("summary_insights", [])
-        ai_recommended_actions = ai_result.get("recommended_actions", [])
+        if cached_result:
+            logger.info(f"Cache HIT for Sentiment DSS: {cache_key}")
+            dss_result_raw = cached_result["dss_result_raw"]
+            ai_summary_insights = cached_result["ai_summary_insights"]
+            ai_recommended_actions = cached_result["ai_recommended_actions"]
+            kpi_summary = dss_result_raw["kpi_summary"]
+        else:
+            logger.info(f"Cache MISS for Sentiment DSS: {cache_key}")
+            
+            # 1. Query sentiment data
+            sentiment_data = await self._query_review_sentiment(req)
+
+            # 2. Calculate KPIs
+            kpi_summary = self._calculate_sentiment_kpis(sentiment_data, request)
+
+            # 3. Build DSS_RESULT_RAW
+            dss_result_raw = {
+                "scenario": "review_sentiment",
+                "filters": {
+                    "from_date": str(request.get("from_date")),
+                    "to_date": str(request.get("to_date")),
+                    "platforms": request.get("platforms", []),
+                    "categories": request.get("categories", []),
+                },
+                "kpi_summary": kpi_summary,
+                "table_data": sentiment_data,
+            }
+
+            # 4. Generate AI insights
+            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
+            if ai_mode == "full" and self.ai_summarizer.available:
+                ai_result = self.ai_summarizer.summarize_with_ai(
+                    "review_sentiment", ai_payload
+                )
+            else:
+                ai_result = self.ai_summarizer._get_fallback_response(
+                    "review_sentiment", ai_payload
+                )
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+            
+            # Cache the result
+            cache_payload = {
+                "dss_result_raw": dss_result_raw,
+                "ai_summary_insights": ai_summary_insights,
+                "ai_recommended_actions": ai_recommended_actions
+            }
+            await cache.set(cache_key, cache_payload, ttl=3600)
 
         # 5. Create analysis session for decision linking
         session_id = None

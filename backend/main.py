@@ -23,7 +23,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
-
+from app.core.cache import cache
 from app.core.database import db_manager
 from app.core.settings import settings
 from app.db_config import DATABASE_URL
@@ -131,6 +131,12 @@ async def lifespan(app: FastAPI):
         await init_pool(database_url=DATABASE_URL, min_size=5, max_size=20, ssl=ssl_mode)
         logger.info("Database connection pool initialized successfully")
 
+        # ✅ Init Redis cache sau khi DB xong
+        try:
+            await cache.init()
+        except Exception as exc:
+            logger.exception("Failed to initialize Redis cache: %s", exc)
+
         from app.db_pool import get_pool
 
         pool = await get_pool()
@@ -150,6 +156,10 @@ async def lifespan(app: FastAPI):
 
     logger.info("=== LIFESPAN SHUTDOWN BEGIN ===")
     try:
+        try:
+            await cache.close()
+        except Exception as exc:
+            logger.exception("Error closing Redis cache: %s", exc)
         await close_pool()
         logger.info("Database connection pool closed")
     except Exception as exc:
