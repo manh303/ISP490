@@ -10,6 +10,7 @@ import hashlib
 from datetime import date, datetime
 from typing import Dict, Any, List, Optional
 import asyncpg
+import time
 
 from app.services.ai_summarizer import get_ai_summarizer
 from app.services.activity_logger import ACTIVITY_LOG_TABLE
@@ -853,6 +854,21 @@ class DSSService:
         user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """Run Product Recommendation DSS analysis"""
+        logger.info("DSSService.run_product_recommendation_dss START: %s", request)
+        t0 = time.perf_counter()
+        data = await self._query_recommendations_by_scope(request)
+        t1 = time.perf_counter()
+        logger.info("DSSService.reco query DB done in %.2fs (rows=%d)", t1 - t0, len(data) if isinstance(data, list) else -1)
+
+        kpi_summary = self._calculate_reco_kpis(data, request)
+        t2 = time.perf_counter()
+        logger.info("DSSService.reco KPIs done in %.2fs", t2 - t1)
+
+        # build dss_result_raw, gọi AI summarizer...
+        ai_payload = {...}
+        ai_result = self.ai_summarizer.summarize_with_ai("product_recommendation", ai_payload)
+        t3 = time.perf_counter()
+        logger.info("DSSService.reco AI summarizer done in %.2fs", t3 - t2)
 
         logger.info(f"Running Product Recommendation DSS: {request}")
         req = dict(request)

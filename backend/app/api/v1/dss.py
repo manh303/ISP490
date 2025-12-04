@@ -5,7 +5,7 @@ AI-powered decision support endpoints for analysts
 
 import logging
 from typing import Dict, Any, Optional
-
+import time
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
 from app.db_pool import get_pool
@@ -136,11 +136,17 @@ async def run_price_prediction_dss(
     
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
+    logger.info("▶ /dss/price/run START user_id=%s request=%s", user_id, request.dict())
+    start = time.perf_counter()
+
     try:
         result = await service.run_price_prediction_dss(request.dict(), user_id=user_id)
+        duration = time.perf_counter() - start
+        logger.info("✅ /dss/price/run DONE in %.2fs (session_id=%s)", duration, result.get("session_id"))
         return result
     except Exception as e:
-        logger.exception(f"Error in run_price_prediction_dss: {e}")
+        duration = time.perf_counter() - start
+        logger.exception("❌ /dss/price/run ERROR after %.2fs: %s", duration, e)
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 
@@ -192,11 +198,16 @@ async def run_product_recommendation_dss(
     
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
+    logger.info("▶ /dss/reco/run START user_id=%s request=%s", user_id, request.dict())
+    start = time.perf_counter()
     try:
         result = await service.run_product_recommendation_dss(request.dict(), user_id=user_id)
+        duration = time.perf_counter() - start
+        logger.info("✅ /dss/reco/run DONE in %.2fs (session_id=%s)", duration, result.get("session_id"))
         return result
     except Exception as e:
-        logger.exception(f"Error in run_product_recommendation_dss: {e}")
+        duration = time.perf_counter() - start
+        logger.exception("❌ /dss/reco/run ERROR after %.2fs: %s", duration, e)
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 
@@ -236,11 +247,16 @@ async def run_review_sentiment_dss(
     
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
+    logger.info("▶ /dss/review/run START user_id=%s request=%s", user_id, request.dict())
+    start = time.perf_counter()
     try:
         result = await service.run_review_sentiment_dss(request.dict(), user_id=user_id)
+        duration = time.perf_counter() - start
+        logger.info("✅ /dss/review/run DONE in %.2fs (session_id=%s)", duration, result.get("session_id"))
         return result
     except Exception as e:
-        logger.exception(f"Error in run_review_sentiment_dss: {e}")
+        duration = time.perf_counter() - start
+        logger.exception("❌ /dss/reco/run ERROR after %.2fs: %s", duration, e)
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 

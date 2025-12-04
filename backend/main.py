@@ -31,8 +31,16 @@ from app.db_pool import close_pool, init_pool
 from app.utils.auth_helpers import decode_access_token
 
 # Configure logging early (force=True to show logs even when uvicorn sets handlers)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s", force=True)
-logger = logging.getLogger(__name__)
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+
+logger = logging.getLogger("backend.main")
+logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
 
 # Load environment variables from .env file
 try:
