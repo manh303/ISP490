@@ -93,14 +93,14 @@ const SentimentAnalysisPage: React.FC = () => {
 
   const getSentimentLabel = (sentiment: string) => {
     switch (sentiment.toLowerCase()) {
-      case 'positive': return 'TÍCH CỰC';
-      case 'negative': return 'TIÊU CỰC';
-      case 'neutral': return 'TRUNG LẬP';
+      case 'positive': return 'POSITIVE';
+      case 'negative': return 'NEGATIVE';
+      case 'neutral': return 'NEUTRAL';
       default: return sentiment.toUpperCase();
     }
   };
 
-  // Custom input cho DatePicker để đồng bộ UI
+  // Custom input for DatePicker to sync UI
   const CustomDateInput = React.forwardRef<HTMLButtonElement, any>(({ value, onClick, placeholder, onChange }, ref) => (
     <button
       type="button"
@@ -117,17 +117,17 @@ const SentimentAnalysisPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Phân tích Cảm xúc</h1>
+      <h1 className="text-2xl font-bold mb-6">Sentiment Analysis</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Summary Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Tóm tắt Cảm xúc</h2>
+          <h2 className="text-xl font-semibold mb-4">Sentiment Summary</h2>
 
           <Form onSubmit={handleSummarySubmit}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Sản phẩm *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
                 <Input
                   type="text"
                   value={summaryForm.product_key}
@@ -137,17 +137,17 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Nền tảng *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
                 <Select
                   options={platformOptions}
                   defaultValue={summaryForm.platform_code}
                   onChange={(value) => handleSummaryChange('platform_code', value)}
-                  placeholder="Chọn nền tảng"
+                  placeholder="Select platform"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Từ ngày *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
                 <DatePicker
                   selected={fromDate}
                   onChange={(date: Date | null) => {
@@ -155,7 +155,7 @@ const SentimentAnalysisPage: React.FC = () => {
                     handleSummaryChange('from_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
                   }}
                   dateFormat="dd/MM/yyyy"
-                  placeholderText="Chọn ngày bắt đầu"
+                  placeholderText="Select start date"
                   maxDate={toDate || undefined}
                   showMonthDropdown
                   showYearDropdown
@@ -172,7 +172,7 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Đến ngày *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">To Date *</label>
                 <DatePicker
                   selected={toDate}
                   onChange={(date: Date | null) => {
@@ -180,7 +180,7 @@ const SentimentAnalysisPage: React.FC = () => {
                     handleSummaryChange('to_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
                   }}
                   dateFormat="dd/MM/yyyy"
-                  placeholderText="Chọn ngày kết thúc"
+                  placeholderText="Select end date"
                   minDate={fromDate || undefined}
                   showMonthDropdown
                   showYearDropdown
@@ -197,45 +197,45 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tên Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
                 <Input
                   type="text"
                   value={summaryForm.model_name}
                   onChange={(e) => handleSummaryChange('model_name', e.target.value)}
-                  placeholder="Tùy chọn"
+                  placeholder="Optional"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phiên bản Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
                 <Input
                   type="text"
                   value={summaryForm.model_version}
                   onChange={(e) => handleSummaryChange('model_version', e.target.value)}
-                  placeholder="Tùy chọn"
+                  placeholder="Optional"
                 />
               </div>
             </div>
 
             <Button disabled={loading}>
-              {loading ? 'Đang tải...' : 'Lấy Tóm tắt'}
+              {loading ? 'Loading...' : 'Get Summary'}
             </Button>
           </Form>
 
           {/* Summary Results */}
           {summary && (
             <div className="mt-6">
-              <h3 className="text-lg font-medium mb-3">Tóm tắt Cảm xúc cho {summary.product_key}</h3>
+              <h3 className="text-lg font-medium mb-3">Sentiment Summary for {summary.product_key}</h3>
               <div className="overflow-x-auto">
                 <Table>
                   <thead>
                     <tr>
-                      <th className="px-4 py-2 text-left">Ngày</th>
-                      <th className="px-4 py-2 text-left">Tổng Đánh giá</th>
-                      <th className="px-4 py-2 text-left">Tích cực</th>
-                      <th className="px-4 py-2 text-left">Tiêu cực</th>
-                      <th className="px-4 py-2 text-left">Trung lập</th>
-                      <th className="px-4 py-2 text-left">Tỷ lệ Tích cực</th>
+                      <th className="px-4 py-2 text-left">Date</th>
+                      <th className="px-4 py-2 text-left">Total Reviews</th>
+                      <th className="px-4 py-2 text-left">Positive</th>
+                      <th className="px-4 py-2 text-left">Negative</th>
+                      <th className="px-4 py-2 text-left">Neutral</th>
+                      <th className="px-4 py-2 text-left">Positive Ratio</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -258,22 +258,22 @@ const SentimentAnalysisPage: React.FC = () => {
 
         {/* Online Analysis Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Phân tích Cảm xúc Trực tuyến</h2>
+          <h2 className="text-xl font-semibold mb-4">Online Sentiment Analysis</h2>
 
           <Form onSubmit={handleOnlineSubmit}>
             <div className="space-y-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Nền tảng *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
                 <Select
                   options={platformOptions}
                   defaultValue={onlineForm.platform_code}
                   onChange={(value) => handleOnlineChange('platform_code', value)}
-                  placeholder="Chọn nền tảng"
+                  placeholder="Select platform"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Sản phẩm *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
                 <Input
                   type="text"
                   value={onlineForm.product_key}
@@ -283,19 +283,19 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung Đánh giá *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Review Content *</label>
                 <textarea
                   className="w-full p-2 border rounded"
                   rows={4}
                   value={onlineForm.review_text}
                   onChange={(e) => handleOnlineChange('review_text', e.target.value)}
                   required
-                  placeholder="Nhập nội dung đánh giá để phân tích cảm xúc..."
+                  placeholder="Enter review content to analyze sentiment..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tên Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
                 <Input
                   type="text"
                   value={onlineForm.model_name}
@@ -304,7 +304,7 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phiên bản Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
                 <Input
                   type="text"
                   value={onlineForm.model_version}
@@ -314,33 +314,33 @@ const SentimentAnalysisPage: React.FC = () => {
             </div>
 
             <Button disabled={onlineLoading}>
-              {onlineLoading ? 'Đang phân tích...' : 'Phân tích Cảm xúc'}
+              {onlineLoading ? 'Analyzing...' : 'Analyze Sentiment'}
             </Button>
           </Form>
 
           {/* Online Analysis Result */}
           {onlineResult && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-lg font-medium mb-3">Kết quả Phân tích</h3>
+              <h3 className="text-lg font-medium mb-3">Analysis Result</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="font-medium">Cảm xúc:</span>
+                  <span className="font-medium">Sentiment:</span>
                   <div className={`text-2xl font-bold ${getSentimentColor(onlineResult.label)}`}>
                     {getSentimentLabel(onlineResult.label)}
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">Điểm Tin cậy:</span>
+                  <span className="font-medium">Confidence Score:</span>
                   <div className="text-2xl font-bold text-blue-600">
                     {(onlineResult.score * 100).toFixed(1)}%
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">Mô hình:</span>
+                  <span className="font-medium">Model:</span>
                   <div>{onlineResult.model_name} ({onlineResult.model_version})</div>
                 </div>
                 <div>
-                  <span className="font-medium">Độ trễ:</span>
+                  <span className="font-medium">Latency:</span>
                   <div>{onlineResult.latency_ms}ms</div>
                 </div>
               </div>

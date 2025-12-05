@@ -84,7 +84,7 @@ const PricePredictionPage: React.FC = () => {
     { value: 'lazada', label: 'Lazada' }
   ];
 
-  // Custom input cho DatePicker để đồng bộ UI
+  // Custom input for DatePicker to sync UI
   const CustomDateInput = React.forwardRef<HTMLButtonElement, any>(({ value, onClick, placeholder, onChange }, ref) => (
     <button
       type="button"
@@ -101,17 +101,17 @@ const PricePredictionPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Dự đoán Giá</h1>
+      <h1 className="text-2xl font-bold mb-6">Price Prediction</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* History Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Lịch sử Dự đoán</h2>
+          <h2 className="text-xl font-semibold mb-4">Prediction History</h2>
 
           <Form onSubmit={handleHistorySubmit}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Sản phẩm *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
                 <Input
                   type="text"
                   value={historyForm.product_key}
@@ -121,18 +121,18 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Nền tảng *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
                 <Select
                   options={platformOptions}
                   defaultValue={historyForm.platform_code}
                   onChange={(value) => handleHistoryChange('platform_code', value)}
-                  placeholder="Chọn nền tảng"
+                  placeholder="Select platform"
                 />
               </div>
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Từ ngày *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
                 <DatePicker
                   selected={fromDate}
                   onChange={(date: Date | null) => {
@@ -140,7 +140,7 @@ const PricePredictionPage: React.FC = () => {
                     handleHistoryChange('from_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
                   }}
                   dateFormat="dd/MM/yyyy"
-                  placeholderText="Chọn ngày bắt đầu"
+                  placeholderText="Select start date"
                   maxDate={toDate || undefined}
                   showMonthDropdown
                   showYearDropdown
@@ -157,7 +157,7 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Đến ngày *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">To Date *</label>
                 <DatePicker
                   selected={toDate}
                   onChange={(date: Date | null) => {
@@ -165,7 +165,7 @@ const PricePredictionPage: React.FC = () => {
                     handleHistoryChange('to_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
                   }}
                   dateFormat="dd/MM/yyyy"
-                  placeholderText="Chọn ngày kết thúc"
+                  placeholderText="Select end date"
                   minDate={fromDate || undefined}
                   showMonthDropdown
                   showYearDropdown
@@ -182,44 +182,44 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tên Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
                 <Input
                   type="text"
                   value={historyForm.model_name}
                   onChange={(e) => handleHistoryChange('model_name', e.target.value)}
-                  placeholder="Tùy chọn"
+                  placeholder="Optional"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phiên bản Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
                 <Input
                   type="text"
                   value={historyForm.model_version}
                   onChange={(e) => handleHistoryChange('model_version', e.target.value)}
-                  placeholder="Tùy chọn"
+                  placeholder="Optional"
                 />
               </div>
             </div>
 
             <Button disabled={loading}>
-              {loading ? 'Đang tải...' : 'Lấy Lịch sử'}
+              {loading ? 'Loading...' : 'Get History'}
             </Button>
           </Form>
 
           {/* History Results */}
           {history && (
             <div className="mt-6">
-              <h3 className="text-lg font-medium mb-3">Lịch sử Dự đoán cho {history.product_key}</h3>
+              <h3 className="text-lg font-medium mb-3">Prediction History for {history.product_key}</h3>
               <div className="overflow-x-auto">
                 <Table>
                   <thead>
                     <tr>
-                      <th className="px-4 py-2 text-left">Ngày</th>
-                      <th className="px-4 py-2 text-left">Giá Dự đoán</th>
-                      <th className="px-4 py-2 text-left">CI Thấp</th>
-                      <th className="px-4 py-2 text-left">CI Cao</th>
-                      <th className="px-4 py-2 text-left">ID Chạy</th>
+                      <th className="px-4 py-2 text-left">Date</th>
+                      <th className="px-4 py-2 text-left">Predicted Price</th>
+                      <th className="px-4 py-2 text-left">CI Lower</th>
+                      <th className="px-4 py-2 text-left">CI Upper</th>
+                      <th className="px-4 py-2 text-left">Run ID</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -241,22 +241,22 @@ const PricePredictionPage: React.FC = () => {
 
         {/* Online Prediction Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Dự đoán Giá Trực tuyến</h2>
+          <h2 className="text-xl font-semibold mb-4">Online Price Prediction</h2>
 
           <Form onSubmit={handleOnlineSubmit}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Nền tảng *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
                 <Select
                   options={platformOptions}
                   defaultValue={onlineForm.platform_code}
                   onChange={(value) => handleOnlineChange('platform_code', value)}
-                  placeholder="Chọn nền tảng"
+                  placeholder="Select platform"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mã Sản phẩm *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
                 <Input
                   type="text"
                   value={onlineForm.product_key}
@@ -266,7 +266,7 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Giá Hiện tại *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current Price *</label>
                 <Input
                   type="number"
                   value={onlineForm.current_price}
@@ -277,7 +277,7 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Đánh giá Trung bình *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Average Rating *</label>
                 <Input
                   type="number"
                   value={onlineForm.avg_rating}
@@ -289,7 +289,7 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Số Lượt Đánh giá *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Review Count *</label>
                 <Input
                   type="number"
                   value={onlineForm.review_count}
@@ -299,7 +299,7 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tên Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
                 <Input
                   type="text"
                   value={onlineForm.model_name}
@@ -308,7 +308,7 @@ const PricePredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phiên bản Mô hình</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
                 <Input
                   type="text"
                   value={onlineForm.model_version}
@@ -318,33 +318,33 @@ const PricePredictionPage: React.FC = () => {
             </div>
 
             <Button disabled={onlineLoading}>
-              {onlineLoading ? 'Đang dự đoán...' : 'Dự đoán Giá'}
+              {onlineLoading ? 'Predicting...' : 'Predict Price'}
             </Button>
           </Form>
 
           {/* Online Prediction Result */}
           {onlineResult && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-lg font-medium mb-3">Kết quả Dự đoán</h3>
+              <h3 className="text-lg font-medium mb-3">Prediction Result</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="font-medium">Giá Dự đoán:</span>
+                  <span className="font-medium">Predicted Price:</span>
                   <div className="text-2xl font-bold text-blue-600">
                     {onlineResult?.predicted_price?.toLocaleString()} VND
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">Khoảng Tin cậy:</span>
+                  <span className="font-medium">Confidence Interval:</span>
                   <div className="text-sm">
                     {onlineResult?.ci_lower?.toLocaleString()} - {onlineResult?.ci_upper?.toLocaleString()} VND
                   </div>
                 </div>
                 <div>
-                  <span className="font-medium">Mô hình:</span>
+                  <span className="font-medium">Model:</span>
                   <div>{onlineResult?.model_name} ({onlineResult?.model_version})</div>
                 </div>
                 <div>
-                  <span className="font-medium">Độ trễ:</span>
+                  <span className="font-medium">Latency:</span>
                   <div>{onlineResult?.latency_ms}ms</div>
                 </div>
               </div>
