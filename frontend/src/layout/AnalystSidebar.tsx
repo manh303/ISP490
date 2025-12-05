@@ -28,7 +28,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Bảng điều khiển Phân tích",
+    name: "Analytics Dashboard",
     path: "/analyst/dashboard",
   },
   {
@@ -43,38 +43,38 @@ const navItems: NavItem[] = [
   },
   {
     icon: <PieChartIcon />,
-    name: "Phân tích Dữ liệu",
+    name: "Data Analysis",
     subItems: [
-      { name: "Bảng điều khiển Phân tích", path: "/analyst/analytics-dashboard", pro: false },
-      { name: "Phân tích Sản phẩm", path: "/analyst/product-analytics", pro: false },
-      { name: "Phân tích Đánh giá", path: "/analyst/review-analytics", pro: false },
-      { name: "Phân tích Nền tảng", path: "/analyst/platform-analytics", pro: false },
-      { name: "Phân tích Danh mục", path: "/analyst/category-analytics", pro: false },
-      { name: "Phân tích Giá cả", path: "/analyst/pricing-analytics", pro: false },
-      { name: "Phân tích Chi tiết Sản phẩm", path: "/analyst/product-detail-analytics", pro: false },
-      { name: "Phân tích Bán hàng", path: "/analyst/sales", pro: false },
-      { name: "Xu hướng Thị trường", path: "/analyst/trends", pro: false },
-      { name: "Thông tin Khách hàng", path: "/analyst/customers", pro: false },
-      { name: "Hiệu suất Sản phẩm", path: "/analyst/products", pro: false },
+      { name: "Analytics Dashboard", path: "/analyst/analytics-dashboard", pro: false },
+      { name: "Product Analytics", path: "/analyst/product-analytics", pro: false },
+      { name: "Review Analytics", path: "/analyst/review-analytics", pro: false },
+      { name: "Platform Analytics", path: "/analyst/platform-analytics", pro: false },
+      { name: "Category Analytics", path: "/analyst/category-analytics", pro: false },
+      { name: "Pricing Analytics", path: "/analyst/pricing-analytics", pro: false },
+      { name: "Product Detail Analytics", path: "/analyst/product-detail-analytics", pro: false },
+      { name: "Sales Analytics", path: "/analyst/sales", pro: false },
+      { name: "Market Trends", path: "/analyst/trends", pro: false },
+      { name: "Customer Information", path: "/analyst/customers", pro: false },
+      { name: "Product Performance", path: "/analyst/products", pro: false },
     ],
   },
   {
     icon: <TableIcon />,
-    name: "Báo cáo",
+    name: "Reports",
     subItems: [
-      { name: "Báo cáo Tuần", path: "/analyst/reports/weekly", pro: false },
-      { name: "Báo cáo Tháng", path: "/analyst/reports/monthly", pro: false },
-      { name: "Báo cáo Tùy chỉnh", path: "/analyst/reports/custom", pro: false },
-      { name: "Xuất Báo cáo", path: "/analyst/reports", pro: false },
+      { name: "Weekly Reports", path: "/analyst/reports/weekly", pro: false },
+      { name: "Monthly Reports", path: "/analyst/reports/monthly", pro: false },
+      { name: "Custom Reports", path: "/analyst/reports/custom", pro: false },
+      { name: "Export Reports", path: "/analyst/reports", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Trực quan hóa Dữ liệu",
+    name: "Data Visualization",
     subItems: [
-      { name: "Biểu đồ và Đồ thị", path: "/analyst/charts", pro: false },
-      { name: "Bảng điều khiển Tương tác", path: "/analyst/interactive", pro: false },
-      { name: "Khám phá Dữ liệu", path: "/analyst/explorer", pro: false },
+      { name: "Charts and Graphs", path: "/analyst/charts", pro: false },
+      { name: "Interactive Dashboard", path: "/analyst/interactive", pro: false },
+      { name: "Data Exploration", path: "/analyst/explorer", pro: false },
     ],
   },
 ];
@@ -82,20 +82,20 @@ const navItems: NavItem[] = [
 const toolsItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
-    name: "Công cụ Phân tích",
+    name: "Analysis Tools",
     subItems: [
-      { name: "Trình tạo Truy vấn", path: "/analyst/query-builder", pro: false },
-      { name: "Khai thác Dữ liệu", path: "/analyst/data-mining", pro: false },
-      { name: "Mô hình Dự đoán", path: "/analyst/models", pro: false },
+      { name: "Query Builder", path: "/analyst/query-builder", pro: false },
+      { name: "Data Mining", path: "/analyst/data-mining", pro: false },
+      { name: "Predictive Models", path: "/analyst/models", pro: false },
     ],
   },
   {
     icon: <CalenderIcon />,
-    name: "Nhiệm vụ Định kỳ",
+    name: "Scheduled Tasks",
     subItems: [
-      { name: "Lịch Báo cáo", path: "/analyst/schedule", pro: false },
-      { name: "Làm mới Dữ liệu", path: "/analyst/refresh", pro: false },
-      { name: "Cảnh báo và Thông báo", path: "/analyst/alerts", pro: false },
+      { name: "Report Schedule", path: "/analyst/schedule", pro: false },
+      { name: "Data Refresh", path: "/analyst/refresh", pro: false },
+      { name: "Alerts and Notifications", path: "/analyst/alerts", pro: false },
     ],
   },
 ];
@@ -350,7 +350,7 @@ const AnalystSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Phân tích"
+                  "Analysis"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -366,7 +366,7 @@ const AnalystSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Công cụ"
+                  "Tools"
                 ) : (
                   <HorizontaLDots />
                 )}

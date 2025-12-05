@@ -73,7 +73,7 @@ export function CategoryAnalytics() {
       }
     } catch (err) {
       console.error('Error loading category analytics data:', err);
-      setError('Không thể tải dữ liệu phân tích danh mục. Vui lòng thử lại.');
+      setError('Unable to load category analytics data. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -108,7 +108,7 @@ export function CategoryAnalytics() {
       <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải dữ liệu phân tích danh mục...</p>
+          <p className="text-gray-600">Loading category analytics data...</p>
         </div>
       </div>
     );
@@ -122,7 +122,7 @@ export function CategoryAnalytics() {
           <p className="text-red-600 mb-4">{error}</p>
           <Button onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Thử lại
+            Try Again
           </Button>
         </div>
       </div>
@@ -141,7 +141,7 @@ export function CategoryAnalytics() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={loadAnalyticsData}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Làm mới
+                  Refresh
                 </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -159,7 +159,7 @@ export function CategoryAnalytics() {
           <div className="px-6 py-4 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Thời gian:</label>
+                <label className="text-sm font-medium">Time:</label>
                 <DateRangePicker
                   fromDate={fromDate}
                   toDate={toDate}
@@ -168,14 +168,14 @@ export function CategoryAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Nền tảng:</label>
+                <label className="text-sm font-medium">Platform:</label>
                 <PlatformSelect
                   value={platformCode}
                   onValueChange={(value) => setPlatformCode(value || 'tiki')}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Danh mục:</label>
+                <label className="text-sm font-medium">Category:</label>
                 <CategoryHierarchySelector
                   platformCode={platformCode}
                   onCategoryChange={(categoryKey, parentKey) => {
@@ -189,7 +189,7 @@ export function CategoryAnalytics() {
 
           {/* Category Share Chart */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
-            <h3 className="text-gray-900 font-semibold mb-4">Tỷ Trọng Danh Mục Theo Nền Tảng</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Category Share by Platform</h3>
 
             <div className="grid grid-cols-1 gap-4">
               {categoryShare && (
@@ -201,28 +201,28 @@ export function CategoryAnalytics() {
           {/* Selected Category Analytics */}
           {categoryAnalytics && selectedCategory && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-              <h3 className="text-gray-900 font-semibold mb-3">Phân Tích Danh Mục Được Chọn</h3>
+              <h3 className="text-gray-900 font-semibold mb-3">Selected Category Analysis</h3>
               <div className="grid grid-cols-4 gap-4">
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
+                  <div className="text-sm text-gray-600 mb-1">Total Products</div>
                   <div className="text-2xl font-bold text-gray-900">
                     {categoryAnalytics.kpis?.total_products?.toLocaleString('vi-VN')}
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
+                  <div className="text-sm text-gray-600 mb-1">Average Rating</div>
                   <div className="text-2xl font-bold text-blue-600">
                     {categoryAnalytics.kpis?.avg_rating?.toFixed(2)} ⭐
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
+                  <div className="text-sm text-gray-600 mb-1">Total Reviews</div>
                   <div className="text-2xl font-bold text-purple-600">
                     {(categoryAnalytics.kpis?.total_reviews / 1000)?.toFixed(0)}K
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Giá trung bình</div>
+                  <div className="text-sm text-gray-600 mb-1">Average Price</div>
                   <div className="text-2xl font-bold text-green-600">
                     {categoryAnalytics.kpis?.avg_price?.toLocaleString('vi-VN')} VND
                   </div>
@@ -234,11 +234,11 @@ export function CategoryAnalytics() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Category Analytics - Phân tích danh mục
+              Category Analytics - Category Analysis
             </div>
             <Button>
               <FileDown className="h-4 w-4 mr-2" />
-              Xuất báo cáo
+              Export Report
             </Button>
           </div>
         </div>

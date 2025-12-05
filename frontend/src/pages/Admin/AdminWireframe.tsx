@@ -23,7 +23,7 @@ export function AdminWireframe() {
   
   const mockUsers = Array.from({ length: 15 }, (_, i) => ({
     id: i + 1,
-    name: `Người dùng ${i + 1}`,
+    name: `User ${i + 1}`,
     email: `user${i + 1}@example.com`,
     role: i % 3 === 0 ? 'Admin' : i % 3 === 1 ? 'Analyst' : 'Data Engineer',
     status: i % 4 === 0 ? 'Inactive' : 'active',
@@ -37,24 +37,24 @@ export function AdminWireframe() {
         {/* Sidebar */}
         <div className="w-64 bg-gray-50 border-r border-gray-200 p-4 relative">
           <div className="mb-8">
-            <h2 className="text-gray-900 mb-6">Tên hệ thống</h2>
+            <h2 className="text-gray-900 mb-6">System Name</h2>
           </div>
           
           <nav className="space-y-2">
             <div className="text-gray-900 bg-gray-200 px-4 py-2 rounded">
-              Quản lý Tài khoản
+              Account Management
             </div>
             <div className="text-gray-600 px-4 py-2 hover:bg-gray-100 rounded cursor-pointer">
-              Cài đặt hệ thống
+              System Settings
             </div>
             <div className="text-gray-600 px-4 py-2 hover:bg-gray-100 rounded cursor-pointer">
-              Nhật ký hoạt động
+              Activity Logs
             </div>
           </nav>
           
           <div className="absolute bottom-4 left-4 w-48 space-y-2">
             <Button variant="outline" className="w-full">
-              Đổi mật khẩu
+              Change Password
             </Button>
             <Button variant="outline" className="w-full">
               Tài khoản
@@ -67,10 +67,10 @@ export function AdminWireframe() {
           {/* Header */}
           <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-gray-600">thông báo</span>
+              <span className="text-gray-600">notifications</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-gray-600">Tên người dùng (Admin)</span>
+              <span className="text-gray-600">Username (Admin)</span>
               <Button variant="ghost" size="sm" className="text-gray-600">
                 log out
               </Button>
@@ -81,7 +81,7 @@ export function AdminWireframe() {
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center gap-4 justify-end">
               <div className="flex items-center gap-2">
-                <span className="text-gray-600 text-sm">Hiển thị:</span>
+                <span className="text-gray-600 text-sm">Show:</span>
                 <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
                   <SelectTrigger className="w-24 bg-white border-gray-300">
                     <SelectValue />
@@ -101,8 +101,8 @@ export function AdminWireframe() {
             <Table>
               <TableHeader>
                 <TableRow className="border-gray-200 hover:bg-gray-50">
-                  <TableHead className="text-gray-600">STT</TableHead>
-                  <TableHead className="text-gray-600">Tên</TableHead>
+                  <TableHead className="text-gray-600">No.</TableHead>
+                  <TableHead className="text-gray-600">Name</TableHead>
                   <TableHead className="text-gray-600">Email</TableHead>
                   <TableHead className="text-gray-600">Role</TableHead>
                   <TableHead className="text-gray-600">Status</TableHead>
@@ -144,7 +144,7 @@ export function AdminWireframe() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Hiển thị {displayedUsers.length} / {mockUsers.length} tài khoản
+              Showing {displayedUsers.length} / {mockUsers.length} accounts
             </div>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />

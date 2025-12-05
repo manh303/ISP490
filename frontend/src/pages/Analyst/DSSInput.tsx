@@ -77,54 +77,54 @@ const DSSInput: React.FC = () => {
     if (modelId === 'price_prediction') {
       // Removed required validation for product_key to allow it to be empty
       // if (!formData.product_key?.trim()) {
-      //   newErrors.product_key = 'Mã sản phẩm là bắt buộc';
+      //   newErrors.product_key = 'Product code is required';
       // }
       if (!formData.platform_code) {
-        newErrors.platform_code = 'Nền tảng là bắt buộc';
+        newErrors.platform_code = 'Platform is required';
       }
     } else if (modelId === 'product_recommendation') {
       if (!formData.scope_mode) {
-        newErrors.scope_mode = 'Chế độ phạm vi là bắt buộc';
+        newErrors.scope_mode = 'Scope mode is required';
       }
       if (formData.scope_mode === 'by_product') {
         if (!formData.product_key?.trim()) {
-          newErrors.product_key = 'Mã sản phẩm nguồn là bắt buộc';
+          newErrors.product_key = 'Source product code is required';
         }
       } else if (formData.scope_mode === 'by_category') {
         if (!formData.platform_code) {
-          newErrors.platform_code = 'Nền tảng là bắt buộc';
+          newErrors.platform_code = 'Platform is required';
         }
         if (!formData.category) {
-          newErrors.category = 'Danh mục là bắt buộc';
+          newErrors.category = 'Category is required';
         }
       }
     } else if (modelId === 'review_sentiment') {
       if (!formData.scope_mode) {
-        newErrors.scope_mode = 'Chế độ phạm vi là bắt buộc';
+        newErrors.scope_mode = 'Scope mode is required';
       }
       if (formData.scope_mode === 'by_product') {
         if (!formData.product_key?.trim()) {
-          newErrors.product_key = 'Mã sản phẩm là bắt buộc';
+          newErrors.product_key = 'Product code is required';
         }
         if (!formData.platform_code) {
-          newErrors.platform_code = 'Nền tảng là bắt buộc';
+          newErrors.platform_code = 'Platform is required';
         }
       } else if (formData.scope_mode === 'by_category') {
         if (!formData.platform_code) {
-          newErrors.platform_code = 'Nền tảng là bắt buộc';
+          newErrors.platform_code = 'Platform is required';
         }
         if (!formData.category) {
-          newErrors.category = 'Danh mục là bắt buộc';
+          newErrors.category = 'Category is required';
         }
       }
       if (!formData.category) {
-        newErrors.category = 'Danh mục là bắt buộc';
+        newErrors.category = 'Category is required';
       }
       if (!formData.from_date) {
-        newErrors.from_date = 'Ngày bắt đầu là bắt buộc';
+        newErrors.from_date = 'Start date is required';
       }
       if (!formData.to_date) {
-        newErrors.to_date = 'Ngày kết thúc là bắt buộc';
+        newErrors.to_date = 'End date is required';
       }
     }
 
@@ -134,21 +134,21 @@ const DSSInput: React.FC = () => {
 
   const models = {
     price_prediction: {
-      name: 'Dự đoán Giá',
+      name: 'Price Prediction',
       icon: <TrendingUp className="w-6 h-6" />,
-      description: 'Dự đoán giá tối ưu cho sản phẩm dựa trên dữ liệu thị trường',
+      description: 'Predict optimal product prices based on market data',
       fields: ['product_key', 'platform_code', 'category', 'time_range']
     },
     product_recommendation: {
-      name: 'Gợi ý Sản phẩm',
+      name: 'Product Recommendations',
       icon: <Users className="w-6 h-6" />,
-      description: 'Gợi ý sản phẩm cá nhân hóa cho khách hàng',
+      description: 'Personalized product recommendations for customers',
       fields: ['scope_mode', 'product_key', 'platform_code', 'category']
     },
     review_sentiment: {
-      name: 'Phân tích Cảm xúc Đánh giá',
+      name: 'Review Sentiment Analysis',
       icon: <MessageSquare className="w-6 h-6" />,
-      description: 'Phân tích cảm xúc trong đánh giá của khách hàng',
+      description: 'Analyze sentiment in customer reviews',
       fields: ['scope_mode', 'product_key', 'platform_code', 'category', 'from_date', 'to_date']
     },
   };
@@ -171,8 +171,8 @@ const DSSInput: React.FC = () => {
   }));
 
   const scopeModeOptions = [
-    { value: 'by_product', label: 'Theo sản phẩm (dựa trên sản phẩm nguồn)' },
-    { value: 'by_category', label: 'Theo danh mục (top sản phẩm trong danh mục)' }
+    { value: 'by_product', label: 'By product (based on source product)' },
+    { value: 'by_category', label: 'By category (top products in category)' }
   ];
 
   const timeRangeOptions = [
@@ -284,12 +284,12 @@ const DSSInput: React.FC = () => {
       case 'scope_mode':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Chế độ phạm vi *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Scope mode *</label>
             <Select
               options={scopeModeOptions}
               defaultValue={formData.scope_mode || ''}
               onChange={(value) => handleChange('scope_mode', value)}
-              placeholder="Chọn chế độ phạm vi"
+              placeholder="Select scope mode"
             />
           </div>
         );
@@ -304,7 +304,7 @@ const DSSInput: React.FC = () => {
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {modelId === 'product_recommendation' ? 'Mã sản phẩm nguồn' : 'Mã sản phẩm'}{isProductKeyRequired ? ' *' : ''}
+              {modelId === 'product_recommendation' ? 'Source product code' : 'Product code'}{isProductKeyRequired ? ' *' : ''}
             </label>
             <Input
               type="text"
@@ -318,12 +318,12 @@ const DSSInput: React.FC = () => {
       case 'platform_code':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nền tảng *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Platform *</label>
             <Select
               options={platformOptions}
               defaultValue={formData.platform_code || ''}
               onChange={(value) => handleChange('platform_code', value)}
-              placeholder="Chọn nền tảng"
+              placeholder="Select platform"
             />
           </div>
         );
@@ -331,32 +331,32 @@ const DSSInput: React.FC = () => {
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Danh mục{(modelId === 'review_sentiment' || ((modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_category')) ? ' *' : ''}
+              Category{(modelId === 'review_sentiment' || ((modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_category')) ? ' *' : ''}
             </label>
             <Select
               options={categoryOptions}
               defaultValue={formData.category || ''}
               onChange={(value) => handleChange('category', value)}
-              placeholder="Chọn danh mục"
+              placeholder="Select category"
             />
           </div>
         );
       case 'time_range':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Khoảng thời gian</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Time range</label>
             <Select
               options={timeRangeOptions}
               defaultValue={formData.time_range || ''}
               onChange={(value) => handleChange('time_range', value)}
-              placeholder="Chọn khoảng thời gian"
+              placeholder="Select time range"
             />
           </div>
         );
       case 'customer_id':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mã khách hàng *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Customer code *</label>
             <Input
               type="text"
               value={formData.customer_id || ''}
@@ -369,13 +369,13 @@ const DSSInput: React.FC = () => {
       case 'review_text':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung đánh giá *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Review content *</label>
             <textarea
               className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
               rows={4}
               value={formData.review_text || ''}
               onChange={(e) => handleChange('review_text', e.target.value)}
-              placeholder="Nhập nội dung đánh giá để phân tích cảm xúc..."
+              placeholder="Enter review content to analyze sentiment..."
               required
             />
           </div>
@@ -383,7 +383,7 @@ const DSSInput: React.FC = () => {
       case 'from_date':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Từ ngày *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">From date *</label>
             <DatePicker
               selected={fromDate}
               onChange={(date: Date | null) => {
@@ -391,7 +391,7 @@ const DSSInput: React.FC = () => {
                 handleChange('from_date', date ? date.toISOString().split('T')[0] : '');
               }}
               dateFormat="dd/MM/yyyy"
-              placeholderText="Chọn ngày bắt đầu"
+              placeholderText="Select start date"
               maxDate={toDate || undefined}
               showMonthDropdown
               showYearDropdown
@@ -410,7 +410,7 @@ const DSSInput: React.FC = () => {
       case 'to_date':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Đến ngày *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">To date *</label>
             <DatePicker
               selected={toDate}
               onChange={(date: Date | null) => {
@@ -418,7 +418,7 @@ const DSSInput: React.FC = () => {
                 handleChange('to_date', date ? date.toISOString().split('T')[0] : '');
               }}
               dateFormat="dd/MM/yyyy"
-              placeholderText="Chọn ngày kết thúc"
+              placeholderText="Select end date"
               minDate={fromDate || undefined}
               showMonthDropdown
               showYearDropdown

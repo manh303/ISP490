@@ -3,10 +3,10 @@ import { BarChart3, Mail, MapPin, Phone } from "lucide-react";
 
 export function AnalystFooter() {
   const footerLinks = {
-    "Sản Phẩm": ["Dashboard", "Báo Cáo", "Analytics", "API"],
-    "Công Ty": ["Về Chúng Tôi", "Tuyển Dụng", "Blog", "Đối Tác"],
-    "Hỗ Trợ": ["Tài Liệu", "Hướng Dẫn", "FAQs", "Liên Hệ"],
-    "Pháp Lý": ["Điều Khoản", "Bảo Mật", "Cookie", "Tuân Thủ"]
+    "Products": ["Dashboard", "Reports", "Analytics", "API"],
+    "Company": ["About Us", "Careers", "Blog", "Partners"],
+    "Support": ["Documentation", "Guides", "FAQs", "Contact"],
+    "Legal": ["Terms", "Privacy", "Cookie", "Compliance"]
   };
 
   return (
@@ -23,7 +23,7 @@ export function AnalystFooter() {
               <span className="text-blue-600">DSS Analytics</span>
             </div>
             <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              Nền tảng phân tích dữ liệu hàng đầu dành cho các nhà phân tích chuyên nghiệp.
+              Leading data analytics platform for professional analysts.
             </p>
             <div className="space-y-2 text-sm text-gray-600">
               <div className="flex items-center gap-2">
@@ -36,7 +36,7 @@ export function AnalystFooter() {
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-blue-500" />
-                <span>Hà Nội, Việt Nam</span>
+                <span>Hanoi, Vietnam</span>
               </div>
             </div>
           </div>
@@ -66,7 +66,7 @@ export function AnalystFooter() {
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-600">
-            © 2025 DSS Analytics. Bản quyền thuộc về công ty.
+            © 2025 DSS Analytics. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
