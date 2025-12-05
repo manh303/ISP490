@@ -2,9 +2,9 @@ import { Database, Mail, Phone, MapPin } from "lucide-react";
 
 export function DSSFooter() {
   const footerSections = {
-    "Sản Phẩm": ["Tính Năng", "Tài Liệu", "API", "Bảng Giá"],
-    "Công Ty": ["Về Chúng Tôi", "Blog", "Tuyển Dụng", "Liên Hệ"],
-    "Hỗ Trợ": ["Trung Tâm Hỗ Trợ", "Cộng Đồng", "Trạng Thái Hệ Thống", "FAQ"],
+    "Products": ["Features", "Documentation", "API", "Pricing"],
+    "Company": ["About Us", "Blog", "Careers", "Contact"],
+    "Support": ["Support Center", "Community", "System Status", "FAQ"],
   };
 
   return (
@@ -20,7 +20,7 @@ export function DSSFooter() {
               <span className="text-white">DSS Analytics</span>
             </div>
             <p className="text-blue-200 text-sm mb-4">
-              Nền tảng phân tích dữ liệu toàn diện cho doanh nghiệp hiện đại
+              Comprehensive data analytics platform for modern businesses
             </p>
             <div className="flex gap-3 text-blue-200 text-sm">
               <Mail className="w-4 h-4" />
@@ -51,14 +51,14 @@ export function DSSFooter() {
 
         <div className="border-t border-blue-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-blue-200 text-sm mb-4 md:mb-0">
-            © 2025 DSS Analytics. Tất cả quyền được bảo lưu.
+            © 2025 DSS Analytics. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-blue-200">
             <a href="#" className="hover:text-white transition-colors">
-              Chính Sách Bảo Mật
+              Privacy Policy
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              Điều Khoản Sử Dụng
+              Terms of Service
             </a>
             <a href="#" className="hover:text-white transition-colors">
               Cookies

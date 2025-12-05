@@ -2,7 +2,7 @@ import { Button } from "../../../components/ui/figma/button";
 import { Database } from "lucide-react";
 
 export function DSSHeader() {
-  const menuItems = ["Trang Chủ", "Hệ Thống", "Người Dùng", "Cấu Hình", "Liên Hệ"];
+  const menuItems = ["Home", "System", "Users", "Configuration", "Contact"];
 
   return (
     <header className="border-b border-blue-100 bg-white">
@@ -31,7 +31,7 @@ export function DSSHeader() {
 
           {/* Login Button */}
           <Button className="bg-blue-600 hover:bg-blue-700">
-            Đăng Nhập Admin
+            Login Admin
           </Button>
         </div>
       </div>

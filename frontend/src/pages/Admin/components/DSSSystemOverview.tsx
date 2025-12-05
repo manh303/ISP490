@@ -5,22 +5,22 @@ export function DSSSystemOverview() {
     {
       icon: Workflow,
       title: "Crawler",
-      description: "Thu thập dữ liệu",
+      description: "Data Collection",
     },
     {
       icon: Database,
       title: "Data Warehouse",
-      description: "Lưu trữ tập trung",
+      description: "Centralized Storage",
     },
     {
       icon: Brain,
       title: "ML Pipeline",
-      description: "Xử lý & phân tích",
+      description: "Processing & Analysis",
     },
     {
       icon: BarChart3,
       title: "Dashboard",
-      description: "Trực quan hóa",
+      description: "Visualization",
     },
   ];
 
@@ -29,10 +29,10 @@ export function DSSSystemOverview() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-white mb-4">
-            Kiến Trúc Hệ Thống
+            System Architecture
           </h2>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-            Quy trình xử lý dữ liệu từ đầu đến cuối được thiết kế tối ưu và tự động hóa
+            End-to-end data processing workflow designed for optimal performance and automation
           </p>
         </div>
 
@@ -70,11 +70,11 @@ export function DSSSystemOverview() {
           </div>
           <div className="text-center">
             <div className="text-4xl text-blue-300 mb-2">24/7</div>
-            <div className="text-blue-100">Giám sát</div>
+            <div className="text-blue-100">Monitoring</div>
           </div>
           <div className="text-center">
             <div className="text-4xl text-blue-300 mb-2">Real-time</div>
-            <div className="text-blue-100">Xử lý dữ liệu</div>
+            <div className="text-blue-100">Data Processing</div>
           </div>
         </div>
       </div>

@@ -13,13 +13,13 @@ export function DSSHero() {
               Admin Portal
             </div>
             <h1 className="text-blue-900 mb-6">
-              Quản Lý & Vận Hành Hệ Thống Dữ Liệu Toàn Diện
+              Comprehensive Data System Management & Operations
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Dành cho quản trị viên – người vận hành, giám sát và đảm bảo hệ thống dữ liệu hoạt động hiệu quả.
+              For administrators – people who operate, monitor and ensure the data system runs efficiently.
             </p>
             <Button size="lg" className="bg-blue-600 hover:bg-blue-700 gap-2">
-              Vào Bảng Quản Trị
+              Enter Admin Panel
               <ArrowRight className="w-5 h-5" />
             </Button>
           </div>

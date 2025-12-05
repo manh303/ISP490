@@ -3,20 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 
 const features = [
   {
-    title: "Quản lý người dùng",
-    description: "Tạo, phân quyền, và theo dõi tài khoản người dùng trong hệ thống một cách dễ dàng và bảo mật.",
+    title: "User Management",
+    description: "Create, assign permissions, and monitor user accounts in the system easily and securely.",
     icon: Users,
     color: "from-blue-600 to-blue-700",
   },
   {
-    title: "Giám sát Crawler",
-    description: "Theo dõi tiến trình và nhật ký thu thập dữ liệu từ các nguồn khác nhau theo thời gian thực.",
+    title: "Crawler Monitoring",
+    description: "Monitor progress and logs of data collection from various sources in real-time.",
     icon: Bot,
     color: "from-blue-700 to-blue-800",
   },
   {
-    title: "Quản lý hệ thống",
-    description: "Kiểm soát ELT Jobs, logs và pipeline để đảm bảo hệ thống vận hành trơn tru và hiệu quả.",
+    title: "System Management",
+    description: "Control ELT Jobs, logs and pipeline to ensure smooth and efficient system operation.",
     icon: Server,
     color: "from-blue-800 to-blue-900",
   },
@@ -28,10 +28,10 @@ export function DSSFeatures() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-blue-900 mb-4">
-            Tính Năng Quản Trị Mạnh Mẽ
+            Powerful Admin Features
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Công cụ toàn diện giúp quản trị viên kiểm soát mọi khía cạnh của hệ thống
+            Comprehensive tools to help administrators control every aspect of the system
           </p>
         </div>
 

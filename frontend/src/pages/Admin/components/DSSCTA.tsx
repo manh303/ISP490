@@ -10,17 +10,17 @@ export function DSSCTA() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-blue-900 mb-4">
-            Bắt đầu vận hành hệ thống ngay hôm nay
+            Start operating the system today
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Truy cập Admin Portal để quản lý, giám sát và tối ưu hóa hệ thống DSS Analytics của bạn
+            Access Admin Portal to manage, monitor and optimize your DSS Analytics system
           </p>
           <Button size="lg" className="bg-blue-600 hover:bg-blue-700 gap-2">
-            Truy cập Admin Portal
+            Access Admin Portal
             <ArrowRight className="w-5 h-5" />
           </Button>
           <p className="text-sm text-gray-500 mt-6">
-            Yêu cầu quyền quản trị viên để truy cập
+            Administrator privileges required for access
           </p>
         </div>
       </div>

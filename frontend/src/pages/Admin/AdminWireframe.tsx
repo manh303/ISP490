@@ -57,7 +57,7 @@ export function AdminWireframe() {
               Change Password
             </Button>
             <Button variant="outline" className="w-full">
-              Tài khoản
+              Account
             </Button>
           </div>
         </div>
