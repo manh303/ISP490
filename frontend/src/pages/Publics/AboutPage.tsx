@@ -13,53 +13,53 @@ export function AboutPage( { navigateTo, isLoggedIn, onLogout }: AboutPageProps)
   const values = [
     {
       icon: Target,
-      title: "Định Hướng Khách Hàng",
-      description: "Chúng tôi đặt nhu cầu và thành công của khách hàng làm trọng tâm trong mọi quyết định",
+      title: "Customer Focus",
+      description: "We put customer needs and success at the center of every decision",
     },
     {
       icon: Zap,
-      title: "Đổi Mới Liên Tục",
-      description: "Không ngừng cải tiến và phát triển công nghệ để mang đến giải pháp tốt nhất",
+      title: "Continuous Innovation",
+      description: "Constantly improving and developing technology to bring the best solutions",
     },
     {
       icon: Shield,
-      title: "Bảo Mật & Tin Cậy",
-      description: "Cam kết bảo vệ dữ liệu và quyền riêng tư của khách hàng ở mức cao nhất",
+      title: "Security & Trust",
+      description: "Committed to protecting customer data and privacy at the highest level",
     },
     {
       icon: Globe,
-      title: "Tầm Nhìn Toàn Cầu",
-      description: "Phát triển giải pháp đáp ứng tiêu chuẩn quốc tế và xu hướng thế giới",
+      title: "Global Vision",
+      description: "Developing solutions that meet international standards and global trends",
     },
   ];
 
   const stats = [
-    { label: "Khách Hàng", value: "500+", icon: Users },
-    { label: "Dự Án Thành Công", value: "1,200+", icon: CheckCircle },
-    { label: "Năm Kinh Nghiệm", value: "10+", icon: Award },
-    { label: "Tăng Trưởng", value: "45%", icon: TrendingUp },
+    { label: "Customers", value: "500+", icon: Users },
+    { label: "Successful Projects", value: "1,200+", icon: CheckCircle },
+    { label: "Years of Experience", value: "10+", icon: Award },
+    { label: "Growth", value: "45%", icon: TrendingUp },
   ];
 
   const team = [
     {
       name: "Nguyễn Văn A",
       position: "CEO & Founder",
-      description: "15 năm kinh nghiệm trong lĩnh vực phân tích dữ liệu và AI",
+      description: "15 years of experience in data analysis and AI",
     },
     {
       name: "Trần Thị B",
       position: "CTO",
-      description: "Chuyên gia công nghệ với nhiều giải thưởng quốc tế",
+      description: "Technology expert with multiple international awards",
     },
     {
       name: "Lê Văn C",
       position: "Head of Product",
-      description: "10 năm phát triển sản phẩm cho doanh nghiệp lớn",
+      description: "10 years developing products for large enterprises",
     },
     {
       name: "Phạm Thị D",
       position: "Head of Customer Success",
-      description: "Chuyên gia tư vấn với hơn 300 dự án triển khai thành công",
+      description: "Consulting expert with over 300 successful project implementations",
     },
   ];
 
@@ -72,16 +72,16 @@ export function AboutPage( { navigateTo, isLoggedIn, onLogout }: AboutPageProps)
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-gray-900 mb-6">
-                Về DSS Analytics
+                About DSS Analytics
               </h1>
               <p className="text-gray-600 text-lg mb-6">
-                Chúng tôi là đội ngũ chuyên gia đam mê công nghệ, tận tâm phát triển các giải pháp 
-                hỗ trợ ra quyết định thông minh cho doanh nghiệp Việt Nam.
+                We are a team of technology enthusiasts, dedicated to developing solutions 
+                that support smart decision-making for Vietnamese businesses.
               </p>
               <p className="text-gray-600 text-lg">
-                Với hơn 10 năm kinh nghiệm trong lĩnh vực phân tích dữ liệu và AI, chúng tôi hiểu rõ 
-                những thách thức mà doanh nghiệp đang phải đối mặt và cam kết mang đến những công cụ 
-                mạnh mẽ nhất để giúp bạn thành công.
+                With over 10 years of experience in data analysis and AI, we clearly understand 
+                the challenges businesses are facing and are committed to bringing the most 
+                powerful tools to help you succeed.
               </p>
             </div>
             <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl">
@@ -120,23 +120,23 @@ export function AboutPage( { navigateTo, isLoggedIn, onLogout }: AboutPageProps)
             <Card className="p-8 bg-gradient-to-br from-blue-50 to-white border-blue-200">
               <Target className="w-12 h-12 text-blue-600 mb-4" />
               <h2 className="text-gray-900 mb-4">
-                Sứ Mệnh
+                Mission
               </h2>
               <p className="text-gray-600 text-lg">
-                Trao quyền cho các doanh nghiệp Việt Nam với công nghệ phân tích dữ liệu tiên tiến, 
-                giúp họ đưa ra quyết định thông minh, nhanh chóng và chính xác hơn để phát triển 
-                bền vững trong thời đại số.
+                Empower Vietnamese businesses with advanced data analytics technology, 
+                helping them make smarter, faster, and more accurate decisions to develop 
+                sustainably in the digital age.
               </p>
             </Card>
 
             <Card className="p-8 bg-gradient-to-br from-purple-50 to-white border-purple-200">
               <TrendingUp className="w-12 h-12 text-purple-600 mb-4" />
               <h2 className="text-gray-900 mb-4">
-                Tầm Nhìn
+                Vision
               </h2>
               <p className="text-gray-600 text-lg">
-                Trở thành nền tảng hỗ trợ ra quyết định hàng đầu tại Việt Nam, được tin dùng bởi 
-                hàng nghìn doanh nghiệp và góp phần thúc đẩy chuyển đổi số toàn diện cho nền kinh tế.
+                Become Vietnam's leading decision support platform, trusted by 
+                thousands of businesses and contributing to comprehensive digital transformation for the economy.
               </p>
             </Card>
           </div>
@@ -148,10 +148,10 @@ export function AboutPage( { navigateTo, isLoggedIn, onLogout }: AboutPageProps)
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-gray-900 mb-4">
-              Giá Trị Cốt Lõi
+              Core Values
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Những giá trị định hướng mọi hành động và quyết định của chúng tôi
+              The values that guide all our actions and decisions
             </p>
           </div>
 
@@ -181,10 +181,10 @@ export function AboutPage( { navigateTo, isLoggedIn, onLogout }: AboutPageProps)
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-gray-900 mb-4">
-              Đội Ngũ Lãnh Đạo
+              Leadership Team
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Những người dẫn dắt DSS Analytics hướng tới tương lai
+              The people leading DSS Analytics towards the future
             </p>
           </div>
 

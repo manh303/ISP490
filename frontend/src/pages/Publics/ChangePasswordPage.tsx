@@ -27,7 +27,7 @@ export function ChangePasswordPage({ navigateTo, onLogout }: ChangePasswordPageP
               onClick={onLogout}
               className="text-gray-600 hover:text-gray-900"
             >
-              Đăng Xuất
+              Logout
             </button>
           </div>
         </div>

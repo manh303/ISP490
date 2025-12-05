@@ -11,29 +11,29 @@ export function Features({ navigateTo }: FeaturesProps) {
   const features = [
     {
       icon: GitBranch,
-      title: "Phân Tích Kịch Bản",
-      description: "Mô phỏng và đánh giá nhiều kịch bản kinh doanh khác nhau để tìm ra giải pháp tối ưu nhất cho doanh nghiệp của bạn.",
+      title: "Scenario Analysis",
+      description: "Simulate and evaluate different business scenarios to find the optimal solution for your business.",
       color: "blue",
       page: "scenario" as Page,
     },
     {
       icon: DollarSign,
-      title: "Báo Cáo Doanh Thu Thời Gian Thực",
-      description: "Theo dõi và phân tích doanh thu trực tiếp với các biểu đồ tương tác, giúp bạn nắm bắt tình hình kinh doanh ngay lập tức.",
+      title: "Real-time Revenue Reports",
+      description: "Monitor and analyze revenue in real-time with interactive charts, helping you grasp business situation instantly.",
       color: "red",
       page: "revenue" as Page,
     },
     {
       icon: TrendingUp,
-      title: "Dự Báo Xu Hướng Thị Trường",
-      description: "Sử dụng AI và machine learning để dự đoán xu hướng thị trường, giúp doanh nghiệp chủ động trong chiến lược.",
+      title: "Market Trend Forecasting",
+      description: "Use AI and machine learning to predict market trends, helping businesses be proactive in their strategies.",
       color: "yellow",
       page: "forecast" as Page,
     },
     {
       icon: Settings,
-      title: "Tối Ưu Hóa Vận Hành",
-      description: "Phân tích hiệu suất vận hành và đưa ra các khuyến nghị để cải thiện quy trình, tiết kiệm chi phí và nâng cao năng suất.",
+      title: "Operations Optimization",
+      description: "Analyze operational performance and provide recommendations to improve processes, save costs, and increase productivity.",
       color: "green",
       page: "operation" as Page,
     },
@@ -99,7 +99,7 @@ export function Features({ navigateTo }: FeaturesProps) {
                       className={`gap-2 ${colors.button}`}
                       onClick={() => navigateTo(feature.page)}
                     >
-                      Tìm hiểu thêm
+                      Learn More
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>

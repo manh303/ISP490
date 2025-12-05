@@ -19,56 +19,56 @@ export function ExplorePage({ navigateTo, isLoggedIn, onLogout }: ExplorePagePro
     {
       id: "scenario",
       icon: GitBranch,
-      title: "Phân Tích Kịch Bản",
-      description: "Mô phỏng các tình huống kinh doanh và đánh giá rủi ro",
+      title: "Scenario Analysis",
+      description: "Simulate business situations and assess risks",
       color: "blue",
       features: [
-        "So sánh đa kịch bản",
-        "Phân tích ROI chi tiết",
-        "Đánh giá rủi ro tự động",
-        "Báo cáo trực quan",
+        "Multi-scenario comparison",
+        "Detailed ROI analysis",
+        "Automated risk assessment",
+        "Visual reports",
       ],
       page: "scenario" as Page,
     },
     {
       id: "revenue",
       icon: DollarSign,
-      title: "Báo Cáo Doanh Thu",
-      description: "Theo dõi doanh thu theo thời gian thực",
+      title: "Revenue Report",
+      description: "Monitor real-time revenue",
       color: "red",
       features: [
-        "Dashboard thời gian thực",
-        "Phân tích theo danh mục",
-        "Biểu đồ tương tác",
-        "Cảnh báo xu hướng",
+        "Real-time dashboard",
+        "Category analysis",
+        "Interactive charts",
+        "Trend alerts",
       ],
       page: "revenue" as Page,
     },
     {
       id: "forecast",
       icon: TrendingUp,
-      title: "Dự Báo Xu Hướng",
-      description: "AI dự đoán xu hướng thị trường với độ chính xác cao",
+      title: "Trend Forecast",
+      description: "AI predicts market trends with high accuracy",
       color: "yellow",
       features: [
-        "Dự báo AI thông minh",
-        "Độ chính xác 95%+",
-        "Phân tích yếu tố",
-        "Khuyến nghị chiến lược",
+        "Smart AI forecasting",
+        "95%+ accuracy",
+        "Factor analysis",
+        "Strategic recommendations",
       ],
       page: "forecast" as Page,
     },
     {
       id: "operation",
       icon: Settings,
-      title: "Tối Ưu Vận Hành",
-      description: "Cải thiện hiệu suất và quy trình vận hành",
+      title: "Operation Optimization",
+      description: "Improve performance and operational processes",
       color: "green",
       features: [
-        "Phát hiện điểm nghẽn",
-        "Tối ưu tự động",
-        "Giảm chi phí 20%+",
-        "Tăng năng suất",
+        "Bottleneck detection",
+        "Automatic optimization",
+        "20%+ cost reduction",
+        "Increased productivity",
       ],
       page: "operation" as Page,
     },
@@ -77,45 +77,45 @@ export function ExplorePage({ navigateTo, isLoggedIn, onLogout }: ExplorePagePro
   const useCases = [
     {
       icon: Building2,
-      title: "Doanh Nghiệp Lớn",
-      description: "Quản lý và phân tích dữ liệu phức tạp từ nhiều chi nhánh",
-      stats: "500+ nhân viên",
+      title: "Large Enterprises",
+      description: "Manage and analyze complex data from multiple branches",
+      stats: "500+ employees",
     },
     {
       icon: ShoppingBag,
-      title: "Bán Lẻ & TMĐT",
-      description: "Tối ưu hóa tồn kho, dự báo nhu cầu và phân tích khách hàng",
-      stats: "1000+ đơn/ngày",
+      title: "Retail & E-commerce",
+      description: "Optimize inventory, forecast demand and analyze customers",
+      stats: "1000+ orders/day",
     },
     {
       icon: Users,
-      title: "SME",
-      description: "Giải pháp linh hoạt và hiệu quả về chi phí cho doanh nghiệp vừa và nhỏ",
-      stats: "10-200 nhân viên",
+      title: "SMEs",
+      description: "Flexible and cost-effective solutions for small and medium enterprises",
+      stats: "10-200 employees",
     },
     {
       icon: Award,
-      title: "Startup",
-      description: "Công cụ phân tích mạnh mẽ giúp scale nhanh chóng",
-      stats: "Gói ưu đãi đặc biệt",
+      title: "Startups",
+      description: "Powerful analytics tools to scale quickly",
+      stats: "Special discount package",
     },
   ];
 
   const testimonials = [
     {
       name: "Nguyễn Văn A",
-      position: "CEO, Công ty ABC",
-      content: "DSS Analytics đã giúp chúng tôi tăng 45% hiệu quả vận hành chỉ trong 3 tháng. Công cụ phân tích cực kỳ mạnh mẽ và dễ sử dụng.",
+      position: "CEO, ABC Company",
+      content: "DSS Analytics helped us increase operational efficiency by 45% in just 3 months. The analytics tools are extremely powerful and easy to use.",
     },
     {
       name: "Trần Thị B",
       position: "CFO, XYZ Corp",
-      content: "Tính năng dự báo doanh thu giúp chúng tôi lập kế hoạch tài chính chính xác hơn rất nhiều. Độ chính xác lên đến 94%!",
+      content: "The revenue forecasting feature helps us plan finances much more accurately. Accuracy up to 94%!",
     },
     {
       name: "Lê Văn C",
       position: "COO, DEF Ltd",
-      content: "Module tối ưu vận hành đã tiết kiệm cho chúng tôi hơn 2 tỷ VNĐ chi phí mỗi năm. ROI rất ấn tượng!",
+      content: "The operation optimization module saved us more than 2 billion VNĐ in costs per year. Very impressive ROI!",
     },
   ];
 
@@ -145,23 +145,22 @@ export function ExplorePage({ navigateTo, isLoggedIn, onLogout }: ExplorePagePro
           <div className="text-center max-w-3xl mx-auto">
             <Badge className="bg-white/20 text-white border-white/30 mb-6 gap-2">
               <Play className="w-4 h-4" />
-              Demo Tương Tác
+              Interactive Demo
             </Badge>
             <h1 className="text-white mb-6">
-              Khám Phá Sức Mạnh Của
+              Discover the Power of
               <br />
               DSS Analytics
             </h1>
             <p className="text-blue-100 text-xl mb-8">
-              Trải nghiệm các tính năng mạnh mẽ và xem cách DSS Analytics có thể 
-              chuyển đổi doanh nghiệp của bạn
+              Experience powerful features and see how DSS Analytics can transform your business
             </p>
             <Button 
               size="lg"
               className="bg-white text-blue-600 hover:bg-blue-50 gap-2"
               onClick={() => navigateTo(isLoggedIn ? "dashboard" : "login")}
             >
-              {isLoggedIn ? "Vào Dashboard" : "Đăng Nhập Để Trải Nghiệm"}
+              {isLoggedIn ? "Go to Dashboard" : "Login to Experience"}
               <ArrowRight className="w-5 h-5" />
             </Button>
           </div>
@@ -173,10 +172,10 @@ export function ExplorePage({ navigateTo, isLoggedIn, onLogout }: ExplorePagePro
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-gray-900 mb-4">
-              Các Module Có Sẵn
+              Available Modules
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Chọn module bạn muốn khám phá chi tiết
+              Choose the module you want to explore in detail
             </p>
           </div>
 
