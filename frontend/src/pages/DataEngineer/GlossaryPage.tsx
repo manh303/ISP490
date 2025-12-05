@@ -73,31 +73,31 @@ const GlossaryPage: React.FC = () => {
         <div className="flex gap-2 flex-1">
           <input
             type="text"
-            placeholder="Tìm kiếm thuật ngữ..."
+            placeholder="Search terms..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 p-2 border rounded"
           />
           <button onClick={handleSearch} className="px-4 py-2 bg-blue-500 text-white rounded">
-            Tìm kiếm
+            Search
           </button>
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
           className="px-4 py-2 bg-green-500 text-white rounded"
         >
-          Tạo mới
+          Create New
         </button>
       </div>
 
       {/* Create Form */}
       {showCreateForm && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium mb-4">Tạo thuật ngữ mới</h3>
+          <h3 className="font-medium mb-4">Create New Term</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
-              placeholder="Tên thuật ngữ"
+              placeholder="Term Name"
               value={newTerm.term_name}
               onChange={(e) => setNewTerm({ ...newTerm, term_name: e.target.value })}
               className="p-2 border rounded"
@@ -119,7 +119,7 @@ const GlossaryPage: React.FC = () => {
             </select>
           </div>
           <textarea
-            placeholder="Định nghĩa"
+            placeholder="Definition"
             value={newTerm.definition}
             onChange={(e) => setNewTerm({ ...newTerm, definition: e.target.value })}
             className="w-full p-2 border rounded mt-4"
@@ -127,10 +127,10 @@ const GlossaryPage: React.FC = () => {
           />
           <div className="mt-4 flex gap-2">
             <button onClick={handleCreateTerm} className="px-4 py-2 bg-green-500 text-white rounded">
-              Tạo
+              Create
             </button>
             <button onClick={() => setShowCreateForm(false)} className="px-4 py-2 bg-gray-500 text-white rounded">
-              Hủy
+              Cancel
             </button>
           </div>
         </div>
@@ -139,7 +139,7 @@ const GlossaryPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Terms List */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Danh sách thuật ngữ</h2>
+          <h2 className="text-lg font-semibold mb-4">Term List</h2>
           {loading && <div>Loading...</div>}
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {terms.map((term) => (
@@ -158,14 +158,14 @@ const GlossaryPage: React.FC = () => {
 
         {/* Term Details */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Chi tiết thuật ngữ</h2>
+          <h2 className="text-lg font-semibold mb-4">Term Details</h2>
           {selectedTerm ? (
             <div>
               <h3 className="font-medium text-lg">{selectedTerm.term_name}</h3>
               <p className="text-gray-600 mb-2">Status: {selectedTerm.status}</p>
               <p className="text-gray-600 mb-4">Steward: {selectedTerm.steward}</p>
               <div className="mb-4">
-                <strong>Định nghĩa:</strong>
+                <strong>Definition:</strong>
                 <p className="mt-1">{selectedTerm.definition}</p>
               </div>
               {selectedTerm.related_datasets && selectedTerm.related_datasets.length > 0 && (
@@ -182,7 +182,7 @@ const GlossaryPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <p className="text-gray-500">Chọn một thuật ngữ để xem chi tiết</p>
+            <p className="text-gray-500">Select a term to view details</p>
           )}
         </div>
       </div>

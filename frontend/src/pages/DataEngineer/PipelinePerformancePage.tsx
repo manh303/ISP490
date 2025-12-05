@@ -41,7 +41,7 @@ const PipelinePerformancePage: React.FC = () => {
       setStats(null);
     } catch (err) {
       console.error('Error fetching pipeline performance:', err);
-      setError('Không thể tải dữ liệu hiệu suất đường ống');
+      setError('Failed to load pipeline performance data');
     } finally {
       setLoading(false);
     }
@@ -84,10 +84,10 @@ const PipelinePerformancePage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Hiệu suất Đường ống
+            Pipeline Performance
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Giám sát các chỉ số thực thi đường ống ETL và xu hướng hiệu suất
+            Monitor ETL pipeline execution metrics and performance trends
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -96,17 +96,17 @@ const PipelinePerformancePage: React.FC = () => {
             onChange={(e) => setTimeRange(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="1h">Giờ qua</option>
-            <option value="24h">24 giờ qua</option>
-            <option value="7d">7 ngày qua</option>
-            <option value="30d">30 ngày qua</option>
+            <option value="1h">Last hour</option>
+            <option value="24h">Last 24 hours</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
           </select>
           <button
             onClick={fetchPipelinePerformance}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
-            Làm mới
+            Refresh
           </button>
         </div>
       </div>
@@ -131,7 +131,7 @@ const PipelinePerformancePage: React.FC = () => {
           {/* Success Rate */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Tỷ lệ Thành công theo Công việc
+              Success Rate by Job
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={successRateData}>
@@ -159,7 +159,7 @@ const PipelinePerformancePage: React.FC = () => {
           {/* Average Duration */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Thời lượng Trung bình theo Công việc
+              Average Duration by Job
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={durationChartData}>
@@ -191,7 +191,7 @@ const PipelinePerformancePage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Chi tiết Thực thi Đường ống
+              Pipeline Execution Details
             </h2>
           </div>
           <div className="p-6">
@@ -199,14 +199,14 @@ const PipelinePerformancePage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Tên Công việc</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Ngày Chạy</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Số lượng Chạy</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Số lượng Thành công</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Số lượng Thất bại</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Thời lượng Trung bình</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Thời lượng Tối thiểu</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Thời lượng Tối đa</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Job Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Run Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Run Count</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Success Count</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Failure Count</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Average Duration</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Min Duration</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Max Duration</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -256,10 +256,10 @@ const PipelinePerformancePage: React.FC = () => {
           <div className="text-center">
             <Activity className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-              Không có Dữ liệu Đường ống nào
+              No Pipeline Data Available
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Không tìm thấy dữ liệu hiệu suất đường ống cho khoảng thời gian đã chọn.
+              No pipeline performance data found for the selected time period.
             </p>
           </div>
         </div>

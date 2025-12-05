@@ -36,12 +36,12 @@ const SourcesPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Nguồn dữ liệu & Hệ thống</h1>
+      <h1 className="text-2xl font-bold mb-6">Data Sources & Systems</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sources List */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Danh sách nguồn dữ liệu</h2>
+          <h2 className="text-lg font-semibold mb-4">Data Sources List</h2>
           {loading && <div>Loading...</div>}
           <div className="space-y-2">
             {sources.map((source) => (
@@ -60,7 +60,7 @@ const SourcesPage: React.FC = () => {
 
         {/* Source Details */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Chi tiết nguồn dữ liệu</h2>
+          <h2 className="text-lg font-semibold mb-4">Data Source Details</h2>
           {selectedSource ? (
             <div>
               <h3 className="font-medium text-lg">{selectedSource.name}</h3>
@@ -76,7 +76,7 @@ const SourcesPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">Chọn một nguồn để xem chi tiết</p>
+            <p className="text-gray-500">Select a source to view details</p>
           )}
         </div>
       </div>

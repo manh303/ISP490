@@ -75,9 +75,10 @@ const DSSInput: React.FC = () => {
 
     // Validate required fields based on model
     if (modelId === 'price_prediction') {
-      if (!formData.product_key?.trim()) {
-        newErrors.product_key = 'Mã sản phẩm là bắt buộc';
-      }
+      // Removed required validation for product_key to allow it to be empty
+      // if (!formData.product_key?.trim()) {
+      //   newErrors.product_key = 'Mã sản phẩm là bắt buộc';
+      // }
       if (!formData.platform_code) {
         newErrors.platform_code = 'Nền tảng là bắt buộc';
       }
@@ -299,17 +300,18 @@ const DSSInput: React.FC = () => {
             (modelId === 'review_sentiment' && formData.scope_mode !== 'by_product')) {
           return null;
         }
+        const isProductKeyRequired = (modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_product';
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {modelId === 'product_recommendation' ? 'Mã sản phẩm nguồn *' : 'Mã sản phẩm *'}
+              {modelId === 'product_recommendation' ? 'Mã sản phẩm nguồn' : 'Mã sản phẩm'}{isProductKeyRequired ? ' *' : ''}
             </label>
             <Input
               type="text"
               value={formData.product_key || ''}
               onChange={(e) => handleChange('product_key', e.target.value)}
               placeholder={modelId === 'product_recommendation' ? "vd: tiki_123456" : "vd: tiki_123456"}
-              required
+              required={isProductKeyRequired}
             />
           </div>
         );
