@@ -1068,6 +1068,10 @@ class DSSService:
             min_cpr_filter = f"AND COALESCE(rec.co_purchase_rate, 0) >= {min_cpr_param}"
 
         # OPTIMIZED: Pre-filter source products by category to avoid full table scan
+        # Fix platform filter for CTE - extract replacements outside f-string to avoid backslash syntax error
+        underscore = '_'
+        platform_filter_for_cte = platform_filter.replace('dpl_rec.platform_code', f'split_part(dp.product_key, {repr(underscore)}, 1)').replace('dp_rec.product_key', 'dp.product_key')
+        
         sql = f"""
             WITH filtered_sources AS (
                 -- Get source products matching category/platform filters
@@ -1075,8 +1079,8 @@ class DSSService:
                 FROM dwh.dim_product dp
                 LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
                 WHERE 1=1
-                  {category_filter.replace('dc.category_sk', 'dc.category_sk')}
-                  {platform_filter.replace('dpl_rec.platform_code', 'split_part(dp.product_key, \'_\', 1)').replace('dp_rec.product_key', 'dp.product_key')}
+                  {category_filter}
+                  {platform_filter_for_cte}
             )
             SELECT * FROM (
                 SELECT
