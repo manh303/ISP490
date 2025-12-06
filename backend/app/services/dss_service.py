@@ -92,8 +92,17 @@ class DSSService:
         # Clamp heavy params
         req["page_size"] = min(req.get("page_size", 50), 100)
         req["top_n"] = min(req.get("top_n", 50), 100)
-        req["min_confidence"] = max(req.get("min_confidence", 0.70), 0.6)
+        
+        # Allow user-specified min_confidence, only clamp to valid range [0, 1]
+        min_conf = req.get("min_confidence", 0.7)
+        req["min_confidence"] = max(0.0, min(min_conf, 1.0))
+        
         ai_mode = req.get("ai_mode", "full")
+        
+        # Convert date strings to date objects if needed
+        for key in ["from_date", "to_date"]:
+            if isinstance(req.get(key), str):
+                req[key] = datetime.strptime(req[key], "%Y-%m-%d").date()
 
         # 0. Check Cache
         # Cache key based on request filters (excluding user_id/pagination if needed, but pagination affects result so keep it)
@@ -324,15 +333,52 @@ class DSSService:
         offset_param = f"${param_idx}"
         params.append(offset)
         param_idx += 1
+        
+        # Add from_date, to_date, max_discount_pct to params
+        from_date_param = f"${param_idx}"
+        params.append(from_date)
+        param_idx += 1
+        
+        to_date_param = f"${param_idx}"
+        params.append(adjusted_to_date)
+        param_idx += 1
+        
+        max_discount_pct = request.get("max_discount_pct", 0.15)
+        max_discount_param = f"${param_idx}"
+        params.append(max_discount_pct)
+        param_idx += 1
 
-        # OPTIMIZED QUERY with window function
+        # OPTIMIZED QUERY with windowed metrics from fact_product_daily
         sql = f"""
-            WITH ranked_predictions AS (
+            WITH date_bounds AS (
+                SELECT 
+                    {from_date_param}::date AS from_date,
+                    {to_date_param}::date   AS to_date
+            ),
+            product_metrics AS (
+                SELECT
+                    f.product_sk,
+                    f.platform_sk,
+                    AVG(f.avg_price)       AS avg_price,
+                    MIN(f.min_price)       AS min_price,
+                    MAX(f.max_price)       AS max_price,
+                    SUM(f.total_review_count) AS total_reviews,
+                    AVG(f.avg_rating)      AS avg_rating,
+                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
+                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
+                CROSS JOIN date_bounds db
+                WHERE dd.date_value BETWEEN db.from_date AND db.to_date
+                GROUP BY f.product_sk, f.platform_sk
+            ),
+            ranked_predictions AS (
                 -- Use window function instead of DISTINCT ON for better performance
                 SELECT 
                     pred.product_sk,
                     pred.platform_sk,
                     pred.predicted_price,
+                    pred.prediction_confidence,
                     pred.ci_upper,
                     pred.ci_lower,
                     pred.created_at,
@@ -350,10 +396,13 @@ class DSSService:
                     ci_upper,
                     ci_lower,
                     created_at,
-                    -- Pre-calculate confidence to avoid repeated computation
-                    GREATEST(0.0, LEAST(1.0, 
-                        1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-                    )) AS confidence
+                    -- Use prediction_confidence if available, fallback to CI calculation
+                    COALESCE(
+                        prediction_confidence,
+                        GREATEST(0.0, LEAST(1.0, 
+                            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                        ))
+                    ) AS confidence
                 FROM ranked_predictions
                 WHERE rn = 1
             ),
@@ -368,83 +417,31 @@ class DSSService:
                         dc.category_lvl1,
                         'Uncategorized'
                     ) AS category_name,
-                    COALESCE(pm.avg_price, 0) AS current_price,
+                    pm.avg_price AS current_price,
                     pred.predicted_price,
-                    (pred.predicted_price - COALESCE(pm.avg_price, 0)) AS price_diff,
+                    (pred.predicted_price - pm.avg_price) AS price_diff,
                     CASE 
-                        WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                        WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
                         ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS price_change_pct,
                     
-                    -- CALCULATE ORDERS & REVENUE WITH RANDOMNESS
-                    -- 1. Calculate Mock Orders
+                    -- Use REAL data from fact_product_daily aggregates
+                    pm.total_orders AS current_orders,
+                    pm.total_revenue AS current_revenue,
                     CASE 
-                        WHEN COALESCE(pm.total_orders, 0) > 0 THEN
-                            -- Has reviews: 1 review ≈ 75 sales
-                            CAST(pm.total_orders * 75 AS INT)
-                        ELSE
-                            -- No reviews: Mock based on price + randomness
-                            -- Base: <100k=300, <500k=150, <2M=50, >2M=20
-                            -- Random: +/- 30% using hash of product_key
-                            CAST(
-                                (CASE 
-                                    WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
-                                    WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
-                                    WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
-                                    ELSE 20
-                                END) * 
-                                (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                            AS INT)
-                    END AS current_orders,
-
-                    -- 2. Calculate Revenue from Orders
-                    (
-                        CASE 
-                            WHEN COALESCE(pm.total_orders, 0) > 0 THEN
-                                CAST(pm.total_orders * 75 AS INT)
-                            ELSE
-                                CAST(
-                                    (CASE 
-                                        WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
-                                        WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
-                                        WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
-                                        ELSE 20
-                                    END) * 
-                                    (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                                AS INT)
-                        END
-                    ) * COALESCE(pm.avg_price, 0) AS current_revenue,
-
-                    CASE 
-                        WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
-                        ELSE 
-                            -- Projected Revenue = Current Revenue * (Predicted Price / Current Price)
-                            (
-                                CASE 
-                                    WHEN COALESCE(pm.total_orders, 0) > 0 THEN
-                                        CAST(pm.total_orders * 75 AS INT)
-                                    ELSE
-                                        CAST(
-                                            (CASE 
-                                                WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
-                                                WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
-                                                WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
-                                                ELSE 20
-                                            END) * 
-                                            (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                                        AS INT)
-                                END
-                            ) * COALESCE(pm.avg_price, 0) * (pred.predicted_price / pm.avg_price)
+                      WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
+                      THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
+                      ELSE NULL
                     END AS projected_revenue,
                     
                     CASE 
-                        WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                        WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
                         ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS expected_revenue_change_pct,
                     pred.confidence,
                     pm.avg_rating,
-                    COALESCE(pm.total_orders, 0) AS total_reviews,
-                    ABS(pred.predicted_price / NULLIF(pm.avg_price, 0) - 1)
+                    pm.total_reviews,
+                    ABS((pred.predicted_price - pm.avg_price) / NULLIF(pm.avg_price, 0))
                         AS abs_revenue_change
                 FROM latest_predictions pred
                 JOIN dwh.dim_product dp 
@@ -453,14 +450,19 @@ class DSSService:
                     ON pred.platform_sk = dpl.platform_sk
                 LEFT JOIN dwh.dim_category dc 
                     ON dp.category_sk = dc.category_sk
-                LEFT JOIN dwh.product_metrics_global pm ON dp.product_sk = pm.product_sk
+                LEFT JOIN product_metrics pm 
+                    ON pm.product_sk = pred.product_sk 
+                   AND pm.platform_sk = pred.platform_sk
                 WHERE {where_clause}
-                  AND COALESCE(pm.avg_price, 0) > 0
+                  AND pm.avg_price > 0
                   AND pred.confidence >= {confidence_param}
                   AND ABS(
-                      (pred.predicted_price - COALESCE(pm.avg_price, 0))
+                      (pred.predicted_price - pm.avg_price)
                       / NULLIF(pm.avg_price, 0)
                   ) > {price_change_param}
+                  AND pred.predicted_price >= pm.avg_price * (1 - {max_discount_param})
+                  -- TODO: Uncomment when margin data is available
+                  -- AND COALESCE(pm.avg_margin_pct, 0) >= $min_margin_pct
             )
             SELECT
                 *,
@@ -470,60 +472,11 @@ class DSSService:
             LIMIT {limit_param} OFFSET {offset_param}
         """
 
-        # COUNT query (without pagination)
-        count_sql = f"""
-            WITH ranked_predictions AS (
-                SELECT 
-                    pred.product_sk,
-                    pred.platform_sk,
-                    pred.predicted_price,
-                    pred.ci_upper,
-                    pred.ci_lower,
-                    pred.created_at,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY pred.product_sk, pred.platform_sk
-                        ORDER BY pred.created_at DESC
-                    ) AS rn
-                FROM ml.fact_price_prediction pred
-            ),
-            latest_predictions AS (
-                SELECT
-                    product_sk,
-                    platform_sk,
-                    predicted_price,
-                    ci_upper,
-                    ci_lower,
-                    created_at,
-                    GREATEST(0.0, LEAST(1.0, 
-                        1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-                    )) AS confidence
-                FROM ranked_predictions
-                WHERE rn = 1
-            )
-            SELECT COUNT(*)
-            FROM latest_predictions pred
-            JOIN dwh.dim_product dp ON pred.product_sk = dp.product_sk
-            JOIN dwh.dim_platform dpl ON pred.platform_sk = dpl.platform_sk
-            LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
-            -- OPTIMIZED: Use product_metrics_global instead of CTE
-            LEFT JOIN dwh.product_metrics_global pm 
-                ON dp.product_sk = pm.product_sk
-            WHERE {where_clause}
-              AND COALESCE(pm.avg_price, 0) > 0
-              AND pred.confidence >= {confidence_param}
-              AND ABS(
-                  (pred.predicted_price - COALESCE(pm.avg_price, 0))
-                  / NULLIF(pm.avg_price, 0)
-              ) > {price_change_param}
-        """
-
-        # Params for count_sql = params without LIMIT/OFFSET
-        count_params = params[:-2]
-
         try:
             rows = await self.db.fetch(sql, *params)
-            total_count_row = await self.db.fetchrow(count_sql, *count_params)
-            total_count = total_count_row["count"] if total_count_row else 0
+            
+            # Get total_count from first row (COUNT(*) OVER() returns same value for all rows)
+            total_count = rows[0]["total_count"] if rows else 0
 
             items = []
             for row in rows:
@@ -540,13 +493,13 @@ class DSSService:
                         "predicted_price": float(row["predicted_price"]),  # giữ lại nếu FE đang dùng
                         "price_diff": float(row["price_diff"]),
                         "price_change_pct": float(row["price_change_pct"]),
-                        "current_revenue": float(row["current_revenue"]),
-                        "projected_revenue": float(row["projected_revenue"]),
+                        "current_revenue": float(row["current_revenue"]) if row["current_revenue"] is not None else 0.0,
+                        "projected_revenue": float(row["projected_revenue"]) if row["projected_revenue"] is not None else 0.0,
                         "expected_revenue_change_pct": float(
                             row["expected_revenue_change_pct"]
                         ),
                         "confidence": float(row["confidence"]),
-                        "current_orders": int(row["current_orders"]),
+                        "current_orders": int(row["current_orders"]) if row["current_orders"] is not None else 0,
                         # Mock avg_rating when null: deterministic hash-based value (3.5-4.5 range)
                         "avg_rating": float(row["avg_rating"])
                         if row["avg_rating"] is not None
@@ -616,17 +569,41 @@ class DSSService:
         
         min_confidence = request.get("min_confidence", 0.70)
         min_price_change_pct = request.get("min_price_change_pct", 0.02)
+        max_discount_pct = request.get("max_discount_pct", 0.15)
         
         # Build parameterized query
-        params: List[Any] = [from_date, adjusted_to_date, product_keys]
+        params: List[Any] = [from_date, adjusted_to_date, product_keys, min_confidence, min_price_change_pct, max_discount_pct]
         
         # Query for BY_PRODUCT mode - get all records for selected products
         sql = """
-            WITH ranked_predictions AS (
+            WITH date_bounds AS (
+                SELECT 
+                    $1::date AS from_date,
+                    $2::date   AS to_date
+            ),
+            product_metrics AS (
+                SELECT
+                    f.product_sk,
+                    f.platform_sk,
+                    AVG(f.avg_price)       AS avg_price,
+                    MIN(f.min_price)       AS min_price,
+                    MAX(f.max_price)       AS max_price,
+                    SUM(f.total_review_count) AS total_reviews,
+                    AVG(f.avg_rating)      AS avg_rating,
+                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
+                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
+                CROSS JOIN date_bounds db
+                WHERE dd.date_value BETWEEN db.from_date AND db.to_date
+                GROUP BY f.product_sk, f.platform_sk
+            ),
+            ranked_predictions AS (
                 SELECT 
                     pred.product_sk,
                     pred.platform_sk,
                     pred.predicted_price,
+                    pred.prediction_confidence,
                     pred.ci_upper,
                     pred.ci_lower,
                     pred.created_at,
@@ -644,23 +621,14 @@ class DSSService:
                     ci_upper,
                     ci_lower,
                     created_at,
-                    GREATEST(0.0, LEAST(1.0, 
-                        1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-                    )) AS confidence
+                    COALESCE(
+                        prediction_confidence,
+                        GREATEST(0.0, LEAST(1.0, 
+                            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                        ))
+                    ) AS confidence
                 FROM ranked_predictions
                 WHERE rn = 1
-            ),
-            product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    f.platform_sk,
-                    AVG(f.avg_price) AS current_price,
-                    SUM(f.total_review_count) AS total_reviews,
-                    AVG(f.avg_rating) AS avg_rating
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN $1 AND $2
-                GROUP BY f.product_sk, f.platform_sk
             )
             SELECT
                 dp.product_key,
@@ -671,75 +639,30 @@ class DSSService:
                     dc.category_lvl1,
                     'Uncategorized'
                 ) AS category_name,
-                COALESCE(pm.avg_price, 0) AS current_price,
+                pm.avg_price AS current_price,
                 pred.predicted_price,
-                (pred.predicted_price - COALESCE(pm.avg_price, 0)) AS price_diff,
+                (pred.predicted_price - pm.avg_price) AS price_diff,
                 CASE 
-                    WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                    WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
                     ELSE (pred.predicted_price / pm.avg_price - 1)
                 END AS price_change_pct,
                 
-                -- Calculate Orders (same logic as by_category)
+                -- Use REAL data from fact_product_daily aggregates
+                pm.total_orders AS current_orders,
+                pm.total_revenue AS current_revenue,
                 CASE 
-                    WHEN COALESCE(pm.total_orders, 0) > 0 THEN
-                        CAST(pm.total_orders * 75 AS INT)
-                    ELSE
-                        CAST(
-                            (CASE 
-                                WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
-                                WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
-                                WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
-                                ELSE 20
-                            END) * 
-                            (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                        AS INT)
-                END AS current_orders,
-                
-                (
-                    CASE 
-                        WHEN COALESCE(pm.total_orders, 0) > 0 THEN
-                            CAST(pm.total_orders * 75 AS INT)
-                        ELSE
-                            CAST(
-                                (CASE 
-                                    WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
-                                    WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
-                                    WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
-                                    ELSE 20
-                                END) * 
-                                (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                            AS INT)
-                    END
-                ) * COALESCE(pm.avg_price, 0) AS current_revenue,
-                
-                CASE 
-                    WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
-                    ELSE 
-                        (
-                            CASE 
-                                WHEN COALESCE(pm.total_orders, 0) > 0 THEN
-                                    CAST(pm.total_orders * 75 AS INT)
-                                ELSE
-                                    CAST(
-                                        (CASE 
-                                            WHEN COALESCE(pm.avg_price, 0) < 100000 THEN 300
-                                            WHEN COALESCE(pm.avg_price, 0) < 500000 THEN 150
-                                            WHEN COALESCE(pm.avg_price, 0) < 2000000 THEN 50
-                                            ELSE 20
-                                        END) * 
-                                        (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                                    AS INT)
-                            END
-                        ) * COALESCE(pm.avg_price, 0) * (pred.predicted_price / pm.avg_price)
+                  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
+                  THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
+                  ELSE NULL
                 END AS projected_revenue,
                 
                 CASE 
-                    WHEN COALESCE(pm.avg_price, 0) = 0 THEN 0
+                    WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
                     ELSE (pred.predicted_price / pm.avg_price - 1)
                 END AS expected_revenue_change_pct,
                 pred.confidence,
                 pm.avg_rating,
-                COALESCE(pm.total_orders, 0) AS total_reviews
+                pm.total_reviews
             FROM latest_predictions pred
             JOIN dwh.dim_product dp 
                 ON pred.product_sk = dp.product_sk
@@ -747,14 +670,17 @@ class DSSService:
                 ON pred.platform_sk = dpl.platform_sk
             LEFT JOIN dwh.dim_category dc 
                 ON dp.category_sk = dc.category_sk
-            LEFT JOIN dwh.product_metrics_global pm ON dp.product_sk = pm.product_sk
+            LEFT JOIN product_metrics pm 
+                ON pm.product_sk = pred.product_sk 
+               AND pm.platform_sk = pred.platform_sk
             WHERE dp.product_key = ANY($3::text[])
-              AND COALESCE(pm.avg_price, 0) > 0
+              AND pm.avg_price > 0
               AND pred.confidence >= $4
               AND ABS(
-                  (pred.predicted_price - COALESCE(pm.avg_price, 0))
+                  (pred.predicted_price - pm.avg_price)
                   / NULLIF(pm.avg_price, 0)
               ) > $5
+              AND pred.predicted_price >= pm.avg_price * (1 - $6)
             ORDER BY dp.product_key, pred.confidence DESC
         """
         
@@ -776,13 +702,13 @@ class DSSService:
                         "predicted_price": float(row["predicted_price"]),
                         "price_diff": float(row["price_diff"]),
                         "price_change_pct": float(row["price_change_pct"]),
-                        "current_revenue": float(row["current_revenue"]),
-                        "projected_revenue": float(row["projected_revenue"]),
+                        "current_revenue": float(row["current_revenue"]) if row["current_revenue"] is not None else 0.0,
+                        "projected_revenue": float(row["projected_revenue"]) if row["projected_revenue"] is not None else 0.0,
                         "expected_revenue_change_pct": float(
                             row["expected_revenue_change_pct"]
                         ),
                         "confidence": float(row["confidence"]),
-                        "current_orders": int(row["current_orders"]),
+                        "current_orders": int(row["current_orders"]) if row["current_orders"] is not None else 0,
                         "avg_rating": float(row["avg_rating"])
                         if row["avg_rating"] is not None
                         else round(3.5 + (abs(hash(row["product_key"])) % 100) / 100, 1),
@@ -826,8 +752,9 @@ class DSSService:
         num_products = len(items)
         num_with_reco = len([i for i in items if i["price_change_pct"] != 0])
 
-        current_revenue = sum(i["current_revenue"] for i in items)
-        projected_revenue = sum(i["projected_revenue"] for i in items)
+        # Handle None values in revenue calculations
+        current_revenue = sum(i["current_revenue"] for i in items if i.get("current_revenue") is not None)
+        projected_revenue = sum(i["projected_revenue"] for i in items if i.get("projected_revenue") is not None)
 
         expected_uplift_pct = (
             (projected_revenue / current_revenue - 1) if current_revenue > 0 else 0.0
@@ -854,26 +781,16 @@ class DSSService:
         user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """Run Product Recommendation DSS analysis"""
-        logger.info("DSSService.run_product_recommendation_dss START: %s", request)
-        t0 = time.perf_counter()
-        data = await self._query_recommendations_by_scope(request)
-        t1 = time.perf_counter()
-        logger.info("DSSService.reco query DB done in %.2fs (rows=%d)", t1 - t0, len(data) if isinstance(data, list) else -1)
-
-        kpi_summary = self._calculate_reco_kpis(data, request)
-        t2 = time.perf_counter()
-        logger.info("DSSService.reco KPIs done in %.2fs", t2 - t1)
-
-        # build dss_result_raw, gọi AI summarizer...
-        ai_payload = {...}
-        ai_result = self.ai_summarizer.summarize_with_ai("product_recommendation", ai_payload)
-        t3 = time.perf_counter()
-        logger.info("DSSService.reco AI summarizer done in %.2fs", t3 - t2)
-
         logger.info(f"Running Product Recommendation DSS: {request}")
         req = dict(request)
         req["top_k"] = min(req.get("top_k", 10), 50)
-        req["min_similarity"] = max(req.get("min_similarity", 0.5), 0.6)
+        req["min_similarity"] = req.get("min_similarity", 0.5)  # Respect user input, default 0.5
+        
+        # Normalize min_co_purchase_rate
+        min_cpr = req.get("min_co_purchase_rate")
+        if min_cpr is not None:
+            req["min_co_purchase_rate"] = max(0.0, min(float(min_cpr), 1.0))
+        
         ai_mode = req.get("ai_mode", "full")
 
         # 0. Check Cache
@@ -1042,6 +959,9 @@ class DSSService:
         if cached is not None:
             return cached
 
+        # Get min_co_purchase_rate from request
+        min_co_purchase_rate = request.get("min_co_purchase_rate")
+
         # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
         sql = """
             SELECT
@@ -1054,6 +974,10 @@ class DSSService:
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
                 rec.similarity_score,
+                rec.co_purchase_count,
+                rec.co_purchase_rate,
+                rec.avg_bundle_revenue,
+                rec.window_days,
                 COALESCE(rec.recommendation_type, 'cross_sell') AS recommendation_type
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
@@ -1063,14 +987,18 @@ class DSSService:
             LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE dp_src.product_key = $1
               AND rec.similarity_score >= $2
+              AND (
+                  $4 IS NULL
+                  OR COALESCE(rec.co_purchase_rate, 0) >= $4
+              )
             ORDER BY rec.similarity_score DESC, rec.rank ASC
             LIMIT $3
         """
 
         try:
-            # No longer need from_date/to_date parameters with product_metrics_global
-            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k)
-            result = [dict(row) for row in rows]
+            # Pass min_co_purchase_rate as 4th parameter
+            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, min_co_purchase_rate)
+            result = self._dedupe_recommendations([dict(row) for row in rows])
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
             await cache.set(cache_key, result, ttl=3600)
             return result
@@ -1109,6 +1037,14 @@ class DSSService:
             category_filter = f"AND CAST(dc.category_sk AS TEXT) = ANY(${param_idx})"
             params.append(categories)
             param_idx += 1
+        
+        # Get min_co_purchase_rate
+        min_co_purchase_rate = request.get("min_co_purchase_rate")
+        min_cpr_param = None
+        if min_co_purchase_rate is not None:
+            min_cpr_param = f"${param_idx}"
+            params.append(min_co_purchase_rate)
+            param_idx += 1
 
         cache_key = self._build_cache_key(
             "reco:by_category",
@@ -1117,6 +1053,7 @@ class DSSService:
                 "categories": categories,
                 "top_k": top_k,
                 "min_similarity": min_similarity,
+                "min_co_purchase_rate": min_co_purchase_rate,
                 "from_date": from_date,
                 "to_date": to_date,
             },
@@ -1125,40 +1062,65 @@ class DSSService:
         if cached is not None:
             return cached
 
-        # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
+        # Build min_co_purchase_rate filter clause
+        min_cpr_filter = ""
+        if min_cpr_param:
+            min_cpr_filter = f"AND COALESCE(rec.co_purchase_rate, 0) >= {min_cpr_param}"
+
+        # OPTIMIZED: Pre-filter source products by category to avoid full table scan
         sql = f"""
-            SELECT
-                dp_src.product_key AS source_product_key,
-                dp_src.product_name AS source_product_name,
-                dp_rec.product_key AS recommended_product_key,
-                dp_rec.product_name AS recommended_product_name,
-                COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) AS platform,
-                COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
-                COALESCE(pm_rec.avg_price, 0) AS avg_price,
-                COALESCE(pm_rec.total_orders, 0) AS total_orders,
-                rec.similarity_score,
-                COALESCE(rec.recommendation_type, 'cross_sell') AS recommendation_type
-            FROM ml.fact_product_recommendation rec
-            JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
-            JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
-            LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
-            LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
-            LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
-            WHERE rec.similarity_score >= $1
-              {platform_filter}
-              {category_filter}
-            ORDER BY pm_rec.total_orders DESC NULLS LAST, rec.similarity_score DESC
-            LIMIT {top_k}
+            WITH filtered_sources AS (
+                -- Get source products matching category/platform filters
+                SELECT DISTINCT dp.product_sk
+                FROM dwh.dim_product dp
+                LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
+                WHERE 1=1
+                  {category_filter.replace('dc.category_sk', 'dc.category_sk')}
+                  {platform_filter.replace('dpl_rec.platform_code', 'split_part(dp.product_key, \'_\', 1)').replace('dp_rec.product_key', 'dp.product_key')}
+            )
+            SELECT * FROM (
+                SELECT
+                    dp_src.product_key AS source_product_key,
+                    dp_src.product_name AS source_product_name,
+                    dp_rec.product_key AS recommended_product_key,
+                    dp_rec.product_name AS recommended_product_name,
+                    COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) AS platform,
+                    COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
+                    COALESCE(pm_rec.avg_price, 0) AS avg_price,
+                    COALESCE(pm_rec.total_orders, 0) AS total_orders,
+                    rec.similarity_score,
+                    rec.co_purchase_count,
+                    rec.co_purchase_rate,
+                    rec.avg_bundle_revenue,
+                    rec.window_days,
+                    COALESCE(rec.recommendation_type, 'cross_sell') AS recommendation_type,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY rec.source_product_sk
+                        ORDER BY rec.similarity_score DESC, COALESCE(rec.co_purchase_rate, 0) DESC
+                    ) AS rn
+                FROM ml.fact_product_recommendation rec
+                INNER JOIN filtered_sources fs ON rec.source_product_sk = fs.product_sk
+                JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
+                JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+                LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
+                LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
+                LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
+                WHERE rec.similarity_score >= $1
+                  {min_cpr_filter}
+            ) ranked
+            WHERE ranked.rn <= {top_k}
+            ORDER BY ranked.total_orders DESC NULLS LAST, ranked.similarity_score DESC
+            LIMIT 1000
         """
 
         try:
             rows = await self.db.fetch(sql, *params)
-            result = [dict(row) for row in rows]
+            result = self._dedupe_recommendations([dict(row) for row in rows])
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
             await cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
-            logger.error(f"Error querying recommendations by category: {e}")
+            logger.exception(f"Error querying recommendations by category: {e}")
             return []
 
     def _calculate_reco_kpis(
@@ -1182,6 +1144,8 @@ class DSSService:
         # Robust numeric casts to avoid str/Decimal issues from DB driver
         similarity_values: List[float] = []
         order_values: List[float] = []
+        co_purchase_rates: List[float] = []
+        
         for r in recommendations:
             try:
                 similarity_values.append(float(r.get("similarity_score", 0) or 0))
@@ -1191,16 +1155,54 @@ class DSSService:
                 order_values.append(float(r.get("total_orders", 0) or 0))
             except (TypeError, ValueError):
                 order_values.append(0.0)
+            # Collect co_purchase_rate values
+            cpr = r.get("co_purchase_rate")
+            if cpr is not None:
+                try:
+                    co_purchase_rates.append(float(cpr))
+                except (TypeError, ValueError):
+                    pass
 
         avg_similarity = sum(similarity_values) / num_recommendations if num_recommendations else 0.0
         avg_orders = sum(order_values) / num_recommendations if num_recommendations else 0.0
+        avg_co_purchase_rate = sum(co_purchase_rates) / len(co_purchase_rates) if co_purchase_rates else 0.0
 
         return {
             "num_source_products": num_source_products,
             "num_recommendations": num_recommendations,
             "avg_similarity": avg_similarity,
             "avg_orders_for_recommended": avg_orders,
+            "avg_co_purchase_rate": avg_co_purchase_rate,
+            "num_recs_with_co_purchase": len(co_purchase_rates),
         }
+
+    def _dedupe_recommendations(
+        self, records: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Deduplicate recommendation rows by (source_product_key, recommended_product_key),
+        keeping the one with higher similarity_score (then higher total_orders).
+        """
+        dedup: Dict[tuple, Dict[str, Any]] = {}
+        for row in records:
+            key = (
+                row.get("source_product_key"),
+                row.get("recommended_product_key"),
+            )
+            if key not in dedup:
+                dedup[key] = row
+                continue
+            existing = dedup[key]
+
+            def _score(item: Dict[str, Any]) -> tuple:
+                sim = float(item.get("similarity_score") or 0)
+                orders = float(item.get("total_orders") or 0)
+                return (sim, orders)
+
+            if _score(row) > _score(existing):
+                dedup[key] = row
+
+        return list(dedup.values())
 
     # ============================================
     # REVIEW SENTIMENT DSS

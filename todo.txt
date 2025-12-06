@@ -1,305 +1,459 @@
-﻿Lý do AI đang trả về “thiếu dữ liệu” là vì AI nhận được rất ít / không có data, hoặc fallback rule-based không đọc đúng các KPI nên rơi vào 2 câu generic.
+﻿1. Price DSS – /dss/price/run
+1.1. Ở hàm run_price_prediction_dss (tầng service tổng)
 
-Để kiểm tra dữ liệu AI nhận và ép nó trả “đầy đủ” hơn, mình sẽ:
+Mục tiêu: đừng ép min_confidence, lưu lại request đúng như Analyst nhập.
 
-Thêm debug info trong response (ai_input_stats) để thấy AI đang được feed gì.
+Bước 1 – Đừng override min_confidence quá mạnh
 
-Thêm logging chi tiết khi bật ENV AI_DEBUG=1.
+Hiện tại đoạn normalize request kiểu:
 
-Cải thiện fallback cho price_prediction để không còn rơi vào 2 câu chung chung khi thực ra đã có KPI.
-
-Dưới đây là từng bước sửa cụ thể.
-
-1. Hiểu rõ hiện tại AI đang nhận gì
-a) AI lấy input ở đâu?
-
-Ở DSSService.run_product_recommendation_dss:
-
-ai_payload = {
-    **dss_result_raw,
-    "table_data": dss_result_raw["table_data"][:15],
-}
+req["page_size"] = min(req.get("page_size", 50), 100)
+req["top_n"] = min(req.get("top_n", 50), 100)
+req["min_confidence"] = max(req.get("min_confidence", 0.70), 0.6)
 
 
-rồi gọi:
+→ Bạn nên sửa thành:
 
-ai_result = self.ai_summarizer.summarize_with_ai(
-    "product_recommendation", ai_payload
+req["page_size"] = min(req.get("page_size", 50), 100)
+req["top_n"] = min(req.get("top_n", 50), 100)
+
+# Giữ nguyên giá trị user gửi, chỉ clamp trong khoảng 0–1
+min_conf = req.get("min_confidence", 0.7)
+req["min_confidence"] = max(0.0, min(min_conf, 1.0))
+
+
+Ý: Analyst nhập 0.4 thì cho phép 0.4, đừng auto đẩy lên 0.6.
+
+Bước 2 – Chuẩn hoá from_date/to_date
+
+Trước khi gọi _query_price_predictions, nên convert string → date (nếu chưa):
+
+from datetime import datetime
+
+for key in ["from_date", "to_date"]:
+    if isinstance(req.get(key), str):
+        req[key] = datetime.strptime(req[key], "%Y-%m-%d").date()
+
+1.2. Ở _query_price_by_category – dùng đúng khoảng ngày + data thật
+
+Mục tiêu:
+
+Thay product_metrics_global bằng aggregate từ fact_product_daily có join dim_date.
+
+Dùng prediction_confidence nếu đã có.
+
+Bắt đầu chuẩn bị để áp max_discount_pct, min_margin_pct.
+
+Bước 3 – Thêm CTE product_metrics_windowed
+
+Trong SQL hiện tại bạn có join dwh.product_metrics_global pm. Giờ sửa thành:
+
+WITH date_bounds AS (
+    SELECT 
+        $from_date::date AS from_date,
+        $to_date::date   AS to_date
+),
+product_metrics AS (
+    SELECT
+        f.product_sk,
+        f.platform_sk,
+        AVG(f.avg_price)       AS avg_price,
+        MIN(f.min_price)       AS min_price,
+        MAX(f.max_price)       AS max_price,
+        SUM(f.total_review_count) AS total_reviews,
+        AVG(f.avg_rating)      AS avg_rating,
+        SUM(f.total_orders)    AS total_orders,
+        SUM(f.total_revenue)   AS total_revenue
+    FROM dwh.fact_product_daily f
+    JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
+    JOIN date_bounds db ON dd.date_value BETWEEN db.from_date AND db.to_date
+    GROUP BY f.product_sk, f.platform_sk
+),
+ranked_predictions AS (
+    ...
 )
 
 
-Ở run_price_prediction_dss:
+Rồi ở phần filtered_results:
 
-ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
-
-
-rồi:
-
-ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
+LEFT JOIN product_metrics pm
+    ON pm.product_sk = latest_predictions.product_sk
+   AND pm.platform_sk = latest_predictions.platform_sk
 
 
-Trong AISummarizer.summarize_with_ai thì nó lấy kpi_summary + table_data từ dss_result_raw và build prompt JSON cho LLM.
+→ Bỏ join với dwh.product_metrics_global.
 
-Nếu table_data rỗng hoặc KPI không đúng key mà fallback hiểu, thì _get_fallback_response() sẽ không tạo insight/action cụ thể và rơi vào 2 câu generic.
+Như vậy mọi metric avg_price, total_reviews, total_orders, total_revenue đều “đúng khoảng thời gian” mà Analyst chọn.
 
-2. Thêm ai_input_stats để thấy AI nhận được gì
+Bước 4 – Dùng prediction_confidence thay vì tính từ CI
 
-Mục tiêu: mỗi lần FE gọi /dss/*/run, response sẽ có thêm:
+Trong latest_predictions hiện đang:
 
-"ai_input_stats": {
-  "scenario": "product_recommendation",
-  "kpi_keys": ["num_source_products", "num_recommendations", "avg_similarity", ...],
-  "table_rows_for_ai": 15
-}
-
-
-Để bạn nhìn 1 phát là biết: AI đang “thấy” bao nhiêu dòng & các KPI nào.
-
-2.1. Sửa run_price_prediction_dss
-
-Trong DSSService.run_price_prediction_dss, ngay sau chỗ:
-
-ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
-if ai_mode == "full" and self.ai_summarizer.available:
-    ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
-else:
-    ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
-
-ai_summary_insights = ai_result.get("summary_insights", [])
-ai_recommended_actions = ai_result.get("recommended_actions", [])
+latest_predictions AS (
+    SELECT
+        product_sk,
+        platform_sk,
+        predicted_price,
+        ci_upper,
+        ci_lower,
+        created_at,
+        GREATEST(0.0, LEAST(1.0,
+            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+        )) AS confidence
+    FROM ranked_predictions
+    WHERE rn = 1
+)
 
 
-bạn thêm:
+Sửa thành:
 
-            # NEW: summarize what AI actually received
-            ai_input_stats = {
-                "scenario": "price_prediction",
-                "kpi_keys": list(kpi_summary.keys()),
-                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
-            }
-
-
-Rồi phần return cuối cùng, thêm field:
-
-        return {
-            **dss_result_raw,
-            "items": data["items"],
-            "total_count": data["total_count"],
-            "ai_summary_insights": ai_summary_insights,
-            "ai_recommended_actions": ai_recommended_actions,
-            "generated_at": datetime.now().isoformat(),
-            "ai_model_used": self.ai_summarizer.model
-            if self.ai_summarizer.available
-            else "rule-based-fallback",
-            "session_id": session_id,
-            "ai_input_stats": ai_input_stats,   # 👈 NEW
-        }
+latest_predictions AS (
+    SELECT
+        product_sk,
+        platform_sk,
+        predicted_price,
+        ci_upper,
+        ci_lower,
+        created_at,
+        COALESCE(prediction_confidence,
+                 GREATEST(0.0, LEAST(1.0,
+                   1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                 ))
+        ) AS confidence
+    FROM ranked_predictions
+    WHERE rn = 1
+)
 
 
-2.2. Sửa run_product_recommendation_dss
+Giả sử bạn đã sửa run_price_predictions.py để fill cột prediction_confidence rồi.
 
-Tương tự, trong run_product_recommendation_dss, sau đoạn:
+Bước 5 – Áp min_confidence, min_price_change_pct, max_discount_pct, min_margin_pct
 
-            ai_payload = {
-                **dss_result_raw,
-                "table_data": dss_result_raw["table_data"][:15],
-            }
-            if ai_mode == "full" and self.ai_summarizer.available:
-                ai_result = self.ai_summarizer.summarize_with_ai(
-                    "product_recommendation", ai_payload
-                )
-            else:
-                ai_result = self.ai_summarizer._get_fallback_response(
-                    "product_recommendation", ai_payload
-                )
+Trong WHERE của CTE filtered_results, hiện bạn đã có filter:
 
-            ai_summary_insights = ai_result.get("summary_insights", [])
-            ai_recommended_actions = ai_result.get("recommended_actions", [])
+WHERE
+    pm.avg_price > 0
+    AND latest_predictions.confidence >= $min_confidence
+    AND ABS(latest_predictions.predicted_price - pm.avg_price) / pm.avg_price >= $min_price_change_pct
 
 
-thêm:
+Giờ:
 
-            # NEW: summarize AI input
-            ai_input_stats = {
-                "scenario": "product_recommendation",
-                "kpi_keys": list(kpi_summary.keys()),
-                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
-            }
+Clamp giảm giá tối đa (max_discount_pct):
 
+Nếu bạn muốn làm ở SQL: chỉ nhận những rec mà giá đề xuất không thấp hơn một ngưỡng:
 
-Và cuối hàm:
-
-        return {
-            **dss_result_raw,
-            "ai_summary_insights": ai_summary_insights,
-            "ai_recommended_actions": ai_recommended_actions,
-            "generated_at": datetime.now().isoformat(),
-            "ai_model_used": self.ai_summarizer.model
-            if self.ai_summarizer.available
-            else "rule-based-fallback",
-            "session_id": session_id,
-            "ai_input_stats": ai_input_stats,  # 👈 NEW
-        }
+AND (latest_predictions.predicted_price >= pm.avg_price * (1 - $max_discount_pct))
 
 
-(Tương tự bạn có thể thêm cho run_review_sentiment_dss nếu muốn.)
+Hoặc nếu làm ở Python layer sau khi fetch rows: chỉnh recommended_price = max(recommended_price, current_price * (1 - max_discount_pct)) rồi recalc diff.
 
-Như vậy, từ FE / Postman bạn sẽ thấy ngay:
+Áp min_margin_pct nếu đã có avg_margin_pct:
 
-AI đang dùng scenario nào.
+Nếu đã thêm avg_margin_pct vào product_metrics (hoặc join product_metrics_global chỉ để lấy margin):
 
-KPI nào được đẩy vào prompt.
+AND COALESCE(pm.avg_margin_pct, 0) >= $min_margin_pct
 
-Bao nhiêu dòng được gửi cho AI (ví dụ 0, 5, 15…).
 
-3. Thêm logging chi tiết khi cần debug
+Nếu chưa có margin thật → tạm thời đừng dùng min_margin_pct, ghi chú “chưa áp dụng”.
 
-Ngoài ai_input_stats trả về response, bạn có thể bật một chế độ debug sâu hơn qua ENV.
+Bước 6 – Tính current_orders, current_revenue từ cột mới thay vì “fake”
 
-Trong AISummarizer.summarize_with_ai (ở đầu hàm, sau docstring) thêm:
+Trong SELECT filtered_results, hiện đang làm:
 
-    def summarize_with_ai(self, scenario: str, dss_result_raw: Dict[str, Any]) -> Dict[str, List[str]]:
+current_orders = scale từ review + random/hash.
+
+current_revenue = current_orders * avg_price.
+
+Giờ bạn đã có pm.total_orders, pm.total_revenue trong khoảng from/to. Nên:
+
+pm.total_orders      AS current_orders,
+pm.total_revenue     AS current_revenue,
+CASE 
+  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0
+  THEN pm.total_revenue * (latest_predictions.predicted_price / NULLIF(pm.avg_price, 0))
+  ELSE NULL
+END AS projected_revenue,
+...
+
+
+Nếu total_revenue toàn kỳ, có thể dùng luôn; nếu bạn muốn “per day” thì chia thêm, nhưng đồ án dùng tổng là được.
+
+expected_revenue_change_pct vẫn = predicted_price / avg_price - 1.
+
+1.3. Ở _query_price_by_product_keys – làm giống by_category
+
+Bước 7 – Dùng lại “product_metrics_windowed”
+
+Trong _query_price_by_product_keys, tạo CTE product_metrics giống Bước 3 nhưng filter theo:
+
+WHERE dd.date_value BETWEEN $from_date AND $to_date
+  AND dp.product_key = ANY($product_keys)
+
+
+Sau đó join product_metrics pm với latest_predictions y hệt by_category.
+
+Bước 8 – Không dùng product_metrics_global nữa
+
+Đảm bảo không còn join dwh.product_metrics_global pm ở cuối.
+
+Bước 9 – Áp các rule y chang by_category
+
+min_confidence, min_price_change_pct, max_discount_pct, min_margin_pct → logic giống hệt _query_price_by_category để tránh 2 luồng khác nhau.
+
+1.4. Ở _calculate_price_kpis – dùng revenue thật
+
+Hiện tại KPI function đang tính:
+
+num_products, num_with_recommendation, current_total_revenue, projected_total_revenue, expected_revenue_uplift_pct, avg_confidence…
+
+Sau khi bạn đổi query:
+
+current_revenue = pm.total_revenue → sum lên.
+
+projected_revenue = pm.total_revenue * (predicted / avg_price) → sum lên.
+
+Bước 10 – Đảm bảo:
+
+current_total_revenue = sum(item["current_revenue"] for item in items if item["current_revenue"] is not None)
+projected_total_revenue = sum(item["projected_revenue"] for item in items if item["projected_revenue"] is not None)
+
+expected_revenue_uplift_pct = (
+    (projected_total_revenue / current_total_revenue - 1.0)
+    if current_total_revenue > 0 else 0.0
+)
+
+2. Recommendation DSS – /dss/reco/run
+2.1. Ở run_product_recommendation_dss
+
+Bước 1 – Chuẩn hóa min_co_purchase_rate
+
+Trong request model đã có min_co_purchase_rate nhưng service chưa dùng.
+
+Thêm:
+
+min_cpr = req.get("min_co_purchase_rate")
+if min_cpr is not None:
+    req["min_co_purchase_rate"] = max(0.0, min(float(min_cpr), 1.0))
+
+
+Rồi truyền vào _query_product_recommendations.
+
+2.2. Ở _query_recommendations_by_product
+
+Giả sử bạn đã thêm cột vào ml.fact_product_recommendation:
+co_purchase_count, co_purchase_rate, avg_bundle_revenue, window_days.
+
+Bước 2 – Chọn thêm các cột này ra
+
+Trong SELECT hiện tại, thêm:
+
+rec.co_purchase_count,
+rec.co_purchase_rate,
+rec.avg_bundle_revenue,
+rec.window_days
+
+
+Bước 3 – Áp filter theo min_co_purchase_rate (nếu có)
+
+Trong WHERE:
+
+WHERE
+    dp_src.product_key = $source_product_key
+    AND rec.similarity_score >= $min_similarity
+    AND (
+        $min_co_purchase_rate IS NULL
+        OR COALESCE(rec.co_purchase_rate, 0) >= $min_co_purchase_rate
+    )
+
+
+Lưu ý: nếu dùng parameter positional ($1, $2, ...) thì thêm đúng thứ tự.
+
+Bước 4 – Map vào dict trả về
+
+Trong Python, khi build result:
+
+"co_purchase_rate": float(row["co_purchase_rate"]) if row["co_purchase_rate"] is not None else None,
+"avg_bundle_revenue": float(row["avg_bundle_revenue"]) if row["avg_bundle_revenue"] is not None else None,
+"co_purchase_count": row["co_purchase_count"],
+"window_days": row["window_days"],
+
+2.3. Ở _query_recommendations_by_category
+
+Bước 5 – Top-K “per source” thay vì top-K global
+
+Thay vì LIMIT top_k toàn bộ, bạn nên dùng window:
+
+SELECT * FROM (
+   SELECT
+      ...,
+      ROW_NUMBER() OVER (
+          PARTITION BY rec.source_product_sk
+          ORDER BY rec.similarity_score DESC, COALESCE(rec.co_purchase_rate, 0) DESC
+      ) AS rn
+   FROM ...
+   WHERE ...
+) ranked
+WHERE ranked.rn <= $top_k
+
+
+=> Mỗi sản phẩm nguồn có tối đa top_k gợi ý.
+
+Bước 6 – Áp min_co_purchase_rate
+
+Tương tự by_product:
+
+AND (
+  $min_co_purchase_rate IS NULL
+  OR COALESCE(rec.co_purchase_rate, 0) >= $min_co_purchase_rate
+)
+
+2.4. Ở _calculate_reco_kpis
+
+Hiện tại chỉ dùng:
+
+avg_similarity, avg_orders_for_recommended.
+
+Bước 7 – Thêm vài KPI mới dùng co_purchase_*
+
+Ví dụ:
+
+co_purchase_rates = [r["co_purchase_rate"] for r in recommendations if r.get("co_purchase_rate") is not None]
+avg_co_purchase_rate = float(np.mean(co_purchase_rates)) if co_purchase_rates else 0.0
+
+kpi["avg_co_purchase_rate"] = avg_co_purchase_rate
+kpi["num_recs_with_co_purchase"] = len(co_purchase_rates)
+
+
+→ Phần này để AI summarizer và Analyst có thêm context (“đa phần các rec có co_purchase_rate ~ 30%…”).
+
+3. Sentiment DSS – /dss/review/run
+3.1. Ở _query_review_sentiment
+
+Mục tiêu: dùng đúng from_date / to_date → chỉ lấy review trong khoảng đó.
+
+Giả sử dwh.fact_review có date_sk.
+
+Bước 1 – Thêm join với dim_date và filter theo ngày
+
+Trong CTE review_stats:
+
+WITH review_stats AS (
+    SELECT
+        r.product_sk,
+        COUNT(*) AS total_reviews,
+        SUM(CASE WHEN sent.sentiment_label = 'positive' THEN 1 ELSE 0 END) AS positive_count,
+        SUM(CASE WHEN sent.sentiment_label = 'neutral' THEN 1 ELSE 0 END)  AS neutral_count,
+        SUM(CASE WHEN sent.sentiment_label = 'negative' THEN 1 ELSE 0 END) AS negative_count,
+        AVG(r.rating) AS avg_rating,
         ...
-        # Debug AI input when needed
-        if os.getenv("AI_DEBUG", "0") == "1":
-            try:
-                kpi_summary = dss_result_raw.get("kpi_summary", {})
-                table_data = dss_result_raw.get("table_data", [])
-                logger.info(
-                    "[AI_DEBUG] scenario=%s, kpi_keys=%s, table_rows=%d",
-                    scenario,
-                    list(kpi_summary.keys()),
-                    len(table_data),
-                )
-                if table_data:
-                    logger.info(
-                        "[AI_DEBUG] first_row=%s",
-                        json.dumps(table_data[0], ensure_ascii=False)[:1000],
-                    )
-            except Exception as e:
-                logger.warning(f"[AI_DEBUG] Failed to log AI input: {e}")
+    FROM dwh.fact_review r
+    LEFT JOIN ml.fact_review_sentiment sent
+           ON sent.review_id = r.review_sk
+          AND sent.model_sk = $model_sk
+    JOIN dwh.dim_date dd ON dd.date_sk = r.date_sk
+    LEFT JOIN dwh.dim_platform dpl ON ...
+    LEFT JOIN dwh.dim_product dp ON ...
+    LEFT JOIN dwh.dim_category dc ON ...
+    WHERE
+        dd.date_value BETWEEN $from_date AND $to_date
+        AND {platform/category filters}
+    GROUP BY r.product_sk
+    HAVING COUNT(*) >= $min_reviews_per_product
+)
 
 
-Khi bạn set trong .env:
+Nếu bạn đang gắn platform_code và category filter trong where_clause dynamic thì chỉ cần chèn thêm dd.date_value BETWEEN vào đó, nhớ điều chỉnh thứ tự param.
 
-AI_DEBUG=1
+Bước 2 – Cập nhật danh sách params để include from/to
 
+Ở phần Python build query:
 
-log sẽ show rất rõ:
+Thêm from_date & to_date vào params ngay sau model_sk (hoặc thứ tự bạn chọn).
 
-Scenario.
+Đảm bảo $ index trong SQL khớp.
 
-Danh sách key trong kpi_summary.
+3.2. Xử lý sentiment_focus ở Python
 
-Số dòng table_data AI thấy.
+Bước 3 – Giữ như hiện tại nhưng cho phép Analyst tinh chỉnh
 
-1 sample row đầu tiên.
+Hiện tại logic:
 
-=> Nếu AI trả generic nhưng table_data đang = 0, hoặc KPI thiếu, bạn nhìn log là biết ngay.
-
-4. Sửa fallback cho price_prediction để không còn bị “thiếu insight”
-
-Hiện tại _get_fallback_response chỉ hiểu KPI dạng total_products, avg_price, total_reviews… nhưng KPI của price DSS đang là:
-
-{
-  "num_products",
-  "num_with_recommendation",
-  "current_revenue",
-  "projected_revenue",
-  "expected_revenue_uplift_pct",
-  "avg_confidence",
-}
+if sentiment_focus == "only_negative":
+    data = [p for p in data if p["is_critical"]]
+elif sentiment_focus == "only_positive":
+    data = [p for p in data if p["positive_pct"] >= 0.7]
 
 
-Vì thế dù đã có KPI, fallback không đọc được, dẫn đến summary_insights rỗng và rơi vào 2 câu generic.
+Gợi ý:
 
-Ta chỉnh đoạn cuối của _get_fallback_response (trong ai_summarizer.py):
+Cho phép FE gửi thêm:
 
-Hiện tại:
+positive_threshold (default 0.7)
 
-        if not summary_insights:
-            if scenario == "product_recommendation":
-                ...
-            else:
-                summary_insights.append(
-                    "Hệ thống chưa đủ thông tin nổi bật để rút ra insight chi tiết, nhưng dữ liệu vẫn có thể dùng "
-                    "cho các phân tích chi tiết hơn."
-                )
-        
-        if not recommended_actions:
-            if scenario == "product_recommendation":
-                ...
-            else:
-                recommended_actions.append(
-                    "Tiếp tục theo dõi dữ liệu trong các ngày tới và kết hợp với các báo cáo chi tiết "
-                    "để đưa ra quyết định kinh doanh phù hợp."
-                )
+Dùng:
 
+positive_threshold = request.get("positive_threshold", 0.7)
+...
+elif sentiment_focus == "only_positive":
+    data = [p for p in data if p["positive_pct"] >= positive_threshold]
 
-Bạn sửa thành (bổ sung case cho price_prediction):
+3.3. “Reasons” – giữ lại nhưng rõ ràng hơn
 
-        if not summary_insights:
-            if scenario == "product_recommendation":
-                # ... (giữ nguyên block hiện tại)
-                ...
-            elif scenario == "price_prediction":
-                num_products = kpi_summary.get("num_products", 0)
-                num_with_reco = kpi_summary.get("num_with_recommendation", 0)
-                uplift = (kpi_summary.get("expected_revenue_uplift_pct") or 0.0) * 100
-                avg_conf = (kpi_summary.get("avg_confidence") or 0.0) * 100
+Ngay sau khi bạn tạo top_negative_reasons / top_positive_reasons từ review text:
 
-                summary_insights.append(
-                    f"Hệ thống đang phân tích {num_products} sản phẩm có dự báo giá, trong đó {num_with_reco} sản phẩm có khuyến nghị điều chỉnh giá."
-                )
-                summary_insights.append(
-                    f"Nếu áp dụng mức giá đề xuất, mô hình ước tính doanh thu có thể thay đổi khoảng {uplift:.1f}% so với hiện tại."
-                )
-                summary_insights.append(
-                    f"Độ tin cậy trung bình của mô hình dự báo giá khoảng {avg_conf:.1f}%."
-                )
-            else:
-                summary_insights.append(
-                    "Hệ thống chưa đủ thông tin nổi bật để rút ra insight chi tiết, nhưng dữ liệu vẫn có thể dùng "
-                    "cho các phân tích chi tiết hơn."
-                )
+Bước 4 – Nếu không có text, gắn lý do business rõ ràng
 
-        if not recommended_actions:
-            if scenario == "product_recommendation":
-                # ... (giữ nguyên block hiện tại)
-                ...
-            elif scenario == "price_prediction":
-                recommended_actions.append(
-                    "Ưu tiên xem xét nhóm sản phẩm có kỳ vọng tăng trưởng doanh thu cao để thử nghiệm điều chỉnh giá trước."
-                )
-                recommended_actions.append(
-                    "Với các sản phẩm có confidence cao, có thể áp dụng điều chỉnh giá mạnh tay hơn (ví dụ 5–10%) so với nhóm còn lại."
-                )
-                recommended_actions.append(
-                    "Theo dõi doanh thu thực tế sau khi triển khai điều chỉnh giá để hiệu chỉnh lại mô hình dự báo nếu cần."
-                )
-            else:
-                recommended_actions.append(
-                    "Tiếp tục theo dõi dữ liệu trong các ngày tới và kết hợp với các báo cáo chi tiết "
-                    "để đưa ra quyết định kinh doanh phù hợp."
-                )
+Ví dụ:
+
+if not top_negative_reasons:
+    if product["negative_pct"] > negative_threshold:
+        top_negative_reasons = [
+            "Tỷ lệ đánh giá tiêu cực cao hơn ngưỡng cho phép",
+            f"{product['negative_pct']*100:.1f}% review là negative"
+        ]
 
 
-=> Kể cả khi LLM trả mỏng, hoặc bạn tắt ai_mode="full", fallback vẫn đảm bảo ít nhất 3 insight + 3 action dựa trên KPI thật, không còn cảnh “thiếu dữ liệu” vô lý.
+Cái này để AI có input hay hơn, Analyst nhìn vào cũng hiểu “vì sao critical”.
 
-5. Sau khi sửa, test như thế nào?
+4. Kết luận – đường đi nước bước
 
-Gọi lại /api/v1/dss/price/run hoặc /api/v1/dss/reco/run với ai_mode=full.
+Tóm tắt lại các group việc cần làm trong code:
 
-Xem trong JSON trả về:
+Price DSS
 
-ai_input_stats.table_rows_for_ai
+Bỏ clamp min_confidence >= 0.6.
 
-ai_input_stats.kpi_keys
+_query_price_by_category & _query_price_by_product_keys:
 
-Nếu muốn log sâu hơn, set AI_DEBUG=1 trong .env rồi xem log backend để thấy sample row AI nhận.
+Dùng CTE aggregate từ fact_product_daily + dim_date theo from/to.
 
-Kiểm tra ai_summary_insights và ai_recommended_actions:
+Dùng prediction_confidence nếu có.
 
-Với price DSS, dù ít data thì cũng phải có ~3 insight + 3 action dựa trên KPI.
+Áp max_discount_pct, min_margin_pct (nếu có margin).
 
-Với reco DSS, fallback mới đã dùng KPI num_recommendations, avg_similarity, avg_orders_for_recommended, nên cũng luôn có nhiều câu hơn.
+Tính current_orders, current_revenue, projected_revenue từ dữ liệu thật.
+
+_calculate_price_kpis: dùng sum(current_revenue/projected_revenue) thật.
+
+Recommendation DSS
+
+Nhận & clamp min_co_purchase_rate.
+
+Ở 2 query:
+
+Select co_purchase_*.
+
+Filter co_purchase_rate nếu người dùng set.
+
+By_category: dùng window ROW_NUMBER để top_k mỗi source.
+
+KPI: thêm avg_co_purchase_rate.
+
+Sentiment DSS
+
+Join dim_date & filter dd.date_value BETWEEN from_date AND to_date.
+
+Cho phép FE điều chỉnh positive_threshold.
+
+Cải thiện “reasons” khi thiếu review text.

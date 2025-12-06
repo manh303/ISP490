@@ -96,7 +96,7 @@ class PricePredictionRequest(BaseModel):
     page_size: int = Field(50, ge=1, le=500, description="Items per page")
     
     # Scope mode (NEW)
-    scope_mode: PriceScopeMode = Field(PriceScopeMode.BY_CATEGORY, description="'by_category' or 'by_product'")
+    scope_mode: PriceScopeMode = Field(PriceScopeMode.BY_CATEGORY, description="'by_category' or 'by_product' (alias: 'specific_products' -> 'by_product')")
     top_n: int = Field(50, ge=1, le=500, description="Number of top products (only meaningful for by_category mode)")
     
     # Optimization constraints
@@ -106,6 +106,15 @@ class PricePredictionRequest(BaseModel):
     min_price_change_pct: Optional[float] = Field(0.02, ge=0, le=0.5, description="Min price change to include (0.02 = 2%)")
     ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
     
+    @model_validator(mode='before')
+    def normalize_scope_mode(cls, values):
+        """Allow legacy alias 'specific_products' by mapping to by_product before validation."""
+        if isinstance(values, dict):
+            scope = values.get("scope_mode")
+            if scope == "specific_products":
+                values["scope_mode"] = PriceScopeMode.BY_PRODUCT
+        return values
+
     @model_validator(mode='after')
     def validate_scope_requirements(self):
         """Validate that required fields are present based on scope_mode"""
@@ -190,8 +199,8 @@ class ProductRecommendationRequest(BaseModel):
     platforms: Optional[List[str]] = Field(None, example=["tiki"])
     categories: Optional[List[str]] = Field(None, example=["1"])
     
-    # Scope configuration
-    scope_mode: str = Field("by_category", description="'by_product' or 'by_category'")
+    # Scope configuration (accept alias 'specific_products' -> 'by_product')
+    scope_mode: str = Field("by_category", description="'by_product' or 'by_category' (alias: 'specific_products' -> 'by_product')")
     
     # If by_product
     source_product_key: Optional[str] = Field(None, description="Source product key (if scope_mode=by_product)")
@@ -201,6 +210,26 @@ class ProductRecommendationRequest(BaseModel):
     min_similarity: Optional[float] = Field(0.5, ge=0, le=1.0, description="Min similarity score")
     min_co_purchase_rate: Optional[float] = Field(0.05, ge=0, le=1.0, description="Min co-purchase rate")
     ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
+
+    @model_validator(mode='before')
+    def normalize_scope_mode(cls, values):
+        """Map legacy alias 'specific_products' -> 'by_product' before validation."""
+        if isinstance(values, dict):
+            scope = values.get("scope_mode")
+            if scope == "specific_products":
+                values["scope_mode"] = "by_product"
+        return values
+
+    @model_validator(mode='after')
+    def validate_scope_mode(self):
+        allowed = {"by_category", "by_product"}
+        if self.scope_mode not in allowed:
+            raise ValueError("scope_mode must be 'by_category' or 'by_product'")
+        if self.scope_mode == "by_product" and not self.source_product_key:
+            raise ValueError("source_product_key is required when scope_mode='by_product'")
+        if self.scope_mode == "by_category" and (not self.categories or len(self.categories) == 0):
+            raise ValueError("categories must not be empty when scope_mode='by_category'")
+        return self
 
 
 class RecommendationPairDetail(BaseModel):
@@ -216,9 +245,11 @@ class RecommendationPairDetail(BaseModel):
     
     similarity_score: float
     co_purchase_rate: float  # Percentage of orders with both products
+    co_purchase_count: Optional[int] = None  # NEW: Number of co-purchases
     
     avg_bundle_revenue: float  # Average revenue when bought together
     total_bundle_orders: Optional[int] = None
+    window_days: Optional[int] = None  # NEW: Data window for analysis
     
     recommendation_type: str = Field("cross_sell", description="cross_sell, upsell, similar")
 
@@ -264,6 +295,7 @@ class ReviewSentimentRequest(BaseModel):
     
     # Thresholds
     negative_threshold: float = Field(0.25, ge=0, le=1.0, description="Products with negative_pct > threshold are flagged")
+    positive_threshold: float = Field(0.7, ge=0, le=1.0, description="Threshold for positive_pct in only_positive filter")
     ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
 
 

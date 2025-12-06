@@ -88,6 +88,14 @@ def run_batch_predictions():
     # Predict with confidence intervals (95% CI)
     print(f"🔮 Predicting prices with 95% confidence intervals for {len(X)} products...")
     preds, ci_lower, ci_upper = predict_with_confidence_interval(model, X, confidence=0.95)
+
+    # 🔥 Thêm đoạn này:
+    ci_width = ci_upper - ci_lower
+    # Tránh chia 0
+    eps = 1e-6
+    relative_uncertainty = ci_width / np.maximum(np.abs(preds), eps)
+    prediction_confidence = np.clip(1.0 - relative_uncertainty, 0.0, 1.0)
+
     
     print(f"✅ Predictions complete:")
     print(f"   Mean price: ${preds.mean():.2f}")
@@ -105,6 +113,7 @@ def run_batch_predictions():
                 "predicted_price": float(preds[idx]),
                 "ci_lower": float(ci_lower[idx]),  # ✅ Calculated from tree predictions
                 "ci_upper": float(ci_upper[idx]),  # ✅ Calculated from tree predictions
+                "prediction_confidence": float(prediction_confidence[idx]),
             }
         )
 
