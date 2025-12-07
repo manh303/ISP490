@@ -43,6 +43,7 @@ import { PlatformSelect } from '../../components/analytics/PlatformSelect';
 import { CategorySelect } from '../../components/analytics/CategorySelect';
 
 // Mock data for loading states and fallbacks
+/*
 const mockOverviewReport: OverviewReport = {
   from_date: '2025-10-22',
   to_date: '2025-11-21',
@@ -78,7 +79,9 @@ const mockOverviewReport: OverviewReport = {
     { category_key: 'dien-tu', category_name: 'Điện tử', platform_code: 'lazada', revenue: 80000000, revenue_share: 0.065 }
   ]
 };
+*/
 
+/*
 const mockTopProducts: TopProduct[] = [
   { product_key: 'iphone-15-pro', product_name: 'iPhone 15 Pro 128GB', platform_code: 'tiki', category_key: 'dien-thoai', total_revenue: 45000000, total_reviews: 1250, avg_rating: 4.5, avg_price: 28500000 },
   { product_key: 'macbook-air-m2', product_name: 'MacBook Air M2 13 inch', platform_code: 'tiki', category_key: 'laptop', total_revenue: 38000000, total_reviews: 890, avg_rating: 4.7, avg_price: 32000000 },
@@ -86,12 +89,13 @@ const mockTopProducts: TopProduct[] = [
   { product_key: 'airpods-pro', product_name: 'AirPods Pro 2', platform_code: 'shopee', category_key: 'phu-kien', total_revenue: 25000000, total_reviews: 750, avg_rating: 4.4, avg_price: 5500000 },
   { product_key: 'dell-xps-13', product_name: 'Dell XPS 13 9340', platform_code: 'lazada', category_key: 'laptop', total_revenue: 22000000, total_reviews: 420, avg_rating: 4.2, avg_price: 35000000 }
 ];
+*/
 
 export function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Thêm state để track lỗi của từng API riêng biệt
+  // Add state to track errors for each API separately
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [topProductsError, setTopProductsError] = useState<string | null>(null);
 
@@ -103,10 +107,10 @@ export function AnalyticsDashboard() {
   const [metric, setMetric] = useState<'revenue' | 'review_count' | 'avg_rating' | 'price_growth'>('revenue');
 
   // Analytics data state
-  const [overviewReport, setOverviewReport] = useState<OverviewReport | null>(mockOverviewReport);
-  const [topProducts, setTopProducts] = useState<TopProduct[] | null>(mockTopProducts);
+  const [overviewReport, setOverviewReport] = useState<OverviewReport | null>(null);
+  const [topProducts, setTopProducts] = useState<TopProduct[] | null>(null);
 
-  // Load all overview data (chỉ gọi khi khởi tạo hoặc đổi filter tổng quan)
+  // Load all overview data (only call when initializing or changing general filters)
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
@@ -132,15 +136,14 @@ export function AnalyticsDashboard() {
       setOverviewReport(overviewData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
-      setAnalyticsError('Không thể tải dữ liệu phân tích. Hiển thị dữ liệu mẫu.');
-      // Vẫn sử dụng mock data
-      setOverviewReport(mockOverviewReport);
+      setAnalyticsError('Unable to load analytics data. Please try again.');
+      setOverviewReport(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Chỉ filter lại getTopProducts khi đổi filter
+  // Only refilter getTopProducts when changing filters
   const loadTopProducts = async () => {
     try {
       setLoading(true);
@@ -162,9 +165,8 @@ export function AnalyticsDashboard() {
       setTopProducts(topProductsData);
     } catch (err) {
       console.error('Error loading top products:', err);
-      setTopProductsError('Không thể tải dữ liệu top sản phẩm. Hiển thị dữ liệu mẫu.');
-      // Vẫn sử dụng mock data
-      setTopProducts(mockTopProducts);
+      setTopProductsError('Unable to load top products data. Please try again.');
+      setTopProducts(null);
     } finally {
       setLoading(false);
     }
@@ -179,7 +181,7 @@ export function AnalyticsDashboard() {
     setToDate(now);
   }, []);
 
-  // Chỉ load tổng quan khi đổi các filter tổng quan
+  // Only load overview when changing general filters
   useEffect(() => {
     if (fromDate && toDate) {
       console.log('Loading analytics data with:', { platformCode, categoryKey });
@@ -187,7 +189,7 @@ export function AnalyticsDashboard() {
     }
   }, [fromDate, toDate, platformCode, categoryKey]);
 
-  // Chỉ filter lại top products khi đổi filter hoặc metric
+  // Only refilter top products when changing filters or metric
   useEffect(() => {
     if (fromDate && toDate) {
       loadTopProducts();
@@ -205,7 +207,7 @@ export function AnalyticsDashboard() {
       <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải dữ liệu phân tích...</p>
+          <p className="text-gray-600">Loading analytics data...</p>
         </div>
       </div>
     );
@@ -226,7 +228,7 @@ export function AnalyticsDashboard() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={loadAnalyticsData}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Làm mới
+                  Refresh
                 </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -243,7 +245,7 @@ export function AnalyticsDashboard() {
                   <AlertCircle className="h-4 w-4" />
                   <span>
                     {analyticsError && topProductsError 
-                      ? 'Một số dữ liệu không thể tải. Hiển thị dữ liệu mẫu.' 
+                      ? 'Some data could not be loaded. Please try again.' 
                       : analyticsError || topProductsError}
                   </span>
                 </div>
@@ -255,7 +257,7 @@ export function AnalyticsDashboard() {
           <div className="px-6 py-4 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Thời gian:</label>
+                <label className="text-sm font-medium">Time:</label>
                 <DateRangePicker
                   fromDate={fromDate}
                   toDate={toDate}
@@ -264,30 +266,30 @@ export function AnalyticsDashboard() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Nền tảng:</label>
+                <label className="text-sm font-medium">Platform:</label>
                 <PlatformSelect
                   value={platformCode}
                   onValueChange={setPlatformCode}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Danh mục:</label>
+                <label className="text-sm font-medium">Category:</label>
                 <CategorySelect
                   value={categoryKey}
                   onValueChange={setCategoryKey}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Tiêu chí:</label>
+                <label className="text-sm font-medium">Criteria:</label>
                 <Select value={metric} onValueChange={v => setMetric(v as 'revenue' | 'review_count' | 'avg_rating' | 'price_growth')}>
                   <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Chọn tiêu chí" />
+                    <SelectValue placeholder="Select criteria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="revenue">Doanh thu</SelectItem>
-                    <SelectItem value="review_count">Số đánh giá</SelectItem>
-                    <SelectItem value="avg_rating">Đánh giá TB</SelectItem>
-                    <SelectItem value="price_growth">Tăng giá</SelectItem>
+                    <SelectItem value="revenue">Revenue</SelectItem>
+                    <SelectItem value="review_count">Review count</SelectItem>
+                    <SelectItem value="avg_rating">Avg rating</SelectItem>
+                    <SelectItem value="price_growth">Price growth</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -296,6 +298,7 @@ export function AnalyticsDashboard() {
 
           {/* Dashboard Summary Cards */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+<<<<<<< Updated upstream
             <h3 className="text-gray-900 font-semibold mb-3">Tổng Quan Hệ Thống</h3>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
@@ -320,6 +323,32 @@ export function AnalyticsDashboard() {
                 <div className="text-sm text-gray-600 mb-1">Số lượng nền tảng</div>
                 <div className="font-bold text-green-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   {(overviewReport || mockOverviewReport)?.platform_comparison?.length?.toLocaleString('vi-VN') || 0}
+=======
+            <h3 className="text-gray-900 font-semibold mb-3">System Overview</h3>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="text-sm text-gray-600 mb-1">Total products</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {overviewReport?.kpis?.total_products?.toLocaleString('vi-VN') || 'N/A'}
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="text-sm text-gray-600 mb-1">Average rating</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {overviewReport?.kpis?.avg_rating?.toFixed(2) || 'N/A'} ⭐
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="text-sm text-gray-600 mb-1">Total reviews</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {overviewReport?.kpis?.total_reviews ? ((overviewReport.kpis.total_reviews / 1000).toFixed(0)) + 'K' : 'N/A'}
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="text-sm text-gray-600 mb-1">Number of platforms</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {overviewReport?.platform_comparison?.length?.toLocaleString('vi-VN') || 'N/A'}
+>>>>>>> Stashed changes
                 </div>
               </div>
             </div>
@@ -327,16 +356,16 @@ export function AnalyticsDashboard() {
 
           {/* Dashboard Charts */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
-            <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Phân Tích</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Analysis Charts</h3>
 
             {/* Row 1: Top Products, Category Share */}
             <div className="grid grid-cols-2 gap-4 mb-4">
-              {(topProducts || mockTopProducts) && (
-                <TopRatedProductsChart data={topProducts || mockTopProducts} />
+              {topProducts && (
+                <TopRatedProductsChart data={topProducts} />
               )}
-              {((overviewReport || mockOverviewReport)?.category_share) && (
+              {overviewReport?.category_share && (
                 <CategoryPerformanceChart 
-                  data={(overviewReport || mockOverviewReport).category_share.map(item => ({
+                  data={overviewReport.category_share.map(item => ({
                     category: item.category_name,
                     product_count: Math.floor(Math.random() * 100) + 10,
                     avg_rating: parseFloat((Math.random() * 2 + 3).toFixed(2)),
@@ -351,11 +380,11 @@ export function AnalyticsDashboard() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Analytics Dashboard - Tổng quan
+              Analytics Dashboard - Overview
             </div>
             <Button>
               <FileDown className="h-4 w-4 mr-2" />
-              Xuất báo cáo
+              Export report
             </Button>
           </div>
         </div>
