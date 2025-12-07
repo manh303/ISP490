@@ -25,8 +25,8 @@ export function PlatformComparisonChart({
   }
 
   const platformIcons: { [key: string]: string } = {
-    'tiki': '🛒',
-    'lazada': '🛍️',
+    'tiki': 'Tiki 🛒',
+    'lazada': 'Lazada 🛍️',
     'shopee': '🏪',
     'sendo': '📦',
   };

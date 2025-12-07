@@ -78,7 +78,7 @@ export function CategoryShareChart({
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={renderLabel}
+                label={false}
                 labelLine={false}
               >
                 {chartData.map((entry, index) => (

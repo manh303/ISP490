@@ -38,7 +38,7 @@ export function PriceVsRatingChart({
   ] : [];
 
   // Sample top 10 products for display
-  const displayProducts = data.slice(0, 10);
+  const displayProducts = data.slice(0, 100);
 
   // Calculate correlation insight
   const highRatedProducts = data.filter(p => p.avg_rating !== null && p.avg_rating >= 4);
