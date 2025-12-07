@@ -143,7 +143,7 @@ export function AnalyticsDashboard() {
     }
   };
 
-  // Chỉ filter lại getTopProducts khi đổi filter
+  // Only refilter getTopProducts when changing filters
   const loadTopProducts = async () => {
     try {
       setLoading(true);
@@ -181,7 +181,7 @@ export function AnalyticsDashboard() {
     setToDate(now);
   }, []);
 
-  // Chỉ load tổng quan khi đổi các filter tổng quan
+  // Only load overview when changing general filters
   useEffect(() => {
     if (fromDate && toDate) {
       console.log('Loading analytics data with:', { platformCode, categoryKey });
@@ -189,7 +189,7 @@ export function AnalyticsDashboard() {
     }
   }, [fromDate, toDate, platformCode, categoryKey]);
 
-  // Chỉ filter lại top products khi đổi filter hoặc metric
+  // Only refilter top products when changing filters or metric
   useEffect(() => {
     if (fromDate && toDate) {
       loadTopProducts();
@@ -200,55 +200,6 @@ export function AnalyticsDashboard() {
     setAnalyticsError(null);
     setTopProductsError(null);
     window.location.reload();
-  };
-
-  const handleExportReport = () => {
-    if (!overviewReport && !topProducts) {
-      alert('No data available to export');
-      return;
-    }
-
-    // Create CSV content
-    let csvContent = 'Analytics Dashboard Report\n\n';
-
-    // Add summary data
-    if (overviewReport?.kpis) {
-      csvContent += 'System Overview\n';
-      csvContent += `Total Products,${overviewReport.kpis.total_products || 'N/A'}\n`;
-      csvContent += `Average Rating,${overviewReport.kpis.avg_rating?.toFixed(2) || 'N/A'}\n`;
-      csvContent += `Total Reviews,${overviewReport.kpis.total_reviews || 'N/A'}\n`;
-      csvContent += '\n';
-    }
-
-    // Add platform comparison
-    if (overviewReport?.platform_comparison) {
-      csvContent += 'Platform Comparison\n';
-      csvContent += 'Platform,Revenue,Products,Average Price,Average Rating,Total Reviews\n';
-      overviewReport.platform_comparison.forEach(platform => {
-        csvContent += `${platform.platform_name},${platform.total_revenue},${platform.total_products},${platform.avg_price},${platform.avg_rating},${platform.total_reviews}\n`;
-      });
-      csvContent += '\n';
-    }
-
-    // Add top products
-    if (topProducts) {
-      csvContent += 'Top Products\n';
-      csvContent += 'Product Name,Platform,Category,Revenue,Reviews,Average Rating,Average Price\n';
-      topProducts.forEach(product => {
-        csvContent += `"${product.product_name}",${product.platform_code},${product.category_key},${product.total_revenue},${product.total_reviews},${product.avg_rating},${product.avg_price}\n`;
-      });
-    }
-
-    // Create and download the file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `analytics-report-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   if (loading && !overviewReport && !topProducts) {
@@ -294,7 +245,7 @@ export function AnalyticsDashboard() {
                   <AlertCircle className="h-4 w-4" />
                   <span>
                     {analyticsError && topProductsError 
-                      ? 'Some data could not be loaded. Please try again.' 
+                      ? 'Some data could not be loaded. Showing sample data.' 
                       : analyticsError || topProductsError}
                   </span>
                 </div>
@@ -348,28 +299,28 @@ export function AnalyticsDashboard() {
           {/* Dashboard Summary Cards */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <h3 className="text-gray-900 font-semibold mb-3">System Overview</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                 <div className="text-sm text-gray-600 mb-1">Total products</div>
-                <div className="font-bold text-gray-900 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                <div className="text-2xl font-bold text-gray-900">
                   {overviewReport?.kpis?.total_products?.toLocaleString('vi-VN') || 'N/A'}
                 </div>
               </div>
-              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                 <div className="text-sm text-gray-600 mb-1">Average rating</div>
-                <div className="font-bold text-blue-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                <div className="text-2xl font-bold text-blue-600">
                   {overviewReport?.kpis?.avg_rating?.toFixed(2) || 'N/A'} ⭐
                 </div>
               </div>
-              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                 <div className="text-sm text-gray-600 mb-1">Total reviews</div>
-                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                <div className="text-2xl font-bold text-purple-600">
                   {overviewReport?.kpis?.total_reviews ? ((overviewReport.kpis.total_reviews / 1000).toFixed(0)) + 'K' : 'N/A'}
                 </div>
               </div>
-              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                 <div className="text-sm text-gray-600 mb-1">Number of platforms</div>
-                <div className="font-bold text-green-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                <div className="text-2xl font-bold text-green-600">
                   {overviewReport?.platform_comparison?.length?.toLocaleString('vi-VN') || 'N/A'}
                 </div>
               </div>
@@ -404,7 +355,7 @@ export function AnalyticsDashboard() {
             <div className="text-gray-600 text-sm">
               Analytics Dashboard - Overview
             </div>
-            <Button onClick={handleExportReport}>
+            <Button>
               <FileDown className="h-4 w-4 mr-2" />
               Export report
             </Button>
