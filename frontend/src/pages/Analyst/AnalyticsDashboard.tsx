@@ -95,7 +95,7 @@ export function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add state to track errors for each API separately
+  // Thêm state để track lỗi của từng API riêng biệt
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [topProductsError, setTopProductsError] = useState<string | null>(null);
 
@@ -110,7 +110,7 @@ export function AnalyticsDashboard() {
   const [overviewReport, setOverviewReport] = useState<OverviewReport | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[] | null>(null);
 
-  // Load all overview data (only call when initializing or changing general filters)
+  // Load all overview data (chỉ gọi khi khởi tạo hoặc đổi filter tổng quan)
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
@@ -143,7 +143,7 @@ export function AnalyticsDashboard() {
     }
   };
 
-  // Only refilter getTopProducts when changing filters
+  // Chỉ filter lại getTopProducts khi đổi filter
   const loadTopProducts = async () => {
     try {
       setLoading(true);
@@ -181,7 +181,7 @@ export function AnalyticsDashboard() {
     setToDate(now);
   }, []);
 
-  // Only load overview when changing general filters
+  // Chỉ load tổng quan khi đổi các filter tổng quan
   useEffect(() => {
     if (fromDate && toDate) {
       console.log('Loading analytics data with:', { platformCode, categoryKey });
@@ -189,7 +189,7 @@ export function AnalyticsDashboard() {
     }
   }, [fromDate, toDate, platformCode, categoryKey]);
 
-  // Only refilter top products when changing filters or metric
+  // Chỉ filter lại top products khi đổi filter hoặc metric
   useEffect(() => {
     if (fromDate && toDate) {
       loadTopProducts();
@@ -207,7 +207,7 @@ export function AnalyticsDashboard() {
       <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading analytics data...</p>
+          <p className="text-gray-600">Đang tải dữ liệu phân tích...</p>
         </div>
       </div>
     );
@@ -228,7 +228,7 @@ export function AnalyticsDashboard() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={loadAnalyticsData}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
+                  Làm mới
                 </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -257,7 +257,7 @@ export function AnalyticsDashboard() {
           <div className="px-6 py-4 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Time:</label>
+                <label className="text-sm font-medium">Thời gian:</label>
                 <DateRangePicker
                   fromDate={fromDate}
                   toDate={toDate}
@@ -266,30 +266,30 @@ export function AnalyticsDashboard() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Platform:</label>
+                <label className="text-sm font-medium">Nền tảng:</label>
                 <PlatformSelect
                   value={platformCode}
                   onValueChange={setPlatformCode}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Category:</label>
+                <label className="text-sm font-medium">Danh mục:</label>
                 <CategorySelect
                   value={categoryKey}
                   onValueChange={setCategoryKey}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Criteria:</label>
+                <label className="text-sm font-medium">Tiêu chí:</label>
                 <Select value={metric} onValueChange={v => setMetric(v as 'revenue' | 'review_count' | 'avg_rating' | 'price_growth')}>
                   <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Select criteria" />
+                    <SelectValue placeholder="Chọn tiêu chí" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="revenue">Revenue</SelectItem>
-                    <SelectItem value="review_count">Review count</SelectItem>
-                    <SelectItem value="avg_rating">Avg rating</SelectItem>
-                    <SelectItem value="price_growth">Price growth</SelectItem>
+                    <SelectItem value="revenue">Doanh thu</SelectItem>
+                    <SelectItem value="review_count">Số đánh giá</SelectItem>
+                    <SelectItem value="avg_rating">Đánh giá TB</SelectItem>
+                    <SelectItem value="price_growth">Tăng giá</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -298,57 +298,30 @@ export function AnalyticsDashboard() {
 
           {/* Dashboard Summary Cards */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-<<<<<<< Updated upstream
             <h3 className="text-gray-900 font-semibold mb-3">Tổng Quan Hệ Thống</h3>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
                 <div className="font-bold text-gray-900 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
-                  {(overviewReport || mockOverviewReport)?.kpis?.total_products?.toLocaleString('vi-VN')}
+                  {overviewReport?.kpis?.total_products?.toLocaleString('vi-VN') || 'N/A'}
                 </div>
               </div>
               <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
                 <div className="font-bold text-blue-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
-                  {(overviewReport || mockOverviewReport)?.kpis?.avg_rating?.toFixed(2)} ⭐
+                  {overviewReport?.kpis?.avg_rating?.toFixed(2) || 'N/A'} ⭐
                 </div>
               </div>
               <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
                 <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
-                  {((overviewReport || mockOverviewReport)?.kpis?.total_reviews / 1000)?.toFixed(0)}K
+                  {overviewReport?.kpis?.total_reviews ? ((overviewReport.kpis.total_reviews / 1000).toFixed(0)) + 'K' : 'N/A'}
                 </div>
               </div>
               <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Số lượng nền tảng</div>
                 <div className="font-bold text-green-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
-                  {(overviewReport || mockOverviewReport)?.platform_comparison?.length?.toLocaleString('vi-VN') || 0}
-=======
-            <h3 className="text-gray-900 font-semibold mb-3">System Overview</h3>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-600 mb-1">Total products</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {overviewReport?.kpis?.total_products?.toLocaleString('vi-VN') || 'N/A'}
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-600 mb-1">Average rating</div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {overviewReport?.kpis?.avg_rating?.toFixed(2) || 'N/A'} ⭐
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-600 mb-1">Total reviews</div>
-                <div className="text-2xl font-bold text-purple-600">
-                  {overviewReport?.kpis?.total_reviews ? ((overviewReport.kpis.total_reviews / 1000).toFixed(0)) + 'K' : 'N/A'}
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                <div className="text-sm text-gray-600 mb-1">Number of platforms</div>
-                <div className="text-2xl font-bold text-green-600">
                   {overviewReport?.platform_comparison?.length?.toLocaleString('vi-VN') || 'N/A'}
->>>>>>> Stashed changes
                 </div>
               </div>
             </div>
@@ -356,7 +329,7 @@ export function AnalyticsDashboard() {
 
           {/* Dashboard Charts */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
-            <h3 className="text-gray-900 font-semibold mb-4">Analysis Charts</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Phân Tích</h3>
 
             {/* Row 1: Top Products, Category Share */}
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -380,11 +353,11 @@ export function AnalyticsDashboard() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Analytics Dashboard - Overview
+              Analytics Dashboard - Tổng quan
             </div>
             <Button>
               <FileDown className="h-4 w-4 mr-2" />
-              Export report
+              Xuất báo cáo
             </Button>
           </div>
         </div>
