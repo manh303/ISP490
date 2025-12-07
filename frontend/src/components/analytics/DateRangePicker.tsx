@@ -44,8 +44,8 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
                 selected={fromDate}
                 onSelect={onFromDateChange}
                 initialFocus
-                locale={vi}
-                weekStartsOn={1}
+                // locale={vi}
+                // weekStartsOn={1}
               />
             </div>
             <div>
@@ -55,8 +55,8 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
                 selected={toDate}
                 onSelect={onToDateChange}
                 initialFocus
-                locale={vi}
-                weekStartsOn={1}
+                // locale={vi}
+                // weekStartsOn={1}
               />
             </div>
           </div>
