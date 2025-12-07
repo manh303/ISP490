@@ -28,37 +28,37 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Bảng điều khiển ML",
+    name: "ML Dashboard",
     path: "/ml/dashboard",
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Học máy",
+    name: "Machine Learning",
     subItems: [
-      { name: "Quản lý mô hình", path: "/ml/models", pro: false },
-      { name: "Dự đoán giá", path: "/ml/price-prediction", pro: false },
-      { name: "Khuyến nghị", path: "/ml/recommendations", pro: false },
-      { name: "Phân tích cảm xúc", path: "/ml/sentiment", pro: false },
-      { name: "Tổng quan trạng thái", path: "/ml/status", pro: false },
+      { name: "Model Management", path: "/ml/models", pro: false },
+      { name: "Price Prediction", path: "/ml/price-prediction", pro: false },
+      { name: "Recommendations", path: "/ml/recommendations", pro: false },
+      { name: "Sentiment Analysis", path: "/ml/sentiment", pro: false },
+      { name: "Status Overview", path: "/ml/status", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
-    name: "Phân tích ML",
+    name: "ML Analysis",
     subItems: [
-      { name: "Tổng quan ML", path: "/mli/overview", pro: false },
-      { name: "Thông tin giá", path: "/mli/price-intelligence", pro: false },
-      { name: "Dự báo nhu cầu và bán hàng", path: "/mli/demand-forecasting", pro: false },
-      { name: "Thông tin ML sản phẩm", path: "/mli/product-insights", pro: false },
+      { name: "ML Overview", path: "/mli/overview", pro: false },
+      { name: "Price Intelligence", path: "/mli/price-intelligence", pro: false },
+      { name: "Demand and Sales Forecasting", path: "/mli/demand-forecasting", pro: false },
+      { name: "Product ML Insights", path: "/mli/product-insights", pro: false },
     ],
   },
   {
     icon: <TableIcon />,
-    name: "Quản lý mô hình",
+    name: "Model Management",
     subItems: [
-      { name: "Hiệu suất mô hình", path: "/mli/model-management", pro: false },
-      { name: "Dữ liệu huấn luyện", path: "/mli/data-sets", pro: false },
-      { name: "Phiên bản mô hình", path: "/mli/model-versions", pro: false },
+      { name: "Model Performance", path: "/mli/model-management", pro: false },
+      { name: "Training Data", path: "/mli/data-sets", pro: false },
+      { name: "Model Versions", path: "/mli/model-versions", pro: false },
     ],
   },
 ];
@@ -66,21 +66,21 @@ const navItems: NavItem[] = [
 const toolsItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
-    name: "Công cụ ML",
+    name: "ML Tools",
     subItems: [
-      { name: "Công cụ khuyến nghị", path: "/mli/recommendation-engine", pro: false },
-      { name: "Tối ưu hóa giá", path: "/mli/price-optimization", pro: false },
-      { name: "Dự báo nhu cầu", path: "/mli/demand-forecast", pro: false },
-      { name: "Phân khúc khách hàng", path: "/mli/customer-segmentation", pro: false },
+      { name: "Recommendation Engine", path: "/mli/recommendation-engine", pro: false },
+      { name: "Price Optimization", path: "/mli/price-optimization", pro: false },
+      { name: "Demand Forecast", path: "/mli/demand-forecast", pro: false },
+      { name: "Customer Segmentation", path: "/mli/customer-segmentation", pro: false },
     ],
   },
   {
     icon: <CalenderIcon />,
-    name: "Dự đoán",
+    name: "Predictions",
     subItems: [
-      { name: "Dự báo bán hàng", path: "/mli/sales-forecast", pro: false },
-      { name: "Xu hướng bán hàng", path: "/mli/sales-trend", pro: false },
-      { name: "Dự đoán rời bỏ", path: "/mli/churn-prediction", pro: false },
+      { name: "Sales Forecast", path: "/mli/sales-forecast", pro: false },
+      { name: "Sales Trends", path: "/mli/sales-trend", pro: false },
+      { name: "Churn Prediction", path: "/mli/churn-prediction", pro: false },
     ],
   },
 ];
@@ -335,7 +335,7 @@ const MLISidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Bảng điều khiển ML"
+                  "ML Dashboard"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -351,7 +351,7 @@ const MLISidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Công cụ ML"
+                  "ML Tools"
                 ) : (
                   <HorizontaLDots />
                 )}

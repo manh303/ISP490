@@ -16,7 +16,7 @@ export function PerformanceChart() {
     <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm h-full">
       <h2 className="text-slate-800 mb-4 flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-blue-600" />
-        📈 Xu hướng Tỷ lệ Thành công
+        📈 Success Rate Trend
       </h2>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>

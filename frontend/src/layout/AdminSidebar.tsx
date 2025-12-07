@@ -33,22 +33,25 @@ const navItems: NavItem[] = [
   },
   {
     icon: <UserCircleIcon />,
-    name: "Quản lý người dùng",
+    name: "User Management",
     subItems: [
-      { name: "Người dùng hoạt động", path: "/admin/users", pro: false },
+      { name: "Active Users", path: "/admin/users", pro: false },
       // { name: "User Details", path: "/admin/users/details", pro: false },
-      { name: "Người dùng đã vô hiệu hóa", path: "/admin/deleted-users", pro: false },
+      { name: "Disabled Users", path: "/admin/deleted-users", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Quản lý vai trò",
+    name: "Role Management",
     path: "/admin/roles",
   },
   {
     icon: <PieChartIcon />,
     name: "System Analytics",
-    path: "/admin/analytics",
+    subItems: [
+      { name: "System Analytics", path: "/admin/analytics", pro: false },
+      { name: "DSS Decisions", path: "/analyst/dss-decisions", pro: false },
+    ],
   },
   {
     icon: <TableIcon />,

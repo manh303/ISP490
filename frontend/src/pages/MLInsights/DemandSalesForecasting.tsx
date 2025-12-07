@@ -83,7 +83,7 @@ const DemandSalesForecasting: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">📈 Demand & Sales Forecasting</h1>
           <p className="text-gray-600">
-            Dự báo nhu cầu và doanh số bán hàng theo thời gian
+            Forecast demand and sales over time
           </p>
           <button
             onClick={fetchData}

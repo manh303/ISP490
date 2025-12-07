@@ -8,20 +8,20 @@ export function VisualizationSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-sm mb-4">
-            Trực Quan Hóa Dữ Liệu
+            Data Visualization
           </div>
           <h2 className="text-3xl lg:text-4xl text-gray-900 mb-4">
-            Biến Dữ Liệu Thành Insight
+            Turn Data Into Insights
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Công cụ biểu đồ mạnh mẽ giúp bạn nhìn thấy xu hướng và đưa ra quyết định nhanh chóng
+            Powerful chart tools help you see trends and make quick decisions
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Line & Bar Chart Combined */}
           <Card className="p-6 bg-white">
-            <h3 className="text-gray-900 mb-6">Xu Hướng Doanh Thu & Tăng Trưởng</h3>
+            <h3 className="text-gray-900 mb-6">Revenue & Growth Trends</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={dashboardData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -42,7 +42,7 @@ export function VisualizationSection() {
                   stroke="#3B82F6" 
                   strokeWidth={3}
                   dot={{ fill: '#3B82F6', r: 5 }}
-                  name="Doanh Thu"
+                  name="Revenue"
                 />
                 <Line 
                   type="monotone" 
@@ -50,7 +50,7 @@ export function VisualizationSection() {
                   stroke="#60A5FA" 
                   strokeWidth={3}
                   dot={{ fill: '#60A5FA', r: 5 }}
-                  name="Tăng Trưởng"
+                  name="Growth"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -58,7 +58,7 @@ export function VisualizationSection() {
 
           {/* Pie Chart */}
           <Card className="p-6 bg-white">
-            <h3 className="text-gray-900 mb-6">Phân Bố Theo Bộ Phận</h3>
+            <h3 className="text-gray-900 mb-6">Distribution by Department</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -89,7 +89,7 @@ export function VisualizationSection() {
 
         {/* Bar Chart */}
         <Card className="p-6 bg-white">
-          <h3 className="text-gray-900 mb-6">So Sánh Hiệu Suất & Mục Tiêu</h3>
+          <h3 className="text-gray-900 mb-6">Performance & Target Comparison</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dashboardData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -104,8 +104,8 @@ export function VisualizationSection() {
                 }}
               />
               <Legend />
-              <Bar dataKey="revenue" fill="#3B82F6" radius={[8, 8, 0, 0]} name="Doanh Thu" />
-              <Bar dataKey="target" fill="#93C5FD" radius={[8, 8, 0, 0]} name="Mục Tiêu" />
+              <Bar dataKey="revenue" fill="#3B82F6" radius={[8, 8, 0, 0]} name="Revenue" />
+              <Bar dataKey="target" fill="#93C5FD" radius={[8, 8, 0, 0]} name="Target" />
             </BarChart>
           </ResponsiveContainer>
         </Card>

@@ -56,7 +56,7 @@ const PriceIntelligence: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">🏷️ Price Intelligence</h1>
           <p className="text-gray-600">
-            Tối ưu hóa giá, dự đoán giá và mô phỏng what-if cho sản phẩm
+            Price optimization, price prediction, and what-if simulation for products
           </p>
           <button
             onClick={fetchData}

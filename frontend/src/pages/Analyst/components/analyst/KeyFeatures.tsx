@@ -14,13 +14,13 @@ export function KeyFeatures() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-sm mb-4">
-            Tính Năng Chính
+            Key Features
           </div>
           <h2 className="text-3xl lg:text-4xl text-gray-900 mb-4">
-            Công Cụ Mạnh Mẽ Cho Nhà Phân Tích
+            Powerful Tools for Analysts
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Tất cả những gì bạn cần để phân tích dữ liệu và đưa ra quyết định thông minh
+            Everything you need to analyze data and make smart decisions
           </p>
         </div>
 

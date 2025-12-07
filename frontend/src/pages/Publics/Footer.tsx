@@ -14,32 +14,32 @@ export function Footer() {
               <span className="text-white">DSS Analytics</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Giải pháp hỗ trợ ra quyết định thông minh cho doanh nghiệp hiện đại.
+              Smart decision support solution for modern businesses.
             </p>
           </div>
 
           {/* Column 2: Quick Links */}
           <div>
-            <h4 className="text-white mb-4">Liên Kết Nhanh</h4>
+            <h4 className="text-white mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Trang Chủ
+                  Home
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Giải Pháp
+                  Solutions
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Về Chúng Tôi
+                  About Us
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">
-                  Liên Hệ
+                  Contact
                 </a>
               </li>
             </ul>
@@ -47,7 +47,7 @@ export function Footer() {
 
           {/* Column 3: Contact Info */}
           <div>
-            <h4 className="text-white mb-4">Thông Tin Liên Hệ</h4>
+            <h4 className="text-white mb-4">Contact Information</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm">
                 <Mail className="w-4 h-4 mt-1 flex-shrink-0 text-blue-400" />
@@ -60,7 +60,7 @@ export function Footer() {
               <li className="flex items-start gap-2 text-sm">
                 <MapPin className="w-4 h-4 mt-1 flex-shrink-0 text-blue-400" />
                 <span className="text-gray-400">
-                  123 Đường ABC, Quận 1, TP.HCM
+                  123 ABC Street, District 1, Ho Chi Minh City
                 </span>
               </li>
             </ul>
@@ -68,7 +68,7 @@ export function Footer() {
 
           {/* Column 4: Social Media */}
           <div>
-            <h4 className="text-white mb-4">Mạng Xã Hội</h4>
+            <h4 className="text-white mb-4">Social Media</h4>
             <div className="flex gap-4">
               <a 
                 href="#" 

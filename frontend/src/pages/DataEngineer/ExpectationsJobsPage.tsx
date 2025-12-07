@@ -99,14 +99,14 @@ const ExpectationsJobsPage: React.FC = () => {
           onClick={() => setShowCreateExpectationForm(!showCreateExpectationForm)}
           className="px-4 py-2 bg-green-500 text-white rounded"
         >
-          Tạo Expectation mới
+          Create New Expectation
         </button>
       </div>
 
       {/* Create Expectation Form */}
       {showCreateExpectationForm && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium mb-4">Tạo Expectation mới</h3>
+          <h3 className="font-medium mb-4">Create New Expectation</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="number"
@@ -154,10 +154,10 @@ const ExpectationsJobsPage: React.FC = () => {
           />
           <div className="mt-4 flex gap-2">
             <button onClick={handleCreateExpectation} className="px-4 py-2 bg-green-500 text-white rounded">
-              Tạo
+              Create
             </button>
             <button onClick={() => setShowCreateExpectationForm(false)} className="px-4 py-2 bg-gray-500 text-white rounded">
-              Hủy
+              Cancel
             </button>
           </div>
         </div>
@@ -209,7 +209,7 @@ const ExpectationsJobsPage: React.FC = () => {
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Expectation Details */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Chi tiết Expectation</h2>
+          <h2 className="text-lg font-semibold mb-4">Expectation Details</h2>
           {selectedExpectation ? (
             <div>
               <h3 className="font-medium text-lg">{selectedExpectation.name}</h3>
@@ -233,13 +233,13 @@ const ExpectationsJobsPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">Chọn một expectation để xem chi tiết</p>
+            <p className="text-gray-500">Select an expectation to view details</p>
           )}
         </div>
 
         {/* Job Details */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Chi tiết Job</h2>
+          <h2 className="text-lg font-semibold mb-4">Job Details</h2>
           {selectedJob ? (
             <div>
               <h3 className="font-medium text-lg">{selectedJob.job_name}</h3>
@@ -248,7 +248,7 @@ const ExpectationsJobsPage: React.FC = () => {
               <p className="text-gray-600 mb-4">Schedule: {selectedJob.schedule}</p>
             </div>
           ) : (
-            <p className="text-gray-500">Chọn một job để xem chi tiết</p>
+            <p className="text-gray-500">Select a job to view details</p>
           )}
         </div>
       </div>

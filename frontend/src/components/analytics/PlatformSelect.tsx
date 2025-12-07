@@ -46,10 +46,10 @@ export function PlatformSelect({ value, onValueChange, placeholder = 'Chọn n�
 
   return (
     <Select value={value} onValueChange={(val) => onValueChange(val === 'all' ? undefined : val)}>
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[200px] bg-white">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white max-h-60 overflow-y-auto">
         <SelectItem value="all">Tất cả nền tảng</SelectItem>
         {platforms.map((platform) => (
           <SelectItem key={platform.platform_code} value={platform.platform_code}>

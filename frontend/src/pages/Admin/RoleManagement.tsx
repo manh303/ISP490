@@ -46,9 +46,9 @@ export default function RoleManagement() {
                             <Shield className="h-8 w-8 text-purple-600" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-800">Quản lý vai trò</h1>
+                            <h1 className="text-3xl font-bold text-gray-800">Role Management</h1>
                             <p className="text-gray-600 mt-1">
-                                Quản lý vai trò người dùng và phân quyền trong hệ thống
+                                Manage user roles and permissions in the system
                             </p>
                         </div>
                     </div>
@@ -61,7 +61,7 @@ export default function RoleManagement() {
              transition-all duration-300"
                         >
                             <Plus className="h-5 w-5 text-blue-500 group-hover:text-white transition-all" />
-                            Tạo vai trò mới
+                            Create New Role
                         </Button>
                     )}
                     {viewMode !== 'list' && (
@@ -69,7 +69,7 @@ export default function RoleManagement() {
                             variant="outline"
                             onClick={handleBackToList}
                         >
-                            ← Quay lại danh sách
+                            ← Back to List
                         </Button>
                     )}
                 </div>
@@ -78,11 +78,11 @@ export default function RoleManagement() {
             {/* Breadcrumb */}
             <div className="mb-6 text-sm text-gray-600">
                 <span className="hover:text-gray-800 cursor-pointer" onClick={handleBackToList}>
-                    Danh sách vai trò
+                    Role List
                 </span>
-                {viewMode === 'create' && <span> / Tạo vai trò mới</span>}
-                {viewMode === 'view' && <span> / Xem chi tiết</span>}
-                {viewMode === 'edit' && <span> / Chỉnh sửa</span>}
+                {viewMode === 'create' && <span> / Create New Role</span>}
+                {viewMode === 'view' && <span> / View Details</span>}
+                {viewMode === 'edit' && <span> / Edit</span>}
             </div>
 
             {/* Main Content */}

@@ -79,20 +79,20 @@ const CatalogPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Danh mục dữ liệu</h1>
+      <h1 className="text-2xl font-bold mb-6">Data Catalog</h1>
 
       {/* Search */}
       <div className="mb-6">
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Tìm kiếm datasets..."
+            placeholder="Search datasets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 p-2 border rounded"
           />
           <button onClick={handleSearch} className="px-4 py-2 bg-blue-500 text-white rounded">
-            Tìm kiếm
+            Search
           </button>
         </div>
       </div>
@@ -164,7 +164,7 @@ const CatalogPage: React.FC = () => {
 
         {/* Dataset Details */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Chi tiết Dataset</h2>
+          <h2 className="text-lg font-semibold mb-4">Dataset Details</h2>
           {selectedDataset ? (
             <div className="space-y-2">
               <div><strong>Name:</strong> {selectedDataset.table_name}</div>
@@ -178,7 +178,7 @@ const CatalogPage: React.FC = () => {
               <div><strong>Quality Issues:</strong> {selectedDataset.quality_issues_count}</div>
             </div>
           ) : (
-            <p className="text-gray-500">Chọn một dataset để xem chi tiết</p>
+            <p className="text-gray-500">Select a dataset to view details</p>
           )}
         </div>
       </div>
