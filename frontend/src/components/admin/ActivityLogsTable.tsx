@@ -196,11 +196,11 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Đang tải nhật ký hoạt động...</div>;
+        return <div className="text-center py-8">Loading activity logs...</div>;
     }
 
     if (error) {
-        return <div className="text-center py-8 text-red-500">Lỗi: {error}</div>;
+        return <div className="text-center py-8 text-red-500">Error: {error}</div>;
     }
 
     return (
@@ -211,7 +211,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                            placeholder="Tìm kiếm..."
+                            placeholder="Search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10"
@@ -224,7 +224,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                     onChange={(e) => setSelectedAction(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md w-32"
                 >
-                    <option value="">Tất cả hành động</option>
+                    <option value="">All Actions</option>
                     {uniqueActions.map(action => (
                         <option key={action} value={action}>{action.replace(/_/g, ' ')}</option>
                     ))}
@@ -235,7 +235,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                     onChange={(e) => setSelectedModule(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md"
                 >
-                    <option value="">Tất cả module</option>
+                    <option value="">All Modules</option>
                     <option value="IAM">IAM</option>
                     <option value="ANALYTICS">Analytics</option>
                     <option value="DSS">DSS</option>
@@ -248,13 +248,13 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md"
                 >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="success">Thành công</option>
-                    <option value="error">Lỗi</option>
+                    <option value="">All Statuses</option>
+                    <option value="success">Success</option>
+                    <option value="error">Error</option>
                 </select>
                 
                 <Input
-                    placeholder="Vai trò"
+                    placeholder="Role"
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
                     className="w-32"
@@ -262,7 +262,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                 
                 <Input
                     type="date"
-                    placeholder="Ngày bắt đầu"
+                    placeholder="Start Date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-40"
@@ -270,7 +270,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                 
                 <Input
                     type="date"
-                    placeholder="Ngày kết thúc"
+                    placeholder="End Date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-40"
@@ -278,12 +278,12 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                 
                 <Button variant="outline" onClick={clearFilters}>
                     <X className="h-4 w-4 mr-2" />
-                    Xóa bộ lọc
+                    Clear Filters
                 </Button>
                 
                 <Button variant="outline" onClick={handleExport}>
                     <Download className="h-4 w-4 mr-2" />
-                    Xuất CSV
+                    Export CSV
                 </Button>
             </div>
 
@@ -293,14 +293,14 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                     <TableHeader>
                         <TableRow>
                             <TableHead>ID</TableHead>
-                            <TableHead>Người dùng</TableHead>
-                            <TableHead>Hành động</TableHead>
+                            <TableHead>User</TableHead>
+                            <TableHead>Action</TableHead>
                             <TableHead>Module</TableHead>
-                            <TableHead>Tài nguyên</TableHead>
-                            <TableHead>Phương thức</TableHead>
-                            <TableHead>Trạng thái</TableHead>
-                            <TableHead>Thời gian</TableHead>
-                            <TableHead>Chi tiết</TableHead>
+                            <TableHead>Resource</TableHead>
+                            <TableHead>Method</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Details</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -340,7 +340,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                                     <span className={`px-2 py-1 rounded text-sm ${
                                         log.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                     }`}>
-                                        {log.status === 'success' ? 'Thành công' : 'Thất bại'}
+                                        {log.status === 'success' ? 'Success' : 'Failed'}
                                     </span>
                                 </TableCell>
                                 <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
@@ -352,7 +352,7 @@ export default function ActivityLogsTable({}: ActivityLogsTableProps) {
                                         className="h-8 px-2"
                                     >
                                         <Eye className="h-4 w-4 mr-1" />
-                                        Chi tiết
+                                        Details
                                     </Button>
                                 </TableCell>
                             </TableRow>

@@ -8,7 +8,7 @@ interface PlatformComparisonChartProps {
 
 export function PlatformComparisonChart({ 
   data, 
-  title = 'So Sánh Nền Tảng' 
+  title = 'Platform Comparison' 
 }: PlatformComparisonChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -18,7 +18,7 @@ export function PlatformComparisonChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
-          Không có dữ liệu
+          No data available
         </div>
       </div>
     );
@@ -69,7 +69,7 @@ export function PlatformComparisonChart({
                 <div className="flex items-center gap-2">
                   <div className="w-16 text-xs text-gray-600 flex items-center gap-1">
                     <ShoppingBag className="h-3 w-3" />
-                    <span>SP</span>
+                    <span>Products</span>
                   </div>
                   <div className="flex-1 relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
@@ -86,7 +86,7 @@ export function PlatformComparisonChart({
                 <div className="flex items-center gap-2">
                   <div className="w-16 text-xs text-gray-600 flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
-                    <span>ĐG</span>
+                    <span>Reviews</span>
                   </div>
                   <div className="flex-1 relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
@@ -118,8 +118,8 @@ export function PlatformComparisonChart({
               </div>
 
               <div className="flex justify-between text-xs text-gray-500 pt-1">
-                <span>Giá TB: {((platform.avg_price || 0) / 1000000).toFixed(1)}M ₫</span>
-                <span>Doanh thu: {((platform.total_revenue || 0) / 1000000000).toFixed(1)}B ₫</span>
+                <span>Avg Price: {((platform.avg_price || 0) / 1000000).toFixed(1)}M ₫</span>
+                <span>Revenue: {((platform.total_revenue || 0) / 1000000000).toFixed(1)}B ₫</span>
               </div>
             </div>
           );
@@ -131,7 +131,7 @@ export function PlatformComparisonChart({
         <div className="mt-4 pt-3 border-t border-gray-200">
           <div className="text-xs text-gray-600">
             <BarChart3 className="h-4 w-4 inline mr-1" />
-            Tổng: {data.reduce((sum, p) => sum + p.total_products, 0).toLocaleString('vi-VN')} sản phẩm
+            Total: {data.reduce((sum, p) => sum + p.total_products, 0).toLocaleString('en-US')} products
           </div>
         </div>
       )}

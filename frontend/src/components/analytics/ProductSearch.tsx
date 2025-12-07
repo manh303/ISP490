@@ -17,7 +17,7 @@ export function ProductSearch({
   onProductSelect,
   platformCode,
   categoryKey,
-  placeholder = "Tìm kiếm sản phẩm...",
+  placeholder = "Search products...",
   className = "",
   disabled = false,
 }: ProductSearchProps) {
@@ -204,7 +204,7 @@ export function ProductSearch({
           ))}
           {products.length === 0 && !loading && (
             <div className="px-4 py-3 text-sm text-gray-500">
-              Không tìm thấy sản phẩm
+              No products found
             </div>
           )}
         </div>

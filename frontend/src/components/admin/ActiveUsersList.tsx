@@ -58,7 +58,7 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                     setUsers(userData.data);
                     setTotal(userData.total);
                 } else {
-                    throw new Error("API trả về lỗi");
+                    throw new Error("API returned error");
                 }
 
                 // Fetch roles
@@ -71,7 +71,7 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                 }
             } catch (err: any) {
                  const detail = err?.response?.data?.detail;
-            let errorMsg = "Không thể tạo vai trò";
+            let errorMsg = "Unable to create role";
             if (typeof detail === 'string') {
                 errorMsg = detail;
             } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -134,9 +134,9 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
     return (
         <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Người dùng đang hoạt động</h2>
+                <h2 className="text-xl font-semibold">Active Users</h2>
                 <div className="text-gray-500 text-sm">
-                    Hiển thị {paginatedUsers.length} / {filteredUsers.length} (Tổng: {total})
+                    Showing {paginatedUsers.length} / {filteredUsers.length} (Total: {total})
                 </div>
             </div>
 
@@ -146,13 +146,13 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                     {/* Search Input */}
                     <div className="flex-1 min-w-[250px]">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Tìm kiếm theo Email, Tên hoặc SĐT
+                            Search by Email, Name or Phone
                         </label>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Nhập email, tên hoặc số điện thoại..."
+                                placeholder="Enter email, name or phone number..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -163,14 +163,14 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                     {/* Role Filter */}
                     <div className="w-[200px]">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Lọc theo Vai trò
+                            Filter by Role
                         </label>
                         <select
                             value={selectedRole}
                             onChange={(e) => setSelectedRole(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                            <option value="all">Tất cả vai trò</option>
+                            <option value="all">All Roles</option>
                             {availableRoles.map((role) => (
                                 <option key={role.role_code} value={role.role_code}>
                                     {role.role_name}
@@ -182,7 +182,7 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                     {/* Items per page */}
                     <div className="w-[120px]">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Hiển thị
+                            Show
                         </label>
                         <select
                             value={itemsPerPage}
@@ -205,7 +205,7 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                             className="flex items-center gap-2"
                         >
                             <X className="h-4 w-4" />
-                            Xóa bộ lọc
+                            Clear filters
                         </Button>
                     )}
                 </div>
@@ -213,10 +213,10 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                 {/* Active Filters Display */}
                 {(searchTerm || selectedRole !== "all") && (
                     <div className="flex flex-wrap gap-2 text-sm">
-                        <span className="text-gray-600">Đang lọc:</span>
+                        <span className="text-gray-600">Filtering:</span>
                         {searchTerm && (
                             <Badge variant="secondary" className="flex items-center gap-1">
-                                Tìm kiếm: "{searchTerm}"
+                                Search: "{searchTerm}"
                                 <X 
                                     className="h-3 w-3 cursor-pointer" 
                                     onClick={() => setSearchTerm("")}
@@ -225,7 +225,7 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                         )}
                         {selectedRole !== "all" && (
                             <Badge variant="secondary" className="flex items-center gap-1">
-                                Vai trò: {availableRoles.find(r => r.role_code === selectedRole)?.role_name}
+                                Role: {availableRoles.find(r => r.role_code === selectedRole)?.role_name}
                                 <X 
                                     className="h-3 w-3 cursor-pointer" 
                                     onClick={() => setSelectedRole("all")}
@@ -236,14 +236,14 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                 )}
             </div>
 
-            {loading && <div className="text-gray-500">Đang tải...</div>}
+            {loading && <div className="text-gray-500">Loading...</div>}
             {error && <div className="text-red-500 mb-2">{error}</div>}
             
             {!loading && filteredUsers.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                     {searchTerm || selectedRole !== "all" 
-                        ? "Không tìm thấy người dùng phù hợp với bộ lọc" 
-                        : "Không có người dùng nào"}
+                        ? "No users found matching the filters" 
+                        : "No users available"}
                 </div>
             )}
 
@@ -253,14 +253,14 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>STT</TableHead>
-                                    <TableHead>Tên</TableHead>
+                                    <TableHead>No.</TableHead>
+                                    <TableHead>Name</TableHead>
                                     <TableHead>Email</TableHead>
-                                    <TableHead>Số điện thoại</TableHead>
-                                    <TableHead>Vai trò</TableHead>
-                                    <TableHead>Trạng thái</TableHead>
-                                    <TableHead>Lần đăng nhập cuối</TableHead>
-                                    <TableHead>Hành động</TableHead>
+                                    <TableHead>Phone</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Last Login</TableHead>
+                                    <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -277,22 +277,22 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                                         </TableCell>
                                         <TableCell>
                                             {user.status === 'active' ? (
-                                                <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
+                                                <Badge variant="default" className="bg-green-500 text-white">Active</Badge>
                                             ) : (
-                                                <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
+                                                <Badge variant="destructive" className="bg-gray-500 text-white">Disabled</Badge>
                                             )}
                                         </TableCell>
                                         <TableCell>{user.last_login_at ? new Date(user.last_login_at).toLocaleString() : '-'}</TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id, false)} title="Xem chi tiết">
+                                                <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id, false)} title="View Details">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
 
-                                                <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id, true)} title="Sửa">
+                                                <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id, true)} title="Edit">
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="sm" variant="destructive" title="Xóa">
+                                                <Button size="sm" variant="destructive" title="Delete">
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -323,7 +323,7 @@ export default function ActiveUsersList({ onSelectUser }: ActiveUsersListProps) 
                                 disabled={currentPage === 1} 
                                 onClick={() => setCurrentPage(currentPage - 1)}
                             >
-                                « Trang trước
+                                « Previous
                             </Button>
                             
                             {/* Page numbers */}

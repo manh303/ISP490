@@ -6,7 +6,7 @@ interface TopRatedProductsChartProps {
   title?: string;
 }
 
-export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh Giá Cao' }: TopRatedProductsChartProps) {
+export function TopRatedProductsChart({ data, title = 'Top Rated Products' }: TopRatedProductsChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="border border-gray-200 rounded-lg p-6 bg-white">
@@ -15,7 +15,7 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
-          Không có dữ liệu
+          No data available
         </div>
       </div>
     );
@@ -32,7 +32,7 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
         </div>
         <div className="flex items-center gap-1 text-sm text-gray-600">
           <TrendingUp className="h-4 w-4" />
-          <span>{data.length} sản phẩm</span>
+          <span>{data.length} products</span>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export function TopRatedProductsChart({ data, title = 'Top Sản Phẩm Đánh G
               </div>
             </div>
             <div className="flex justify-between text-xs text-gray-500">
-              <span>{product?.total_reviews?.toLocaleString('vi-VN')} đánh giá</span>
+              <span>{product?.total_reviews?.toLocaleString('en-US')} reviews</span>
               <span>
                 {product?.avg_price
                   ? product.avg_price < 1_000_000

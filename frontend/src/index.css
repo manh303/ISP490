@@ -295,6 +295,11 @@
     display: none;
     -webkit-appearance: none;
   }
+
+  /* Aria selected opacity utility */
+  .aria-selected\:opacity-100[aria-selected] {
+    opacity: 1;
+  }
 }
 
 .tableCheckbox:checked ~ span span {
