@@ -297,28 +297,28 @@ export function AnalyticsDashboard() {
           {/* Dashboard Summary Cards */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <h3 className="text-gray-900 font-semibold mb-3">Tổng Quan Hệ Thống</h3>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="font-bold text-gray-900 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   {(overviewReport || mockOverviewReport)?.kpis?.total_products?.toLocaleString('vi-VN')}
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="font-bold text-blue-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   {(overviewReport || mockOverviewReport)?.kpis?.avg_rating?.toFixed(2)} ⭐
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   {((overviewReport || mockOverviewReport)?.kpis?.total_reviews / 1000)?.toFixed(0)}K
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                 <div className="text-sm text-gray-600 mb-1">Số lượng nền tảng</div>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="font-bold text-green-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   {(overviewReport || mockOverviewReport)?.platform_comparison?.length?.toLocaleString('vi-VN') || 0}
                 </div>
               </div>

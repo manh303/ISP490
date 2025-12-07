@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -6,18 +6,25 @@ import DatePicker from 'react-datepicker';
 import { FaRegCalendarAlt } from 'react-icons/fa';
 import 'react-datepicker/dist/react-datepicker.css';
 import { vi } from 'date-fns/locale';
-import { getSentimentSummary, onlineSentiment, SentimentSummary, OnlineSentimentRequest, OnlineSentimentResponse } from '../../services/machineLearningApi';
+import { getSentimentSummary, onlineSentiment, SentimentSummary, OnlineSentimentRequest, OnlineSentimentResponse, listModels, MLModel } from '../../services/machineLearningApi';
 import Button from '../../components/ui/button/Button';
 import Form from '../../components/form/Form';
 import Input from '../../components/form/input/InputField';
 import Select from '../../components/form/Select';
 import { Table } from '../../components/ui/table';
-
+import { PlatformSelect } from '../../components/analytics/PlatformSelect';
+import { ProductSearch } from '../../components/analytics/ProductSearch';
 const SentimentAnalysisPage: React.FC = () => {
   const [summary, setSummary] = useState<SentimentSummary | null>(null);
   const [onlineResult, setOnlineResult] = useState<OnlineSentimentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [onlineLoading, setOnlineLoading] = useState(false);
+
+  // Select states
+  const [platformCode, setPlatformCode] = useState<string>('tiki');
+  const [productId, setProductId] = useState<string>('');
+  const [productName, setProductName] = useState<string>('');
+  const [models, setModels] = useState<MLModel[]>([]);
 
   // Form states
   dayjs.extend(utc);
@@ -69,6 +76,18 @@ const SentimentAnalysisPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const data = await listModels();
+        setModels(data);
+      } catch (error) {
+        console.error('Error fetching models:', error);
+      }
+    };
+    fetchModels();
+  }, []);
+
   const handleSummaryChange = (field: string, value: string) => {
     setSummaryForm(prev => ({ ...prev, [field]: value }));
   };
@@ -77,10 +96,10 @@ const SentimentAnalysisPage: React.FC = () => {
     setOnlineForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const platformOptions = [
-    { value: 'tiki', label: 'Tiki' },
-    { value: 'lazada', label: 'Lazada' }
-  ];
+  const modelOptions = models.map(model => ({
+    value: `${model.model_name}|${model.model_version}`,
+    label: `${model.model_name} (${model.model_version})`
+  }));
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment.toLowerCase()) {
@@ -125,30 +144,36 @@ const SentimentAnalysisPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">Sentiment Summary</h2>
 
           <Form onSubmit={handleSummarySubmit}>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
-                <Input
-                  type="text"
-                  value={summaryForm.product_key}
-                  onChange={(e) => handleSummaryChange('product_key', e.target.value)}
-                  placeholder="vd: tiki_123456"
+            <div className="space-y-4 mb-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Platform:</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => {
+                    setPlatformCode(value || 'tiki');
+                    handleSummaryChange('platform_code', value || 'tiki');
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Product:</label>
+                <ProductSearch
+                  value={productName}
+                  onProductSelect={(productKey, productName) => {
+                    setProductId(productKey);
+                    setProductName(productName);
+                    handleSummaryChange('product_key', productKey);
+                  }}
+                  platformCode={platformCode}
+                  placeholder="Search products..."
+                  className="w-64"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
-                <Select
-                  options={platformOptions}
-                  defaultValue={summaryForm.platform_code}
-                  onChange={(value) => handleSummaryChange('platform_code', value)}
-                  placeholder="Select platform"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
-                <DatePicker
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
+                  <DatePicker
                   selected={fromDate}
                   onChange={(date: Date | null) => {
                     setFromDate(date);
@@ -197,24 +222,19 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
-                <Input
-                  type="text"
-                  value={summaryForm.model_name}
-                  onChange={(e) => handleSummaryChange('model_name', e.target.value)}
-                  placeholder="Optional"
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                <Select
+                  options={modelOptions}
+                  defaultValue={summaryForm.model_name && summaryForm.model_version ? `${summaryForm.model_name}|${summaryForm.model_version}` : ''}
+                  onChange={(value) => {
+                    const [name, version] = value.split('|');
+                    handleSummaryChange('model_name', name);
+                    handleSummaryChange('model_version', version);
+                  }}
+                  placeholder="Select model"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
-                <Input
-                  type="text"
-                  value={summaryForm.model_version}
-                  onChange={(e) => handleSummaryChange('model_version', e.target.value)}
-                  placeholder="Optional"
-                />
-              </div>
+                </div>
             </div>
 
             <Button disabled={loading}>
@@ -262,23 +282,28 @@ const SentimentAnalysisPage: React.FC = () => {
 
           <Form onSubmit={handleOnlineSubmit}>
             <div className="space-y-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
-                <Select
-                  options={platformOptions}
-                  defaultValue={onlineForm.platform_code}
-                  onChange={(value) => handleOnlineChange('platform_code', value)}
-                  placeholder="Select platform"
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Platform:</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => {
+                    setPlatformCode(value || 'tiki');
+                    handleOnlineChange('platform_code', value || 'tiki');
+                  }}
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
-                <Input
-                  type="text"
-                  value={onlineForm.product_key}
-                  onChange={(e) => handleOnlineChange('product_key', e.target.value)}
-                  placeholder="vd: tiki_123456"
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Product:</label>
+                <ProductSearch
+                  value={productName}
+                  onProductSelect={(productKey, productName) => {
+                    setProductId(productKey);
+                    setProductName(productName);
+                    handleOnlineChange('product_key', productKey);
+                  }}
+                  platformCode={platformCode}
+                  placeholder="Search products..."
+                  className="w-64"
                 />
               </div>
 
@@ -295,20 +320,16 @@ const SentimentAnalysisPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
-                <Input
-                  type="text"
-                  value={onlineForm.model_name}
-                  onChange={(e) => handleOnlineChange('model_name', e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
-                <Input
-                  type="text"
-                  value={onlineForm.model_version}
-                  onChange={(e) => handleOnlineChange('model_version', e.target.value)}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                <Select
+                  options={modelOptions}
+                  defaultValue={`${onlineForm.model_name}|${onlineForm.model_version}`}
+                  onChange={(value) => {
+                    const [name, version] = value.split('|');
+                    handleOnlineChange('model_name', name);
+                    handleOnlineChange('model_version', version);
+                  }}
+                  placeholder="Select model"
                 />
               </div>
             </div>
@@ -347,6 +368,7 @@ const SentimentAnalysisPage: React.FC = () => {
             </div>
           )}
         </div>
+        
       </div>
     </div>
   );

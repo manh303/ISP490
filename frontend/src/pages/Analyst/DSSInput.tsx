@@ -5,6 +5,9 @@ import Button from '../../components/ui/button/Button';
 import Form from '../../components/form/Form';
 import Input from '../../components/form/input/InputField';
 import Select from '../../components/form/Select';
+import { PlatformSelect } from '../../components/analytics/PlatformSelect';
+import { CategorySelect } from '../../components/analytics/CategorySelect';
+import { ProductSearch } from '../../components/analytics/ProductSearch';
 import DatePicker from 'react-datepicker';
 import { FaRegCalendarAlt } from 'react-icons/fa';
 import { vi } from 'date-fns/locale';
@@ -33,11 +36,19 @@ const DSSInput: React.FC = () => {
   const { modelId } = useParams<{ modelId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<DSSInputData>({});
+  const [formData, setFormData] = useState<DSSInputData>({
+    platform_code: 'tiki'
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<Category[]>([]);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
+
+  // Select states
+  const [platformCode, setPlatformCode] = useState<string>('tiki');
+  const [categoryKey, setCategoryKey] = useState<string>('');
+  const [productId, setProductId] = useState<string>('');
+  const [productName, setProductName] = useState<string>('');
 
   // Load categories on component mount
   useEffect(() => {
@@ -158,12 +169,6 @@ const DSSInput: React.FC = () => {
   if (!currentModel) {
     return <div>Model not found</div>;
   }
-
-  const platformOptions = [
-    { value: 'tiki', label: 'Tiki' },
-    { value: 'lazada', label: 'Lazada' },
-    { value: 'shopee', label: 'Shopee' }
-  ];
 
   const categoryOptions = categories.map(category => ({
     value: category.category_key,
@@ -304,14 +309,18 @@ const DSSInput: React.FC = () => {
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {modelId === 'product_recommendation' ? 'Source product code' : 'Product code'}{isProductKeyRequired ? ' *' : ''}
+              {modelId === 'product_recommendation' ? 'Source product' : 'Product'}{isProductKeyRequired ? ' *' : ''}
             </label>
-            <Input
-              type="text"
-              value={formData.product_key || ''}
-              onChange={(e) => handleChange('product_key', e.target.value)}
-              placeholder={modelId === 'product_recommendation' ? "vd: tiki_123456" : "vd: tiki_123456"}
-              required={isProductKeyRequired}
+            <ProductSearch
+              value={productName}
+              onProductSelect={(productKey, productName) => {
+                setProductId(productKey);
+                setProductName(productName);
+                handleChange('product_key', productKey);
+              }}
+              platformCode={platformCode}
+              categoryKey={categoryKey}
+              placeholder="Search products..."
             />
           </div>
         );
@@ -319,11 +328,12 @@ const DSSInput: React.FC = () => {
         return (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Platform *</label>
-            <Select
-              options={platformOptions}
-              defaultValue={formData.platform_code || ''}
-              onChange={(value) => handleChange('platform_code', value)}
-              placeholder="Select platform"
+            <PlatformSelect
+              value={platformCode}
+              onValueChange={(value) => {
+                setPlatformCode(value || 'tiki');
+                handleChange('platform_code', value || 'tiki');
+              }}
             />
           </div>
         );
@@ -333,11 +343,13 @@ const DSSInput: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Category{(modelId === 'review_sentiment' || ((modelId === 'product_recommendation' || modelId === 'review_sentiment') && formData.scope_mode === 'by_category')) ? ' *' : ''}
             </label>
-            <Select
-              options={categoryOptions}
-              defaultValue={formData.category || ''}
-              onChange={(value) => handleChange('category', value)}
-              placeholder="Select category"
+            <CategorySelect
+              value={categoryKey}
+              onValueChange={(value) => {
+                setCategoryKey(value || '');
+                handleChange('category', value || '');
+              }}
+              platformCode={platformCode}
             />
           </div>
         );

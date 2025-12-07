@@ -350,16 +350,23 @@ const DataEngineerDashboard: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {alerts.slice(0, 5).map((alert, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900 dark:text-white">{alert.alert_name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{alert.target_name}</p>
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded gap-2 sm:gap-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-white break-words max-w-[180px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg">
+                        {alert.alert_name}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
+                        {alert.target_name}
+                      </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right min-w-[90px]">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getSeverityColor(alert.severity)}`}>
                         {alert.severity}
                       </span>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1 break-words">
                         {alert.triggered_count_24h} triggered
                       </p>
                     </div>

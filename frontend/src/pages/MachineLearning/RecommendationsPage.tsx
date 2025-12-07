@@ -1,21 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getRecommendations, Recommendations } from '../../services/machineLearningApi';
 import Button from '../../components/ui/button/Button';
 import Form from '../../components/form/Form';
 import Input from '../../components/form/input/InputField';
 import Select from '../../components/form/Select';
-
+import { PlatformSelect } from '../../components/analytics/PlatformSelect';
+//import { CategorySelect } from '../../components/analytics/CategorySelect';
+import { ProductSearch } from '../../components/analytics/ProductSearch';
+import { listModels, MLModel } from '../../services/machineLearningApi';
 const RecommendationsPage: React.FC = () => {
   const [recommendations, setRecommendations] = useState<Recommendations | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Select states
+  const [platformCode, setPlatformCode] = useState<string>('tiki');
+  const [categoryKey, setCategoryKey] = useState<string>('');
+  const [productId, setProductId] = useState<string>('');
+  const [productName, setProductName] = useState<string>('');
+  const [models, setModels] = useState<MLModel[]>([]);
+
   const [formData, setFormData] = useState({
     source_product_key: '',
-    platform_code: '',
+    platform_code: 'tiki',
     model_name: '',
     model_version: '',
     limit: 10
   });
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const data = await listModels();
+        setModels(data);
+      } catch (error) {
+        console.error('Error fetching models:', error);
+      }
+    };
+    fetchModels();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,10 +56,10 @@ const RecommendationsPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const platformOptions = [
-    { value: 'tiki', label: 'Tiki' },
-    { value: 'lazada', label: 'Lazada' }
-  ];
+  const modelOptions = models.map(model => ({
+    value: `${model.model_name}|${model.model_version}`,
+    label: `${model.model_name} (${model.model_version})`
+  }));
 
   return (
     <div className="p-6">
@@ -51,42 +73,41 @@ const RecommendationsPage: React.FC = () => {
           <Form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Source Product Key *</label>
-                <Input
-                  type="text"
-                  value={formData.source_product_key}
-                  onChange={(e) => handleChange('source_product_key', e.target.value)}
-                  placeholder="e.g., tiki_123456"
+                <label className="block text-sm font-medium text-gray-700 mb-2">Source Product *</label>
+                <ProductSearch
+                  value={productName}
+                  onProductSelect={(productKey, productName) => {
+                    setProductId(productKey);
+                    setProductName(productName);
+                    handleChange('source_product_key', productKey);
+                  }}
+                  platformCode={platformCode}
+                  placeholder="Search products..."
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => {
+                    setPlatformCode(value || 'tiki');
+                    handleChange('platform_code', value || 'tiki');
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
                 <Select
-                  options={platformOptions}
-                  defaultValue={formData.platform_code}
-                  onChange={(value) => handleChange('platform_code', value)}
-                  placeholder="Select platform"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
-                <Input
-                  type="text"
-                  value={formData.model_name}
-                  onChange={(e) => handleChange('model_name', e.target.value)}
-                  placeholder="Optional"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
-                <Input
-                  type="text"
-                  value={formData.model_version}
-                  onChange={(e) => handleChange('model_version', e.target.value)}
-                  placeholder="Optional"
+                  options={modelOptions}
+                  defaultValue={formData.model_name && formData.model_version ? `${formData.model_name}|${formData.model_version}` : ''}
+                  onChange={(value) => {
+                    const [name, version] = value.split('|');
+                    handleChange('model_name', name);
+                    handleChange('model_version', version);
+                  }}
+                  placeholder="Select model"
                 />
               </div>
 

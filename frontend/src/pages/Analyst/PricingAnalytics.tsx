@@ -183,34 +183,34 @@ export function PricingAnalytics() {
           {priceDistribution && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
               <h3 className="text-gray-900 font-semibold mb-3">Price Distribution</h3>
-              <div className="grid grid-cols-5 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="text-sm text-gray-600 mb-1">Lowest Price</div>
-                  <div className="text-xl font-bold text-gray-900">
+                  <div className="font-bold text-gray-900 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {priceDistribution.min_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="text-sm text-gray-600 mb-1">P25</div>
-                  <div className="text-xl font-bold text-blue-600">
+                  <div className="font-bold text-blue-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {priceDistribution.p25_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="text-sm text-gray-600 mb-1">Median Price</div>
-                  <div className="text-xl font-bold text-purple-600">
+                  <div className="font-bold text-purple-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {priceDistribution.median_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="text-sm text-gray-600 mb-1">P75</div>
-                  <div className="text-xl font-bold text-green-600">
+                  <div className="font-bold text-green-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {priceDistribution.p75_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="text-sm text-gray-600 mb-1">Highest Price</div>
-                  <div className="text-xl font-bold text-red-600">
+                  <div className="font-bold text-red-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {priceDistribution.max_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>

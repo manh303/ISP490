@@ -173,14 +173,16 @@ const DataQuality: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border mb-6">
-        <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 w-full">
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[120px]"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -191,7 +193,7 @@ const DataQuality: React.FC = () => {
             <select
               value={filters.severity}
               onChange={(e) => handleFilterChange('severity', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[120px]"
             >
               <option value="">All Severities</option>
               <option value="CRITICAL">Critical</option>
@@ -205,12 +207,12 @@ const DataQuality: React.FC = () => {
               placeholder="Schema name..."
               value={filters.schemaName}
               onChange={(e) => handleFilterChange('schemaName', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[140px] flex-1"
             />
 
             <button
               onClick={fetchData}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors min-w-[110px] justify-center"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
@@ -242,19 +244,19 @@ const DataQuality: React.FC = () => {
             <div className="space-y-4">
               {issues.map((issue) => (
                 <div key={issue.issue_id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2 sm:gap-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       {getSeverityIcon(issue.severity)}
-                      <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-gray-900 dark:text-white break-words max-w-[180px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg">
                           {issue.issue_type}
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                        <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
                           {issue.schema_name}.{issue.table_name}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 min-w-[90px]">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getSeverityColor(issue.severity)}`}>
                         {issue.severity}
                       </span>
@@ -264,12 +266,12 @@ const DataQuality: React.FC = () => {
                     </div>
                   </div>
 
-                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  <p className="text-gray-700 dark:text-gray-300 mb-3 break-words max-w-full md:max-w-2xl">
                     {issue.issue_description}
                   </p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 gap-2 sm:gap-0">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <span>Affected Rows: {issue.affected_rows.toLocaleString()}</span>
                       <span>Detected: {new Date(issue.detected_at).toLocaleString()}</span>
                     </div>

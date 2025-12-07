@@ -195,31 +195,31 @@ export function ProductDetailAnalytics() {
           {productReport?.review_summary && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
               <h3 className="text-gray-900 font-semibold mb-3">Product Summary</h3>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="h-5 w-5 text-yellow-500" />
                     <div className="text-sm text-gray-600">Average Rating</div>
                   </div>
-                  <div className="text-xl font-bold text-gray-900">
+                  <div className="font-bold text-gray-900 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {productReport.review_summary.avg_rating?.toFixed(1)}/5
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare className="h-5 w-5 text-blue-500" />
                     <div className="text-sm text-gray-600">Total Reviews</div>
                   </div>
-                  <div className="text-xl font-bold text-blue-600">
+                  <div className="font-bold text-blue-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {productReport.review_summary.total_reviews?.toLocaleString('vi-VN')}
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="h-5 w-5 text-purple-500" />
                     <div className="text-sm text-gray-600">Average Rating</div>
                   </div>
-                  <div className="text-xl font-bold text-purple-600">
+                  <div className="font-bold text-purple-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {productReport.review_summary.avg_rating?.toFixed(2)}
                   </div>
                 </div>

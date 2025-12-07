@@ -150,6 +150,23 @@ const DataPipeline: React.FC = () => {
     }
   };
 
+  const downloadLogs = () => {
+    if (!selectedRun) return;
+    if (!runLogs || runLogs.trim() === '' || runLogs === 'Error loading logs') {
+      alert('No logs available to download');
+      return;
+    }
+    const blob = new Blob([runLogs], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `logs_run_${selectedRun.run_id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -314,7 +331,7 @@ const DataPipeline: React.FC = () => {
                   <div className="border-t pt-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-gray-900 dark:text-white">Logs</h4>
-                      <button className="text-blue-600 hover:text-blue-800 text-sm">
+                      <button onClick={downloadLogs} disabled={logsLoading} className="text-blue-600 hover:text-blue-800 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                         <Download className="w-4 h-4 inline mr-1" />
                         Download
                       </button>

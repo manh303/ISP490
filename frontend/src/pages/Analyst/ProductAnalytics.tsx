@@ -257,28 +257,28 @@ export function ProductAnalytics() {
           {overviewKPIs && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
               <h3 className="text-gray-900 font-semibold mb-3">Overview</h3>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   <div className="text-sm text-gray-600 mb-1">Total Products</div>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="font-bold text-gray-900 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {overviewKPIs?.total_products?.toLocaleString('vi-VN')}
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   <div className="text-sm text-gray-600 mb-1">Average Rating</div>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="font-bold text-blue-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {overviewKPIs?.avg_rating?.toFixed(2)} ⭐
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   <div className="text-sm text-gray-600 mb-1">Total Reviews</div>
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {(overviewKPIs?.total_reviews / 1000)?.toFixed(0)}K
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                   <div className="text-sm text-gray-600 mb-1">Average Price</div>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="font-bold text-green-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {overviewKPIs?.avg_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>

@@ -39,7 +39,10 @@ const navItems: NavItem[] = [
   {
     icon: <ListIcon />,
     name: "DSS Scenarios",
-    path: "/analyst/dss-scenarios",
+    subItems: [
+      { name: "DSS Scenarios", path: "/analyst/dss-scenarios", pro: false },
+      { name: "DSS Decisions", path: "/analyst/dss-decisions", pro: false },
+    ],
   },
   {
     icon: <PieChartIcon />,

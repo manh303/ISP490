@@ -48,7 +48,10 @@ const navItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
     name: "System Analytics",
-    path: "/admin/analytics",
+    subItems: [
+      { name: "System Analytics", path: "/admin/analytics", pro: false },
+      { name: "DSS Decisions", path: "/analyst/dss-decisions", pro: false },
+    ],
   },
   {
     icon: <TableIcon />,

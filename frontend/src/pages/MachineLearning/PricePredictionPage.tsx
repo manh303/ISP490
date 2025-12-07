@@ -7,17 +7,26 @@ import { FaRegCalendarAlt } from 'react-icons/fa';
 import 'react-datepicker/dist/react-datepicker.css';
 import { vi } from 'date-fns/locale';
 import { getPricePredictionHistory, onlinePricePrediction, PricePredictionHistory, OnlinePricePredictionRequest, OnlinePricePredictionResponse } from '../../services/machineLearningApi';
+// import { getProducts, getCategories, getPlatforms} from '../../services/analyticsApi';
 import Button from '../../components/ui/button/Button';
 import Form from '../../components/form/Form';
 import Input from '../../components/form/input/InputField';
 import Select from '../../components/form/Select';
 import { Table } from '../../components/ui/table';
-
+import { PlatformSelect } from '../../components/analytics/PlatformSelect';
+import { ProductSearch } from '../../components/analytics/ProductSearch';
+import { listModels, MLModel } from '../../services/machineLearningApi';
 const PricePredictionPage: React.FC = () => {
   const [history, setHistory] = useState<PricePredictionHistory | null>(null);
   const [onlineResult, setOnlineResult] = useState<OnlinePricePredictionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [onlineLoading, setOnlineLoading] = useState(false);
+
+  // Select states
+  const [platformCode, setPlatformCode] = useState<string>('tiki');
+  const [productId, setProductId] = useState<string>('');
+  const [productName, setProductName] = useState<string>('');
+  const [models, setModels] = useState<MLModel[]>([]);
 
   // Form states
   dayjs.extend(utc);
@@ -44,6 +53,18 @@ const PricePredictionPage: React.FC = () => {
     model_name: 'price_forecast_rf',
     model_version: 'v1.0'
   });
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const data = await listModels();
+        setModels(data);
+      } catch (error) {
+        console.error('Error fetching models:', error);
+      }
+    };
+    fetchModels();
+  }, []);
 
   const handleHistorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,10 +100,10 @@ const PricePredictionPage: React.FC = () => {
     setOnlineForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const platformOptions = [
-    { value: 'tiki', label: 'Tiki' },
-    { value: 'lazada', label: 'Lazada' }
-  ];
+  const modelOptions = models.map(model => ({
+    value: `${model.model_name}|${model.model_version}`,
+    label: `${model.model_name} (${model.model_version})`
+  }));
 
   // Custom input for DatePicker to sync UI
   const CustomDateInput = React.forwardRef<HTMLButtonElement, any>(({ value, onClick, placeholder, onChange }, ref) => (
@@ -109,100 +130,98 @@ const PricePredictionPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">Prediction History</h2>
 
           <Form onSubmit={handleHistorySubmit}>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
-                <Input
-                  type="text"
-                  value={historyForm.product_key}
-                  onChange={(e) => handleHistoryChange('product_key', e.target.value)}
-                  placeholder="vd: tiki_123456"
+            <div className="space-y-4 mb-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Platform:</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => {
+                    setPlatformCode(value || 'tiki');
+                    handleHistoryChange('platform_code', value || 'tiki');
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Product:</label>
+                <ProductSearch
+                  value={productName}
+                  onProductSelect={(productKey, productName) => {
+                    setProductId(productKey);
+                    setProductName(productName);
+                    handleHistoryChange('product_key', productKey);
+                  }}
+                  platformCode={platformCode}
+                  placeholder="Search products..."
+                  className="w-64"
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
+                  <DatePicker
+                    selected={fromDate}
+                    onChange={(date: Date | null) => {
+                      setFromDate(date);
+                      handleHistoryChange('from_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Select start date"
+                    maxDate={toDate || undefined}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    locale={vi}
+                    customInput={<CustomDateInput />}
+                    popperClassName="z-50"
+                    calendarClassName="rounded-lg shadow-lg border border-gray-200"
+                    dayClassName={date =>
+                      'text-sm rounded-full transition-colors duration-100 ' +
+                      (dayjs(date).isSame(fromDate, 'date') ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">To Date *</label>
+                  <DatePicker
+                    selected={toDate}
+                    onChange={(date: Date | null) => {
+                      setToDate(date);
+                      handleHistoryChange('to_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Select end date"
+                    minDate={fromDate || undefined}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    locale={vi}
+                    customInput={<CustomDateInput />}
+                    popperClassName="z-50"
+                    calendarClassName="rounded-lg shadow-lg border border-gray-200"
+                    dayClassName={date =>
+                      'text-sm rounded-full transition-colors duration-100 ' +
+                      (dayjs(date).isSame(toDate, 'date') ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
+                    }
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
                 <Select
-                  options={platformOptions}
-                  defaultValue={historyForm.platform_code}
-                  onChange={(value) => handleHistoryChange('platform_code', value)}
-                  placeholder="Select platform"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">From Date *</label>
-                <DatePicker
-                  selected={fromDate}
-                  onChange={(date: Date | null) => {
-                    setFromDate(date);
-                    handleHistoryChange('from_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
+                  options={modelOptions}
+                  defaultValue={historyForm.model_name && historyForm.model_version ? `${historyForm.model_name}|${historyForm.model_version}` : ''}
+                  onChange={(value) => {
+                    const [name, version] = value.split('|');
+                    handleHistoryChange('model_name', name);
+                    handleHistoryChange('model_version', version);
                   }}
-                  dateFormat="dd/MM/yyyy"
-                  placeholderText="Select start date"
-                  maxDate={toDate || undefined}
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  locale={vi}
-                  customInput={<CustomDateInput />}
-                  popperClassName="z-50"
-                  calendarClassName="rounded-lg shadow-lg border border-gray-200"
-                  dayClassName={date =>
-                    'text-sm rounded-full transition-colors duration-100 ' +
-                    (dayjs(date).isSame(fromDate, 'date') ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
-                  }
+                  placeholder="Select model"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">To Date *</label>
-                <DatePicker
-                  selected={toDate}
-                  onChange={(date: Date | null) => {
-                    setToDate(date);
-                    handleHistoryChange('to_date', date ? dayjs(date).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') : '');
-                  }}
-                  dateFormat="dd/MM/yyyy"
-                  placeholderText="Select end date"
-                  minDate={fromDate || undefined}
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  locale={vi}
-                  customInput={<CustomDateInput />}
-                  popperClassName="z-50"
-                  calendarClassName="rounded-lg shadow-lg border border-gray-200"
-                  dayClassName={date =>
-                    'text-sm rounded-full transition-colors duration-100 ' +
-                    (dayjs(date).isSame(toDate, 'date') ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
-                <Input
-                  type="text"
-                  value={historyForm.model_name}
-                  onChange={(e) => handleHistoryChange('model_name', e.target.value)}
-                  placeholder="Optional"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
-                <Input
-                  type="text"
-                  value={historyForm.model_version}
-                  onChange={(e) => handleHistoryChange('model_version', e.target.value)}
-                  placeholder="Optional"
-                />
-              </div>
-            </div>
-
-            <Button disabled={loading}>
+            </div>            <Button disabled={loading}>
               {loading ? 'Loading...' : 'Get History'}
             </Button>
           </Form>
@@ -244,76 +263,79 @@ const PricePredictionPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">Online Price Prediction</h2>
 
           <Form onSubmit={handleOnlineSubmit}>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Code *</label>
-                <Select
-                  options={platformOptions}
-                  defaultValue={onlineForm.platform_code}
-                  onChange={(value) => handleOnlineChange('platform_code', value)}
-                  placeholder="Select platform"
+            <div className="space-y-4 mb-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Platform:</label>
+                <PlatformSelect
+                  value={platformCode}
+                  onValueChange={(value) => {
+                    setPlatformCode(value || 'tiki');
+                    handleOnlineChange('platform_code', value || 'tiki');
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Product:</label>
+                <ProductSearch
+                  value={productName}
+                  onProductSelect={(productKey, productName) => {
+                    setProductId(productKey);
+                    setProductName(productName);
+                    handleOnlineChange('product_key', productKey);
+                  }}
+                  platformCode={platformCode}
+                  placeholder="Search products..."
+                  className="w-64"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
-                <Input
-                  type="text"
-                  value={onlineForm.product_key}
-                  onChange={(e) => handleOnlineChange('product_key', e.target.value)}
-                  placeholder="vd: tiki_123456"
-                />
-              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Price *</label>
+                  <Input
+                    type="number"
+                    value={onlineForm.current_price}
+                    onChange={(e) => handleOnlineChange('current_price', parseFloat(e.target.value))}
+                    min="0"
+                    step={0.01}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Current Price *</label>
-                <Input
-                  type="number"
-                  value={onlineForm.current_price}
-                  onChange={(e) => handleOnlineChange('current_price', parseFloat(e.target.value))}
-                  min="0"
-                  step={0.01}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Average Rating *</label>
+                  <Input
+                    type="number"
+                    value={onlineForm.avg_rating}
+                    onChange={(e) => handleOnlineChange('avg_rating', parseFloat(e.target.value))}
+                    min="0"
+                    max="5"
+                    step={0.1}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Average Rating *</label>
-                <Input
-                  type="number"
-                  value={onlineForm.avg_rating}
-                  onChange={(e) => handleOnlineChange('avg_rating', parseFloat(e.target.value))}
-                  min="0"
-                  max="5"
-                  step={0.1}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Review Count *</label>
+                  <Input
+                    type="number"
+                    value={onlineForm.review_count}
+                    onChange={(e) => handleOnlineChange('review_count', parseInt(e.target.value))}
+                    min="0"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Review Count *</label>
-                <Input
-                  type="number"
-                  value={onlineForm.review_count}
-                  onChange={(e) => handleOnlineChange('review_count', parseInt(e.target.value))}
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Name</label>
-                <Input
-                  type="text"
-                  value={onlineForm.model_name}
-                  onChange={(e) => handleOnlineChange('model_name', e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
-                <Input
-                  type="text"
-                  value={onlineForm.model_version}
-                  onChange={(e) => handleOnlineChange('model_version', e.target.value)}
-                />
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                  <Select
+                    options={modelOptions}
+                    defaultValue={`${onlineForm.model_name}|${onlineForm.model_version}`}
+                    onChange={(value) => {
+                      const [name, version] = value.split('|');
+                      handleOnlineChange('model_name', name);
+                      handleOnlineChange('model_version', version);
+                    }}
+                    placeholder="Select model"
+                  />
+                </div>
               </div>
             </div>
 

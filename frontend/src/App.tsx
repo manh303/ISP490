@@ -223,7 +223,7 @@ export default function App() {
           {/* Analyst Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute requiredRole="ANALYST">
+              <ProtectedRoute requiredRole={["ANALYST", "ADMIN"]}>
                 <AnalystLayout />
               </ProtectedRoute>
             }
