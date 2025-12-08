@@ -3,11 +3,11 @@ import psycopg2
 from psycopg2.extras import DictCursor
 
 DB_CONFIG = {
-    "host": "dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com",
+    "host": "localhost",
     "port": 5432,
-    "database": "ecommerce_dss_1",
+    "database": "ecommerce_dss",
     "user": "dss_user",
-    "password": "6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G",
+    "password": "dss_password_123",
     # Nếu connect lỗi vì SSL, thử mở dòng dưới:
     # "sslmode": "require",
 }

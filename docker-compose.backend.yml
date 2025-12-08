@@ -36,7 +36,7 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: ecommerce_dss_1
+      POSTGRES_DB: ecommerce_dss
       POSTGRES_USER: dss_user
       POSTGRES_PASSWORD: dss_password_123
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
@@ -44,7 +44,7 @@ services:
       - postgres_standalone_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dss_user -d ecommerce_dss_1"]
+      test: ["CMD-SHELL", "pg_isready -U dss_user -d ecommerce_dss"]
       interval: 30s
       timeout: 10s
       retries: 5

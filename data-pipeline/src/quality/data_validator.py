@@ -733,7 +733,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Data Quality Validator')
     parser.add_argument('--db-host', default='localhost', help='Database host')
-    parser.add_argument('--db-name', default='ecommerce_dss_1', help='Database name')
+    parser.add_argument('--db-name', default='ecommerce_dss', help='Database name')
     parser.add_argument('--db-user', default='dss_user', help='Database user')
     parser.add_argument('--db-password', default='dss_password_123', help='Database password')
     parser.add_argument('--rule-filter', help='Filter rules by ID pattern')

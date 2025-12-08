@@ -10,11 +10,21 @@ except ImportError:
 
 
 def _ensure_sslmode(url: str) -> str:
-    """Append sslmode=require if missing to keep Render TLS happy."""
+    """Append sslmode=require if missing AND on production/Render environment."""
+    # Only add sslmode=require for production environments (Render, external hosts)
+    # Skip for localhost/local development
+    is_localhost = "localhost" in url or "127.0.0.1" in url
+    
+    # If already has sslmode specified, return as-is
     if "sslmode=" in url:
         return url
-    separator = "&" if "?" in url else "?"
-    return f"{url}{separator}sslmode=require"
+    
+    # Only add sslmode=require for production, not for localhost
+    if not is_localhost:
+        separator = "&" if "?" in url else "?"
+        return f"{url}{separator}sslmode=require"
+    
+    return url
 
 
 def get_database_url() -> str:
@@ -28,11 +38,11 @@ def get_database_url() -> str:
         return _ensure_sslmode(env_url.strip())
     
     # Fallback to individual components
-    host = os.getenv("DB_HOST","dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com" )
-    port = os.getenv("DB_PORT", "5432")
-    name = os.getenv("DB_NAME","ecommerce_dss_1")
+    host = os.getenv("DB_HOST","localhost" )
+    port = os.getenv("DB_PORT", "5433")
+    name = os.getenv("DB_NAME","ecommerce_dss")
     user = os.getenv("DB_USER","dss_user")
-    password = os.getenv("DB_PASSWORD","6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G")
+    password = os.getenv("DB_PASSWORD","dss_password_123")
     
     if not all([host, name, user, password]):
         raise ValueError(

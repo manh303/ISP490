@@ -18,7 +18,7 @@ except Exception as e:
     pass
 
 # Default DATABASE_URL if not in environment
-DEFAULT_DATABASE_URL = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
+DEFAULT_DATABASE_URL = "postgresql://dss_user:dss_password_123@localhost:5433/ecommerce_dss"
 
 
 def collect_table_stats_after_etl():

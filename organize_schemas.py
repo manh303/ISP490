@@ -1,7 +1,7 @@
 import asyncio
 import asyncpg
 
-DATABASE_URL = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
+DATABASE_URL = "postgresql://dss_user:dss_password_123@localhost/ecommerce_dss"
 
 # Map tables to their correct schemas
 SCHEMA_MAPPING = {

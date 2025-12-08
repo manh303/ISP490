@@ -140,8 +140,8 @@ python /app/src/staging/load_raw_data.py
         retries=0,
         bash_command=rf"""
 pip install -q psycopg2-binary 2>/dev/null || true
-psql postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 -f /app/src/spark_jobs/create_ods_tables.sql 2>/dev/null || \
-python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com',port=5432,database='ecommerce_dss_1',user='dss_user',password='6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G'); cur=conn.cursor(); cur.execute(open('/app/src/spark_jobs/create_ods_tables.sql').read()); conn.commit(); conn.close(); print('✅ ODS tables created')"
+psql postgresql://dss_user:dss_password_123@localhost:5433/ecommerce_dss -f /app/src/spark_jobs/create_ods_tables.sql 2>/dev/null || \
+python -c "import psycopg2; conn=psycopg2.connect(host='localhost',port=5432,database='ecommerce_dss',user='dss_user',password='dss_password_123'); cur=conn.cursor(); cur.execute(open('/app/src/spark_jobs/create_ods_tables.sql').read()); conn.commit(); conn.close(); print('✅ ODS tables created')"
 """
     )
 
@@ -150,7 +150,7 @@ python -c "import psycopg2; conn=psycopg2.connect(host='dpg-d4j17gn5r7bs73bsoqm0
         retries=0,
         bash_command=r"""
 pip install -q psycopg2-binary 2>/dev/null || true
-python -c "import psycopg2; from datetime import date; conn=psycopg2.connect(host='dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com',port=5432,database='ecommerce_dss_1',user='dss_user',password='6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G'); cur=conn.cursor(); today=date.today(); cur.execute('DELETE FROM ods_product_clean WHERE DATE(crawled_at) = %s', (today,)); cur.execute('DELETE FROM ods_review_clean WHERE DATE(crawled_at) = %s', (today,)); conn.commit(); conn.close(); print('✅ Today partition cleaned')"
+python -c "import psycopg2; from datetime import date; conn=psycopg2.connect(host='localhost',port=5432,database='ecommerce_dss',user='dss_user',password='dss_password_123'); cur=conn.cursor(); today=date.today(); cur.execute('DELETE FROM ods_product_clean WHERE DATE(crawled_at) = %s', (today,)); cur.execute('DELETE FROM ods_review_clean WHERE DATE(crawled_at) = %s', (today,)); conn.commit(); conn.close(); print('✅ Today partition cleaned')"
 """
     )
 
@@ -167,9 +167,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.shuffle.partitions=50 \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/ods_transformation.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
@@ -213,9 +213,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.session.timeZone=UTC \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/dwh_build.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
@@ -231,9 +231,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.session.timeZone=UTC \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/datamart_build.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
@@ -249,9 +249,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.session.timeZone=UTC \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/ml_models/product_recommendation.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
@@ -267,9 +267,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.session.timeZone=UTC \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/ml_models/price_optimization.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
@@ -285,9 +285,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.session.timeZone=UTC \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/ml_models/demand_forecasting.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
@@ -303,9 +303,9 @@ docker exec spark-master spark-submit \
   --conf spark.sql.session.timeZone=UTC \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/ml_models/sales_forecasting.py \
-  --pg-url jdbc:postgresql://dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com:5432/ecommerce_dss_1 \
+  --pg-url jdbc:postgresql://localhost:5432/ecommerce_dss \
   --pg-user dss_user \
-  --pg-pass 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  --pg-pass dss_password_123
 """
     )
 
