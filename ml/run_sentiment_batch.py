@@ -69,19 +69,21 @@ def insert_sentiment_rows(conn, rows: List[Dict[str, Any]]):
         return
 
     insert_sql = """
-        INSERT INTO ml.fact_review_sentiment (
-            review_id,
-            product_sk,
-            platform_code,
-            date_sk,
-            sentiment_label,
-            sentiment_score,
-            model_sk
-        )
-        VALUES (%(review_id)s, %(product_sk)s, %(platform_code)s,
-                %(date_sk)s, %(sentiment_label)s, %(sentiment_score)s,
-                %(model_sk)s)
-    """
+    INSERT INTO ml.fact_review_sentiment (
+        review_id,
+        product_sk,
+        platform_code,
+        date_sk,
+        sentiment_label,
+        sentiment_score,
+        model_sk,
+        language_code,
+        sentiment_source
+    )
+    VALUES (%(review_id)s, %(product_sk)s, %(platform_code)s,
+            %(date_sk)s, %(sentiment_label)s, %(sentiment_score)s,
+            %(model_sk)s, %(language_code)s, %(sentiment_source)s)
+"""
 
     with conn.cursor() as cur:
         execute_batch(cur, insert_sql, rows, page_size=500)
@@ -129,9 +131,10 @@ def main():
                 "sentiment_label": str(labels[i]),
                 "sentiment_score": float(scores[i]),
                 "model_sk": int(model_sk),
+                "language_code": "vi",              # hoặc logic detect ngôn ngữ
+                "sentiment_source": "rating_rule_v1"  # hoặc "tfidf_logreg_v1"
             }
         )
-
     insert_sentiment_rows(conn, rows)
     conn.close()
 

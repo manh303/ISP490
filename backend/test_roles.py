@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
 
-from app.main import db_manager
+from backend.main import db_manager
 
 async def test_and_init_roles():
     """Test database connection và khởi tạo roles"""

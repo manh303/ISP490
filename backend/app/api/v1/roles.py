@@ -7,7 +7,7 @@ from typing import Dict, Any
 import logging
 from app.api.dependencies import require_role
 # Import models and services
-from models.role import (
+from app.models.role import (
     RoleResponse, RoleDetailResponse, RoleCreateRequest, 
     RoleUpdateRequest, RoleListResponse, RoleActionResponse
 )
@@ -33,13 +33,14 @@ security = HTTPBearer()
 
 async def get_database():
     """Get database connection"""
-    import sys
-    import os
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-    from main import db_manager
-    if not db_manager.is_connected:
-        await db_manager.connect()
-    return db_manager
+    try:
+        from backend.main import db_manager
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        return db_manager
+    except Exception as e:
+        logger.error(f"Database connection error: {e}")
+        raise HTTPException(status_code=500, detail="Database connection failed")
 
 async def get_role_service(db = Depends(get_database)) -> RoleService:
     """Get role service"""

@@ -9,10 +9,7 @@ from pydantic import BaseModel, Field
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-try:
-    from .ml_service import get_ml_service, MLInferenceService
-except ImportError:
-    from ml_service import get_ml_service, MLInferenceService
+from app.ml_service import get_ml_service, MLInferenceService
 
 # Create ML router
 ml_router = APIRouter(prefix="/api/v1/ml", tags=["Machine Learning"])

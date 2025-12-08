@@ -1,54 +1,85 @@
-# ML API Stability Improvements - Implementation Plan
+PS C:\DoAn_FPT_FALL2025\ecommerce-dss-project> python db_migration_dss_improvements.py
 
-## Current Issues Identified:
-- Direct psycopg2 connections without pooling
-- Models loaded on-demand causing delays
-- Limited error handling and retry logic
-- Synchronous database operations in async endpoints
-- No connection health checks or circuit breakers
-- Poor model caching and monitoring
+======================================================================
+🚀 BẮT ĐẦU DATABASE MIGRATION - DSS IMPROVEMENTS
+======================================================================
+Thời gian: 2025-12-05 14:27:04
+✅ Kết nối database thành công
 
-## Implementation Plan:
+======================================================================
+1. Migration: dwh.fact_product_daily
+======================================================================
+✅ Thêm cột total_orders vào dwh.fact_product_daily
+✅ Thêm cột total_revenue vào dwh.fact_product_daily
 
-### Phase 1: Database Connection Improvements
-- [ ] Implement SQLAlchemy async engine with connection pooling
-- [ ] Add retry logic for connection failures
-- [ ] Use context managers for proper connection cleanup
-- [ ] Add connection health checks
+💡 Lưu ý: Cần cập nhật ETL job để fill dữ liệu cho 2 cột mới này
 
-### Phase 2: ML Service Optimization
-- [ ] Pre-load models on startup instead of on-demand
-- [ ] Add model caching and health monitoring
-- [ ] Implement model loading status tracking
-- [ ] Add fallback mechanisms for failed predictions
+======================================================================
+2. Migration: dwh.product_metrics_global
+======================================================================
+✅ Thêm cột total_revenue vào dwh.product_metrics_global
+✅ Thêm cột avg_cost vào dwh.product_metrics_global
+✅ Thêm cột avg_margin_pct vào dwh.product_metrics_global
 
-### Phase 3: Error Handling & Resilience
-- [ ] Add comprehensive error handling for all endpoints
-- [ ] Implement circuit breaker pattern for database failures
-- [ ] Add timeout handling for long-running operations
-- [ ] Graceful degradation when services are unavailable
+💡 Lưu ý: Cần cập nhật ETL job để tính toán:
+   - total_revenue: SUM từ fact_product_daily.total_revenue
+   - avg_cost: từ bảng cost (nếu có)
+   - avg_margin_pct: (avg_price - avg_cost) / avg_price
 
-### Phase 4: Performance Optimizations
-- [ ] Cache frequently accessed data (model metadata, stats)
-- [ ] Implement async database operations
-- [ ] Add request rate limiting
-- [ ] Optimize query patterns
+======================================================================
+3. Migration: ml.fact_price_prediction
+======================================================================
+✅ Thêm cột prediction_confidence vào ml.fact_price_prediction
+✅ Thêm comment cho cột prediction_confidence
 
-### Phase 5: Monitoring & Health Checks
-- [ ] Enhanced health check endpoints
-- [ ] Add metrics collection
-- [ ] Implement proper logging
-- [ ] Add performance monitoring
+💡 Lưu ý: Cần cập nhật ML pipeline để tính và lưu prediction_confidence
 
-## Files to Modify:
-- `backend/app/api/v1/ml_api.py` - Main API improvements
-- `backend/app/services/ml_service.py` - ML service optimization
-- `backend/app/main.py` - Database connection management
-- `ml/config.yaml` - Configuration updates
+======================================================================
+4. Migration: ml.fact_product_recommendation
+======================================================================
+✅ Thêm cột co_purchase_count vào ml.fact_product_recommendation
+✅ Thêm cột co_purchase_rate vào ml.fact_product_recommendation
+✅ Thêm cột avg_bundle_revenue vào ml.fact_product_recommendation
+✅ Thêm cột window_days vào ml.fact_product_recommendation
+✅ Thêm comment cho cột co_purchase_count
+✅ Thêm comment cho cột co_purchase_rate
+✅ Thêm comment cho cột avg_bundle_revenue
+✅ Thêm comment cho cột window_days
 
-## Testing & Validation:
-- [ ] Test connection stability under load
-- [ ] Verify ML model loading performance
-- [ ] Monitor error rates and response times
-- [ ] Implement monitoring dashboards
-- [ ] Add automated health checks
+💡 Lưu ý: Cần cập nhật recommendation pipeline để tính co-purchase metrics
+
+======================================================================
+7. Migration: dss.dss_action_item (BẮT BUỘC)
+======================================================================
+ℹ️  Bảng dss.dss_action_item đã tồn tại
+
+======================================================================
+5. Migration: ml.fact_review_sentiment (OPTIONAL)
+======================================================================
+✅ Thêm cột language_code vào ml.fact_review_sentiment
+✅ Thêm cột sentiment_source vào ml.fact_review_sentiment
+
+💡 Migration này là optional, không bắt buộc cho DSS API
+
+======================================================================
+6. Migration: dwh.dim_product (OPTIONAL)
+======================================================================
+✅ Thêm cột image_url vào dwh.dim_product
+✅ Thêm cột product_url vào dwh.dim_product
+
+💡 Migration này là optional, giúp UI đẹp hơn nhưng không bắt buộc cho DSS API
+
+======================================================================
+✅ HOÀN THÀNH TẤT CẢ MIGRATIONS!
+======================================================================
+
+📋 TÓM TẮT:
+   ✅ Đã thêm cột cho các bảng fact/dim
+   ✅ Đã tạo bảng dss.dss_action_item
+
+📝 BƯỚC TIẾP THEO:
+   1. Cập nhật ETL jobs để fill dữ liệu cho các cột mới
+   2. Cập nhật ML pipelines (price prediction, recommendation)
+   3. Chạy lại ETL/ML jobs để có dữ liệu mẫu
+   4. Test lại 3 API: /dss/price/run, /dss/reco/run, /dss/review/run
+✅ Đã ngắt kết nối database

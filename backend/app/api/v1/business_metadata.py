@@ -4,13 +4,14 @@ Business Metadata API - Data Catalog, Glossary, and Quality
 Provides endpoints for data catalog, business glossary, expectations, and source systems
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+from app.api.dependencies import require_role
 
 router = APIRouter(prefix="/business-metadata", tags=["Business Metadata"])
 
@@ -47,6 +48,8 @@ class Dataset(BaseModel):
     updated_at: Optional[datetime]
     row_count: Optional[int]
     size_mb: Optional[float]
+    last_loaded_at: Optional[datetime]
+    freshness_hours: Optional[float]
 
 class DatasetDetail(BaseModel):
     dataset_id: int
@@ -104,7 +107,9 @@ class Job(BaseModel):
 # SOURCE SYSTEMS
 # ===================================================================
 
-@router.get("/sources", response_model=List[SourceSystem], summary="Get All Source Systems")
+@router.get("/sources", response_model=List[SourceSystem], summary="Get All Source Systems",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_source_systems():
     """
     Get list of all registered source systems with dataset counts
@@ -119,8 +124,8 @@ async def get_source_systems():
                     s.name,
                     s.owner_contact,
                     COUNT(d.dataset_id) as dataset_count
-                FROM meta_source_system s
-                LEFT JOIN meta_dataset d ON s.source_id = d.source_id
+                FROM metadata.meta_source_system s
+                LEFT JOIN metadata.meta_dataset d ON s.source_id = d.source_id
                 GROUP BY s.source_id, s.code, s.name, s.owner_contact
                 ORDER BY s.code;
             """)
@@ -129,7 +134,9 @@ async def get_source_systems():
     finally:
         conn.close()
 
-@router.get("/sources/{code}", summary="Get Source System Details")
+@router.get("/sources/{code}", summary="Get Source System Details",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_source_system_detail(code: str):
     """
     Get detailed information about a specific source system
@@ -145,8 +152,8 @@ async def get_source_system_detail(code: str):
                     s.name,
                     s.owner_contact,
                     COUNT(d.dataset_id) as dataset_count
-                FROM meta_source_system s
-                LEFT JOIN meta_dataset d ON s.source_id = d.source_id
+                FROM metadata.meta_source_system s
+                LEFT JOIN metadata.meta_dataset d ON s.source_id = d.source_id
                 WHERE s.code = %s
                 GROUP BY s.source_id, s.code, s.name, s.owner_contact;
             """, (code,))
@@ -165,7 +172,7 @@ async def get_source_system_detail(code: str):
                     d.dataset_type,
                     d.pii_class,
                     d.retention_days
-                FROM meta_dataset d
+                FROM metadata.meta_dataset d
                 WHERE d.source_id = %s
                 ORDER BY d.layer, d.table_name;
             """, (source['source_id'],))
@@ -182,7 +189,9 @@ async def get_source_system_detail(code: str):
 # DATA CATALOG
 # ===================================================================
 
-@router.get("/catalog/datasets", response_model=List[Dataset], summary="Get All Datasets")
+@router.get("/catalog/datasets", response_model=List[Dataset], summary="Get All Datasets",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_datasets(
     layer: Optional[str] = None,
     source_code: Optional[str] = None,
@@ -208,12 +217,14 @@ async def get_datasets(
                     d.created_at,
                     d.updated_at,
                     ts.row_count,
-                    ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb
-                FROM meta_dataset d
-                LEFT JOIN meta_source_system s ON d.source_id = s.source_id
+                    ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
+                    ts.last_loaded_at,
+                    EXTRACT(EPOCH FROM (NOW() - ts.last_loaded_at))/3600 as freshness_hours
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
-                    SELECT row_count, size_bytes
-                    FROM meta.table_stats
+                    SELECT row_count, size_bytes, last_loaded_at
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -242,7 +253,9 @@ async def get_datasets(
     finally:
         conn.close()
 
-@router.get("/catalog/datasets/{dataset_id}", response_model=DatasetDetail, summary="Get Dataset Details")
+@router.get("/catalog/datasets/{dataset_id}", response_model=DatasetDetail, summary="Get Dataset Details",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_dataset_detail(dataset_id: int):
     """
     Get detailed information about a specific dataset including lineage and quality
@@ -268,11 +281,11 @@ async def get_dataset_detail(dataset_id: int):
                     ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ts.last_loaded_at,
                     EXTRACT(EPOCH FROM (NOW() - ts.last_loaded_at))/3600 as freshness_hours
-                FROM meta_dataset d
-                LEFT JOIN meta_source_system s ON d.source_id = s.source_id
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes, last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -288,7 +301,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get upstream sources
             cur.execute("""
                 SELECT CONCAT(source_schema, '.', source_table) as source_table
-                FROM meta.data_lineage
+                FROM metadata.data_lineage
                 WHERE target_schema = %s AND target_table = %s
                   AND is_active = TRUE;
             """, (dataset['schema_name'], dataset['table_name']))
@@ -297,7 +310,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get downstream targets
             cur.execute("""
                 SELECT CONCAT(target_schema, '.', target_table) as target_table
-                FROM meta.data_lineage
+                FROM metadata.data_lineage
                 WHERE source_schema = %s AND source_table = %s
                   AND is_active = TRUE;
             """, (dataset['schema_name'], dataset['table_name']))
@@ -306,7 +319,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get quality issues count
             cur.execute("""
                 SELECT COUNT(*) as count
-                FROM meta.data_quality_issue
+                FROM metadata.data_quality_issue
                 WHERE schema_name = %s AND table_name = %s
                   AND status IN ('OPEN', 'IN_PROGRESS');
             """, (dataset['schema_name'], dataset['table_name']))
@@ -315,7 +328,7 @@ async def get_dataset_detail(dataset_id: int):
             # Get expectations count
             cur.execute("""
                 SELECT COUNT(*) as count
-                FROM meta_expectation
+                FROM metadata.meta_expectation
                 WHERE dataset_id = %s;
             """, (dataset_id,))
             exp_count = cur.fetchone()['count']
@@ -330,7 +343,9 @@ async def get_dataset_detail(dataset_id: int):
     finally:
         conn.close()
 
-@router.get("/catalog/search", summary="Search Data Catalog")
+@router.get("/catalog/search", response_model=List[Dataset], summary="Search Data Catalog",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def search_catalog(
     q: str = Query(..., description="Search query"),
     limit: int = Query(default=50, le=100)
@@ -351,13 +366,17 @@ async def search_catalog(
                     d.table_name,
                     d.dataset_type,
                     d.pii_class,
+                    d.created_at,
+                    d.updated_at,
                     ts.row_count,
-                    ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb
-                FROM meta_dataset d
-                LEFT JOIN meta_source_system s ON d.source_id = s.source_id
+                    ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
+                    ts.last_loaded_at,
+                    EXTRACT(EPOCH FROM (NOW() - ts.last_loaded_at))/3600 as freshness_hours
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
-                    SELECT row_count, size_bytes
-                    FROM meta.table_stats
+                    SELECT row_count, size_bytes, last_loaded_at
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -371,11 +390,14 @@ async def search_catalog(
                     d.table_name
                 LIMIT %s;
             """, (search_pattern, search_pattern, search_pattern, search_pattern, limit))
-            return cur.fetchall()
+            rows = cur.fetchall()
+            return [Dataset(**row) for row in rows]
     finally:
         conn.close()
 
-@router.get("/catalog/schemas", summary="Get All Schemas")
+@router.get("/catalog/schemas", summary="Get All Schemas",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_schemas():
     """
     Get list of all schemas with table counts
@@ -389,10 +411,10 @@ async def get_schemas():
                     COUNT(DISTINCT table_name) as table_count,
                     SUM(ts.row_count) as total_rows,
                     ROUND(SUM(ts.size_bytes) / 1024.0 / 1024.0 / 1024.0, 2) as total_size_gb
-                FROM meta_dataset d
+                FROM metadata.meta_dataset d
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -405,7 +427,9 @@ async def get_schemas():
     finally:
         conn.close()
 
-@router.get("/catalog/schemas/{schema_name}/tables", summary="Get Tables in Schema")
+@router.get("/catalog/schemas/{schema_name}/tables", summary="Get Tables in Schema",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_schema_tables(schema_name: str):
     """
     Get all tables in a specific schema
@@ -423,11 +447,11 @@ async def get_schema_tables(schema_name: str):
                     ts.row_count,
                     ROUND(ts.size_bytes / 1024.0 / 1024.0, 2) as size_mb,
                     ts.last_loaded_at
-                FROM meta_dataset d
-                LEFT JOIN meta_source_system s ON d.source_id = s.source_id
+                FROM metadata.meta_dataset d
+                LEFT JOIN metadata.meta_source_system s ON d.source_id = s.source_id
                 LEFT JOIN LATERAL (
                     SELECT row_count, size_bytes, last_loaded_at
-                    FROM meta.table_stats
+                    FROM metadata.table_stats
                     WHERE schema_name = d.schema_name 
                       AND table_name = d.table_name
                     ORDER BY snapshot_date DESC
@@ -444,7 +468,9 @@ async def get_schema_tables(schema_name: str):
 # BUSINESS GLOSSARY
 # ===================================================================
 
-@router.get("/glossary/terms", response_model=List[BusinessTerm], summary="Get All Business Terms")
+@router.get("/glossary/terms", response_model=List[BusinessTerm], summary="Get All Business Terms",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_business_terms(
     status: Optional[str] = None
 ):
@@ -463,7 +489,7 @@ async def get_business_terms(
                     bt.steward,
                     bt.status,
                     ARRAY[]::TEXT[] as related_datasets
-                FROM meta_business_term bt
+                FROM metadata.meta_business_term bt
                 WHERE 1=1
             """
             params = []
@@ -480,7 +506,9 @@ async def get_business_terms(
     finally:
         conn.close()
 
-@router.get("/glossary/terms/{term_id}", summary="Get Business Term Detail")
+@router.get("/glossary/terms/{term_id}", summary="Get Business Term Detail",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_business_term_detail(term_id: int):
     """
     Get detailed information about a specific business term
@@ -495,7 +523,7 @@ async def get_business_term_detail(term_id: int):
                     definition,
                     steward,
                     status
-                FROM meta_business_term
+                FROM metadata.meta_business_term
                 WHERE term_id = %s;
             """, (term_id,))
             term = cur.fetchone()
@@ -510,7 +538,7 @@ async def get_business_term_detail(term_id: int):
                     d.schema_name,
                     d.table_name,
                     d.layer
-                FROM meta_dataset d
+                FROM metadata.meta_dataset d
                 WHERE d.table_name ILIKE %s
                 ORDER BY d.layer, d.table_name;
             """, (f"%{term['term_name'].replace(' ', '_')}%",))
@@ -523,7 +551,9 @@ async def get_business_term_detail(term_id: int):
     finally:
         conn.close()
 
-@router.get("/glossary/search", summary="Search Business Glossary")
+@router.get("/glossary/search", response_model=List[BusinessTerm], summary="Search Business Glossary",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def search_glossary(
     q: str = Query(..., description="Search query"),
     limit: int = Query(default=50, le=100)
@@ -539,10 +569,11 @@ async def search_glossary(
                 SELECT 
                     term_id,
                     term_name,
+                    ARRAY[]::TEXT[] as related_datasets,
                     definition,
                     steward,
                     status
-                FROM meta_business_term
+                FROM metadata.meta_business_term
                 WHERE term_name ILIKE %s
                    OR definition ILIKE %s
                 ORDER BY 
@@ -550,11 +581,14 @@ async def search_glossary(
                     term_name
                 LIMIT %s;
             """, (search_pattern, search_pattern, search_pattern, limit))
-            return cur.fetchall()
+            rows = cur.fetchall()
+            return [BusinessTerm(**row) for row in rows]
     finally:
         conn.close()
 
-@router.post("/glossary/terms", summary="Create Business Term")
+@router.post("/glossary/terms", summary="Create Business Term",
+             dependencies=[Depends(require_role("DATA_ENGINEER", "ADMIN"))],
+             )
 async def create_business_term(
     term_name: str,
     definition: str,
@@ -568,7 +602,7 @@ async def create_business_term(
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                INSERT INTO meta_business_term (term_name, definition, steward, status)
+                INSERT INTO metadata.meta_business_term (term_name, definition, steward, status)
                 VALUES (%s, %s, %s, %s)
                 RETURNING term_id, term_name, definition, steward, status;
             """, (term_name, definition, steward, status))
@@ -585,7 +619,9 @@ async def create_business_term(
 # DATA EXPECTATIONS / QUALITY RULES
 # ===================================================================
 
-@router.get("/expectations", response_model=List[DataExpectation], summary="Get All Data Expectations")
+@router.get("/expectations", response_model=List[DataExpectation], summary="Get All Data Expectations",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_expectations(
     severity: Optional[str] = None,
     dataset_id: Optional[int] = None
@@ -609,11 +645,11 @@ async def get_expectations(
                     e.tags,
                     cr.passed as last_check_passed,
                     cr.created_at as last_check_time
-                FROM meta_expectation e
-                JOIN meta_dataset d ON e.dataset_id = d.dataset_id
+                FROM metadata.meta_expectation e
+                JOIN metadata.meta_dataset d ON e.dataset_id = d.dataset_id
                 LEFT JOIN LATERAL (
                     SELECT passed, created_at
-                    FROM meta.data_quality_check_result
+                    FROM metadata.data_quality_check_result
                     WHERE rule_id = e.exp_id
                     ORDER BY created_at DESC
                     LIMIT 1
@@ -638,7 +674,9 @@ async def get_expectations(
     finally:
         conn.close()
 
-@router.get("/expectations/{exp_id}/results", summary="Get Expectation Check Results")
+@router.get("/expectations/{exp_id}/results", summary="Get Expectation Check Results",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_expectation_results(
     exp_id: int,
     limit: int = Query(default=20, le=100)
@@ -658,7 +696,7 @@ async def get_expectation_results(
                     cr.total_count,
                     cr.error_message,
                     cr.created_at
-                FROM meta.data_quality_check_result cr
+                FROM metadata.data_quality_check_result cr
                 WHERE cr.rule_id = %s
                 ORDER BY cr.created_at DESC
                 LIMIT %s;
@@ -667,7 +705,9 @@ async def get_expectation_results(
     finally:
         conn.close()
 
-@router.post("/expectations", summary="Create Data Expectation")
+@router.post("/expectations", summary="Create Data Expectation",
+             dependencies=[Depends(require_role("DATA_ENGINEER", "ADMIN"))],
+             )
 async def create_expectation(
     dataset_id: int,
     name: str,
@@ -683,7 +723,7 @@ async def create_expectation(
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                INSERT INTO meta_expectation (dataset_id, name, severity, check_sql, owner, tags)
+                INSERT INTO metadata.meta_expectation (dataset_id, name, severity, check_sql, owner, tags)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING exp_id, dataset_id, name, severity, check_sql, owner, tags;
             """, (dataset_id, name, severity, check_sql, owner, tags))
@@ -700,7 +740,9 @@ async def create_expectation(
 # JOBS
 # ===================================================================
 
-@router.get("/jobs", response_model=List[Job], summary="Get All Jobs")
+@router.get("/jobs", response_model=List[Job], summary="Get All Jobs",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_jobs(active_only: bool = True):
     """
     Get list of all registered jobs
@@ -716,8 +758,8 @@ async def get_jobs(active_only: bool = True):
                     j.schedule,
                     j.active,
                     ARRAY_AGG(DISTINCT d.table_name) FILTER (WHERE d.table_name IS NOT NULL) as related_datasets
-                FROM meta_job j
-                LEFT JOIN meta_dataset d ON 
+                FROM metadata.meta_job j
+                LEFT JOIN metadata.meta_dataset d ON 
                     j.job_name ILIKE '%' || REPLACE(d.table_name, '_', '%') || '%'
             """
             
@@ -735,7 +777,9 @@ async def get_jobs(active_only: bool = True):
     finally:
         conn.close()
 
-@router.get("/jobs/{job_id}", summary="Get Job Details")
+@router.get("/jobs/{job_id}", summary="Get Job Details",
+            dependencies=[Depends(require_role("DATA_ENGINEER", "ANALYST", "ADMIN"))],
+            )
 async def get_job_detail(job_id: int):
     """
     Get detailed information about a specific job
@@ -750,7 +794,7 @@ async def get_job_detail(job_id: int):
                     owner,
                     schedule,
                     active
-                FROM meta_job
+                FROM metadata.meta_job
                 WHERE job_id = %s;
             """, (job_id,))
             job = cur.fetchone()

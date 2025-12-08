@@ -87,7 +87,7 @@ class IAMService:
         """
         try:
             query = "UPDATE iam.iam_user SET last_login_at = $1, updated_at = $2 WHERE user_id = $3"
-            now = datetime.datetime.utcnow()
+            now = datetime.utcnow()
             await self.db.execute_query(query, (now, now, user_id))
         except Exception as e:
             logger.error(f"Update last login error: {e}")
@@ -124,7 +124,7 @@ class IAMService:
                 SET password_hash = $1, updated_at = $2
                 WHERE user_id = $3
             """
-            await self.db.execute_query(query, (new_password_hash, datetime.datetime.now(datetime.timezone.utc), user_id))
+            await self.db.execute_query(query, (new_password_hash, datetime.now(), user_id))
 
         except Exception as e:
             logger.error(f"Change password error: {e}")
@@ -141,6 +141,6 @@ class IAMService:
                 INSERT INTO iam.iam_audit_log (user_id, action, target_type, target_id, details_text, created_at)
                 VALUES ($1, $2, $3, $4, $5, $6)
             """
-            await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.datetime.now(datetime.timezone.utc)))
+            await self.db.execute_query(query, (user_id, action, target_type, target_id, details, datetime.now()))
         except Exception as e:
             logger.error(f"Log user action error: {e}")

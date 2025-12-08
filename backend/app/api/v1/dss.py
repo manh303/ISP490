@@ -5,10 +5,11 @@ AI-powered decision support endpoints for analysts
 
 import logging
 from typing import Dict, Any, Optional
-
+import time
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
-from app.db_config import DATABASE_URL
+from app.db_pool import get_pool
+from app.db_config import DATABASE_URL  # Needed for health check endpoints
 
 from app.schemas.dss import (
     PricePredictionRequest,
@@ -30,20 +31,61 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/dss", tags=["DSS - Decision Support System"])
 
 
-async def get_db():
+async def get_db_connection():
     """
-    Tạo 1 kết nối asyncpg cho mỗi request DSS.
-    DSSService đang dùng self.db.fetch / fetchrow / execute theo style asyncpg.
+    Get a database connection from the pool for each DSS request.
+    Uses connection pooling for better performance.
     """
-    conn = await asyncpg.connect(dsn=DATABASE_URL)
     try:
-        yield conn
-    finally:
-        await conn.close()
+        pool = await get_pool()
+        logger.debug("Pool retrieved successfully from get_pool()")
+    except RuntimeError as e:
+        logger.warning(f"Pool not initialized, attempting fallback initialization... Error: {e}")
+        # Fallback: try to initialize pool if not initialized
+        from app.db_config import DATABASE_URL
+        from app.db_pool import init_pool
+        try:
+            logger.info("Starting fallback pool initialization...")
+            
+            # Determine SSL requirements
+            import os
+            ssl_mode = None
+            if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+                ssl_mode = "require"
+                logger.info("🔒 SSL enabled for fallback database connection (Render environment detected)")
+            
+            await init_pool(DATABASE_URL, min_size=1, max_size=5, ssl=ssl_mode)
+            pool = await get_pool()
+            if pool is None:
+                raise Exception("Pool is still None after initialization")
+            logger.info("Fallback pool initialization successful")
+        except Exception as init_e:
+            logger.error(f"Fallback pool initialization failed: {init_e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Database connection failed: {str(init_e)}"
+            )
+
+    async with pool.acquire() as connection:
+        try:
+            yield connection
+        except RuntimeError as e:
+            if "Database connection pool not initialized" in str(e):
+                raise HTTPException(
+                    status_code=500,
+                    detail="Database connection pool not initialized. Server startup issue."
+                )
+            raise
+        except Exception as e:
+            logger.error(f"Database connection error: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Database connection error: {str(e)}"
+            )
 
 
-async def get_dss_service(db=Depends(get_db)) -> DSSService:
-    """Get DSS service instance"""
+async def get_dss_service(db=Depends(get_db_connection)) -> DSSService:
+    """Get DSS service instance with pooled connection"""
     return DSSService(db)
 
 
@@ -94,11 +136,17 @@ async def run_price_prediction_dss(
     
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
+    logger.info("▶ /dss/price/run START user_id=%s request=%s", user_id, request.dict())
+    start = time.perf_counter()
+
     try:
         result = await service.run_price_prediction_dss(request.dict(), user_id=user_id)
+        duration = time.perf_counter() - start
+        logger.info("✅ /dss/price/run DONE in %.2fs (session_id=%s)", duration, result.get("session_id"))
         return result
     except Exception as e:
-        logger.exception(f"Error in run_price_prediction_dss: {e}")
+        duration = time.perf_counter() - start
+        logger.exception("❌ /dss/price/run ERROR after %.2fs: %s", duration, e)
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 
@@ -150,11 +198,16 @@ async def run_product_recommendation_dss(
     
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
+    logger.info("▶ /dss/reco/run START user_id=%s request=%s", user_id, request.dict())
+    start = time.perf_counter()
     try:
         result = await service.run_product_recommendation_dss(request.dict(), user_id=user_id)
+        duration = time.perf_counter() - start
+        logger.info("✅ /dss/reco/run DONE in %.2fs (session_id=%s)", duration, result.get("session_id"))
         return result
     except Exception as e:
-        logger.exception(f"Error in run_product_recommendation_dss: {e}")
+        duration = time.perf_counter() - start
+        logger.exception("❌ /dss/reco/run ERROR after %.2fs: %s", duration, e)
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 
@@ -194,11 +247,16 @@ async def run_review_sentiment_dss(
     
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
+    logger.info("▶ /dss/review/run START user_id=%s request=%s", user_id, request.dict())
+    start = time.perf_counter()
     try:
         result = await service.run_review_sentiment_dss(request.dict(), user_id=user_id)
+        duration = time.perf_counter() - start
+        logger.info("✅ /dss/review/run DONE in %.2fs (session_id=%s)", duration, result.get("session_id"))
         return result
     except Exception as e:
-        logger.exception(f"Error in run_review_sentiment_dss: {e}")
+        duration = time.perf_counter() - start
+        logger.exception("❌ /dss/reco/run ERROR after %.2fs: %s", duration, e)
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 
@@ -292,9 +350,15 @@ async def dss_health_check():
         "components": {},
     }
 
+    # Determine SSL requirements
+    import os
+    ssl_mode = None
+    if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+        ssl_mode = "require"
+
     # Check database
     try:
-        conn = await asyncpg.connect(dsn=DATABASE_URL)
+        conn = await asyncpg.connect(dsn=DATABASE_URL, ssl=ssl_mode)
         await conn.fetchval("SELECT 1")
         await conn.close()
         health_status["components"]["database"] = "healthy"
@@ -320,7 +384,7 @@ async def dss_health_check():
 
     # Check ML tables
     try:
-        conn = await asyncpg.connect(dsn=DATABASE_URL)
+        conn = await asyncpg.connect(dsn=DATABASE_URL, ssl=ssl_mode)
         tables = await conn.fetch(
             """
             SELECT table_name 
@@ -371,8 +435,14 @@ async def get_data_status():
     }
 
     try:
+        # Determine SSL requirements
+        import os
+        ssl_mode = None
+        if os.getenv("RENDER") or "render.com" in DATABASE_URL:
+            ssl_mode = "require"
+
         async with asyncpg.create_pool(
-            dsn=DATABASE_URL, min_size=1, max_size=1
+            dsn=DATABASE_URL, min_size=1, max_size=1, ssl=ssl_mode
         ) as pool:
             async with pool.acquire() as conn:
                 # Check latest fact_product_daily
