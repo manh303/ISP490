@@ -46,8 +46,8 @@ def update_etl_run_metrics(run_id=None, job_code=None):
                 if job_code:
                     cur.execute("""
                         SELECT r.run_id, r.job_code, r.status, r.started_at
-                        FROM meta.etl_run r
-                        JOIN meta.etl_job j ON r.job_id = j.job_id
+                        FROM metadata.etl_run r
+                        JOIN metadata.etl_job j ON r.job_id = j.job_id
                         WHERE j.job_code = %s
                           AND r.status IN ('RUNNING', 'SUCCESS')
                           AND r.started_at >= NOW() - INTERVAL '24 hours'
@@ -57,8 +57,8 @@ def update_etl_run_metrics(run_id=None, job_code=None):
                 else:
                     cur.execute("""
                         SELECT run_id, job_code, status, started_at
-                        FROM meta.etl_run r
-                        JOIN meta.etl_job j ON r.job_id = j.job_id
+                        FROM metadata.etl_run r
+                        JOIN metadata.etl_job j ON r.job_id = j.job_id
                         WHERE r.status IN ('RUNNING', 'SUCCESS')
                           AND r.started_at >= NOW() - INTERVAL '24 hours'
                         ORDER BY r.started_at DESC
@@ -113,7 +113,7 @@ def update_etl_run_metrics(run_id=None, job_code=None):
             
             # Update ETL run
             cur.execute("""
-                UPDATE meta.etl_run
+                UPDATE metadata.etl_run
                 SET rows_read = %s,
                     rows_written = %s
                 WHERE run_id = %s;
@@ -158,8 +158,8 @@ def update_all_null_metrics(days=7):
             # Get all runs with NULL metrics
             cur.execute("""
                 SELECT r.run_id, j.job_code, r.status, r.started_at
-                FROM meta.etl_run r
-                JOIN meta.etl_job j ON r.job_id = j.job_id
+                FROM metadata.etl_run r
+                JOIN metadata.etl_job j ON r.job_id = j.job_id
                 WHERE (r.rows_read IS NULL OR r.rows_written IS NULL)
                   AND r.status = 'SUCCESS'
                   AND r.started_at >= NOW() - INTERVAL '%s days'

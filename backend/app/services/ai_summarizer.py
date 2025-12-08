@@ -1053,10 +1053,16 @@ Write concisely, clearly, using language accessible to non-technical business st
                 
                 # Tìm recommendations có similarity rất cao
                 sim_score = row.get("similarity_score", 0)
-                if sim_score >= 0.8:
+                # Convert to float for comparison (can be string from DB)
+                try:
+                    sim_score_float = float(sim_score) if sim_score else 0.0
+                except (ValueError, TypeError):
+                    sim_score_float = 0.0
+                    
+                if sim_score_float >= 0.8:
                     high_similarity_products.append({
                         "name": rec_product[:40],
-                        "score": sim_score
+                        "score": sim_score_float
                     })
 
             # ACTION 1: Combo/Bundle với tên sản phẩm thực

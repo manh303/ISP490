@@ -151,6 +151,54 @@ async def run_price_prediction_dss(
         raise HTTPException(status_code=500, detail="Internal server error in DSS")
 
 
+@router.get(
+    "/price/{session_id}/ai-summary",
+    response_model=Dict[str, Any],
+    operation_id="get_ai_summary_status_v1",
+)
+async def get_ai_summary_status(
+    session_id: int,
+    service: DSSService = Depends(get_dss_service),
+):
+    """
+    Poll AI Generation Status
+    
+    **Purpose:**
+    Check if async AI generation has completed and retrieve updated AI insights.
+    
+    **Usage:**
+    After receiving a DSS response with `ai_generation_status: "pending"`, 
+    poll this endpoint every 2-3 seconds until status is "completed" or "failed".
+    
+    **Response:**
+    ```json
+    {
+      "session_id": 123,
+      "ai_generation_status": "completed",
+      "ai_summary_insights": [...],
+      "ai_recommended_actions": [...],
+      "ai_model_used": "OpenAI gpt-4o-mini",
+      "generation_duration_seconds": 12.5
+    }
+    ```
+    
+    **Status Values:**
+    - `pending`: AI generation queued but not started
+    - `generating`: AI generation in progress
+    - `completed`: AI generation successful, insights available
+    - `failed`: AI generation failed, error message in response
+    - `skipped`: AI mode was not 'full', no AI generation needed
+    """
+    try:
+        result = await service.get_ai_generation_status(session_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error getting AI summary status: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 # ============================================
 # PRODUCT RECOMMENDATION DSS
 # ============================================

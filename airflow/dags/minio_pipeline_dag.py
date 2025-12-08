@@ -26,7 +26,7 @@ default_args = {
 }
 
 # ============================================================
-#      PHẦN A – ETL META LOGGING (schema meta.*)
+#      PHẦN A – ETL META LOGGING (schema metadata.*)
 # ============================================================
 
 PIPELINE_JOB_CODE = "MINIO_ECOMMERCE_DWH_PIPELINE"
@@ -59,14 +59,14 @@ def _get_pg_conn():
 
 def _ensure_etl_job(conn):
     """
-    Đảm bảo meta.etl_job có dòng cho PIPELINE_JOB_CODE.
+    Đảm bảo metadata.etl_job có dòng cho PIPELINE_JOB_CODE.
     Trả về job_id hoặc None.
     """
     try:
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO meta.etl_job (job_code, job_name, description)
+            INSERT INTO metadata.etl_job (job_code, job_name, description)
             VALUES (%s, %s, %s)
             ON CONFLICT (job_code) DO NOTHING;
         """,
@@ -79,7 +79,7 @@ def _ensure_etl_job(conn):
         conn.commit()
 
         cur.execute(
-            "SELECT job_id FROM meta.etl_job WHERE job_code = %s;",
+            "SELECT job_id FROM metadata.etl_job WHERE job_code = %s;",
             (PIPELINE_JOB_CODE,),
         )
         row = cur.fetchone()
@@ -95,7 +95,7 @@ def _ensure_etl_job(conn):
 
 def start_etl_run(job_code, run_date, airflow_run_id=None):
     """
-    Tạo 1 dòng meta.etl_run với status=RUNNING.
+    Tạo 1 dòng metadata.etl_run với status=RUNNING.
     Trả về run_id hoặc None.
     """
     conn = _get_pg_conn()
@@ -111,7 +111,7 @@ def start_etl_run(job_code, run_date, airflow_run_id=None):
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO meta.etl_run (
+            INSERT INTO metadata.etl_run (
                 job_id, run_date, started_at, status, airflow_run_id
             )
             VALUES (%s, %s, %s, %s, %s)
@@ -136,7 +136,7 @@ def start_etl_run(job_code, run_date, airflow_run_id=None):
 
 def finish_etl_run(run_id, status, rows_read=None, rows_written=None, error_message=None):
     """
-    Update meta.etl_run khi DAG kết thúc.
+    Update metadata.etl_run khi DAG kết thúc.
     """
     if run_id is None:
         print("[META] finish_etl_run called with run_id=None, skip.")
@@ -150,7 +150,7 @@ def finish_etl_run(run_id, status, rows_read=None, rows_written=None, error_mess
         cur = conn.cursor()
         cur.execute(
             """
-            UPDATE meta.etl_run
+            UPDATE metadata.etl_run
             SET finished_at = %s,
                 status = %s,
                 rows_read = COALESCE(%s, rows_read),

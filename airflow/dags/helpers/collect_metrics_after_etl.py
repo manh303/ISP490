@@ -90,7 +90,7 @@ def collect_table_stats_after_etl():
                     
                     # Insert/Update with CURRENT_DATE (TODAY)
                     cur.execute("""
-                        INSERT INTO meta.table_stats (
+                        INSERT INTO metadata.table_stats (
                             schema_name, table_name, snapshot_date,
                             row_count, size_bytes,
                             last_loaded_at
@@ -152,7 +152,7 @@ def collect_db_health():
             
             # Insert health record
             cur.execute("""
-                INSERT INTO meta.db_connection_health (
+                INSERT INTO metadata.db_connection_health (
                     check_time, host, port, database_name, status,
                     active_connections, idle_connections, max_connections,
                     connection_usage_pct, slow_queries_count

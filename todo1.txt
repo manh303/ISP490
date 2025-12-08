@@ -1,633 +1,1172 @@
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -  STEP 1: LOADING RAW DATA
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - [INFO] Found 599 local JSONL files
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_headphones_20251110_224447.jsonl
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_headphones_20251110_233703.jsonl
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_laptops_20251110_224447.jsonl
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_laptops_20251110_233324.jsonl
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_smartphones_20251110_224447.jsonl
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO -    ... and 594 more
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:35:50 +07] {subprocess.py:93} INFO - [INFO] Attempting to load with schema inference...
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  Loaded 937,940 raw records
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -    Schema: 28 columns
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO - root
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- brand: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- category: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- content: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- crawl_date: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- crawl_timestamp: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- discount_percent: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- helpful_count: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- image_urls: array (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |    |-- element: string (containsNull = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- images: array (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |    |-- element: struct (containsNull = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |    |    |-- full_path: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |    |    |-- id: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |    |    |-- status: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- page_number: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- price_current: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- price_original: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- product_id: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- product_name: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- product_url: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- rating: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- rating_avg: double (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- review_count: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- review_date: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- review_id: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- review_text: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- review_time: long (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- reviewer_name: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- seller_name: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- sku_info: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- source: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- title: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  |-- url: string (nullable = true)
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO -  STEP 2: CLEANING & TRANSFORMING DATA
-[2025-12-08, 12:36:36 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO -  Cleaned 937,940 records
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO -  Columns used: ['global_product_id', 'source_platform', 'product_id', 'product_name', 'brand_name', 'brand_std', 'category', 'price_current', 'price_original', 'discount_percent', 'review_count', 'rating', 'seller_name', 'url', 'crawl_date', 'data_quality_score']
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO -  STEP 2.5: CATEGORY MAPPING (using mapping table)
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:47 +07] {subprocess.py:93} INFO - [DEBUG] Sample raw categories (first 20):
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   1. Category: 'tablets' | Product: 'Máy tính bảng Huawei M3 8.4 màn hình 2K, trang bị '
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   2. Category: 'tablets' | Product: 'iPad Pro M4 11 inch Wifi (Mặt kính Nano) - Hàng ch'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   3. Category: 'tablets' | Product: '[phân phát miễn phí]Galaxy S23 super smart 5G 75-i'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   4. Category: 'tablets' | Product: 'Máy tính bảng 2 trong 1 Fujitsu Stylistic R727 Cor'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   5. Category: 'tablets' | Product: 'Máy tính bảng Samsung Galaxy Tab A9 Wi-Fi'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   6. Category: 'tablets' | Product: 'Máy tính bảng SAMSUNG Galaxy Tab S10 FE 5G 128GB'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   7. Category: 'tablets' | Product: 'Xiaomi Redmi Pad 2 Tablet 4/128Gb - 6/128Gb - 8/25'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   8. Category: 'tablets' | Product: 'Xiaomi Redmi Pad 2 Tablet 4/128Gb 4g Sim Version -'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   9. Category: 'tablets' | Product: 'Máy Tính Bảng Samsung Galaxy Tab S9 Ultra 5G - Hàn'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   10. Category: 'tablets' | Product: 'Quality Type C to USB OTG Adapter Cable USB C Spli'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   11. Category: 'tablets' | Product: 'Bluetooth Mobile Phone Bộ nhớ 8+256GB P33 Pro 3800'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   12. Category: 'tablets' | Product: 'Samsung A200'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   13. Category: 'tablets' | Product: '[International Product] SWANSON HYDRANGEA ROOT EXT'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   14. Category: 'tablets' | Product: 'Viên uống ngừa thai tháng 1 v an toàn hiệu quả hộp'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   15. Category: 'tablets' | Product: 'Viên sủi Vitamin C Swisse 1000mg Của Úc'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   16. Category: 'tablets' | Product: 'Bộ Lấy Ráy Tai Có Camera Chuyên Nghiệp Modeco NK3-'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   17. Category: 'tablets' | Product: '[Combo 2 Tubes X 20 Pills] Multivitamin Effervesce'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   18. Category: 'tablets' | Product: 'Bộ Lọc thùng YEE, Baki cho Hồ cá cảnh | Dễ dàng Lắ'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   19. Category: 'tablets' | Product: 'Bể cá mini NAGO có máy bơm nước có tích hợp đèn th'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   20. Category: 'tablets' | Product: 'BỔ MẮT ÚC SWISSE KIDS EYE HEALTH'
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - [INFO] Total category mappings configured: 130
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - [INFO] Unique category patterns: 130
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - [INFO] Including 27 plural variants for Lazada compatibility
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - [DEBUG] Before mapping - checking for potential matches:
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO -   Found 1000/1000 categories ending in 's' (likely plural)
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:36:59 +07] {subprocess.py:93} INFO - [DEBUG] Analyzing unmapped categories (will become OTHER)...
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO - [DEBUG] Top 30 unmapped category patterns by frequency:
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    1. 'NULL' → 113,596 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    2. 'dồng hồ thông minh' → 34,637 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    3. 'máy in' → 34,232 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    4. 'máy ảnh' → 32,109 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    5. 'chuột máy tính' → 28,890 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    6. 'màn hình máy tính' → 24,344 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    7. 'bàn phím máy tính' → 21,175 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    8. 'điện thoại' → 17,080 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -    9. 'tvs' → 10,908 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -   10. 'destops-computers' → 7,600 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO -   11. 'máy tính bảng' → 2,941 products
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:37:29 +07] {subprocess.py:93} INFO - [DEBUG] OTHER category distribution by platform:
-[2025-12-08, 12:37:51 +07] {subprocess.py:93} INFO -   tiki: 264,773 (80.8% of OTHER)
-[2025-12-08, 12:37:51 +07] {subprocess.py:93} INFO -   tiki_mass_crawl: 43,836 (13.4% of OTHER)
-[2025-12-08, 12:37:51 +07] {subprocess.py:93} INFO -   lazada: 18,508 (5.7% of OTHER)
-[2025-12-08, 12:37:51 +07] {subprocess.py:93} INFO -   None: 395 (0.1% of OTHER)
-[2025-12-08, 12:37:51 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:37:51 +07] {subprocess.py:93} INFO - [DEBUG] Sample unmapped products (first 50):
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    1. [lazada] Cat:'destops-computers' | '[HCM]Máy tính để bàn G2030 - Ram 4G'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    2. [lazada] Cat:'destops-computers' | 'Trọn bộ máy tính học online, xem phim, đ'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    3. [lazada] Cat:'destops-computers' | 'MSI GTX 1050ti 4G 1fan đẹp BH 1 tháng'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    4. [lazada] Cat:'destops-computers' | '[All in one] Máy tính All in one Lenov C'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    5. [lazada] Cat:'destops-computers' | '[HCM]Máy tính bàn G2030- Ram 4gb'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    6. [lazada] Cat:'destops-computers' | 'Máy tính All in one 15.6 ci3 - nhỏ gọn -'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    7. [lazada] Cat:'destops-computers' | 'Core I5 Computer Set for Online Gaming, '
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    8. [lazada] Cat:'destops-computers' | 'Máy Bộ HP EliteDesk 800 G3 Mini'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -    9. [lazada] Cat:'destops-computers' | 'Trọn bộ máy tính văn phòng DELL 3050 Cor'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   10. [lazada] Cat:'destops-computers' | 'Bộ máy tính văn phòng, chơi game giá rẻ '
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   11. [lazada] Cat:'destops-computers' | 'Intel NUC 7i7BNH i7 RAM 8GB- bật 24/7- G'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   12. [lazada] Cat:'destops-computers' | 'Máy chủ Dell PowerEDGE T310'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   13. [lazada] Cat:'destops-computers' | 'máy tính de bàn all in one Nec 22in'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   14. [lazada] Cat:'destops-computers' | 'Máy bộ Dell Vostro 3671MT Core i3 i5 i7 '
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   15. [lazada] Cat:'destops-computers' | 'sale máy để bàn all in one Lenovo c470'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   16. [lazada] Cat:'destops-computers' | '[HCM][Trả góp 0%]Máy tính chơi game LMHT'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   17. [lazada] Cat:'destops-computers' | 'máy Dell đồng bộ văn phòng Core i5, Ram '
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   18. [lazada] Cat:'destops-computers' | 'Bộ Máy tính văn phòng Giá Rẻ - HP Pro 63'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   19. [lazada] Cat:'destops-computers' | 'Barebone IBM/ Intel'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   20. [lazada] Cat:'destops-computers' | 'Máy Tính Siêu Nhỏ Ultra Mini T9 PLUS - I'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   21. [lazada] Cat:'destops-computers' | '[HCM]Máy tính để bàn A4-6300K Ram 8GB VG'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   22. [lazada] Cat:'destops-computers' | 'Dell 3050 SFF i3 7100 8G 256G A1'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   23. [lazada] Cat:'destops-computers' | 'Máy tính mini - HP ProDesk 600 G4 Mini ('
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   24. [lazada] Cat:'destops-computers' | 'Máy tính để bàn Tyni Dell optiplex 3050 '
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   25. [lazada] Cat:'destops-computers' | 'máy tính để bàn all in one Toshiba dynab'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   26. [lazada] Cat:'destops-computers' | 'Trọn bộ máy tính học online, xem phim, đ'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   27. [lazada] Cat:'destops-computers' | '[Xả Hàng Tồn] Bộ máy tính chơi game liên'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   28. [lazada] Cat:'destops-computers' | '[Trả góp 0%]Máy tính đồng bộ Fujitsu D58'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   29. [lazada] Cat:'destops-computers' | '[HCM]Máy tính để bàn chơi game core i5 2'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   30. [lazada] Cat:'destops-computers' | 'Server - Máy chủ IBM X3650 M4 chạy 2 CPU'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   31. [lazada] Cat:'destops-computers' | 'Máy tính mini HP Elitedesk 800 G3 65W CP'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   32. [lazada] Cat:'destops-computers' | 'Trọn bộ cây máy tính để bàn Core I7 DELL'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   33. [lazada] Cat:'destops-computers' | 'Tủ lạnh 2 ngăn 118 lít thương hiệu làm l'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   34. [lazada] Cat:'destops-computers' | 'Bộ máy tính văn phòng H81 G3250 /4GB /25'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   35. [lazada] Cat:'destops-computers' | 'FULL Bộ Máy Tính Để Bàn Chơi Game core i'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   36. [lazada] Cat:'destops-computers' | 'Bộ máy tính CORE i5 Mạnh Siêu nhanh chơi'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   37. [lazada] Cat:'destops-computers' | '[HCM][Trả góp 0%]Máy tính chơi game i5-3'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   38. [lazada] Cat:'destops-computers' | '[HCM][Trả góp 0%]Máy tính chơi game LMHT'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   39. [lazada] Cat:'destops-computers' | 'Combo main h61, ram , chip core i, ổ, ng'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   40. [lazada] Cat:'destops-computers' | 'Hp Z2 Mini G4 Workstation Graphics Works'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   41. [lazada] Cat:'destops-computers' | 'máy Dell đồng bộ văn phòng Core i5 ( 4 n'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   42. [lazada] Cat:'destops-computers' | 'Bộ máy tính văn phòng G31 giá rẻ dùng họ'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   43. [lazada] Cat:'destops-computers' | '[SALE OFF 30%] Bộ máy tính để bàn All in'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   44. [lazada] Cat:'destops-computers' | '[Trả góp 0%]Máy tính chơi game i5-3470S '
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   45. [lazada] Cat:'destops-computers' | 'Lenovo Thinkstation P300 Sff High-Perfor'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   46. [lazada] Cat:'destops-computers' | 'Máy tính Dell optiplex 990 Core i7 - Ram'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   47. [lazada] Cat:'destops-computers' | 'Máy bộ Dell OPTILEX 7040 nhỏ gọn, Ram 8G'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   48. [lazada] Cat:'destops-computers' | 'MÁY TÍNH ĐỂ BÀN VSP ALL IN ONE VA241-610'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   49. [lazada] Cat:'destops-computers' | 'Bộ máy tính Mới 100%...Core i5 9400F + R'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -   50. [lazada] Cat:'destops-computers' | 'Máy tính all in one Nec'
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:37:53 +07] {subprocess.py:93} INFO -  Category Mapping Summary:
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -  Standardization Summary:
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -   Total products: 937,940
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -   Categories mapped: 23
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -   Top categories:
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -   ⚠️ OTHER: 327,512 (34.9%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Smartphones: 112,099 (12.0%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Laptops: 105,793 (11.3%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Headphones: 87,490 (9.3%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Smart TVs: 63,060 (6.7%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Smartwatches: 50,039 (5.3%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Cameras: 44,541 (4.7%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Tablets: 38,975 (4.2%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Speakers: 35,631 (3.8%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Monitors: 34,022 (3.6%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Desktop: 15,485 (1.7%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Storage: 13,974 (1.5%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Keyboard: 2,797 (0.3%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Mouse: 2,322 (0.2%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -     Printers: 1,925 (0.2%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -   ... and 8 more categories
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - [RESULT] OTHER classification: 327,512 (34.9%)
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - [WARNING] OTHER rate is high (>15%). Check unmapped categories above.
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO -  STEP 2.8: DATA STANDARDIZATION
-[2025-12-08, 12:38:16 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO -   By source_platform_std:
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO -     lazada: 424,788
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO -     tiki: 511,202
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO -     unknown: 1,950
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO -  STEP 2.9: IDENTIFIER SYNCHRONIZATION
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:27 +07] {subprocess.py:93} INFO -  Identifier Sync Summary:
-[2025-12-08, 12:38:40 +07] {subprocess.py:93} INFO -   Distinct global_product_id_synced: 78,520
-[2025-12-08, 12:38:40 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:38:40 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:38:40 +07] {subprocess.py:93} INFO -  STEP 3: DEDUPLICATION
-[2025-12-08, 12:38:40 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO -  Deduplicated data:
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO -    Key column: global_product_id_synced
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO -    Original: 937,940 records
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO -    After dedup: 78,520 records
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO -    Removed: 859,420 duplicates
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO -  STEP 4: DATA VALIDATION
-[2025-12-08, 12:39:02 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO -  Data Quality Report:
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO -   Total records: 78,520
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO -   Valid records: 77,459 (98.6%)
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO -   Missing product_name: 0
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO -   Missing/invalid price: 1,020
-[2025-12-08, 12:40:21 +07] {subprocess.py:93} INFO -   Missing brand: 0
-[2025-12-08, 12:40:26 +07] {subprocess.py:93} INFO - [INFO] DWH star schema ensured.
-[2025-12-08, 12:40:26 +07] {subprocess.py:93} INFO - [INFO] Loading dim_date...
-[2025-12-08, 12:40:44 +07] {subprocess.py:93} INFO -   ✅ Loaded/ensured 25 dates
-[2025-12-08, 12:40:45 +07] {subprocess.py:93} INFO - [INFO] Loading dim_platform...
-[2025-12-08, 12:41:04 +07] {subprocess.py:93} INFO -   ✅ Loaded/ensured 3 platforms
-[2025-12-08, 12:41:04 +07] {subprocess.py:93} INFO - [INFO] Loading dim_category...
-[2025-12-08, 12:41:36 +07] {subprocess.py:93} INFO -   ✅ Loaded/ensured 23 categories
-[2025-12-08, 12:41:36 +07] {subprocess.py:93} INFO - [INFO] Loading dim_brand...
-[2025-12-08, 12:41:54 +07] {subprocess.py:93} INFO -   ✅ Loaded/ensured 1313 brands
-[2025-12-08, 12:41:54 +07] {subprocess.py:93} INFO - [INFO] Loading dim_product...
-[2025-12-08, 12:42:08 +07] {subprocess.py:93} INFO - [INFO] Processing 78520 products in batches...
-[2025-12-08, 12:42:36 +07] {subprocess.py:93} INFO - [INFO] Collected 78520 product rows, now inserting in batches...
-[2025-12-08, 12:42:44 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 5000/78520 products (6.4%)
-[2025-12-08, 12:42:54 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 10000/78520 products (12.7%)
-[2025-12-08, 12:42:58 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 15000/78520 products (19.1%)
-[2025-12-08, 12:43:07 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 20000/78520 products (25.5%)
-[2025-12-08, 12:43:15 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 25000/78520 products (31.8%)
-[2025-12-08, 12:43:21 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 30000/78520 products (38.2%)
-[2025-12-08, 12:43:33 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 35000/78520 products (44.6%)
-[2025-12-08, 12:43:55 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 40000/78520 products (50.9%)
-[2025-12-08, 12:44:07 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 45000/78520 products (57.3%)
-[2025-12-08, 12:44:18 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 50000/78520 products (63.7%)
-[2025-12-08, 12:44:29 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 55000/78520 products (70.0%)
-[2025-12-08, 12:44:49 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 60000/78520 products (76.4%)
-[2025-12-08, 12:44:59 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 65000/78520 products (82.8%)
-[2025-12-08, 12:45:06 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 70000/78520 products (89.1%)
-[2025-12-08, 12:45:13 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 75000/78520 products (95.5%)
-[2025-12-08, 12:45:17 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 78520/78520 products (100.0%)
-[2025-12-08, 12:45:17 +07] {subprocess.py:93} INFO -   ✅ Loaded/ensured 78520 products total
-[2025-12-08, 12:45:18 +07] {subprocess.py:93} INFO - [INFO] Loading fact_product_daily...
-[2025-12-08, 12:45:53 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 5000/78068 rows...
-[2025-12-08, 12:46:05 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 10000/78068 rows...
-[2025-12-08, 12:46:10 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 15000/78068 rows...
-[2025-12-08, 12:46:18 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 20000/78068 rows...
-[2025-12-08, 12:46:29 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 25000/78068 rows...
-[2025-12-08, 12:46:42 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 30000/78068 rows...
-[2025-12-08, 12:46:53 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 35000/78068 rows...
-[2025-12-08, 12:47:05 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 40000/78068 rows...
-[2025-12-08, 12:47:11 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 45000/78068 rows...
-[2025-12-08, 12:47:16 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 50000/78068 rows...
-[2025-12-08, 12:47:21 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 55000/78068 rows...
-[2025-12-08, 12:47:30 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 60000/78068 rows...
-[2025-12-08, 12:47:38 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 65000/78068 rows...
-[2025-12-08, 12:47:42 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 70000/78068 rows...
-[2025-12-08, 12:47:52 +07] {subprocess.py:93} INFO -   [PROGRESS] Loaded 75000/78068 rows...
-[2025-12-08, 12:47:57 +07] {subprocess.py:93} INFO -   ✅ Loaded/updated 78068 rows into fact_product_daily
-[2025-12-08, 12:47:57 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:47:57 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:47:57 +07] {subprocess.py:93} INFO -  STEP 7: SAVING CLEANED DATA
-[2025-12-08, 12:47:57 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:47:57 +07] {subprocess.py:93} INFO - [INFO] Writing to local: /tmp/cleaned_data/cleaned_20251208_054757
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -  Saved cleaned data locally:
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -    Path: /tmp/cleaned_data/cleaned_20251208_054757
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -    Format: Parquet
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -    Total records: 78,520
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -  Uploaded 0 files to MinIO: s3a://cleaned-data/cleaned_20251208_054757/
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -  STARTING REVIEW DATA PIPELINE
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -  STEP 8: LOADING REVIEW DATA (LOCAL + MINIO)
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO - [INFO] Loading from /app/data/outputs/tiki_reviews
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -    Found 181 JSON/JSONL files
-[2025-12-08, 12:48:42 +07] {subprocess.py:93} INFO -    Sample files: ['/app/data/outputs/tiki_reviews/date=2025-11-12/tiki_reviews_20251112_015150.jsonl', '/app/data/outputs/tiki_reviews/date=2025-11-12/tiki_reviews_20251112_205613.jsonl', '/app/data/outputs/tiki_reviews/date=2025-11-12/tiki_reviews_20251112_210718.jsonl']
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -    ✓ Loaded 113,201 reviews from tiki_reviews
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - [INFO] Loading from /app/data/outputs/lazada_reviews
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -    Found 6 JSON/JSONL files
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -    Sample files: ['/app/data/outputs/lazada_reviews/date=2025-11-11/lazada_reviews_20251111_220021.jsonl', '/app/data/outputs/lazada_reviews/date=2025-11-13/lazada_reviews_20251113_232909.jsonl', '/app/data/outputs/lazada_reviews/date=2025-11-14/lazada_reviews_20251114_031405.jsonl']
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -    ✓ Loaded 1,950 reviews from lazada_reviews
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - [INFO] Normalizing schemas for union...
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -   DataFrame 0 columns: ['content', 'crawl_date', 'helpful_count', 'images', 'product_id', 'rating', 'review_id', 'review_time', 'reviewer_name', 'source', 'title', 'source_platform']
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - root
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- content: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- crawl_date: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- helpful_count: long (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- images: array (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |    |-- element: struct (containsNull = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |    |    |-- full_path: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |    |    |-- id: long (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |    |    |-- status: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- product_id: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- rating: long (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- review_id: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- review_time: long (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- reviewer_name: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- source: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- title: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- source_platform: string (nullable = false)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -   DataFrame 1 columns: ['crawl_timestamp', 'helpful_count', 'product_id', 'product_name', 'product_url', 'rating', 'review_date', 'review_id', 'review_text', 'reviewer_name', 'sku_info', 'source_platform']
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - root
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- crawl_timestamp: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- helpful_count: long (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- product_id: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- product_name: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- product_url: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- rating: long (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- review_date: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- review_id: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- review_text: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- reviewer_name: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- sku_info: string (nullable = true)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO -  |-- source_platform: string (nullable = false)
-[2025-12-08, 12:48:49 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO -  ✓ Total loaded: 115,151 raw reviews
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO -    Final schema: ['review_id', 'product_id', 'reviewer_name', 'rating', 'review_text', 'review_date', 'helpful_count', 'verified_purchase', 'source_platform', 'extra_data', 'crawl_date']
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO -  STEP 8.1: CLEANING REVIEW DATA
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO -  ✓ Cleaned 115,151 reviews
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO -  STEP 8.1.5: STANDARDIZING REVIEW DATA
-[2025-12-08, 12:48:51 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:53 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:53 +07] {subprocess.py:93} INFO -  ✓ Standardized 115,151 reviews
-[2025-12-08, 12:48:53 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:53 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:53 +07] {subprocess.py:93} INFO -  STEP 8.1.7: SYNCHRONIZING REVIEW IDENTIFIERS
-[2025-12-08, 12:48:53 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:55 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:55 +07] {subprocess.py:93} INFO -  ✓ Synchronized identifiers for 115,151 reviews
-[2025-12-08, 12:48:55 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:48:55 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:48:55 +07] {subprocess.py:93} INFO -  STEP 8.1.8: DEDUPLICATING REVIEW DATA
-[2025-12-08, 12:48:55 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO -  ✓ Deduplication Summary:
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO -    Before: 115,151
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO -    After: 103,675
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO -    Duplicates removed: 11,476 (9.97%)
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO -  STEP 8.1.9: VALIDATING REVIEW DATA
-[2025-12-08, 12:49:00 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO -  ✓ Validation Summary:
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO -    Total reviews: 103,675
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO -    Valid reviews: 103,313 (99.65%)
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO -    Invalid reviews: 362
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO -  STEP 8.2: SENTIMENT ANALYSIS
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:05 +07] {subprocess.py:93} INFO -  ✓ Sentiment Distribution:
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO -    NEGATIVE  :        887
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO -    NEUTRAL   :     94,281
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO -    POSITIVE  :      8,507
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO -  STEP 8.3: ADDING TIME FEATURES
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO -  ✓ Added time features
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO -  STEP 8.4: LOADING REVIEW DIMENSIONS TO DWH
-[2025-12-08, 12:49:12 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:50:27 +07] {subprocess.py:93} INFO -  ✓ Loaded 66042 reviewers to dwh.dim_reviewer
-[2025-12-08, 12:50:27 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:50:27 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:50:27 +07] {subprocess.py:93} INFO -  STEP 8.5: AGGREGATING REVIEWS DAILY
-[2025-12-08, 12:50:27 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:50:29 +07] {subprocess.py:93} INFO -  ✓ Generated daily aggregates for 5,549 product-date combinations
-[2025-12-08, 12:50:31 +07] {subprocess.py:93} INFO - [INFO] Loading dwh.fact_review (detail)...
-[2025-12-08, 12:53:45 +07] {subprocess.py:93} INFO -   ✅ Loaded/updated 103675 rows into dwh.fact_review
-[2025-12-08, 12:53:45 +07] {subprocess.py:93} INFO - [INFO] Loading dwh.fact_review_daily (aggregate)...
-[2025-12-08, 12:54:04 +07] {subprocess.py:93} INFO -   ✅ Loaded/updated 5549 rows into dwh.fact_review_daily
-[2025-12-08, 12:54:04 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:54:04 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:54:04 +07] {subprocess.py:93} INFO -  STEP 8.5: SAVING REVIEW RESULTS
-[2025-12-08, 12:54:04 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:54:04 +07] {subprocess.py:93} INFO - [INFO] Writing cleaned reviews to /tmp/reviews_processed_20251208_055404/cleaned_reviews
-[2025-12-08, 12:54:08 +07] {subprocess.py:93} INFO - [INFO] Writing aggregates to /tmp/reviews_processed_20251208_055404/reviews_by_product
-[2025-12-08, 12:54:14 +07] {subprocess.py:93} INFO -  ✓ Uploaded 0 files to MinIO: s3a://processed-reviews/reviews_20251208_055404/
-[2025-12-08, 12:54:14 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:54:14 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:54:14 +07] {subprocess.py:93} INFO -  PIPELINE COMPLETED SUCCESSFULLY! (STAR DWH + MinIO + Reviews)
-[2025-12-08, 12:54:14 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 12:54:15 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 12:54:15 +07] {subprocess.py:93} INFO -  Spark session closed
-[2025-12-08, 12:54:16 +07] {subprocess.py:97} INFO - Command exited with return code 0
+2025-12-08 16:33:23,081 INFO app.api.v1.dss: ▶ /dss/price/run START user_id=1 request={'from_date': datetime.date(2025, 12, 8), 'to_date': datetime.date(2025, 12, 8), 'platforms': ['tiki', 'lazada'], 'categories': ['1', '2'], 'product_keys': ['string'], 'page': 1, 'page_size': 50, 'scope_mode': <PriceScopeMode.BY_CATEGORY: 'by_category'>, 'top_n': 50, 'max_discount_pct': 0.15, 'min_margin_pct': 0.1, 'min_confidence': 0.7, 'min_price_change_pct': 0.02, 'ai_mode': 'full'}
+2025-12-08 16:33:23,081 INFO app.api.v1.dss: DEBUG_API: request.min_price_change_pct = 0.02 (type: <class 'float'>)
+2025-12-08 16:33:23,081 INFO app.services.dss_service: Running Price Prediction DSS: {'from_date': datetime.date(2025, 12, 8), 'to_date': datetime.date(2025, 12, 8), 'platforms': ['tiki', 'lazada'], 'categories': ['1', '2'], 'product_keys': ['string'], 'page': 1, 'page_size': 50, 'scope_mode': <PriceScopeMode.BY_CATEGORY: 'by_category'>, 'top_n': 50, 'max_discount_pct': 0.15, 'min_margin_pct': 0.1, 'min_confidence': 0.7, 'min_price_change_pct': 0.02, 'ai_mode': 'full'}
+2025-12-08 16:33:23,142 INFO app.services.dss_service: Cache MISS for Price DSS: dss_price:97ba359b7c35
+2025-12-08 16:33:28,692 INFO app.services.dss_service: Created analysis session 195 for price prediction (AI status: pending)
+2025-12-08 16:33:28,692 INFO app.services.dss_service: 🚀 Started async AI generation for session 195
+2025-12-08 16:33:28,692 INFO app.api.v1.dss: ✅ /dss/price/run DONE in 5.61s (session_id=195)
+2025-12-08 16:33:28,693 INFO app.services.dss_service: [AI_ASYNC] Starting AI generation for session 195
+2025-12-08 16:33:30,571 INFO app.services.ai_summarizer: [AI_DEBUG] scenario=price_prediction, kpi_keys=['num_products', 'num_with_recommendation', 'current_revenue', 'projected_revenue', 'expected_revenue_uplift_pct', 'avg_confidence'], table_rows=10
+2025-12-08 16:33:30,572 INFO app.services.ai_summarizer: [AI_DEBUG] first_row={"product_key": "tiki_263675862", "product_name": "Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế", "platform": "tiki", "category_name": "Mobile Phones", "current_price": 3199000.0, "recommended_price": 4990544.66, "predicted_price": 4990544.66, "price_diff": 1791544.66, "price_change_pct": 0.5600327164738981, "current_revenue": 0.0, "projected_revenue": 0.0, "expected_revenue_change_pct": 0.5600327164738981, "confidence": 0.9983376824444649, "current_orders": 0, "avg_rating": 4.0, "total_reviews": 4}
+2025-12-08 16:33:30,572 INFO app.services.ai_summarizer: Trying Google Gemini for AI summarization...
+2025-12-08 16:33:30,808 WARNING app.services.ai_summarizer: ⚠️  Google Gemini rate limit (attempt 1/1): 429 You exceeded your current qquota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current
+2025-12-08 16:33:30,808 INFO app.services.ai_summarizer: Trying OpenAI for AI summarization...
+2025-12-08 16:33:30,808 INFO app.services.ai_summarizer: OpenAI generate with model=gpt-4o-mini
+2025-12-08 16:33:43,064 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-08 16:33:43,078 INFO app.services.ai_summarizer: ✅ AI summarization successful using OpenAI
+2025-12-08 16:33:43,078 INFO app.services.dss_service: [AI_ASYNC] ✅ AI generation completed in 12.51s using models/gemini-pro-latest  
+INFO:     127.0.0.1:62307 - "POST /api/v1/dss/price/run?user_id=1 HTTP/1.1" 200 OK
+2025-12-08 16:33:43,255 INFO app.services.dss_service: [AI_ASYNC] Session 195 updated with AI results
 
 
-
-[2025-12-08, 13:18:17 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:18:17 +07] {subprocess.py:93} INFO -  STEP 1: LOADING RAW DATA
-[2025-12-08, 13:18:17 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO - [INFO] Found 603 local JSONL files
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_headphones_20251110_224447.jsonl
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_headphones_20251110_233703.jsonl
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_laptops_20251110_224447.jsonl
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_laptops_20251110_233324.jsonl
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO -    /app/data/outputs/lazada/date=2025-11-10/lazada_smartphones_20251110_224447.jsonl
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO -    ... and 598 more
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:18:18 +07] {subprocess.py:93} INFO - [INFO] Attempting to load with schema inference...
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  Loaded 942,885 raw records
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -    Schema: 28 columns
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO - root
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- brand: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- category: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- content: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- crawl_date: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- crawl_timestamp: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- discount_percent: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- helpful_count: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- image_urls: array (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |    |-- element: string (containsNull = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- images: array (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |    |-- element: struct (containsNull = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |    |    |-- full_path: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |    |    |-- id: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |    |    |-- status: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- page_number: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- price_current: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- price_original: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- product_id: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- product_name: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- product_url: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- rating: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- rating_avg: double (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- review_count: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- review_date: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- review_id: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- review_text: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- review_time: long (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- reviewer_name: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- seller_name: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- sku_info: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- source: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- title: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  |-- url: string (nullable = true)
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO -  STEP 2: CLEANING & TRANSFORMING DATA
-[2025-12-08, 13:19:10 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO -  Cleaned 942,885 records
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO -  Columns used: ['global_product_id', 'source_platform', 'product_id', 'product_name', 'brand_name', 'brand_std', 'category', 'price_current', 'price_original', 'discount_percent', 'review_count', 'rating', 'seller_name', 'url', 'crawl_date', 'data_quality_score']
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO -  STEP 2.5: CATEGORY MAPPING (using mapping table)
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:19:31 +07] {subprocess.py:93} INFO - [DEBUG] Sample raw categories (first 20):
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   1. Category: 'cameras' | Product: 'Webcam Full Hd 1080P 4K Usb Web Camera Pc Có Micro'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   2. Category: 'cameras' | Product: 'Camera Không Dây Thông Minh 360 Độ IP Wifi V380Pro'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   3. Category: 'cameras' | Product: 'Camera Wifi Mini W8 Siêu Nhỏ – Ghi Hình Full HD, K'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   4. Category: 'cameras' | Product: 'Camera ip wifi Yoosee MINI X5 để bàn 3MP , Nhỏ Gọn'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   5. Category: 'cameras' | Product: '[HOÀN TIỀN] Camera IP/Wifi Imou C22EP - Phát Hiện '
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   6. Category: 'cameras' | Product: '[New]Yoosee Camera Wifi Ngoài Trời 3Q015 2 Mắt 3 K'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   7. Category: 'cameras' | Product: 'Xiaovv Wifi Ptz Cctv Camera for Home Dual Lens Dua'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   8. Category: 'cameras' | Product: 'Camera Hành Trình Hikvision C200S/C200S 2CH Full H'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   9. Category: 'cameras' | Product: 'Camera Không Dây Mini, Camera Mini Máy Quay Phim M'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   10. Category: 'cameras' | Product: 'Remote Control 360 Degree Panoramic Camera 9pro'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   11. Category: 'cameras' | Product: 'Camera wifi yoosee 2 mắt 5.0mpx - Góc rộng - Quay '
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   12. Category: 'cameras' | Product: 'Camera Imou ZOOM 12X Cruiser Z S7DP Phân Giải 5MP,'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   13. Category: 'cameras' | Product: 'Máy Ảnh Kỹ Thuật Số Chống Nước, Thân Máy Bằng Kim '
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   14. Category: 'cameras' | Product: 'Camera Wifi IMOU BULLET 2E F52FP/ F42FP /F32FP/ F2'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   15. Category: 'cameras' | Product: 'Máy Ảnh Kỹ Thuật Số Mini Cổ Điển CHUZHAO, Quay Vid'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   16. Category: 'cameras' | Product: 'Insta360 | Action 8K Panoramic Camera'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   17. Category: 'cameras' | Product: 'Camera IP CCTV TP-Link VIGI C340 4MP Ngoài Trời, P'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   18. Category: 'cameras' | Product: 'LazMall Ẩn Nấp Camera Mini A9 Nhật Bản [NEW] Giám '
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   19. Category: 'cameras' | Product: 'SONOFF CAM Pan-Tilt 2 Smart Indoor Home Security C'
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO -   20. Category: 'cameras' | Product: 'Camera xài sim 4G 2 màn hình Vstarcam BG66DR Năng '
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO - [INFO] Total category mappings configured: 130
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO - [INFO] Unique category patterns: 130
-[2025-12-08, 13:19:46 +07] {subprocess.py:93} INFO - [INFO] Including 27 plural variants for Lazada compatibility
-[2025-12-08, 13:19:47 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:19:47 +07] {subprocess.py:93} INFO - [DEBUG] Before mapping - checking for potential matches:
-[2025-12-08, 13:19:47 +07] {subprocess.py:93} INFO -   Found 1000/1000 categories ending in 's' (likely plural)
-[2025-12-08, 13:19:47 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:19:47 +07] {subprocess.py:93} INFO - [DEBUG] Analyzing unmapped categories (will become OTHER)...
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO - [DEBUG] Top 30 unmapped category patterns by frequency:
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    1. 'NULL' → 113,596 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    2. 'dồng hồ thông minh' → 35,091 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    3. 'máy in' → 34,232 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    4. 'máy ảnh' → 32,109 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    5. 'chuột máy tính' → 28,890 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    6. 'màn hình máy tính' → 24,344 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    7. 'bàn phím máy tính' → 21,175 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    8. 'điện thoại' → 17,978 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -    9. 'tvs' → 10,908 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -   10. 'destops-computers' → 7,600 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO -   11. 'máy tính bảng' → 3,106 products
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:10 +07] {subprocess.py:93} INFO - [DEBUG] OTHER category distribution by platform:
-[2025-12-08, 13:20:30 +07] {subprocess.py:93} INFO -   tiki: 266,291 (80.9% of OTHER)
-[2025-12-08, 13:20:30 +07] {subprocess.py:93} INFO -   tiki_mass_crawl: 43,836 (13.3% of OTHER)
-[2025-12-08, 13:20:30 +07] {subprocess.py:93} INFO -   lazada: 18,508 (5.6% of OTHER)
-[2025-12-08, 13:20:30 +07] {subprocess.py:93} INFO -   None: 395 (0.1% of OTHER)
-[2025-12-08, 13:20:30 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:30 +07] {subprocess.py:93} INFO - [DEBUG] Sample unmapped products (first 50):
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    1. [lazada] Cat:'destops-computers' | '[HCM]Máy tính để bàn G2030 - Ram 4G'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    2. [lazada] Cat:'destops-computers' | 'Trọn bộ máy tính học online, xem phim, đ'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    3. [lazada] Cat:'destops-computers' | 'MSI GTX 1050ti 4G 1fan đẹp BH 1 tháng'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    4. [lazada] Cat:'destops-computers' | '[All in one] Máy tính All in one Lenov C'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    5. [lazada] Cat:'destops-computers' | '[HCM]Máy tính bàn G2030- Ram 4gb'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    6. [lazada] Cat:'destops-computers' | 'Máy tính All in one 15.6 ci3 - nhỏ gọn -'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    7. [lazada] Cat:'destops-computers' | 'Core I5 Computer Set for Online Gaming, '
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    8. [lazada] Cat:'destops-computers' | 'Máy Bộ HP EliteDesk 800 G3 Mini'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -    9. [lazada] Cat:'destops-computers' | 'Trọn bộ máy tính văn phòng DELL 3050 Cor'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   10. [lazada] Cat:'destops-computers' | 'Bộ máy tính văn phòng, chơi game giá rẻ '
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   11. [lazada] Cat:'destops-computers' | 'Intel NUC 7i7BNH i7 RAM 8GB- bật 24/7- G'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   12. [lazada] Cat:'destops-computers' | 'Máy chủ Dell PowerEDGE T310'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   13. [lazada] Cat:'destops-computers' | 'máy tính de bàn all in one Nec 22in'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   14. [lazada] Cat:'destops-computers' | 'Máy bộ Dell Vostro 3671MT Core i3 i5 i7 '
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   15. [lazada] Cat:'destops-computers' | 'sale máy để bàn all in one Lenovo c470'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   16. [lazada] Cat:'destops-computers' | '[HCM][Trả góp 0%]Máy tính chơi game LMHT'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   17. [lazada] Cat:'destops-computers' | 'máy Dell đồng bộ văn phòng Core i5, Ram '
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   18. [lazada] Cat:'destops-computers' | 'Bộ Máy tính văn phòng Giá Rẻ - HP Pro 63'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   19. [lazada] Cat:'destops-computers' | 'Barebone IBM/ Intel'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   20. [lazada] Cat:'destops-computers' | 'Máy Tính Siêu Nhỏ Ultra Mini T9 PLUS - I'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   21. [lazada] Cat:'destops-computers' | '[HCM]Máy tính để bàn A4-6300K Ram 8GB VG'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   22. [lazada] Cat:'destops-computers' | 'Dell 3050 SFF i3 7100 8G 256G A1'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   23. [lazada] Cat:'destops-computers' | 'Máy tính mini - HP ProDesk 600 G4 Mini ('
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   24. [lazada] Cat:'destops-computers' | 'Máy tính để bàn Tyni Dell optiplex 3050 '
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   25. [lazada] Cat:'destops-computers' | 'máy tính để bàn all in one Toshiba dynab'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   26. [lazada] Cat:'destops-computers' | 'Trọn bộ máy tính học online, xem phim, đ'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   27. [lazada] Cat:'destops-computers' | '[Xả Hàng Tồn] Bộ máy tính chơi game liên'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   28. [lazada] Cat:'destops-computers' | '[Trả góp 0%]Máy tính đồng bộ Fujitsu D58'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   29. [lazada] Cat:'destops-computers' | '[HCM]Máy tính để bàn chơi game core i5 2'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   30. [lazada] Cat:'destops-computers' | 'Server - Máy chủ IBM X3650 M4 chạy 2 CPU'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   31. [lazada] Cat:'destops-computers' | 'Máy tính mini HP Elitedesk 800 G3 65W CP'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   32. [lazada] Cat:'destops-computers' | 'Trọn bộ cây máy tính để bàn Core I7 DELL'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   33. [lazada] Cat:'destops-computers' | 'Tủ lạnh 2 ngăn 118 lít thương hiệu làm l'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   34. [lazada] Cat:'destops-computers' | 'Bộ máy tính văn phòng H81 G3250 /4GB /25'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   35. [lazada] Cat:'destops-computers' | 'FULL Bộ Máy Tính Để Bàn Chơi Game core i'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   36. [lazada] Cat:'destops-computers' | 'Bộ máy tính CORE i5 Mạnh Siêu nhanh chơi'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   37. [lazada] Cat:'destops-computers' | '[HCM][Trả góp 0%]Máy tính chơi game i5-3'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   38. [lazada] Cat:'destops-computers' | '[HCM][Trả góp 0%]Máy tính chơi game LMHT'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   39. [lazada] Cat:'destops-computers' | 'Combo main h61, ram , chip core i, ổ, ng'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   40. [lazada] Cat:'destops-computers' | 'Hp Z2 Mini G4 Workstation Graphics Works'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   41. [lazada] Cat:'destops-computers' | 'máy Dell đồng bộ văn phòng Core i5 ( 4 n'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   42. [lazada] Cat:'destops-computers' | 'Bộ máy tính văn phòng G31 giá rẻ dùng họ'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   43. [lazada] Cat:'destops-computers' | '[SALE OFF 30%] Bộ máy tính để bàn All in'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   44. [lazada] Cat:'destops-computers' | '[Trả góp 0%]Máy tính chơi game i5-3470S '
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   45. [lazada] Cat:'destops-computers' | 'Lenovo Thinkstation P300 Sff High-Perfor'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   46. [lazada] Cat:'destops-computers' | 'Máy tính Dell optiplex 990 Core i7 - Ram'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   47. [lazada] Cat:'destops-computers' | 'Máy bộ Dell OPTILEX 7040 nhỏ gọn, Ram 8G'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   48. [lazada] Cat:'destops-computers' | 'MÁY TÍNH ĐỂ BÀN VSP ALL IN ONE VA241-610'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   49. [lazada] Cat:'destops-computers' | 'Bộ máy tính Mới 100%...Core i5 9400F + R'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -   50. [lazada] Cat:'destops-computers' | 'Máy tính all in one Nec'
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:32 +07] {subprocess.py:93} INFO -  Category Mapping Summary:
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -   Total products: 942,886
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -   Categories mapped: 23
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -   Top categories:
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -   ⚠️ OTHER: 329,030 (34.9%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Smartphones: 113,248 (12.0%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Laptops: 107,852 (11.4%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Headphones: 87,502 (9.3%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Smart TVs: 63,065 (6.7%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Smartwatches: 50,075 (5.3%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Cameras: 44,550 (4.7%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Tablets: 39,091 (4.1%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Speakers: 35,645 (3.8%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Monitors: 34,023 (3.6%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Desktop: 15,495 (1.6%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Storage: 13,985 (1.5%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Keyboard: 2,800 (0.3%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Mouse: 2,322 (0.2%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -     Printers: 1,925 (0.2%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -   ... and 8 more categories
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - [RESULT] OTHER classification: 329,030 (34.9%)
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - [WARNING] OTHER rate is high (>15%). Check unmapped categories above.
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -  STEP 2.8: DATA STANDARDIZATION
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:20:55 +07] {subprocess.py:93} INFO -  Standardization Summary:
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO -   By source_platform_std:
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO -     lazada: 424,788
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO -     tiki: 516,148
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO -     unknown: 1,950
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO -  STEP 2.9: IDENTIFIER SYNCHRONIZATION
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:21:07 +07] {subprocess.py:93} INFO -  Identifier Sync Summary:
-[2025-12-08, 13:21:20 +07] {subprocess.py:93} INFO -   Distinct global_product_id_synced: 78,540
-[2025-12-08, 13:21:20 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:21:20 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:21:20 +07] {subprocess.py:93} INFO -  STEP 3: DEDUPLICATION
-[2025-12-08, 13:21:20 +07] {subprocess.py:93} INFO - ============================================================
-[2025-12-08, 13:21:20 +07] {subprocess.py:93} INFO - [INFO] Deduplicating by ['global_product_id_synced', 'snapshot_date'] (Preserving History)
-[2025-12-08, 13:21:46 +07] {subprocess.py:93} INFO -  Deduplicated data:
-[2025-12-08, 13:21:46 +07] {subprocess.py:93} INFO -  Error during deduplication: name 'key_col' is not defined
-[2025-12-08, 13:21:46 +07] {subprocess.py:93} INFO -  Failed to deduplicate data
-[2025-12-08, 13:21:46 +07] {subprocess.py:93} INFO - 
-[2025-12-08, 13:21:46 +07] {subprocess.py:93} INFO -  Spark session closed
-[2025-12-08, 13:21:46 +07] {subprocess.py:97} INFO - Command exited with return code 1
+{
+  "scenario": "price_prediction",
+  "filters": {
+    "from_date": "2025-12-08",
+    "to_date": "2025-12-08",
+    "platforms": [
+      "tiki",
+      "lazada"
+    ],
+    "categories": [
+      "1",
+      "2"
+    ],
+    "scope_mode": "by_category",
+    "product_keys": [
+      "string"
+    ]
+  },
+  "kpi_summary": {
+    "num_products": 30,
+    "num_with_recommendation": 30,
+    "current_revenue": 0,
+    "projected_revenue": 0,
+    "expected_revenue_uplift_pct": 0,
+    "avg_confidence": 0.9673641785383766
+  },
+  "table_data": [
+    {
+      "product_key": "tiki_263675862",
+      "product_name": "Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 3199000,
+      "recommended_price": 4990544.66,
+      "predicted_price": 4990544.66,
+      "price_diff": 1791544.66,
+      "price_change_pct": 0.5600327164738981,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.5600327164738981,
+      "confidence": 0.9983376824444649,
+      "current_orders": 0,
+      "avg_rating": 4,
+      "total_reviews": 4
+    },
+    {
+      "product_key": "tiki_17921443",
+      "product_name": "Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17925120",
+      "product_name": "Ốp lưng cho điện thoại Samsung Galaxy A50 CB 27 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921509",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 5 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17920150",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 75 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.7,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17920485",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 Plus CB 41 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17919959",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 Plus CB 25 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.7,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921863",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 58 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.1,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921584",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 19 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921955",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 29 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921247",
+      "product_name": "Ốp lưng cho điện thoại Iphone 5s CB 21 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17920365",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 55 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17922116",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 78 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921722",
+      "product_name": "Ốp lưng cho điện thoại Iphone 8 mẫu CB 40 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921351",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 15 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 44644.66,
+      "predicted_price": 44644.66,
+      "price_diff": 9644.66,
+      "price_change_pct": 0.2755617142857143,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.2755617142857143,
+      "confidence": 0.9436187888988291,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278833657",
+      "product_name": "Điện Thoại Samsung Galaxy A07 4GB/128GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 2718000,
+      "recommended_price": 3391259.26,
+      "predicted_price": 3391259.26,
+      "price_diff": 673259.26,
+      "price_change_pct": 0.2477039220014717,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.2477039220014717,
+      "confidence": 0.9950738741219095,
+      "current_orders": 0,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_273412211",
+      "product_name": "Điện thoại Xiaomi Redmi 13C (4+128GB) | 6.74\" 90Hz| Media Tek Helio G85| 5000mAh - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 2699000,
+      "recommended_price": 3288770.69,
+      "predicted_price": 3288770.69,
+      "price_diff": 589770.69,
+      "price_change_pct": 0.2185145201926639,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.2185145201926639,
+      "confidence": 0.9966499093313191,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278820676",
+      "product_name": "Điện Thoại Xiaomi 15T Pro 5G 12GB/512GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 16429000,
+      "recommended_price": 19485887.5,
+      "predicted_price": 19485887.5,
+      "price_diff": 3056887.5,
+      "price_change_pct": 0.18606655913324,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.18606655913324,
+      "confidence": 0.9988304612761415,
+      "current_orders": 0,
+      "avg_rating": 3.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_273373420",
+      "product_name": "Điện thoại Xiaomi Redmi 13C (4GB/128GB) - Hàng chính hãng - Bảo hành 18 tháng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 2699000,
+      "recommended_price": 3088700.06,
+      "predicted_price": 3088700.06,
+      "price_diff": 389700.06,
+      "price_change_pct": 0.1443868321600593,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.1443868321600593,
+      "confidence": 0.9954007738776681,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 2
+    },
+    {
+      "product_key": "tiki_278843336",
+      "product_name": "Điện Thoại Xiaomi POCO M6 8GB/256GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 3979000,
+      "recommended_price": 4251269.07,
+      "predicted_price": 4251269.07,
+      "price_diff": 272269.07,
+      "price_change_pct": 0.0684265066599648,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0684265066599648,
+      "confidence": 0.9959248897882627,
+      "current_orders": 0,
+      "avg_rating": 3.8,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278600678",
+      "product_name": "Điện Thoại Samsung Galaxy S25 FE (8/128GB), Concert Camera 50MP, Pin bền bỉ, Trợ thủ AI thông minh - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 13490000,
+      "recommended_price": 14301918.27,
+      "predicted_price": 14301918.27,
+      "price_diff": 811918.27,
+      "price_change_pct": 0.0601866767976279,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0601866767976279,
+      "confidence": 0.9959245739697546,
+      "current_orders": 0,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_52977720",
+      "product_name": "Ốp lưng in cho Realme 2 Mẫu Chuột Che Mắt",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 42000,
+      "recommended_price": 44454.8,
+      "predicted_price": 44454.8,
+      "price_diff": 2454.8,
+      "price_change_pct": 0.05844761904761905,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.05844761904761905,
+      "confidence": 0.9545277450354067,
+      "current_orders": 0,
+      "avg_rating": 4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_52977731",
+      "product_name": "Ốp lưng in cho Realme 3 Mẫu Chuột Che Mắt",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 42000,
+      "recommended_price": 44454.8,
+      "predicted_price": 44454.8,
+      "price_diff": 2454.8,
+      "price_change_pct": 0.05844761904761905,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.05844761904761905,
+      "confidence": 0.9545277450354067,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278892326",
+      "product_name": "USB Bluetooth v5.4 Baseus BA04 kết nối 20m truyền âm thanh không dây cho laptop, smartphone, tablet - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 231830,
+      "recommended_price": 245214.83,
+      "predicted_price": 245214.83,
+      "price_diff": 13384.83,
+      "price_change_pct": 0.057735538972523,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.057735538972523,
+      "confidence": 0.9589566014420906,
+      "current_orders": 0,
+      "avg_rating": 3.7,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278580633",
+      "product_name": "Điện thoại Xiaomi Redmi 15 (8GB/128GB) - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 4519000,
+      "recommended_price": 4763315.62,
+      "predicted_price": 4763315.62,
+      "price_diff": 244315.62,
+      "price_change_pct": 0.0540640894003098,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0540640894003098,
+      "confidence": 0.9932471428378705,
+      "current_orders": 0,
+      "avg_rating": 4.4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278580531",
+      "product_name": "Điện thoại Xiaomi Redmi 15 (6GB/128GB) - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 4149000,
+      "recommended_price": 4349503.79,
+      "predicted_price": 4349503.79,
+      "price_diff": 200503.79,
+      "price_change_pct": 0.0483258110388045,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0483258110388045,
+      "confidence": 0.9970150939907562,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3243493852",
+      "product_name": "LEOBOG | Black Emperor Magnetic Switch Pink Emperor Magnetic Switch Jade Emperor Magnetic Switch Mechanical Keyboard Switches",
+      "platform": "lazada",
+      "category_name": "Computers",
+      "current_price": 94000,
+      "recommended_price": 97325.51,
+      "predicted_price": 97325.51,
+      "price_diff": 3325.51,
+      "price_change_pct": 0.03537776595744681,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.03537776595744681,
+      "confidence": 0.9402631437533695,
+      "current_orders": 0,
+      "avg_rating": 4,
+      "total_reviews": 7
+    },
+    {
+      "product_key": "tiki_277041250",
+      "product_name": "Điện Thoại Xiaomi 14T Pro 5G 12GB/512GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 14349000,
+      "recommended_price": 14746450.23,
+      "predicted_price": 14746450.23,
+      "price_diff": 397450.23,
+      "price_change_pct": 0.0276988103700606,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0276988103700606,
+      "confidence": 0.9954277077568925,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_273990229",
+      "product_name": "Điện Thoại Xiaomi Redmi Note 13 6GB/128GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 3609000,
+      "recommended_price": 3685614.21,
+      "predicted_price": 3685614.21,
+      "price_diff": 76614.21,
+      "price_change_pct": 0.0212286533665835,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0212286533665835,
+      "confidence": 0.9941627992583629,
+      "current_orders": 0,
+      "avg_rating": 4.1,
+      "total_reviews": 6
+    },
+    {
+      "product_key": "tiki_277811118",
+      "product_name": "Điện Thoại Xiaomi Redmi Note 14 5G 8GB/256GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 5909000,
+      "recommended_price": 6030549.82,
+      "predicted_price": 6030549.82,
+      "price_diff": 121549.82,
+      "price_change_pct": 0.0205702860044001,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0205702860044001,
+      "confidence": 0.9912319868704774,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    }
+  ],
+  "total_count": 30,
+  "date_adjustment_info": {
+    "requested_from_date": "2025-12-08",
+    "requested_to_date": "2025-12-08",
+    "actual_from_date": "2025-12-08",
+    "actual_to_date": "2025-12-08",
+    "date_adjusted": false
+  },
+  "items": [
+    {
+      "product_key": "tiki_263675862",
+      "product_name": "Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 3199000,
+      "recommended_price": 4990544.66,
+      "predicted_price": 4990544.66,
+      "price_diff": 1791544.66,
+      "price_change_pct": 0.5600327164738981,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.5600327164738981,
+      "confidence": 0.9983376824444649,
+      "current_orders": 0,
+      "avg_rating": 4,
+      "total_reviews": 4
+    },
+    {
+      "product_key": "tiki_17921443",
+      "product_name": "Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17925120",
+      "product_name": "Ốp lưng cho điện thoại Samsung Galaxy A50 CB 27 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921509",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 5 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17920150",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 75 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.7,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17920485",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 Plus CB 41 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17919959",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 Plus CB 25 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.7,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921863",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 58 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.1,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921584",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 19 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921955",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 29 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921247",
+      "product_name": "Ốp lưng cho điện thoại Iphone 5s CB 21 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17920365",
+      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 55 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17922116",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 78 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921722",
+      "product_name": "Ốp lưng cho điện thoại Iphone 8 mẫu CB 40 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 45022.81,
+      "predicted_price": 45022.81,
+      "price_diff": 10022.81,
+      "price_change_pct": 0.286366,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.286366,
+      "confidence": 0.9478311104971013,
+      "current_orders": 0,
+      "avg_rating": 4.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_17921351",
+      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 15 - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 35000,
+      "recommended_price": 44644.66,
+      "predicted_price": 44644.66,
+      "price_diff": 9644.66,
+      "price_change_pct": 0.2755617142857143,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.2755617142857143,
+      "confidence": 0.9436187888988291,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278833657",
+      "product_name": "Điện Thoại Samsung Galaxy A07 4GB/128GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 2718000,
+      "recommended_price": 3391259.26,
+      "predicted_price": 3391259.26,
+      "price_diff": 673259.26,
+      "price_change_pct": 0.2477039220014717,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.2477039220014717,
+      "confidence": 0.9950738741219095,
+      "current_orders": 0,
+      "avg_rating": 3.6,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_273412211",
+      "product_name": "Điện thoại Xiaomi Redmi 13C (4+128GB) | 6.74\" 90Hz| Media Tek Helio G85| 5000mAh - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 2699000,
+      "recommended_price": 3288770.69,
+      "predicted_price": 3288770.69,
+      "price_diff": 589770.69,
+      "price_change_pct": 0.2185145201926639,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.2185145201926639,
+      "confidence": 0.9966499093313191,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278820676",
+      "product_name": "Điện Thoại Xiaomi 15T Pro 5G 12GB/512GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 16429000,
+      "recommended_price": 19485887.5,
+      "predicted_price": 19485887.5,
+      "price_diff": 3056887.5,
+      "price_change_pct": 0.18606655913324,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.18606655913324,
+      "confidence": 0.9988304612761415,
+      "current_orders": 0,
+      "avg_rating": 3.5,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_273373420",
+      "product_name": "Điện thoại Xiaomi Redmi 13C (4GB/128GB) - Hàng chính hãng - Bảo hành 18 tháng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 2699000,
+      "recommended_price": 3088700.06,
+      "predicted_price": 3088700.06,
+      "price_diff": 389700.06,
+      "price_change_pct": 0.1443868321600593,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.1443868321600593,
+      "confidence": 0.9954007738776681,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 2
+    },
+    {
+      "product_key": "tiki_278843336",
+      "product_name": "Điện Thoại Xiaomi POCO M6 8GB/256GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 3979000,
+      "recommended_price": 4251269.07,
+      "predicted_price": 4251269.07,
+      "price_diff": 272269.07,
+      "price_change_pct": 0.0684265066599648,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0684265066599648,
+      "confidence": 0.9959248897882627,
+      "current_orders": 0,
+      "avg_rating": 3.8,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278600678",
+      "product_name": "Điện Thoại Samsung Galaxy S25 FE (8/128GB), Concert Camera 50MP, Pin bền bỉ, Trợ thủ AI thông minh - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 13490000,
+      "recommended_price": 14301918.27,
+      "predicted_price": 14301918.27,
+      "price_diff": 811918.27,
+      "price_change_pct": 0.0601866767976279,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0601866767976279,
+      "confidence": 0.9959245739697546,
+      "current_orders": 0,
+      "avg_rating": 4.3,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_52977720",
+      "product_name": "Ốp lưng in cho Realme 2 Mẫu Chuột Che Mắt",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 42000,
+      "recommended_price": 44454.8,
+      "predicted_price": 44454.8,
+      "price_diff": 2454.8,
+      "price_change_pct": 0.05844761904761905,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.05844761904761905,
+      "confidence": 0.9545277450354067,
+      "current_orders": 0,
+      "avg_rating": 4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_52977731",
+      "product_name": "Ốp lưng in cho Realme 3 Mẫu Chuột Che Mắt",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 42000,
+      "recommended_price": 44454.8,
+      "predicted_price": 44454.8,
+      "price_diff": 2454.8,
+      "price_change_pct": 0.05844761904761905,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.05844761904761905,
+      "confidence": 0.9545277450354067,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278892326",
+      "product_name": "USB Bluetooth v5.4 Baseus BA04 kết nối 20m truyền âm thanh không dây cho laptop, smartphone, tablet - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 231830,
+      "recommended_price": 245214.83,
+      "predicted_price": 245214.83,
+      "price_diff": 13384.83,
+      "price_change_pct": 0.057735538972523,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.057735538972523,
+      "confidence": 0.9589566014420906,
+      "current_orders": 0,
+      "avg_rating": 3.7,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278580633",
+      "product_name": "Điện thoại Xiaomi Redmi 15 (8GB/128GB) - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 4519000,
+      "recommended_price": 4763315.62,
+      "predicted_price": 4763315.62,
+      "price_diff": 244315.62,
+      "price_change_pct": 0.0540640894003098,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0540640894003098,
+      "confidence": 0.9932471428378705,
+      "current_orders": 0,
+      "avg_rating": 4.4,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_278580531",
+      "product_name": "Điện thoại Xiaomi Redmi 15 (6GB/128GB) - Hàng chính hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 4149000,
+      "recommended_price": 4349503.79,
+      "predicted_price": 4349503.79,
+      "price_diff": 200503.79,
+      "price_change_pct": 0.0483258110388045,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0483258110388045,
+      "confidence": 0.9970150939907562,
+      "current_orders": 0,
+      "avg_rating": 4.2,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "lazada_3243493852",
+      "product_name": "LEOBOG | Black Emperor Magnetic Switch Pink Emperor Magnetic Switch Jade Emperor Magnetic Switch Mechanical Keyboard Switches",
+      "platform": "lazada",
+      "category_name": "Computers",
+      "current_price": 94000,
+      "recommended_price": 97325.51,
+      "predicted_price": 97325.51,
+      "price_diff": 3325.51,
+      "price_change_pct": 0.03537776595744681,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.03537776595744681,
+      "confidence": 0.9402631437533695,
+      "current_orders": 0,
+      "avg_rating": 4,
+      "total_reviews": 7
+    },
+    {
+      "product_key": "tiki_277041250",
+      "product_name": "Điện Thoại Xiaomi 14T Pro 5G 12GB/512GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 14349000,
+      "recommended_price": 14746450.23,
+      "predicted_price": 14746450.23,
+      "price_diff": 397450.23,
+      "price_change_pct": 0.0276988103700606,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0276988103700606,
+      "confidence": 0.9954277077568925,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    },
+    {
+      "product_key": "tiki_273990229",
+      "product_name": "Điện Thoại Xiaomi Redmi Note 13 6GB/128GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 3609000,
+      "recommended_price": 3685614.21,
+      "predicted_price": 3685614.21,
+      "price_diff": 76614.21,
+      "price_change_pct": 0.0212286533665835,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0212286533665835,
+      "confidence": 0.9941627992583629,
+      "current_orders": 0,
+      "avg_rating": 4.1,
+      "total_reviews": 6
+    },
+    {
+      "product_key": "tiki_277811118",
+      "product_name": "Điện Thoại Xiaomi Redmi Note 14 5G 8GB/256GB - Hàng Chính Hãng",
+      "platform": "tiki",
+      "category_name": "Mobile Phones",
+      "current_price": 5909000,
+      "recommended_price": 6030549.82,
+      "predicted_price": 6030549.82,
+      "price_diff": 121549.82,
+      "price_change_pct": 0.0205702860044001,
+      "current_revenue": 0,
+      "projected_revenue": 0,
+      "expected_revenue_change_pct": 0.0205702860044001,
+      "confidence": 0.9912319868704774,
+      "current_orders": 0,
+      "avg_rating": 3.9,
+      "total_reviews": 0
+    }
+  ],
+  "ai_summary_insights": [
+    "Analyzing approximately 30 products within the selected scope.",
+    "Analyzed 30 products with 30 having price recommendations. Average model confidence: 96.7%",
+    "Top 1 by impact: 'Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế' (tiki) - Current ₫3,199,000, Recommended ₫4,990,545 (+56.0%), Revenue impact: +56.0%",
+    "Top 2 by impact: 'Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng' (tiki) - Current ₫35,000, Recommended ₫45,023 (+28.6%), Revenue impact: +28.6%",
+    "10 products have confidence ≥80%, making them low-risk candidates for immediate adjustment"
+  ],
+  "ai_recommended_actions": [
+    "[PRIORITY: HIGH] Adjust price for 'Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế' (tiki) from ₫3,199,000 to ₫4,990,545 (+56.0%). Expected revenue change: +56.0%. Confidence: 99.8%, Current orders: 0",
+    "[PRIORITY: HIGH] Adjust price for 'Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng' (tiki) from ₫35,000 to ₫45,023 (+28.6%). Expected revenue change: +28.6%. Confidence: 94.8%, Current orders: 0",
+    "[PRIORITY: HIGH] Adjust price for 'Ốp lưng cho điện thoại Samsung Galaxy A50 CB 27 - Hàng chính hãng' (tiki) from ₫35,000 to ₫45,023 (+28.6%). Expected revenue change: +28.6%. Confidence: 94.8%, Current orders: 0",
+    "[CATEGORY: Mobile Phones] Apply +28.6% average price adjustment to 7 products, prioritizing 7 items with confidence ≥75%",
+    "[PLATFORM: tiki] Prioritize tiki with 10 recommendations (10 high-confidence). Average suggested change: +31.4%",
+    "[A/B TEST] Run 2-week price test for 'Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế': 50% traffic at current ₫3,199,000, 50% at recommended ₫4,990,545. Track conversion rate, revenue per session, and customer feedback",
+    "[MONITORING] Track daily: (1) Revenue per product (+/-5% alert), (2) Conversion rate changes (+/-10% alert), (3) Competitor pricing. Weekly review for first month post-implementation"
+  ],
+  "generated_at": "2025-12-08T16:33:28.692904",
+  "ai_model_used": "rule-based-fallback",
+  "ai_generation_status": "pending",
+  "session_id": 195,
+  "ai_input_stats": {
+    "scenario": "price_prediction",
+    "kpi_keys": [
+      "num_products",
+      "num_with_recommendation",
+      "current_revenue",
+      "projected_revenue",
+      "expected_revenue_uplift_pct",
+      "avg_confidence"
+    ],
+    "table_rows_for_ai": 10
+  }
+}

@@ -125,6 +125,10 @@ class DSSService:
                 }
             else:
                 kpi_summary = dss_result_raw["kpi_summary"]
+            
+            # Get AI generation status from cache (with backward compatibility)
+            ai_generation_status = cached_result.get("ai_generation_status", "completed")
+            
             # Rehydrate data structure for response consistency
             table_items = dss_result_raw.get("table_data", [])
             date_info = dss_result_raw.get("date_adjustment_info", {})
@@ -167,12 +171,10 @@ class DSSService:
                 },
             }
 
-            # 4. Generate AI insights
-            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
-            if ai_mode == "full" and self.ai_summarizer.available:
-                ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
-            else:
-                ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
+            # 4. Generate rule-based AI insights immediately (fast fallback)
+            # Reduced prompt size from 20 to 10 products for faster processing
+            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:10]}
+            ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
             
             ai_summary_insights = ai_result.get("summary_insights", [])
             ai_recommended_actions = ai_result.get("recommended_actions", [])
@@ -183,15 +185,20 @@ class DSSService:
                 "kpi_keys": list(kpi_summary.keys()),
                 "table_rows_for_ai": len(ai_payload.get("table_data", [])),
             }
+            
+            # Set initial AI status for async generation
+            ai_generation_status = "skipped" if ai_mode != "full" else "pending"
 
             # Cache the result (TTL 1 hour)
             cache_payload = {
                 "dss_result_raw": dss_result_raw,
                 "ai_summary_insights": ai_summary_insights,
                 "ai_recommended_actions": ai_recommended_actions,
-                "ai_input_stats": ai_input_stats
+                "ai_input_stats": ai_input_stats,
+                "ai_generation_status": ai_generation_status,
             }
             await cache.set(cache_key, cache_payload, ttl=3600)
+
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -202,8 +209,9 @@ class DSSService:
                     INSERT INTO dss.dss_analysis_session (
                         scenario_key, user_id, filters_json, kpi_summary_json,
                         ai_summary_insights, ai_recommended_actions, date_adjustment_info,
-                        generated_at, source_endpoint
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
+                        generated_at, source_endpoint,
+                        ai_generation_status, ai_model_used
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
                     RETURNING session_id
                     """,
                     "price_prediction",
@@ -213,10 +221,24 @@ class DSSService:
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     json.dumps(dss_result_raw["date_adjustment_info"]),
-                    "/dss/price/run"
+                    "/dss/price/run",
+                    ai_generation_status,  # Initially 'pending' or 'skipped'
+                    "rule-based-fallback"  # Will be updated when AI completes
                 )
                 session_id = session_row["session_id"]
-                logger.info(f"Created analysis session {session_id} for price prediction")
+                logger.info(f"Created analysis session {session_id} for price prediction (AI status: {ai_generation_status})")
+                
+                # Start background AI generation if mode is 'full' and AI is available
+                if ai_mode == "full" and self.ai_summarizer.available and session_id:
+                    asyncio.create_task(
+                        self._generate_ai_summary_async(
+                            session_id=session_id,
+                            scenario="price_prediction",
+                            dss_result_raw=ai_payload,  # Use the smaller payload
+                        )
+                    )
+                    logger.info(f"🚀 Started async AI generation for session {session_id}")
+                    
             except Exception as e:
                 logger.warning(f"Failed to create analysis session: {e}")
                 # Continue without session_id - не critical
@@ -229,11 +251,10 @@ class DSSService:
             "ai_summary_insights": ai_summary_insights,
             "ai_recommended_actions": ai_recommended_actions,
             "generated_at": datetime.now().isoformat(),
-            "ai_model_used": self.ai_summarizer.model
-            if self.ai_summarizer.available
-            else "rule-based-fallback",
-            "session_id": session_id,  # NEW: Session ID for decision linking
-            "ai_input_stats": ai_input_stats,   # 👈 NEW
+            "ai_model_used": "rule-based-fallback",  # Initial fallback
+            "ai_generation_status": ai_generation_status,  # NEW: Track AI status
+            "session_id": session_id,
+            "ai_input_stats": ai_input_stats,
         }
 
     async def _query_price_predictions(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -851,22 +872,21 @@ class DSSService:
                 "table_data": recommendations,
             }
 
-            # 4. Generate AI insights (send a moderate sample for context)
+            # 4. Generate AI insights (async pattern like price DSS)
             ai_payload = {
                 **dss_result_raw,
-                "table_data": dss_result_raw["table_data"][:15],
+                "table_data": dss_result_raw["table_data"][:10],  # Reduced from 15 to 10 for faster AI
             }
-            if ai_mode == "full" and self.ai_summarizer.available:
-                ai_result = self.ai_summarizer.summarize_with_ai(
-                    "product_recommendation", ai_payload
-                )
-            else:
-                ai_result = self.ai_summarizer._get_fallback_response(
-                    "product_recommendation", ai_payload
-                )
             
+            # ASYNC PATTERN: Return rule-based immediately, generate full AI in background
+            ai_result = self.ai_summarizer._get_fallback_response(
+                "product_recommendation", ai_payload
+            )
             ai_summary_insights = ai_result.get("summary_insights", [])
             ai_recommended_actions = ai_result.get("recommended_actions", [])
+            
+            # Determine initial AI status
+            ai_generation_status = "pending" if (ai_mode == "full" and self.ai_summarizer.available) else "skipped"
 
             # NEW: summarize AI input
             ai_input_stats = {
@@ -875,12 +895,13 @@ class DSSService:
                 "table_rows_for_ai": len(ai_payload.get("table_data", [])),
             }
 
-            # Cache the result
+            # Cache the result (with AI status for backward compatibility)
             cache_payload = {
                 "dss_result_raw": dss_result_raw,
                 "ai_summary_insights": ai_summary_insights,
                 "ai_recommended_actions": ai_recommended_actions,
-                "ai_input_stats": ai_input_stats
+                "ai_input_stats": ai_input_stats,
+                "ai_generation_status": ai_generation_status  # Cached results are always completed
             }
             await cache.set(cache_key, cache_payload, ttl=3600)
 
@@ -1256,6 +1277,15 @@ class DSSService:
             ai_summary_insights = cached_result["ai_summary_insights"]
             ai_recommended_actions = cached_result["ai_recommended_actions"]
             kpi_summary = dss_result_raw["kpi_summary"]
+            # Handle backward compatibility for cached results without ai_input_stats
+            ai_input_stats = cached_result.get("ai_input_stats")
+            if ai_input_stats is None:
+                ai_input_stats = {
+                    "scenario": "review_sentiment",
+                    "kpi_keys": list(kpi_summary.keys()),
+                    "table_rows_for_ai": len(dss_result_raw.get("table_data", [])),
+                }
+
         else:
             logger.info(f"Cache MISS for Sentiment DSS: {cache_key}")
             
@@ -2155,4 +2185,138 @@ class DSSService:
         except Exception as e:
             logger.exception(f"Error getting decision detail: {e}")
             raise
+
+    # ============================================
+    # ASYNC AI GENERATION (Background Task)
+    # ============================================
+    
+    async def get_ai_generation_status(self, session_id: int) -> Dict[str, Any]:
+        """
+        Get AI generation status for a session.
+        Used by polling endpoint to check if AI generation completed.
+        
+        Args:
+            session_id: Session ID to check
+            
+        Returns:
+            AI generation status info
+            
+        Raises:
+            ValueError: If session not found
+        """
+        result = await self.db.fetchrow(
+            """
+            SELECT 
+                session_id,
+                ai_generation_status,
+                ai_summary_insights,
+                ai_recommended_actions,
+                ai_model_used,
+                ai_generation_error,
+                ai_generation_started_at,
+                ai_generation_completed_at,
+                EXTRACT(EPOCH FROM (ai_generation_completed_at - ai_generation_started_at)) AS duration_seconds
+            FROM dss.dss_analysis_session
+            WHERE session_id = $1
+            """,
+            session_id
+        )
+        
+        if not result:
+            raise ValueError(f"Session {session_id} not found")
+        
+        return {
+            "session_id": result["session_id"],
+            "ai_generation_status": result["ai_generation_status"],
+            "ai_summary_insights": json.loads(result["ai_summary_insights"]) if result["ai_summary_insights"] else [],
+            "ai_recommended_actions": json.loads(result["ai_recommended_actions"]) if result["ai_recommended_actions"] else [],
+            "ai_model_used": result["ai_model_used"],
+            "ai_generation_error": result["ai_generation_error"],
+            "generation_duration_seconds": float(result["duration_seconds"]) if result["duration_seconds"] else None,
+        }
+    
+    async def _generate_ai_summary_async(
+        self, 
+        session_id: int, 
+        scenario: str, 
+        dss_result_raw: Dict[str, Any]
+    ):
+        """
+        Background task to generate AI summary and update session.
+        Runs asynchronously without blocking the main response.
+        
+        Args:
+            session_id: Session ID to update
+            scenario: DSS scenario type (price_prediction, product_recommendation, review_sentiment)
+            dss_result_raw: DSS result data for AI input
+        """
+        from app.db_pool import get_pool
+        
+        logger.info(f"[AI_ASYNC] Starting AI generation for session {session_id}")
+        
+        try:
+            # Update status to 'generating'
+            pool = await get_pool()
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE dss.dss_analysis_session
+                    SET ai_generation_status = 'generating',
+                        ai_generation_started_at = NOW()
+                    WHERE session_id = $1
+                    """,
+                    session_id
+                )
+            
+            # Generate AI summary (this is the slow part - 10-30s)
+            start_time = time.perf_counter()
+            ai_result = self.ai_summarizer.summarize_with_ai(scenario, dss_result_raw)
+            duration = time.perf_counter() - start_time
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+            ai_model_used = self.ai_summarizer.model if self.ai_summarizer.available else "rule-based-fallback"
+            
+            logger.info(f"[AI_ASYNC] ✅ AI generation completed in {duration:.2f}s using {ai_model_used}")
+            
+            # Update session with AI results
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE dss.dss_analysis_session
+                    SET ai_summary_insights = $1,
+                        ai_recommended_actions = $2,
+                        ai_model_used = $3,
+                        ai_generation_status = 'completed',
+                        ai_generation_completed_at = NOW()
+                    WHERE session_id = $4
+                    """,
+                    json.dumps(ai_summary_insights),
+                    json.dumps(ai_recommended_actions),
+                    ai_model_used,
+                    session_id
+                )
+            
+            logger.info(f"[AI_ASYNC] Session {session_id} updated with AI results")
+            
+        except Exception as e:
+            logger.error(f"[AI_ASYNC] ❌ AI generation failed for session {session_id}: {e}")
+            
+            # Update session with error
+            try:
+                pool = await get_pool()
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """
+                        UPDATE dss.dss_analysis_session
+                        SET ai_generation_status = 'failed',
+                            ai_generation_error = $1,
+                            ai_generation_completed_at = NOW()
+                        WHERE session_id = $2
+                        """,
+                        str(e)[:500],  # Truncate error message
+                        session_id
+                    )
+            except Exception as update_error:
+                logger.error(f"[AI_ASYNC] Failed to update error status: {update_error}")
 
