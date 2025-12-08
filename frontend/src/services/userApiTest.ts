@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 /** API root (ví dụ: http://localhost:8000) */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://isp490.onrender.com';
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({
@@ -81,7 +81,7 @@ export const userApi = {
     const res = await api.delete(`/v1/test-admin/users/${userId}/permanent`, { params: { confirm: true } });
     return res.data;
   },
-    updateUserPassword: async (userId: number, newPassword: string) => {
+  updateUserPassword: async (userId: number, newPassword: string) => {
     const res = await api.put(`/v1/admin/users/${userId}/password`, { new_password: newPassword });
     return res.data;
   },

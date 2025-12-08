@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 /** API root (ví dụ: http://localhost:8000) */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://isp490.onrender.com';
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({
@@ -123,11 +123,11 @@ export interface UserProfileResponse {
 
 export interface ChangePasswordRequest { current_password: string; new_password: string; }
 export interface UpdateProfileRequest { full_name?: string; phone?: string; email?: string; }
-export interface UpdateProfileResponse { 
-  success: boolean; 
-  message: string; 
-  data?: any; 
-  user_id?: number; 
+export interface UpdateProfileResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+  user_id?: number;
 }
 export interface SignupRequest { name: string; email: string; password: string; confirm_password: string; }
 export interface SignupResponse { success: boolean; message: string; verification_sent: boolean; email: string; }
@@ -153,7 +153,7 @@ export const adminAPI = {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) queryParams.append(key, value.toString());
     });
-    
+
     const response = await api.get(`/v1/admin/activity-logs?${queryParams}`);
     return response.data;
   },
@@ -212,23 +212,23 @@ export const authAPI = {
       permissions:
         roleCode === 'ADMIN'
           ? [
-              { perm_id: '1', perm_code: 'system.admin',    perm_name: 'System Administration', module: 'system',   action: 'admin' },
-              { perm_id: '2', perm_code: 'user.manage',     perm_name: 'User Management',       module: 'user',     action: 'manage' },
-              { perm_id: '3', perm_code: 'data.write',      perm_name: 'Write Data',            module: 'data',     action: 'write' },
-              { perm_id: '4', perm_code: 'analytics.view',  perm_name: 'View Analytics',        module: 'analytics',action: 'view' },
-              { perm_id: '5', perm_code: 'dss.dashboard',   perm_name: 'DSS Dashboard',         module: 'dss',      action: 'read' }
-            ]
+            { perm_id: '1', perm_code: 'system.admin', perm_name: 'System Administration', module: 'system', action: 'admin' },
+            { perm_id: '2', perm_code: 'user.manage', perm_name: 'User Management', module: 'user', action: 'manage' },
+            { perm_id: '3', perm_code: 'data.write', perm_name: 'Write Data', module: 'data', action: 'write' },
+            { perm_id: '4', perm_code: 'analytics.view', perm_name: 'View Analytics', module: 'analytics', action: 'view' },
+            { perm_id: '5', perm_code: 'dss.dashboard', perm_name: 'DSS Dashboard', module: 'dss', action: 'read' }
+          ]
           : roleCode === 'ANALYST'
-          ? [
-              { perm_id: '3', perm_code: 'data.read',       perm_name: 'Read Data',             module: 'data',     action: 'read' },
-              { perm_id: '4', perm_code: 'analytics.view',  perm_name: 'View Analytics',        module: 'analytics',action: 'view' },
-              { perm_id: '6', perm_code: 'reports.generate',perm_name: 'Generate Reports',      module: 'reports',  action: 'generate' },
-              { perm_id: '5', perm_code: 'dss.dashboard',   perm_name: 'DSS Dashboard',         module: 'dss',      action: 'read' }
+            ? [
+              { perm_id: '3', perm_code: 'data.read', perm_name: 'Read Data', module: 'data', action: 'read' },
+              { perm_id: '4', perm_code: 'analytics.view', perm_name: 'View Analytics', module: 'analytics', action: 'view' },
+              { perm_id: '6', perm_code: 'reports.generate', perm_name: 'Generate Reports', module: 'reports', action: 'generate' },
+              { perm_id: '5', perm_code: 'dss.dashboard', perm_name: 'DSS Dashboard', module: 'dss', action: 'read' }
             ]
-          : [
-              { perm_id: '7', perm_code: 'profile.view',    perm_name: 'View Profile',          module: 'profile',  action: 'view' },
-              { perm_id: '8', perm_code: 'orders.create',   perm_name: 'Create Orders',         module: 'orders',   action: 'create' },
-              { perm_id: '9', perm_code: 'data.read_own',   perm_name: 'Read Own Data',         module: 'data',     action: 'read_own' }
+            : [
+              { perm_id: '7', perm_code: 'profile.view', perm_name: 'View Profile', module: 'profile', action: 'view' },
+              { perm_id: '8', perm_code: 'orders.create', perm_name: 'Create Orders', module: 'orders', action: 'create' },
+              { perm_id: '9', perm_code: 'data.read_own', perm_name: 'Read Own Data', module: 'data', action: 'read_own' }
             ]
     };
 

@@ -40,7 +40,7 @@ class AuthService {
   private token: string | null;
 
   constructor() {
-    this.baseURL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+    this.baseURL = (import.meta as any).env?.VITE_API_URL || 'https://isp490.onrender.com';
     this.token = Cookies.get('access_token') || null;
   }
 
@@ -55,7 +55,7 @@ class AuthService {
     const res = await fetch(`${this.baseURL}${path}`, { ...init, headers: { ...this.headers(), ...(init.headers || {}) } });
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
-      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch { }
       throw new Error(msg);
     }
     return res.json();
@@ -66,7 +66,7 @@ class AuthService {
     // Các khả năng thường gặp
     const fromTop = raw?.user && raw?.access_token;
     const fromData = raw?.data?.user && (raw?.data?.tokens?.access_token || raw?.data?.access_token);
-    const minimal  = raw?.access_token && (raw?.email || raw?.role);
+    const minimal = raw?.access_token && (raw?.email || raw?.role);
 
     if (fromTop) {
       return {
@@ -145,7 +145,7 @@ class AuthService {
     this.token = null;
     Cookies.remove('access_token');
     Cookies.remove('user_data');
-    try { await this.call('/api/v1/auth/signout', { method: 'POST' }); } catch {}
+    try { await this.call('/api/v1/auth/signout', { method: 'POST' }); } catch { }
   }
 
   getToken() { return this.token || Cookies.get('access_token') || null; }

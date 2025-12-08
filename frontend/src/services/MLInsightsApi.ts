@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 /** API root (ví dụ: http://localhost:8000) */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://isp490.onrender.com';
 
 /** Axios instance trỏ tới /api */
 const api = axios.create({
@@ -109,7 +109,7 @@ export const getPriceOptimization = async (
   if (recommendation) {
     params.recommendation = recommendation;
   }
-  
+
   const response = await api.get('/v1/ml/price-optimization', { params });
   return response.data;
 };
@@ -127,7 +127,7 @@ export const getDemandForecast = async (
   if (trend) {
     params.trend = trend;
   }
-  
+
   const response = await api.get('/v1/ml/demand-forecast', { params });
   return response.data;
 };
