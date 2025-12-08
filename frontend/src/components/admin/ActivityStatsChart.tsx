@@ -46,13 +46,13 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
                         <Activity className="h-16 w-16 text-gray-400 mx-auto" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Tính năng thống kê hoạt động
+                        Activity Statistics Feature
                     </h3>
                     <p className="text-gray-600 mb-4">
-                        Tính năng này đang được phát triển và sẽ được cập nhật trong tương lai gần.
+                        This feature is under development and will be updated in the near future.
                     </p>
                     <p className="text-sm text-gray-500">
-                        Vui lòng quay lại sau để xem thống kê chi tiết về hoạt động của hệ thống.
+                        Please come back later to view detailed statistics about system activity.
                     </p>
                 </div>
             </div>
@@ -62,52 +62,52 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Tổng số nhật ký</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Trong {days} ngày qua
+                            In the last {days} days
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Hành động duy nhất</CardTitle>
+                        <CardTitle className="text-sm font-medium">Unique Actions</CardTitle>
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Các loại hành động khác nhau
+                            Different types of actions
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Trung bình nhật ký/ngày</CardTitle>
+                        <CardTitle className="text-sm font-medium">Average logs/day</CardTitle>
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Trung bình mỗi ngày
+                            Average per day
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Ngày hoạt động nhiều nhất</CardTitle>
+                        <CardTitle className="text-sm font-medium">Most Active Day</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">0</div>
                         <p className="text-xs text-muted-foreground">
-                            Số nhật ký tối đa trong một ngày
+                            Maximum logs in a day
                         </p>
                     </CardContent>
                 </Card>
@@ -116,22 +116,22 @@ export default function ActivityStatsChart({ days = 7 }: ActivityStatsChartProps
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Hoạt động theo loại hành động</CardTitle>
+                        <CardTitle>Activity by Action Type</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px] flex items-center justify-center text-gray-500">
-                            Dữ liệu sẽ được hiển thị khi tính năng hoạt động
+                            Data will be displayed when the feature is active
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Xu hướng hoạt động hàng ngày</CardTitle>
+                        <CardTitle>Daily Activity Trend</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px] flex items-center justify-center text-gray-500">
-                            Dữ liệu sẽ được hiển thị khi tính năng hoạt động
+                            Data will be displayed when the feature is active
                         </div>
                     </CardContent>
                 </Card>
