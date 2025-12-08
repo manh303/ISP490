@@ -63,7 +63,7 @@ export function ReviewSummaryChart({ data }: ReviewSummaryChartProps) {
       {/* Rating Distribution */}
       <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">
-          Phân Phối Đánh Giá
+          Rating Distribution
         </h4>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
@@ -83,7 +83,7 @@ export function ReviewSummaryChart({ data }: ReviewSummaryChartProps) {
                 />
                 <Tooltip
                   formatter={(value: any, name: string) => [
-                    `${value} đánh giá`,
+                    `${value} reviews`,
                     'Số lượng'
                   ]}
                   contentStyle={{
@@ -124,7 +124,7 @@ export function ReviewSummaryChart({ data }: ReviewSummaryChartProps) {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: any) => [`${value} đánh giá`]}
+                  formatter={(value: any) => [`${value} reviews`]}
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
@@ -142,7 +142,7 @@ export function ReviewSummaryChart({ data }: ReviewSummaryChartProps) {
       {sentimentData.length > 0 && (
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Phân Phối Tâm Trạng
+            Sentiment Distribution
           </h4>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -165,7 +165,7 @@ export function ReviewSummaryChart({ data }: ReviewSummaryChartProps) {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: any) => [`${value} đánh giá`]}
+                  formatter={(value: any) => [`${value} reviews`]}
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
@@ -180,22 +180,22 @@ export function ReviewSummaryChart({ data }: ReviewSummaryChartProps) {
       )}
 
       {/* Summary Stats */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+      <div className="mt-6">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">
-          Thống Kê Tổng Quan
+          Overall Statistics
         </h4>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">
               {data.avg_rating?.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">Rating trung bình</div>
+            <div className="text-sm text-gray-600">Average Rating</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-600">
               {data.total_reviews?.toLocaleString('vi-VN')}
             </div>
-            <div className="text-sm text-gray-600">Tổng đánh giá</div>
+            <div className="text-sm text-gray-600">Total Reviews</div>
           </div>
         </div>
       </div>

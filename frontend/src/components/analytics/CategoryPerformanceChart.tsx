@@ -8,7 +8,7 @@ interface CategoryPerformanceChartProps {
 
 export function CategoryPerformanceChart({
   data,
-  title = 'Hiệu Suất Theo Danh Mục'
+  title = 'Category Performance'
 }: CategoryPerformanceChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -18,7 +18,7 @@ export function CategoryPerformanceChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
-          Không có dữ liệu
+          No data available
         </div>
       </div>
     );
@@ -81,9 +81,9 @@ export function CategoryPerformanceChart({
               </div>
               
               <div className="flex justify-between text-xs text-gray-600">
-                <span>{(category.product_count || 0).toLocaleString('vi-VN')} SP</span>
-                <span>{category.high_rated_count} chất lượng cao</span>
-                <span>{(category.total_reviews / 1000).toFixed(0)}K đánh giá</span>
+                <span>{(category.product_count || 0).toLocaleString('en-US')} products</span>
+                <span>{category.high_rated_count} high-rated</span>
+                <span>{(category.total_reviews / 1000).toFixed(0)}K reviews</span>
               </div>
             </div>
           );

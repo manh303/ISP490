@@ -8,7 +8,7 @@ interface ReviewTrendsChartProps {
 
 export function ReviewTrendsChart({ 
   data, 
-  title = 'Xu Hướng Đánh Giá' 
+  title = 'Review Trends' 
 }: ReviewTrendsChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -18,7 +18,7 @@ export function ReviewTrendsChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
-          Không có dữ liệu
+          No data available
         </div>
       </div>
     );
@@ -41,7 +41,7 @@ export function ReviewTrendsChart({
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-1">
             <Star className="h-4 w-4 text-blue-600" />
-            <span className="text-xs text-blue-700 font-medium">Đánh giá TB</span>
+            <span className="text-xs text-blue-700 font-medium">Avg Rating</span>
           </div>
           <div className="text-2xl font-bold text-blue-900">
             {avgRating.toFixed(2)}
@@ -51,7 +51,7 @@ export function ReviewTrendsChart({
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-1">
             <MessageSquare className="h-4 w-4 text-purple-600" />
-            <span className="text-xs text-purple-700 font-medium">Tổng đánh giá</span>
+            <span className="text-xs text-purple-700 font-medium">Total Reviews</span>
           </div>
           <div className="text-2xl font-bold text-purple-900">
             {totalReviews.toLocaleString('vi-VN')}
@@ -61,7 +61,7 @@ export function ReviewTrendsChart({
         <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="h-4 w-4 text-green-600" />
-            <span className="text-xs text-green-700 font-medium">Tổng đơn hàng</span>
+            <span className="text-xs text-green-700 font-medium">Total Orders</span>
           </div>
           <div className="text-2xl font-bold text-green-900">
             {totalOrders.toLocaleString('vi-VN')}
@@ -132,7 +132,7 @@ export function ReviewTrendsChart({
             </div>
             <div className="flex items-center gap-3">
               <span className="text-gray-700">
-                {trend.total_orders.toLocaleString('vi-VN')} đơn
+                {trend.total_orders.toLocaleString('en-US')} orders
               </span>
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
