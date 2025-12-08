@@ -502,33 +502,41 @@ class AnalyticsService:
 
     async def get_top_products(
         self,
-        from_date: date,
-        to_date: date,
+        from_date: date,  # NOTE: Ignored in optimized version for performance
+        to_date: date,    # NOTE: Ignored in optimized version for performance
         metric: str = "revenue",
         platform_code: Optional[str] = None,
         category_key: Optional[str] = None,
         limit: int = 20,
     ) -> List[TopProductItem]:
         """
-        Lấy danh sách top products theo 1 metric:
-        - revenue
-        - review_count
-        - avg_rating
-        - price_growth (tạm thời cũng sort theo revenue hoặc avg_price tùy em)
+        Get top products by metric - OPTIMIZED VERSION
+        
+        Uses product_metrics_global (pre-aggregated materialized view) for instant results.
+        NOTE: from_date/to_date parameters are ignored as metrics represent all-time totals.
+        This is an emergency optimization to avoid 60s+ timeouts on production.
+        
+        Metrics:
+        - revenue: Total revenue (price * review_count)
+        - review_count: Total number of reviews
+        - avg_rating: Average product rating
         """
+        # Map metric to column in materialized view
         metric_column_map = {
-            "revenue": "SUM(f.avg_price * f.total_review_count)",
-            "review_count": "SUM(f.total_review_count)",
-            "avg_rating": "AVG(f.avg_rating)",
+            "revenue": "pm.total_revenue",
+            "review_count": "pm.total_orders",  # Note: Uses total_orders from view
+            "avg_rating": "pm.avg_rating",
         }
-        metric_column = metric_column_map.get(metric, metric_column_map["revenue"])
+        metric_column = metric_column_map.get(metric, "pm.total_revenue")
 
-        conditions = ["d.date_value BETWEEN $1 AND $2"]
-        params: List[Any] = [from_date, to_date]
-        param_index = 3
+        # Build WHERE conditions
+        conditions = []
+        params: List[Any] = []
+        param_index = 1
 
         if platform_code:
-            conditions.append(f"pl.platform_code = ${param_index}")
+            # Extract platform from product_key prefix (e.g., "tiki_123" -> "tiki")
+            conditions.append(f"split_part(p.product_key, '_', 1) = ${param_index}")
             params.append(platform_code)
             param_index += 1
 
@@ -537,37 +545,28 @@ class AnalyticsService:
             params.append(int(category_key))
             param_index += 1
 
-        where_clause = "WHERE " + " AND ".join(conditions)
+        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
+        # OPTIMIZED QUERY: Uses pre-aggregated metrics, no GROUP BY, instant results
         sql = f"""
             SELECT
                 p.product_key,
                 p.product_name,
-                pl.platform_code,
+                split_part(p.product_key, '_', 1) AS platform_code,
                 p.category_sk AS category_key,
-                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
-                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
-                COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
-                AVG(f.avg_rating) AS avg_rating,
-                AVG(f.avg_price) AS avg_price
-            FROM dwh.fact_product_daily f
-            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
-            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
-            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+                COALESCE(c.category_std_key, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
+                COALESCE(pm.total_revenue, 0) AS total_revenue,
+                COALESCE(pm.total_orders, 0) AS total_reviews,
+                pm.avg_rating,
+                pm.avg_price
+            FROM dwh.product_metrics_global pm
+            JOIN dwh.dim_product p ON p.product_sk = pm.product_sk
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
-            GROUP BY
-                p.product_key,
-                p.product_name,
-                pl.platform_code,
-                p.category_sk,
-                c.category_std_key,
-                c.category_lvl3,
-                c.category_lvl2,
-                c.category_lvl1
-            ORDER BY {metric_column} DESC
+            ORDER BY {metric_column} DESC NULLS LAST
             LIMIT {limit}
         """
+        
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(sql, *params)
 
