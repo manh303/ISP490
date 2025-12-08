@@ -137,6 +137,7 @@ async def run_price_prediction_dss(
     **Response includes `session_id`** that can be used when saving decisions via `POST /dss/decisions`.
     """
     logger.info("▶ /dss/price/run START user_id=%s request=%s", user_id, request.dict())
+    logger.info(f"DEBUG_API: request.min_price_change_pct = {request.min_price_change_pct} (type: {type(request.min_price_change_pct)})")
     start = time.perf_counter()
 
     try:

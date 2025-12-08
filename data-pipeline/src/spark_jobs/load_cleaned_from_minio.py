@@ -580,11 +580,27 @@ def clean_data(df):
     print("=" * 60)
     try:
         # ===== Đảm bảo product_id tồn tại dưới dạng string =====
-        if "product_id" in df.columns:
-            df = df.withColumn("product_id", col("product_id").cast(StringType()))
+        # ===== Kiểm tra & Tạo product_id dự phòng (NẾU THIẾU) =====
+        # Logic: Nếu product_id null nhưng có url -> md5(url)
+        
+        missing_id_count = df.filter(col("product_id").isNull() | (trim(col("product_id")) == "")).count()
+        if missing_id_count > 0:
+            print(f"[WARN] Found {missing_id_count} records with missing product_id. Generating from URL hash...")
+            
+            df = df.withColumn(
+                "product_id",
+                when(
+                    (col("product_id").isNotNull()) & (trim(col("product_id")) != ""),
+                    col("product_id").cast(StringType())
+                )
+                .when(
+                    col("url").isNotNull() & (trim(col("url")) != ""),
+                    F.md5(col("url"))
+                )
+                .otherwise(lit(None).cast(StringType()))
+            )
         else:
-            # trường hợp hiếm nhưng để phòng thủ
-            df = df.withColumn("product_id", lit(None).cast(StringType()))
+             df = df.withColumn("product_id", col("product_id").cast(StringType()))
 
         # ===== Tạo global_product_id & chuẩn hóa platform =====
         df_cleaned = (
@@ -708,6 +724,7 @@ def clean_data(df):
             "url",
             "crawl_date",
             "data_quality_score",
+            "raw_category_path",
         ]
         select_cols = [c for c in candidate_cols if c in available_cols]
 
@@ -737,11 +754,14 @@ def map_categories(df):
 
     # DEBUG: Check sample categories before mapping
     print("\n[DEBUG] Sample raw categories (first 20):")
-    sample_cats = df.select("category", "product_name").distinct().limit(20).collect()
-    for i, row in enumerate(sample_cats[:20], 1):
-        cat = row["category"] if row["category"] else "NULL"
-        name = row["product_name"][:50] if row["product_name"] else "NULL"
-        print(f"  {i}. Category: '{cat}' | Product: '{name}'")
+    if "category" in df.columns:
+        sample_cats = df.select("category", "product_name").distinct().limit(20).collect()
+        for i, row in enumerate(sample_cats[:20], 1):
+            cat = row["category"] if row["category"] else "NULL"
+            name = row["product_name"][:50] if row["product_name"] else "NULL"
+            print(f"  {i}. Category: '{cat}' | Product: '{name}'")
+    else:
+        print("[WARN] 'category' column missing in DataFrame")
 
     # ✅ NEW: Create sorted mapping dict (longest keywords first for better matching)
     print(f"\n[INFO] Total category mappings configured: {len(CATEGORY_MAPPINGS)}")
@@ -777,15 +797,28 @@ def map_categories(df):
     map_category_udf = udf(_map_category_enhanced, StringType())
 
     # Prepare both category and product_name for mapping
+    # Safely handle raw_category_path and category columns
+    raw_cat_col = col("raw_category_path") if "raw_category_path" in df.columns else lit(None)
+    cat_col = col("category") if "category" in df.columns else lit(None)
+
     df_mapped = df.withColumn(
         "category_text",
-        lower(trim(coalesce(col("raw_category_path"), col("category"), lit(""))))
+        lower(trim(coalesce(raw_cat_col, cat_col, lit(""))))
+    ).withColumn(
+        "product_name_lower",
+        lower(trim(col("product_name")))
     )
+
+    # Define UDF for unidecode since it cannot be applied directly to Column
+    def safe_unidecode(text):
+        return unidecode(text) if text else None
+    
+    unidecode_udf = udf(safe_unidecode, StringType())
 
     # Chuẩn hoá: bỏ dấu, sửa typos phổ biến
     df_mapped = df_mapped.withColumn(
         "category_norm",
-        regexp_replace(unidecode(col("category_text")), r"[-_]", " ")
+        regexp_replace(unidecode_udf(col("category_text")), r"[-_]", " ")
     )
 
     df_mapped = (
@@ -968,6 +1001,12 @@ def standardize_data(df):
             to_timestamp(col("crawl_date"), "yyyy-MM-dd"),
         ),
     )
+    
+    # ✅ NEW: Compute snapshot_date IMMEDIATELY for deduplication
+    df_std = df_std.withColumn(
+        "snapshot_date",
+        to_date(col("crawl_ts"))
+    )
 
     print("\n Standardization Summary:")
     if "source_platform_std" in df_std.columns:
@@ -1041,19 +1080,24 @@ def deduplicate_data(df):
     print(" STEP 3: DEDUPLICATION")
     print("=" * 60)
 
-    key_col = (
-        "global_product_id_synced"
-        if "global_product_id_synced" in df.columns
-        else "global_product_id"
-    )
+    # ✅ FIX: Deduplicate by ID AND Date (to keep history)
+    # Check if snapshot_date exists (it should from standardize_data)
+    dedup_cols = []
+    if "snapshot_date" in df.columns:
+        dedup_cols = ["global_product_id_synced", "snapshot_date"]
+        print(f"[INFO] Deduplicating by {dedup_cols} (Preserving History)")
+    else:
+        dedup_cols = ["global_product_id_synced"]
+        print(f"[WARN] 'snapshot_date' missing! Deduplicating by {dedup_cols} (Potential Data Loss)")
+
     try:
-        df_deduplicated = df.dropDuplicates([key_col])
+        df_deduplicated = df.dropDuplicates(dedup_cols)
         original_count = df.count()
         deduplicated_count = df_deduplicated.count()
         duplicates_removed = original_count - deduplicated_count
 
         print(" Deduplicated data:")
-        print(f"   Key column: {key_col}")
+        print(f"   Key columns: {dedup_cols}")
         print(f"   Original: {original_count:,} records")
         print(f"   After dedup: {deduplicated_count:,} records")
         print(f"   Removed: {duplicates_removed:,} duplicates")
@@ -2916,15 +2960,7 @@ def main():
 
         # Chuẩn bị thêm cột snapshot_date + price cho star schema
         df_for_dwh = (
-            df_dedup.withColumn(
-                "snapshot_date",
-                to_date(
-                    coalesce(
-                        col("crawl_ts"),
-                        to_timestamp(col("crawl_date"), "yyyy-MM-dd"),
-                    )
-                ),
-            ).withColumn("price", col("price_current_vnd"))
+            df_dedup.withColumn("price", col("price_current_vnd"))
         )
 
         # Kết nối Postgres

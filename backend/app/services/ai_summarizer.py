@@ -153,7 +153,7 @@ class GeminiProvider(AIProvider):
 
         # Try multiple model names in order of preference (without 'models/' prefix)
         model_options = [
-            os.getenv("GEMINI_MODEL", "gemini-2.0-flash").replace("models/", ""),
+            os.getenv("GEMINI_MODEL", "gemini-2.5-pro").replace("models/", ""),
             "gemini-2.0-flash",
             "gemini-2.0-flash-exp",
             "gemini-1.5-flash",
@@ -187,7 +187,7 @@ class GeminiProvider(AIProvider):
                 
                 if selected_model is None:
                     # Fallback to a default if nothing matched
-                    selected_model = "models/gemini-2.0-flash"
+                    selected_model = "models/gemini-2.5-pro"
                 
                 self.model = selected_model
                 self.client = genai.GenerativeModel(self.model)

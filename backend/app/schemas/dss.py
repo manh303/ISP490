@@ -208,7 +208,7 @@ class ProductRecommendationRequest(BaseModel):
     # Common
     top_k: int = Field(10, ge=1, le=50, description="Number of recommendations per product")
     min_similarity: Optional[float] = Field(0.5, ge=0, le=1.0, description="Min similarity score")
-    min_co_purchase_rate: Optional[float] = Field(0.05, ge=0, le=1.0, description="Min co-purchase rate")
+    min_co_purchase_rate: Optional[float] = Field(0.0, ge=0, le=1.0, description="Min co-purchase rate")
     ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
 
     @model_validator(mode='before')
@@ -289,6 +289,10 @@ class ReviewSentimentRequest(BaseModel):
     platforms: Optional[List[str]] = Field(None, example=["tiki", "lazada"])
     categories: Optional[List[str]] = Field(None, example=["1"])
     
+    # Scope configuration (accept alias 'specific_products' -> 'by_product')
+    scope_mode: str = Field("by_category", description="'by_product' or 'by_category'")
+    product_keys: Optional[List[str]] = Field(None, description="List of product keys for by_product mode")
+    
     # Filters
     min_reviews_per_product: int = Field(10, ge=1, description="Min number of reviews to include product")
     sentiment_focus: str = Field("all", description="'all', 'only_negative', 'only_positive'")
@@ -297,6 +301,17 @@ class ReviewSentimentRequest(BaseModel):
     negative_threshold: float = Field(0.25, ge=0, le=1.0, description="Products with negative_pct > threshold are flagged")
     positive_threshold: float = Field(0.7, ge=0, le=1.0, description="Threshold for positive_pct in only_positive filter")
     ai_mode: Literal["full", "fast"] = Field("full", description="'full' uses LLM, 'fast' uses rule-based")
+
+    @model_validator(mode='after')
+    def validate_scope_mode(self):
+        allowed = {"by_category", "by_product"}
+        if self.scope_mode not in allowed:
+            raise ValueError("scope_mode must be 'by_category' or 'by_product'")
+        if self.scope_mode == "by_product" and (not self.product_keys or len(self.product_keys) == 0):
+            raise ValueError("product_keys is required when scope_mode='by_product'")
+        # Note: categories not strictly required for by_category in this specific schema logic, 
+        # but typically yes. Keeping flexible or verify similar to Price/Reco.
+        return self
 
 
 class ProductSentimentDetail(BaseModel):

@@ -32,7 +32,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 # ============================================================
-#  ETL METADATA LOGGING (schema meta.*)
+#  ETL METADATA LOGGING (schema METADATA.*)
 # ============================================================
 
 def _get_pg_conn():
@@ -61,7 +61,7 @@ def _get_pg_conn():
 
 def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
     """
-    Ghi log bắt đầu crawler vào meta.etl_run.
+    Ghi log bắt đầu crawler vào METADATA.etl_run.
     Trả về run_id hoặc None.
     """
     conn = _get_pg_conn()
@@ -74,7 +74,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
         # Ensure job exists
         cur.execute(
             """
-            INSERT INTO meta.etl_job (job_code, job_name, description)
+            INSERT INTO METADATA.etl_job (job_code, job_name, description)
             VALUES (%s, %s, %s)
             ON CONFLICT (job_code) DO NOTHING
             """,
@@ -82,7 +82,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
         )
         
         # Get job_id
-        cur.execute("SELECT job_id FROM meta.etl_job WHERE job_code = %s", (job_code,))
+        cur.execute("SELECT job_id FROM METADATA.etl_job WHERE job_code = %s", (job_code,))
         row = cur.fetchone()
         if not row:
             print(f"{LOG_PREFIX} [META] Cannot find etl_job for {job_code}")
@@ -94,7 +94,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
         # Create run
         cur.execute(
             """
-            INSERT INTO meta.etl_run (job_id, run_date, started_at, status)
+            INSERT INTO METADATA.etl_run (job_id, run_date, started_at, status)
             VALUES (%s, %s, %s, %s)
             RETURNING run_id
             """,
@@ -118,7 +118,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
 
 def log_etl_finish(run_id: Optional[int], status: str, rows_read: int = 0, rows_written: int = 0, error_message: str = None):
     """
-    Ghi log kết thúc crawler vào meta.etl_run.
+    Ghi log kết thúc crawler vào METADATA.etl_run.
     """
     if run_id is None:
         return
@@ -131,7 +131,7 @@ def log_etl_finish(run_id: Optional[int], status: str, rows_read: int = 0, rows_
         cur = conn.cursor()
         cur.execute(
             """
-            UPDATE meta.etl_run
+            UPDATE METADATA.etl_run
             SET finished_at = %s,
                 status = %s,
                 rows_read = %s,

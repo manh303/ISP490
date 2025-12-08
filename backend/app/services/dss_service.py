@@ -152,6 +152,8 @@ class DSSService:
                     "to_date": str(request.get("to_date")),
                     "platforms": request.get("platforms", []),
                     "categories": request.get("categories", []),
+                    "scope_mode": request.get("scope_mode", "by_category"),
+                    "product_keys": request.get("product_keys", []),
                 },
                 "kpi_summary": kpi_summary,
                 "table_data": data["items"],
@@ -684,9 +686,17 @@ class DSSService:
             ORDER BY dp.product_key, pred.confidence DESC
         """
         
-        params.extend([min_confidence, min_price_change_pct])
+        # params list already includes all needed arguments in correct order:
+        # 1. from_date
+        # 2. adjusted_to_date 
+        # 3. product_keys
+        # 4. min_confidence
+        # 5. min_price_change_pct
+        # 6. max_discount_pct
+
         
         try:
+            logger.info(f"[DEBUG_PRICE] keys={product_keys}, min_conf={min_confidence}, min_pct={min_price_change_pct}, max_disc={max_discount_pct}")
             rows = await self.db.fetch(sql, *params)
             
             items = []
@@ -835,6 +845,7 @@ class DSSService:
                     "platforms": request.get("platforms", []),
                     "categories": request.get("categories", []),
                     "scope_mode": request.get("scope_mode", "by_category"),
+                    "source_product_key": request.get("source_product_key"),
                 },
                 "kpi_summary": kpi_summary,
                 "table_data": recommendations,
@@ -962,7 +973,16 @@ class DSSService:
         # Get min_co_purchase_rate from request
         min_co_purchase_rate = request.get("min_co_purchase_rate")
 
-        # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
+        # Validate dates
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+
+        # OPTIMIZED: Use product_metrics_global instead of CTE
+        # ADDED: Date filtering logic
         sql = """
             SELECT
                 dp_src.product_key AS source_product_key,
@@ -982,22 +1002,25 @@ class DSSService:
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+            JOIN dwh.dim_date dd ON rec.date_sk = dd.date_sk
             LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
             LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE dp_src.product_key = $1
+              AND dd.date_value BETWEEN $5 AND $6
               AND rec.similarity_score >= $2
               AND (
-                  $4 IS NULL
-                  OR COALESCE(rec.co_purchase_rate, 0) >= $4
+                  $4::float IS NULL
+                  OR COALESCE(rec.co_purchase_rate, 0) >= $4::float
               )
-            ORDER BY rec.similarity_score DESC, rec.rank ASC
+            ORDER BY rec.similarity_score DESC
             LIMIT $3
         """
 
         try:
-            # Pass min_co_purchase_rate as 4th parameter
-            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, min_co_purchase_rate)
+            logger.info(f"[DEBUG_RECO] key={source_product_key}, min_sim={min_similarity}, cpr={min_co_purchase_rate}, dates={from_date}-{to_date}")
+            # Pass min_co_purchase_rate as 4th parameter, dates as 5,6
+            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, min_co_purchase_rate, from_date, to_date)
             result = self._dedupe_recommendations([dict(row) for row in rows])
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
             await cache.set(cache_key, result, ttl=3600)
@@ -1250,6 +1273,8 @@ class DSSService:
                     "to_date": str(request.get("to_date")),
                     "platforms": request.get("platforms", []),
                     "categories": request.get("categories", []),
+                    "scope_mode": request.get("scope_mode", "by_category"),
+                    "product_keys": request.get("product_keys", []),
                 },
                 "kpi_summary": kpi_summary,
                 "table_data": sentiment_data,
@@ -1268,15 +1293,23 @@ class DSSService:
             
             ai_summary_insights = ai_result.get("summary_insights", [])
             ai_recommended_actions = ai_result.get("recommended_actions", [])
+
+            # NEW: summarize AI input
+            ai_input_stats = {
+                "scenario": "review_sentiment",
+                "kpi_keys": list(kpi_summary.keys()),
+                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
+            }
             
             # Cache the result
             cache_payload = {
                 "dss_result_raw": dss_result_raw,
                 "ai_summary_insights": ai_summary_insights,
-                "ai_recommended_actions": ai_recommended_actions
+                "ai_recommended_actions": ai_recommended_actions,
+                "ai_input_stats": ai_input_stats
             }
             await cache.set(cache_key, cache_payload, ttl=3600)
-
+            
         # 5. Create analysis session for decision linking
         session_id = None
         if user_id:
@@ -1312,7 +1345,8 @@ class DSSService:
             "ai_model_used": self.ai_summarizer.model
             if self.ai_summarizer.available
             else "rule-based-fallback",
-            "session_id": session_id,  # NEW: Session ID for decision linking
+            "session_id": session_id,
+            "ai_input_stats": ai_input_stats,
         }
 
     async def _query_review_sentiment(
@@ -1327,10 +1361,21 @@ class DSSService:
         min_reviews = request.get("min_reviews_per_product", 10)
         negative_threshold = request.get("negative_threshold", 0.25)
 
+        product_keys = request.get("product_keys")
+        
         conditions: List[str] = []
         params: List[Any] = []
         param_idx = 1
 
+        # If product_keys provided, filter by them (usually overrides platform/category, or intersects)
+        if product_keys:
+             conditions.append(f"dp.product_key = ANY(${param_idx})")
+             params.append(product_keys)
+             param_idx += 1
+        
+        # Only apply platform/category filters if NOT strictly exclusively by_product or if you want intersection
+        # Usually if user selects specific products, we just return those. 
+        # But keeping existing filters as optional intersection is safe.
         if platforms:
             conditions.append(f"dpl.platform_code = ANY(${param_idx})")
             params.append(platforms)

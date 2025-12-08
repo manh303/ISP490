@@ -1,459 +1,764 @@
-﻿1. Price DSS – /dss/price/run
-1.1. Ở hàm run_price_prediction_dss (tầng service tổng)
+﻿1. Nhóm “Tổng quan & kịch bản DSS”
+1.1. Màn DSS Overview / Dashboard (/dss – DSSPage)
 
-Mục tiêu: đừng ép min_confidence, lưu lại request đúng như Analyst nhập.
+Mục đích:
+Cho Analyst 1 màn tổng quan ecommerce + entry point để nhảy sang các phân tích sâu hơn (price, brand, trending, AI suggestions).
 
-Bước 1 – Đừng override min_confidence quá mạnh
+Layout gợi ý:
 
-Hiện tại đoạn normalize request kiểu:
+Header
 
-req["page_size"] = min(req.get("page_size", 50), 100)
-req["top_n"] = min(req.get("top_n", 50), 100)
-req["min_confidence"] = max(req.get("min_confidence", 0.70), 0.6)
+Tiêu đề: E-commerce DSS Dashboard
 
+Subtitle: “Tổng quan dữ liệu & điểm vào các kịch bản DSS”
 
-→ Bạn nên sửa thành:
+Ở góc phải: Dropdown chọn role (Analyst) hoặc quick link “Go to DSS Scenarios”.
 
-req["page_size"] = min(req.get("page_size", 50), 100)
-req["top_n"] = min(req.get("top_n", 50), 100)
+Thanh tab ngang:
 
-# Giữ nguyên giá trị user gửi, chỉ clamp trong khoảng 0–1
-min_conf = req.get("min_confidence", 0.7)
-req["min_confidence"] = max(0.0, min(min_conf, 1.0))
+Dashboard (default)
 
+Price Analysis
 
-Ý: Analyst nhập 0.4 thì cho phép 0.4, đừng auto đẩy lên 0.6.
+Brand Analysis
 
-Bước 2 – Chuẩn hoá from_date/to_date
+Trending Products
 
-Trước khi gọi _query_price_predictions, nên convert string → date (nếu chưa):
+AI Recommendations (hoặc AI Assistant)
 
-from datetime import datetime
+Tab: Dashboard
 
-for key in ["from_date", "to_date"]:
-    if isinstance(req.get(key), str):
-        req[key] = datetime.strptime(req[key], "%Y-%m-%d").date()
+Section 1 – Summary cards (4–6 card)
 
-1.2. Ở _query_price_by_category – dùng đúng khoảng ngày + data thật
+Total Products
 
-Mục tiêu:
+Platforms Count
 
-Thay product_metrics_global bằng aggregate từ fact_product_daily có join dim_date.
+Average Price
 
-Dùng prediction_confidence nếu đã có.
+Rated Products (số sản phẩm có review)
 
-Bắt đầu chuẩn bị để áp max_discount_pct, min_margin_pct.
+Có thể thêm: “Latest Crawl Date”, “ML Models Status (OK/Warn)”
 
-Bước 3 – Thêm CTE product_metrics_windowed
+Section 2 – Platform breakdown
 
-Trong SQL hiện tại bạn có join dwh.product_metrics_global pm. Giờ sửa thành:
+Bảng hoặc bar chart: mỗi dòng 1 platform (Tiki, Lazada, Shopee)
 
-WITH date_bounds AS (
-    SELECT 
-        $from_date::date AS from_date,
-        $to_date::date   AS to_date
-),
-product_metrics AS (
-    SELECT
-        f.product_sk,
-        f.platform_sk,
-        AVG(f.avg_price)       AS avg_price,
-        MIN(f.min_price)       AS min_price,
-        MAX(f.max_price)       AS max_price,
-        SUM(f.total_review_count) AS total_reviews,
-        AVG(f.avg_rating)      AS avg_rating,
-        SUM(f.total_orders)    AS total_orders,
-        SUM(f.total_revenue)   AS total_revenue
-    FROM dwh.fact_product_daily f
-    JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
-    JOIN date_bounds db ON dd.date_value BETWEEN db.from_date AND db.to_date
-    GROUP BY f.product_sk, f.platform_sk
-),
-ranked_predictions AS (
-    ...
-)
+total_products, avg_price, rated_products
 
+Section 3 – Category snapshot
 
-Rồi ở phần filtered_results:
+Bảng top N category theo:
 
-LEFT JOIN product_metrics pm
-    ON pm.product_sk = latest_predictions.product_sk
-   AND pm.platform_sk = latest_predictions.platform_sk
+total_products
 
+avg_price
 
-→ Bỏ join với dwh.product_metrics_global.
+avg_rating
 
-Như vậy mọi metric avg_price, total_reviews, total_orders, total_revenue đều “đúng khoảng thời gian” mà Analyst chọn.
+Section 4 – Quick links
 
-Bước 4 – Dùng prediction_confidence thay vì tính từ CI
+3 card:
 
-Trong latest_predictions hiện đang:
+“Tối ưu giá” → dẫn tới /analyst/dss-scenarios với model price_prediction focus.
 
-latest_predictions AS (
-    SELECT
-        product_sk,
-        platform_sk,
-        predicted_price,
-        ci_upper,
-        ci_lower,
-        created_at,
-        GREATEST(0.0, LEAST(1.0,
-            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-        )) AS confidence
-    FROM ranked_predictions
-    WHERE rn = 1
-)
+“Gợi ý sản phẩm” → product_recommendation.
 
+“Cảm xúc review” → review_sentiment.
 
-Sửa thành:
+Tab: Price Analysis
 
-latest_predictions AS (
-    SELECT
-        product_sk,
-        platform_sk,
-        predicted_price,
-        ci_upper,
-        ci_lower,
-        created_at,
-        COALESCE(prediction_confidence,
-                 GREATEST(0.0, LEAST(1.0,
-                   1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-                 ))
-        ) AS confidence
-    FROM ranked_predictions
-    WHERE rn = 1
-)
+Filter bar bên trên:
 
+Date range
 
-Giả sử bạn đã sửa run_price_predictions.py để fill cột prediction_confidence rồi.
+Platform multi-select
 
-Bước 5 – Áp min_confidence, min_price_change_pct, max_discount_pct, min_margin_pct
+Category selector
 
-Trong WHERE của CTE filtered_results, hiện bạn đã có filter:
+Main content:
 
-WHERE
-    pm.avg_price > 0
-    AND latest_predictions.confidence >= $min_confidence
-    AND ABS(latest_predictions.predicted_price - pm.avg_price) / pm.avg_price >= $min_price_change_pct
+Chart: so sánh phân bố giá / median price theo category & platform.
 
+Card “Products with biggest price gap vs prediction” (link sang DSSInput để chạy DSS chi tiết).
 
-Giờ:
+CTA: Button “Run Price Optimization DSS” → /analyst/dss-input/price_prediction.
 
-Clamp giảm giá tối đa (max_discount_pct):
+Tab: Brand Analysis
 
-Nếu bạn muốn làm ở SQL: chỉ nhận những rec mà giá đề xuất không thấp hơn một ngưỡng:
+Bảng: each row brand (Apple, Samsung, …)
 
-AND (latest_predictions.predicted_price >= pm.avg_price * (1 - $max_discount_pct))
+avg_price, avg_rating, total_reviews, share of revenue.
 
+Bar/line chart: market share theo brand.
 
-Hoặc nếu làm ở Python layer sau khi fetch rows: chỉnh recommended_price = max(recommended_price, current_price * (1 - max_discount_pct)) rồi recalc diff.
+Tab: Trending Products
 
-Áp min_margin_pct nếu đã có avg_margin_pct:
+Grid card:
 
-Nếu đã thêm avg_margin_pct vào product_metrics (hoặc join product_metrics_global chỉ để lấy margin):
+Image (nếu có), product_name, platform, category
 
-AND COALESCE(pm.avg_margin_pct, 0) >= $min_margin_pct
+price, avg_rating, total_reviews
 
+tag “🔥 trending” nếu growth > X%
 
-Nếu chưa có margin thật → tạm thời đừng dùng min_margin_pct, ghi chú “chưa áp dụng”.
+CTA “Phân tích sâu sản phẩm này” → mở DSSInput với scope by_product.
 
-Bước 6 – Tính current_orders, current_revenue từ cột mới thay vì “fake”
+Tab: AI Recommendations
 
-Trong SELECT filtered_results, hiện đang làm:
+Khu vực hiển thị mấy insight tổng hợp kiểu:
 
-current_orders = scale từ review + random/hash.
+“Top 10 sản phẩm nên điều chỉnh giá”,
 
-current_revenue = current_orders * avg_price.
+“Top 5 category có sentiment giảm”,…
 
-Giờ bạn đã có pm.total_orders, pm.total_revenue trong khoảng from/to. Nên:
+Button dẫn tới từng DSS tương ứng.
 
-pm.total_orders      AS current_orders,
-pm.total_revenue     AS current_revenue,
-CASE 
-  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0
-  THEN pm.total_revenue * (latest_predictions.predicted_price / NULLIF(pm.avg_price, 0))
-  ELSE NULL
-END AS projected_revenue,
-...
+1.2. Màn DSS Scenarios (kịch bản DSS) – /analyst/dss-scenarios (DSSScenarios)
 
+Mục đích:
+Giải thích rõ 3 model DSS (Price / Reco / Sentiment), mô tả use case + input cần, cho Analyst chọn kịch bản thay vì chọn “model kỹ thuật”.
 
-Nếu total_revenue toàn kỳ, có thể dùng luôn; nếu bạn muốn “per day” thì chia thêm, nhưng đồ án dùng tổng là được.
+Layout:
 
-expected_revenue_change_pct vẫn = predicted_price / avg_price - 1.
+Header
 
-1.3. Ở _query_price_by_product_keys – làm giống by_category
+Title: DSS Scenarios
 
-Bước 7 – Dùng lại “product_metrics_windowed”
+Subtitle: “Chọn bài toán business bạn muốn giải quyết”
 
-Trong _query_price_by_product_keys, tạo CTE product_metrics giống Bước 3 nhưng filter theo:
+Danh sách scenario (3 card lớn)
 
-WHERE dd.date_value BETWEEN $from_date AND $to_date
-  AND dp.product_key = ANY($product_keys)
+Mỗi DSSScenario card (dữ liệu từ API):
 
+Price Prediction (price_prediction)
 
-Sau đó join product_metrics pm với latest_predictions y hệt by_category.
+Icon: 🔮 / TrendingUp
 
-Bước 8 – Không dùng product_metrics_global nữa
+Title: “Tối ưu hóa giá bán”
 
-Đảm bảo không còn join dwh.product_metrics_global pm ở cuối.
+Description: “Đề xuất giá tối ưu cho sản phẩm để tăng doanh thu/lợi nhuận”
 
-Bước 9 – Áp các rule y chang by_category
+Use cases:
 
-min_confidence, min_price_change_pct, max_discount_pct, min_margin_pct → logic giống hệt _query_price_by_category để tránh 2 luồng khác nhau.
+Tăng doanh thu của top sản phẩm
 
-1.4. Ở _calculate_price_kpis – dùng revenue thật
+Chuẩn bị giá cho campaign
 
-Hiện tại KPI function đang tính:
+So sánh giá với thị trường
 
-num_products, num_with_recommendation, current_total_revenue, projected_total_revenue, expected_revenue_uplift_pct, avg_confidence…
+Required inputs: from_date, to_date, platforms, categories, scope_mode, (optional product_keys)
 
-Sau khi bạn đổi query:
+Button:
 
-current_revenue = pm.total_revenue → sum lên.
+“Run Scenario” → /analyst/dss-input/price_prediction
 
-projected_revenue = pm.total_revenue * (predicted / avg_price) → sum lên.
+“View Previous Decisions” → /analyst/dss-decisions?scenario=price_prediction
 
-Bước 10 – Đảm bảo:
+Product Recommendation (product_recommendation)
 
-current_total_revenue = sum(item["current_revenue"] for item in items if item["current_revenue"] is not None)
-projected_total_revenue = sum(item["projected_revenue"] for item in items if item["projected_revenue"] is not None)
+Icon: 👥 / Users
 
-expected_revenue_uplift_pct = (
-    (projected_total_revenue / current_total_revenue - 1.0)
-    if current_total_revenue > 0 else 0.0
-)
+Description: “Gợi ý sản phẩm bổ sung / cross-sell”
 
-2. Recommendation DSS – /dss/reco/run
-2.1. Ở run_product_recommendation_dss
+Use cases:
 
-Bước 1 – Chuẩn hóa min_co_purchase_rate
+Đề xuất combo
 
-Trong request model đã có min_co_purchase_rate nhưng service chưa dùng.
+Tối ưu giỏ hàng, tăng basket size
 
-Thêm:
+Required inputs: scope_mode, source_product_key, optional platforms, categories, top_k, min_similarity
 
-min_cpr = req.get("min_co_purchase_rate")
-if min_cpr is not None:
-    req["min_co_purchase_rate"] = max(0.0, min(float(min_cpr), 1.0))
+Button “Run Scenario” → /analyst/dss-input/product_recommendation
 
+Review Sentiment (review_sentiment)
 
-Rồi truyền vào _query_product_recommendations.
+Icon: 💬 / MessageSquare
 
-2.2. Ở _query_recommendations_by_product
+Description: “Theo dõi cảm xúc khách hàng từ review”
 
-Giả sử bạn đã thêm cột vào ml.fact_product_recommendation:
-co_purchase_count, co_purchase_rate, avg_bundle_revenue, window_days.
+Use cases:
 
-Bước 2 – Chọn thêm các cột này ra
+Phát hiện khủng hoảng
 
-Trong SELECT hiện tại, thêm:
+Monitor chất lượng sản phẩm
 
-rec.co_purchase_count,
-rec.co_purchase_rate,
-rec.avg_bundle_revenue,
-rec.window_days
+Required inputs: from_date, to_date, platforms, categories, scope_mode, (optional product_key, min_reviews_per_product)
 
+Button “Run Scenario” → /analyst/dss-input/review_sentiment
 
-Bước 3 – Áp filter theo min_co_purchase_rate (nếu có)
+Panel bên phải / dưới
 
-Trong WHERE:
+Khi click vào 1 scenario → hiển thị detail:
 
-WHERE
-    dp_src.product_key = $source_product_key
-    AND rec.similarity_score >= $min_similarity
-    AND (
-        $min_co_purchase_rate IS NULL
-        OR COALESCE(rec.co_purchase_rate, 0) >= $min_co_purchase_rate
-    )
+Mô tả, KPI chính, output fields, ví dụ action.
 
+2. Nhóm “Chạy DSS” – Input & Results
+2.1. Màn DSS Input – /analyst/dss-input/:modelId (DSSInput)
 
-Lưu ý: nếu dùng parameter positional ($1, $2, ...) thì thêm đúng thứ tự.
+Mục đích:
+Form để Analyst config một lần chạy DSS cho 1 model (price_prediction / product_recommendation / review_sentiment).
 
-Bước 4 – Map vào dict trả về
+Header:
 
-Trong Python, khi build result:
+Breadcrumb: DSS → Scenarios → [Tên model] → Input
 
-"co_purchase_rate": float(row["co_purchase_rate"]) if row["co_purchase_rate"] is not None else None,
-"avg_bundle_revenue": float(row["avg_bundle_revenue"]) if row["avg_bundle_revenue"] is not None else None,
-"co_purchase_count": row["co_purchase_count"],
-"window_days": row["window_days"],
+Title: ví dụ Tối ưu hoá giá (Price Prediction DSS)
 
-2.3. Ở _query_recommendations_by_category
+Subtext: “Chọn phạm vi dữ liệu & tham số phân tích”
 
-Bước 5 – Top-K “per source” thay vì top-K global
+Layout 2 cột:
 
-Thay vì LIMIT top_k toàn bộ, bạn nên dùng window:
+Cột trái – Thông tin model
 
-SELECT * FROM (
-   SELECT
-      ...,
-      ROW_NUMBER() OVER (
-          PARTITION BY rec.source_product_sk
-          ORDER BY rec.similarity_score DESC, COALESCE(rec.co_purchase_rate, 0) DESC
-      ) AS rn
-   FROM ...
-   WHERE ...
-) ranked
-WHERE ranked.rn <= $top_k
+Card giới thiệu model hiện tại:
 
+Icon, name, description (từ models[modelId] trong code)
 
-=> Mỗi sản phẩm nguồn có tối đa top_k gợi ý.
+Danh sách “fields” bắt buộc cho model đó (đã có mảng fields trong code).
 
-Bước 6 – Áp min_co_purchase_rate
+Panel nhỏ: “Gợi ý sử dụng”
 
-Tương tự by_product:
+Ví dụ price: “Chọn date range >= 7 ngày, ưu tiên category có doanh thu cao”.
 
-AND (
-  $min_co_purchase_rate IS NULL
-  OR COALESCE(rec.co_purchase_rate, 0) >= $min_co_purchase_rate
-)
+Cột phải – Form input
 
-2.4. Ở _calculate_reco_kpis
+Phần A – Filter chung (tuỳ model):
 
-Hiện tại chỉ dùng:
+Date range (from_date, to_date)
 
-avg_similarity, avg_orders_for_recommended.
+DatePicker đôi, dùng icon lịch.
 
-Bước 7 – Thêm vài KPI mới dùng co_purchase_*
+Default:
 
-Ví dụ:
+Price / Reco: 7–30 ngày gần nhất
 
-co_purchase_rates = [r["co_purchase_rate"] for r in recommendations if r.get("co_purchase_rate") is not None]
-avg_co_purchase_rate = float(np.mean(co_purchase_rates)) if co_purchase_rates else 0.0
+Sentiment: 1–3 tháng gần nhất
 
-kpi["avg_co_purchase_rate"] = avg_co_purchase_rate
-kpi["num_recs_with_co_purchase"] = len(co_purchase_rates)
+Platform (platform_code)
 
+Select (multi nếu bạn muốn), options: Tiki, Lazada, Shopee.
 
-→ Phần này để AI summarizer và Analyst có thêm context (“đa phần các rec có co_purchase_rate ~ 30%…”).
+Category (category)
 
-3. Sentiment DSS – /dss/review/run
-3.1. Ở _query_review_sentiment
+Category selector (combo box): dữ liệu từ getCategories().
 
-Mục tiêu: dùng đúng from_date / to_date → chỉ lấy review trong khoảng đó.
+Cho phép search theo tên.
 
-Giả sử dwh.fact_review có date_sk.
+Scope Mode (scope_mode)
 
-Bước 1 – Thêm join với dim_date và filter theo ngày
+Select:
 
-Trong CTE review_stats:
+by_category – phân tích toàn category
 
-WITH review_stats AS (
-    SELECT
-        r.product_sk,
-        COUNT(*) AS total_reviews,
-        SUM(CASE WHEN sent.sentiment_label = 'positive' THEN 1 ELSE 0 END) AS positive_count,
-        SUM(CASE WHEN sent.sentiment_label = 'neutral' THEN 1 ELSE 0 END)  AS neutral_count,
-        SUM(CASE WHEN sent.sentiment_label = 'negative' THEN 1 ELSE 0 END) AS negative_count,
-        AVG(r.rating) AS avg_rating,
-        ...
-    FROM dwh.fact_review r
-    LEFT JOIN ml.fact_review_sentiment sent
-           ON sent.review_id = r.review_sk
-          AND sent.model_sk = $model_sk
-    JOIN dwh.dim_date dd ON dd.date_sk = r.date_sk
-    LEFT JOIN dwh.dim_platform dpl ON ...
-    LEFT JOIN dwh.dim_product dp ON ...
-    LEFT JOIN dwh.dim_category dc ON ...
-    WHERE
-        dd.date_value BETWEEN $from_date AND $to_date
-        AND {platform/category filters}
-    GROUP BY r.product_sk
-    HAVING COUNT(*) >= $min_reviews_per_product
-)
+by_product – focus 1 sản phẩm
 
+top_n – lấy N sản phẩm top theo doanh thu
 
-Nếu bạn đang gắn platform_code và category filter trong where_clause dynamic thì chỉ cần chèn thêm dd.date_value BETWEEN vào đó, nhớ điều chỉnh thứ tự param.
+Ghi chú ngắn dưới field.
 
-Bước 2 – Cập nhật danh sách params để include from/to
+Product Key (product_key) – chỉ hiện nếu:
 
-Ở phần Python build query:
+modelId = product_recommendation và scope_mode = by_product
 
-Thêm from_date & to_date vào params ngay sau model_sk (hoặc thứ tự bạn chọn).
+hoặc modelId = review_sentiment và scope_mode = by_product
 
-Đảm bảo $ index trong SQL khớp.
+Input text + hint: “VD: lazada_123456” (tạm, sau có thể chuyển thành search API).
 
-3.2. Xử lý sentiment_focus ở Python
+Phần B – Tham số riêng cho từng model
 
-Bước 3 – Giữ như hiện tại nhưng cho phép Analyst tinh chỉnh
+Price Prediction
 
-Hiện tại logic:
+Group “Advanced Pricing Constraints”:
 
-if sentiment_focus == "only_negative":
-    data = [p for p in data if p["is_critical"]]
-elif sentiment_focus == "only_positive":
-    data = [p for p in data if p["positive_pct"] >= 0.7]
+max_discount_pct (slider hoặc input %): “Giảm tối đa X% so với giá hiện tại”
 
+min_margin_pct: “Biên lợi nhuận tối thiểu Y%”
 
-Gợi ý:
+min_confidence: “Ngưỡng confidence tối thiểu để chấp nhận”
 
-Cho phép FE gửi thêm:
+min_price_change_pct: “Chỉ khuyến nghị giá nếu chênh lệch >= Z%”
 
-positive_threshold (default 0.7)
+Có thể default ẩn và có toggle “Hiển thị tuỳ chọn nâng cao”.
 
-Dùng:
+Product Recommendation
 
-positive_threshold = request.get("positive_threshold", 0.7)
-...
-elif sentiment_focus == "only_positive":
-    data = [p for p in data if p["positive_pct"] >= positive_threshold]
+Field:
 
-3.3. “Reasons” – giữ lại nhưng rõ ràng hơn
+top_k: số gợi ý / sản phẩm (default 10)
 
-Ngay sau khi bạn tạo top_negative_reasons / top_positive_reasons từ review text:
+min_similarity: từ 0–1
 
-Bước 4 – Nếu không có text, gắn lý do business rõ ràng
+min_co_purchase_rate: từ 0–1
 
-Ví dụ:
+Review Sentiment
 
-if not top_negative_reasons:
-    if product["negative_pct"] > negative_threshold:
-        top_negative_reasons = [
-            "Tỷ lệ đánh giá tiêu cực cao hơn ngưỡng cho phép",
-            f"{product['negative_pct']*100:.1f}% review là negative"
-        ]
+Field:
 
+min_reviews_per_product: số review tối thiểu
 
-Cái này để AI có input hay hơn, Analyst nhìn vào cũng hiểu “vì sao critical”.
+sentiment_focus: radio:
 
-4. Kết luận – đường đi nước bước
+All
 
-Tóm tắt lại các group việc cần làm trong code:
+Only Negative
 
-Price DSS
+Only Positive
 
-Bỏ clamp min_confidence >= 0.6.
+Footer form:
 
-_query_price_by_category & _query_price_by_product_keys:
+Button “Chạy DSS” (primary)
 
-Dùng CTE aggregate từ fact_product_daily + dim_date theo from/to.
+Button “Huỷ / Quay lại Scenarios”
 
-Dùng prediction_confidence nếu có.
+Loading spinner khi submit.
 
-Áp max_discount_pct, min_margin_pct (nếu có margin).
+Sau khi submit thành công:
 
-Tính current_orders, current_revenue, projected_revenue từ dữ liệu thật.
+Điều hướng tới /analyst/dss-results/:modelId
 
-_calculate_price_kpis: dùng sum(current_revenue/projected_revenue) thật.
+navigate('/analyst/dss-results/price_prediction', { state: { inputData, dssResults } })
 
-Recommendation DSS
+2.2. Màn DSS Results – /analyst/dss-results/:modelId (DSSResults)
 
-Nhận & clamp min_co_purchase_rate.
+Mục đích:
+Hiển thị kết quả phân tích + AI summary & recommended actions cho lần chạy DSS đó.
 
-Ở 2 query:
+Header:
 
-Select co_purchase_*.
+Breadcrumb: DSS → Scenarios → [Tên model] → Results
 
-Filter co_purchase_rate nếu người dùng set.
+Hiển thị tóm tắt input đã dùng:
 
-By_category: dùng window ROW_NUMBER để top_k mỗi source.
+Date range, platforms, categories, scope, top_n…
 
-KPI: thêm avg_co_purchase_rate.
+Layout tổng: 2 phần
 
-Sentiment DSS
+Phần trên – Overview & AI Summary
 
-Join dim_date & filter dd.date_value BETWEEN from_date AND to_date.
+Model summary header
 
-Cho phép FE điều chỉnh positive_threshold.
+Icon tương ứng (Price / Reco / Sentiment)
 
-Cải thiện “reasons” khi thiếu review text.
+Tên model
+
+Tag: “Session #123 / Created at 2025-12-05 22:57 / AI Model: gemini-pro / gpt-4o-mini…”
+
+KPI cards (tuỳ model)
+
+Price Prediction:
+
+Số sản phẩm phân tích (num_products)
+
+Số sản phẩm có khuyến nghị (num_with_recommendation)
+
+Current Revenue (tổng)
+
+Projected Revenue (tổng)
+
+Expected Uplift %
+
+Avg Confidence
+
+Product Recommendation:
+
+Tổng số sản phẩm nguồn / session
+
+Tổng số recommendations (rows)
+
+Avg similarity
+
+Avg co_purchase_rate
+
+Review Sentiment:
+
+Tổng số sản phẩm được phân tích
+
+Tổng review
+
+Avg positive_pct, avg_negative_pct
+
+sản phẩm “critical negative”
+
+Avg rating
+
+AI Summary & Risks
+
+Box “AI Insights” – list bullet 3–5 insight (từ ai_summary_insights[]).
+
+Box “AI Recommended Actions (High level)” – list 3–5 action, có tag Level:
+
+[PRICE], [RECO], [CS], [MARKETING]…
+
+Nếu có date_adjustment_info → panel nhỏ: “We adjusted your date range to … because …”.
+
+Phần dưới – Detailed Table + AI Actions
+
+Tuỳ model, render khác nhau:
+
+a) Price Prediction
+
+Table: Price Recommendations
+
+Columns:
+
+Product
+
+Platform
+
+Category
+
+Current Price
+
+Predicted Price
+
+Recommended Price (nếu có guardrail)
+
+Price change % (badge màu xanh/đỏ)
+
+Current Orders
+
+Current Revenue
+
+Projected Revenue
+
+Expected Revenue Uplift %
+
+Confidence %
+
+Sorting:
+
+Default sort theo expected_revenue_change_pct * current_revenue desc.
+
+Pagination.
+
+Action panel (phía bên phải hoặc dưới)
+
+Danh sách ai_recommended_actions[] chi tiết, mỗi item:
+
+Title
+
+Description (nêu rõ sản phẩm hoặc nhóm sản phẩm)
+
+Tag priority: HIGH / MEDIUM / LOW
+
+Optional: Impact, Effort.
+
+Button “Create Decision from this” → mở DSSDecisionCreatePage với prefill dữ liệu.
+
+b) Product Recommendation
+
+Table: Recommendations
+
+Mỗi dòng:
+
+Source Product
+
+Recommended Product
+
+Platform
+
+Category
+
+similarity_score
+
+co_purchase_count
+
+co_purchase_rate
+
+avg_bundle_revenue
+
+Filter:
+
+Min similarity slider
+
+Min co_purchase_rate slider
+
+Filter theo source_product_key.
+
+AI actions:
+
+Ví dụ: “Tạo combo A + B trên Tiki với discount 10%”, “Đề xuất nhóm sản phẩm này vào widget ‘Frequently Bought Together’…”.
+
+c) Review Sentiment
+
+Table: Product Sentiment
+
+Columns:
+
+Product, Platform, Category
+
+total_reviews
+
+positive_pct, neutral_pct, negative_pct
+
+avg_rating
+
+sample_negative_reviews (show icon + mở modal xem chi tiết)
+
+sample_positive_reviews
+
+top_positive_reasons / top_negative_reasons (list tag)
+
+Filter:
+
+Chỉ show sản phẩm negative_pct >= X khi chọn “critical focus”.
+
+Charts phụ:
+
+Pie chart phân bố sentiment toàn scope.
+
+Bar chart top sản phẩm negative_pct cao.
+
+AI actions:
+
+“Trả lời toàn bộ review negative trong 24h cho 10 sản phẩm top risk”
+
+“Mở investigation về lỗi QC cho nhóm sản phẩm X”…
+
+3. Nhóm “Decision & Action log”
+3.1. Màn Danh sách Decision DSS – /analyst/dss-decisions (DSSDecisionsPage)
+
+Mục đích:
+Quản lý lịch sử “quyết định đã chốt” dựa trên DSS (khác với kết quả raw AI, đây là quyết định business).
+
+Header:
+
+Title: DSS Decisions
+
+Button: “+ Create Decision” → /analyst/dss-decisions/create
+
+Filters:
+
+Scenario select (scenario_key):
+
+All, Price Prediction, Product Recommendation, Review Sentiment
+
+Status:
+
+DRAFT, APPROVED, IN_PROGRESS, DONE, CANCELLED
+
+Date range: created_at
+
+Search box theo title / product_name.
+
+Table columns:
+
+Decision ID
+
+Title
+
+Scenario (icon + text)
+
+Status badge
+
+Owner (user who created)
+
+Created at, Last updated
+
+#Actions in decision
+
+Link “View details”
+
+Pagination (page/pageSize).
+
+3.2. Màn Decision Detail – /analyst/dss-decisions/:decisionId (DSSDecisionDetailPage)
+
+Mục đích:
+Xem chi tiết 1 quyết định: bối cảnh, kết quả DSS gốc, list action chi tiết, trạng thái thực thi.
+
+Header:
+
+Back link → /analyst/dss-decisions
+
+Title = decision.title
+
+Tag:
+
+Scenario: Price / Reco / Sentiment
+
+Status (badge màu)
+
+Section 1 – Meta
+
+Decision ID
+
+Scenario key
+
+Owner, created_at, updated_at
+
+Link tới DSS Session (nếu có analysis_session_id) – “View original DSS Run”.
+
+Section 2 – Context & Summary
+
+description (markdown view nếu bạn muốn).
+
+kpi_summary hiển thị dạng key-value / grid:
+
+For price: current_revenue, projected_revenue, uplift…
+
+For sentiment: total_reviews, avg_negative_pct…
+
+Section 3 – AI Insights & Actions (read-only)
+
+2 panel:
+
+AI summary insights (những gì AI nói)
+
+AI recommended_actions (nguyên văn, để tham chiếu)
+
+Section 4 – Action items
+
+Bảng action:
+
+Action ID
+
+Title
+
+Action type (pricing, marketing, cs, etc)
+
+Owner (phụ trách)
+
+Due date
+
+Status (NOT_STARTED, IN_PROGRESS, DONE)
+
+Impact / Priority (optional)
+
+Link tới ticket ngoài (Jira, Trello…) nếu có field external_link.
+
+3.3. Màn Tạo mới Decision – /analyst/dss-decisions/create (DSSDecisionCreatePage)
+
+Mục đích:
+Cho Analyst “chốt” một quyết định/plan từ kết quả DSS + AI actions.
+
+Form fields:
+
+scenario_key (Select)
+
+Price / Reco / Sentiment
+
+title (Input, required)
+
+description (Textarea)
+
+Có thể paste lại kết quả, insight quan trọng.
+
+status (Select)
+
+DRAFT, APPROVED, IN_PROGRESS, DONE
+
+Action list (dynamic)
+
+Nút “Add action” mở form nhỏ cho từng DSSActionItem:
+
+title (required)
+
+description
+
+type (pricing, marketing, cs…)
+
+owner (text hoặc select)
+
+due_date
+
+priority (HIGH/MEDIUM/LOW)
+
+Có thể thêm nhiều action, list bên dưới cho phép edit/delete.
+
+Footer:
+
+Button “Save Decision” (lưu qua saveDSSDecision)
+
+Button “Cancel”
+
+Nếu vào từ DSSResults với state prefill, bạn có thể:
+
+Prefill scenario_key + description + list actions từ ai_recommended_actions.
+
+4. Màn DSS System Health – /analyst/dss-health (DSSHealth)
+
+Mục đích:
+Giúp Analyst (và cả Admin/DE/ML) xem DSS có đủ data & ML model chạy ổn chưa trước khi tin kết quả.
+
+Header:
+
+Title: DSS System Health
+
+Subtitle: “Monitor data pipeline, ML model status & DSS API health”
+
+Button “Refresh Now” (spin icon khi đang refresh).
+
+Sections:
+
+Overall Status
+
+Big indicator: ✅ Healthy / ⚠️ Degraded / ❌ Failing
+
+Dựa trên aggregate từ API getDSSHealth, getDataStatus.
+
+Data Status (by schema / table)
+
+Cards hoặc bảng:
+
+Raw Layer: last_updated, record_count, status
+
+DWH Layer: fact_product_daily, dim_product, dim_category,… mỗi cái:
+
+last_loaded_at, row_count, status icon.
+
+ML Model Status
+
+List models:
+
+Price model: version, trained_at, MAE/RMSE, status
+
+Reco model: version, last retrain, #products covered
+
+Sentiment model: version, accuracy, F1.
+
+Maybe link “Retrain logs” nếu sau này có.
+
+DSS API Status
+
+Last run time for:
+
+/dss/price/run
+
+/dss/reco/run
+
+/dss/review/run
+
+Average response time, last error (nếu có).
+
+Recent Alerts
+
+List log các warning: category mapping OTHER > 15%, missing predictions cho N sản phẩm, ML model stale > 30 days…
+
+5. Gợi ý routing/menu tổng thể
+
+Trong sidebar Analyst bạn có thể tạo group “DSS”:
+
+DSS Dashboard → /dss
+
+DSS Scenarios → /analyst/dss-scenarios
+
+Run DSS (ẩn, chỉ navigate khi chọn scenario) → /analyst/dss-input/:modelId
+
+DSS Results (ẩn, chỉ navigate từ input) → /analyst/dss-results/:modelId
+
+DSS Decisions → /analyst/dss-decisions
+
+DSS Health → /analyst/dss-health
+
+6. Kế hoạch Kiểm thử & Đảm bảo chất lượng
+
+6.1. Unit Testing (Vitest)
+   - [ ] Fix cấu hình và sửa các test đang lỗi (AuthContext, SignInForm).
+   - [ ] Viết test cho các utility function quan trọng (format tiền tệ, xử lý ngày tháng).
+   - [ ] Viết test cho các component core (Button, Card, Table).
+
+6.2. Integration/E2E Testing (Browser)
+   - [ ] Test luồng Đăng nhập/Đăng xuất (Login Flow) - Đã verify thành công.
+   - [ ] Test luồng chạy kịch bản DSS (End-to-End): Input -> Run -> Result.
+   - [ ] Kiểm tra hiển thị trên các màn hình khác nhau (Responsive).
