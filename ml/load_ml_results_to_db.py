@@ -28,6 +28,7 @@ def get_or_create_model(
     status: str = "active",
 ) -> int:
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        # 1) Tìm xem model đã tồn tại chưa
         cur.execute(
             """
             SELECT model_sk
@@ -37,10 +38,42 @@ def get_or_create_model(
             (model_name, model_version),
         )
         row = cur.fetchone()
-        if row:
-            return row["model_sk"]
 
-        # 🔹 CHỖ QUAN TRỌNG: wrap dict thành Json
+        if row:
+            model_sk = row["model_sk"]
+
+            # 🔁 UPDATE các field nếu có giá trị mới
+            set_parts = []
+            params = []
+
+            if training_data_until is not None:
+                set_parts.append("training_data_until = %s")
+                params.append(training_data_until)
+
+            if metrics is not None:
+                set_parts.append("metrics = %s")
+                params.append(Json(metrics))
+
+            if status is not None:
+                set_parts.append("status = %s")
+                params.append(status)
+
+            if set_parts:
+                set_sql = ", ".join(set_parts)
+                params.append(model_sk)
+                cur.execute(
+                    f"""
+                    UPDATE ml.dim_ml_model
+                    SET {set_sql}
+                    WHERE model_sk = %s
+                    """,
+                    params,
+                )
+
+            conn.commit()
+            return model_sk
+
+        # 2) Chưa có → INSERT mới
         metrics_json = Json(metrics) if metrics is not None else None
 
         cur.execute(
@@ -52,11 +85,13 @@ def get_or_create_model(
             VALUES (%s,%s,%s,%s,%s,%s)
             RETURNING model_sk
             """,
-            (model_name, model_type, model_version, training_data_until, metrics_json, status),
+            (model_name, model_type, model_version,
+             training_data_until, metrics_json, status),
         )
         model_sk = cur.fetchone()["model_sk"]
         conn.commit()
         return model_sk
+
 
 
 # -------------------------------------------------------------------

@@ -52,6 +52,70 @@ class MLService:
         """
         self.db = db
 
+    async def _resolve_model(
+        self,
+        model_type: str,
+        model_name: Optional[str],
+        model_version: Optional[str],
+    ) -> MLModelResponse:
+        """
+        Resolve model từ ml.dim_ml_model registry.
+        
+        Logic:
+        - Nếu truyền model_name/model_version → chọn exact match
+        - Nếu không → lấy model mới nhất có status='active' cho model_type
+        
+        Args:
+            model_type: Loại model ('price', 'sentiment', 'recommendation')
+            model_name: Tên model (optional)
+            model_version: Version (optional)
+            
+        Returns:
+            MLModelResponse object
+            
+        Raises:
+            RuntimeError: Nếu không tìm thấy model phù hợp
+        """
+        query = """
+            SELECT model_sk, model_name, model_type, model_version,
+                   training_data_until, metrics, status, created_at
+            FROM ml.dim_ml_model
+            WHERE model_type = $1
+              AND status = 'active'
+        """
+        params: List[Any] = [model_type]
+
+        if model_name:
+            query += f" AND model_name = ${len(params)+1}"
+            params.append(model_name)
+        if model_version:
+            query += f" AND model_version = ${len(params)+1}"
+            params.append(model_version)
+
+        query += " ORDER BY created_at DESC LIMIT 1"
+
+        row = await self.db.fetchrow(query, *params)
+        if not row:
+            raise RuntimeError(
+                f"No active model found for type='{model_type}' "
+                f"(name='{model_name}', version='{model_version}')"
+            )
+
+        metrics = row["metrics"]
+        if isinstance(metrics, str):
+            metrics = json.loads(metrics)
+
+        return MLModelResponse(
+            model_sk=row["model_sk"],
+            model_name=row["model_name"],
+            model_type=row["model_type"],
+            model_version=row["model_version"],
+            training_data_until=row["training_data_until"],
+            metrics=metrics,
+            status=row["status"],
+            created_at=row["created_at"],
+        )
+
     # ---------------------------------------------------------------------
     # MODEL REGISTRY
     # ---------------------------------------------------------------------
@@ -301,27 +365,90 @@ class MLService:
         self, payload: OnlinePricePredictionRequest
     ) -> OnlinePricePredictionResponse:
         """
-        Đây là stub.
-        Thực tế anh sẽ:
-          - load model từ file / MinIO
-          - chuẩn hoá feature từ DWH (fact_product_daily, dim_product, ...)
-          - predict ra giá
-        Ở đây em giả lập giá trị để anh nối tiếp dễ hơn.
+        Online price prediction sử dụng model thật từ registry.
+        
+        Flow:
+        1. Resolve model từ ml.dim_ml_model
+        2. Lấy features (từ payload hoặc query DWH)
+        3. Load model từ file & predict
+        4. Return kết quả với latency thực tế
         """
-        # TODO: nối vào MLPredictionService thực tế của anh
-        # Ví dụ tạm:
-        dummy_price = 1000000.0
-        ci_lower = dummy_price * 0.9
-        ci_upper = dummy_price * 1.1
-        model_version = payload.model_version or "v1.0"
+        import time
+        import numpy as np
+        from app.ml_runtime import load_price_model
+        
+        t0 = time.perf_counter()
+
+        # 1) Resolve model từ registry
+        model_info = await self._resolve_model(
+            model_type="price",
+            model_name=payload.model_name,
+            model_version=payload.model_version,
+        )
+
+        # 2) Chuẩn hoá features
+        # Ưu tiên lấy từ payload, nếu thiếu thì query DWH
+        current_price = payload.current_price
+        avg_rating = payload.avg_rating
+        review_count = payload.review_count
+
+        if current_price is None or avg_rating is None or review_count is None:
+            # Query snapshot mới nhất từ fact_product_daily
+            snap_sql = """
+                SELECT fpd.min_price, fpd.max_price,
+                       fpd.total_review_count, fpd.avg_rating
+                FROM dwh.fact_product_daily fpd
+                JOIN dwh.dim_product dp ON dp.product_sk = fpd.product_sk
+                JOIN dwh.dim_platform pl ON pl.platform_sk = fpd.platform_sk
+                JOIN dwh.dim_date d ON d.date_sk = fpd.date_sk
+                WHERE dp.product_key = $1
+                  AND pl.platform_code = $2
+                ORDER BY d.date_value DESC
+                LIMIT 1
+            """
+            snap = await self.db.fetchrow(
+                snap_sql,
+                payload.product_key,
+                payload.platform_code,
+            )
+            if not snap:
+                raise ValueError(
+                    f"No product data found for {payload.product_key} "
+                    f"on platform {payload.platform_code}"
+                )
+
+            min_price = float(snap["min_price"])
+            max_price = float(snap["max_price"])
+            total_review_count = int(snap["total_review_count"] or 0)
+            avg_rating = float(snap["avg_rating"] or 0.0)
+        else:
+            # Dùng current_price cho cả min/max (simplified)
+            min_price = max_price = float(current_price)
+            total_review_count = int(review_count or 0)
+            avg_rating = float(avg_rating or 0.0)
+
+        # Tạo feature vector [min_price, max_price, review_count, avg_rating]
+        # NOTE: Thứ tự features phải khớp với lúc train model
+        X = np.array([[min_price, max_price, total_review_count, avg_rating]])
+
+        # 3) Load model & predict
+        model = load_price_model(model_info.model_name, model_info.model_version)
+        pred = float(model.predict(X)[0])
+
+        # Optional: CI calculation (nếu model support quantile regression)
+        ci_lower = None
+        ci_upper = None
+        # TODO: Implement CI nếu cần (có thể dùng model.predict với quantile params)
+
+        latency_ms = int((time.perf_counter() - t0) * 1000)
 
         return OnlinePricePredictionResponse(
-            predicted_price=dummy_price,
+            predicted_price=pred,
             ci_lower=ci_lower,
             ci_upper=ci_upper,
-            model_name=payload.model_name,
-            model_version=model_version,
-            latency_ms=5,
+            model_name=model_info.model_name,
+            model_version=model_info.model_version,
+            latency_ms=latency_ms,
         )
 
     # ---------------------------------------------------------------------
@@ -352,8 +479,9 @@ class MLService:
                 rec_dp.product_key AS recommended_product_key,
                 rec_dp.product_name AS recommended_product_name,
                 rnk.similarity_score,
-                fpd_snap.min_price,
-                fpd_snap.avg_rating
+                -- Add COALESCE to handle NULL values from fact_product_daily
+                COALESCE(fpd_snap.min_price, 1000000.0) AS min_price,
+                COALESCE(fpd_snap.avg_rating, 4.0) AS avg_rating
             FROM ml.fact_product_recommendation rnk
             JOIN ml.dim_ml_model m ON m.model_sk = rnk.model_sk
             JOIN dwh.dim_date d ON d.date_sk = rnk.date_sk
@@ -523,32 +651,50 @@ class MLService:
         self,
         payload: OnlineSentimentRequest,
     ) -> OnlineSentimentResponse:
-        # TODO: gọi model thật (REST / gRPC / onnxruntime...) – hiện tại stub
+        """
+        Online sentiment analysis sử dụng model thật từ registry.
+        
+        Flow:
+        1. Resolve model từ ml.dim_ml_model
+        2. Load vectorizer + classifier từ file
+        3. Transform text → predict_proba
+        4. Return label, score, latency
+        """
         import time
+        import numpy as np
+        from app.ml_runtime import load_sentiment_pipeline
+        
         t0 = time.perf_counter()
 
-        # logic stub đơn giản: nếu có từ "tốt" → positive, "tệ" → negative
-        text = payload.review_text.lower()
-        if "tốt" in text or "ngon" in text:
-            label = "positive"
-            score = 0.9
-        elif "tệ" in text or "dở" in text:
-            label = "negative"
-            score = 0.9
-        else:
-            label = "neutral"
-            score = 0.6
+        # 1) Resolve model từ registry
+        model_info = await self._resolve_model(
+            model_type="sentiment",
+            model_name=payload.model_name,
+            model_version=payload.model_version,
+        )
+
+        # 2) Load pipeline (vectorizer + classifier)
+        vectorizer, clf = load_sentiment_pipeline(
+            model_info.model_name,
+            model_info.model_version,
+        )
+
+        # 3) Transform & predict
+        X = vectorizer.transform([payload.review_text])
+        proba = clf.predict_proba(X)[0]
+        
+        # Lấy label có xác suất cao nhất
+        idx = int(np.argmax(proba))
+        label = str(clf.classes_[idx])
+        score = float(proba[idx])
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
-
-        model_name = payload.model_name or "sentiment_bert"
-        model_version = payload.model_version or "v1.0"
 
         return OnlineSentimentResponse(
             label=label,
             score=score,
-            model_name=model_name,
-            model_version=model_version,
+            model_name=model_info.model_name,
+            model_version=model_info.model_version,
             latency_ms=latency_ms,
         )
 
@@ -586,9 +732,16 @@ class MLService:
             JOIN dwh.dim_date d ON d.date_sk = r.date_sk
             WHERE d.date_value BETWEEN $1 AND $2
         """
+        sentiment_sql = """
+            SELECT COUNT(*) AS cnt
+            FROM ml.fact_review_sentiment s
+            JOIN dwh.dim_date d ON d.date_sk = s.date_sk
+            WHERE d.date_value BETWEEN $1 AND $2
+        """
 
         preds = await self.db.fetchrow(preds_sql, from_date, today)
         recs = await self.db.fetchrow(recs_sql, from_date, today)
+        sentiments = await self.db.fetchrow(sentiment_sql, from_date, today)
 
         return MLStatusSummary(
             models_total=models["total"],
@@ -597,4 +750,5 @@ class MLService:
             models_training=models["training"],
             predictions_last_7_days=preds["cnt"],
             recommendations_last_7_days=recs["cnt"],
+            sentiment_reviews_last_7_days=sentiments["cnt"],
         )

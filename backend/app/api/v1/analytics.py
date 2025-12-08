@@ -1,8 +1,8 @@
 # app/api/v1/analytics.py
 from datetime import date
 from typing import Optional, List
+from contextlib import asynccontextmanager
 
-import asyncpg
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.api.dependencies import require_role
 from app.schemas.analytics import (
@@ -32,20 +32,25 @@ except ImportError:
     USE_CACHE = False
 import os
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analytics", tags=["Analytics / Analyst"])
 
-
 async def get_db():
     """
-    Tạo 1 kết nối asyncpg cho mỗi request analytics.
+    Trả về connection pool cho analytics service.
+    Service sẽ acquire connection từ pool khi cần.
     """
-    conn = await asyncpg.connect(dsn=DATABASE_URL)
     try:
-        yield conn
-    finally:
-        await conn.close()
-
+        from app.db_pool import get_pool
+        pool = await get_pool()
+        logger.debug(f"get_db: Successfully got pool {id(pool)}")
+        return pool
+    except Exception as e:
+        logger.error(f"get_db: Failed to get pool: {e}")
+        raise
 
 async def get_analytics_service(db=Depends(get_db)) -> AnalyticsService:
     if USE_CACHE:
@@ -101,10 +106,9 @@ async def get_overview_trends(
     to_date: date = Query(...),
     platform_code: Optional[str] = Query(None),
     category_key: Optional[str] = Query(None),
-    max_points: int = Query(365, ge=30, le=1000, description="Maximum number of data points (auto-sampling for large ranges)"),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
-    return await service.get_overview_trends(from_date, to_date, platform_code, category_key, max_points)
+    return await service.get_overview_trends(from_date, to_date, platform_code, category_key)
 
 
 # ====== PLATFORM COMPARISON ======
@@ -218,15 +222,19 @@ async def get_price_vs_revenue(
 
 # ====== REPORT APIs ======
 
-@router.get("/report/overview", response_model=OverviewReportResponse,dependencies=[Depends(require_role("ANALYST"))])
+@router.get(
+    "/report/overview",
+    response_model=OverviewReportResponse,
+    dependencies=[Depends(require_role("ANALYST"))],
+)
 async def get_overview_report(
-    from_date: date = Query(...),
-    to_date: date = Query(...),
+    from_date: date = Query(..., description="Ngày bắt đầu (YYYY-MM-DD)"),
+    to_date: date = Query(..., description="Ngày kết thúc (YYYY-MM-DD)"),
     platform_code: Optional[str] = Query(
         None, description="tiki / lazada, nếu null thì tổng tất cả"
     ),
     category_key: Optional[str] = Query(
-        None, description="category_sk, lấy từ /filters/categories"
+        None, description="category_sk, lấy từ /analytics/filters/categories"
     ),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
@@ -236,30 +244,32 @@ async def get_overview_report(
       - Trend theo ngày
       - So sánh giữa các platform
       - Tỷ trọng category theo platform (nếu có platform_code)
-    
-    Tối ưu: Chạy parallel các queries độc lập để giảm thời gian response.
     """
-    # Tính max_points dựa trên date range để tối ưu performance
-    days_diff = (to_date - from_date).days + 1
-    max_points = min(365, max(30, days_diff))  # Tối đa 365 points, tối thiểu 30
-    
-    # Chạy parallel các queries độc lập (nhanh hơn 60-70%)
+
+    # chạy song song các query
     tasks = [
         service.get_overview_kpis(from_date, to_date, platform_code, category_key),
-        service.get_overview_trends(from_date, to_date, platform_code, category_key, max_points),
+        service.get_overview_trends(from_date, to_date, platform_code, category_key),
         service.get_platform_comparison(from_date, to_date, category_key),
     ]
-    
-    # Thêm category_share nếu có platform_code
     if platform_code:
         tasks.append(service.get_category_share(from_date, to_date, platform_code))
-    
-    # Chạy tất cả queries song song
+
     results = await asyncio.gather(*tasks)
-    
+
     kpis = results[0]
     trends = results[1]
-    platform_comparison = results[2]
+    platform_comparison_resp = results[2]
+
+    # rút ra list PlatformComparisonItem từ PlatformComparisonResponse
+    if isinstance(platform_comparison_resp, list):
+        platforms = platform_comparison_resp
+    elif isinstance(platform_comparison_resp, dict):
+        platforms = platform_comparison_resp.get("platforms", [])
+    else:
+        # trường hợp là Pydantic model PlatformComparisonResponse
+        platforms = getattr(platform_comparison_resp, "platforms", [])
+
     category_share = results[3] if platform_code else []
 
     return OverviewReportResponse(
@@ -269,42 +279,41 @@ async def get_overview_report(
         category_key=category_key,
         kpis=kpis,
         trends=trends,
-        platform_comparison=platform_comparison,
+        platform_comparison=platforms,   # <-- GIỜ LÀ LIST[PlatformComparisonItem]
         category_share=category_share,
     )
 
-
-@router.get("/report/product", response_model=ProductReportResponse,dependencies=[Depends(require_role("ANALYST"))])
+@router.get(
+    "/report/product",
+    response_model=ProductReportResponse,
+    dependencies=[Depends(require_role("ANALYST"))],
+)
 async def get_product_report(
     product_key: str = Query(..., description="global product key, vd: tiki_123456"),
     platform_code: str = Query(..., description="tiki / lazada"),
-    from_date: date = Query(...),
-    to_date: date = Query(...),
+    from_date: date = Query(..., description="Ngày bắt đầu (YYYY-MM-DD)"),
+    to_date: date = Query(..., description="Ngày kết thúc (YYYY-MM-DD)"),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     """
     Report chi tiết cho 1 product:
       - Timeseries: giá / rating / review theo ngày
       - Review summary: tổng số review, breakdown rating, top review
-    UI có thể dùng report này cho màn product-detail report.
-    
-    Tối ưu: Chạy parallel timeseries và review summary để giảm thời gian response.
     """
-    # Chạy parallel 2 queries độc lập (nhanh hơn 50%)
-    timeseries, review_summary = await asyncio.gather(
-        service.get_product_timeseries(
-            product_key=product_key,
-            platform_code=platform_code,
-            from_date=from_date,
-            to_date=to_date,
-        ),
-        service.get_review_summary(
-            product_key=product_key,
-            platform_code=platform_code,
-            from_date=from_date,
-            to_date=to_date,
-            top_n=5,
-        ),
+    # Tuần tự cũng được (an toàn tuyệt đối), hoặc dùng asyncio.gather nếu muốn nhanh hơn.
+    timeseries = await service.get_product_timeseries(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
+    review_summary = await service.get_review_summary(
+        product_key=product_key,
+        platform_code=platform_code,
+        from_date=from_date,
+        to_date=to_date,
+        top_n=5,
     )
 
     return ProductReportResponse(

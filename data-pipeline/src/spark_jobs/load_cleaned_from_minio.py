@@ -449,7 +449,6 @@ CREATE TABLE IF NOT EXISTS {ml}.fact_product_recommendation (
     source_product_sk      INT NOT NULL REFERENCES {dwh}.dim_product(product_sk),
     recommended_product_sk INT NOT NULL REFERENCES {dwh}.dim_product(product_sk),
     rank                   INT NOT NULL,
-
     similarity_score       NUMERIC(5,4),
     recommendation_type    VARCHAR(50),
     created_at             TIMESTAMPTZ DEFAULT NOW()
@@ -607,7 +606,7 @@ def clean_data(df):
         )
 
         # ======================================================
-        # 🔥 SỬA LỖI LỚN NHẤT: brand_name CHỈ XUẤT HIỆN NẾU CÓ
+        #  SỬA LỖI LỚN NHẤT: brand_name CHỈ XUẤT HIỆN NẾU CÓ
         # ======================================================
 
         if "brand_name" in df_cleaned.columns and "brand" in df_cleaned.columns:
@@ -753,33 +752,26 @@ def map_categories(df):
     plural_count = sum(1 for k in mapping_dict.keys() if k.endswith('s') and k not in ['access', 'wireless'])
     print(f"[INFO] Including {plural_count} plural variants for Lazada compatibility")
 
-    def _map_category_enhanced(category_text: str, product_name: str):
-        """
-        Try to map using category first, then fallback to product_name
-        ✅ IMPROVED: Sort by keyword length (longest first) for best match
-        """
+    def _map_category_enhanced(category_text, product_name):
         if not category_text and not product_name:
             return None
-        
-        # ✅ Sort mappings by keyword length DESC for better specificity
-        sorted_mappings = sorted(mapping_dict.items(), 
-                                key=lambda x: len(x[0]), 
-                                reverse=True)
-        
-        # Try category text first
-        if category_text:
-            t = category_text.lower().strip()
-            for key, path in sorted_mappings:
-                if key in t:
-                    return path
-        
-        # Fallback to product name if category didn't match
+
+        sorted_mappings = sorted(mapping_dict.items(), key=lambda x: len(x[0]), reverse=True)
+
+        # 1. Ưu tiên product_name
         if product_name:
             p = product_name.lower().strip()
             for key, path in sorted_mappings:
                 if key in p:
                     return path
-        
+
+        # 2. Sau đó mới tới category_text
+        if category_text:
+            t = category_text.lower().strip()
+            for key, path in sorted_mappings:
+                if key in t:
+                    return path
+
         return None
 
     map_category_udf = udf(_map_category_enhanced, StringType())
@@ -787,11 +779,28 @@ def map_categories(df):
     # Prepare both category and product_name for mapping
     df_mapped = df.withColumn(
         "category_text",
-        lower(trim(coalesce(col("category"), lit(""))))
-    ).withColumn(
-        "product_name_lower",
-        lower(trim(coalesce(col("product_name"), lit(""))))
+        lower(trim(coalesce(col("raw_category_path"), col("category"), lit(""))))
     )
+
+    # Chuẩn hoá: bỏ dấu, sửa typos phổ biến
+    df_mapped = df_mapped.withColumn(
+        "category_norm",
+        regexp_replace(unidecode(col("category_text")), r"[-_]", " ")
+    )
+
+    df_mapped = (
+        df_mapped
+        .withColumn("category_norm",
+            regexp_replace(col("category_norm"), "d?ong ho thong minh", "dong ho thong minh")
+        )
+        .withColumn("category_norm",
+            regexp_replace(col("category_norm"), "destops computers", "desktop computers")
+        )
+        .withColumn("category_norm",
+            regexp_replace(col("category_norm"), r"\btvs\b", "tv")
+        )
+    )
+    mapping_dict = {unidecode(k.lower()): v for (k, v) in CATEGORY_MAPPINGS}
 
     # ✅ DEBUG: Show before mapping stats
     print("\n[DEBUG] Before mapping - checking for potential matches:")

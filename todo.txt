@@ -1,420 +1,459 @@
-Đây là phần request
-{
-  "from_date": "2025-11-20",
-  "to_date": "2025-11-25",
-  "platforms": [
-    "tiki",
-    "lazada"
-  ],
-  "categories": [
-    "1",
-    "2"
-  ],
-  "page": 1,
-  "page_size": 10,
-  "scope_mode": "top_n",
-  "top_n": 10,
-  "product_keys": [
-    "string"
-  ],
-  "max_discount_pct": 0.15,
-  "min_margin_pct": 0.1,
-  "min_confidence": 0.7,
-  "min_price_change_pct": 0.02
-}
+﻿1. Price DSS – /dss/price/run
+1.1. Ở hàm run_price_prediction_dss (tầng service tổng)
 
-Đây là phần response
-{
-  "scenario": "price_prediction",
-  "filters": {
-    "from_date": "2025-11-20",
-    "to_date": "2025-11-25",
-    "platforms": [
-      "tiki",
-      "lazada"
-    ],
-    "categories": [
-      "1",
-      "2"
-    ]
-  },
-  "kpi_summary": {
-    "num_products": 10,
-    "num_with_recommendation": 10,
-    "current_revenue": 517453085,
-    "projected_revenue": 953666283.33,
-    "expected_revenue_uplift_pct": 0.8430004786424261,
-    "avg_confidence": 0.9515540870423264
-  },
-  "table_data": [
-    {
-      "product_key": "tiki_278890829",
-      "product_name": "Điện Thoại Samsung Galaxy A17 5G, Camera 50MP & IOS, Kính Cường Lực Gorilla Victus, AI Gemini - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2645000,
-      "predicted_price": 5696299.94,
-      "price_diff": 3051299.94,
-      "price_change_pct": 1.1536105633270322,
-      "current_revenue": 396750000,
-      "projected_revenue": 854444991,
-      "expected_revenue_change_pct": 1.1536105633270322,
-      "confidence": 0.9979494689319327,
-      "current_orders": 150,
-      "avg_rating": 4.185,
-      "total_reviews": 2
-    },
-    {
-      "product_key": "tiki_276393034",
-      "product_name": "Bao da kèm bàn phím cho iPad Air 5 2022 10.9 inch chính hãng Dux Ducis có bàn di chuột TrackPad - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 424279,
-      "predicted_price": 848710.46,
-      "price_diff": 424431.46,
-      "price_change_pct": 1.000359339019843,
-      "current_revenue": 31820925,
-      "projected_revenue": 63653284.5,
-      "expected_revenue_change_pct": 1.000359339019843,
-      "confidence": 1,
-      "current_orders": 75,
-      "avg_rating": 5,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "lazada_3254739423",
-      "product_name": "Samsung Galaxy M51 Ram 8/128Gb Battery 7000 with Nfc",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2799000,
-      "predicted_price": 21419.94,
-      "price_diff": -2777580.06,
-      "price_change_pct": -0.9923472883172562,
-      "current_revenue": 44784000,
-      "projected_revenue": 342719.04,
-      "expected_revenue_change_pct": -0.9923472883172562,
-      "confidence": 0.9516805369202714,
-      "current_orders": 16,
-      "avg_rating": 3.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_55387101",
-      "product_name": "Bảng số kiêm giá đỡ điện thoại trên ô tô (Màu ngẫu nhiên, sử dụng với mọi loại xe ô tô, điện thoại)",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 30000,
-      "predicted_price": 56497.16,
-      "price_diff": 26497.16,
-      "price_change_pct": 0.8832386666666667,
-      "current_revenue": 2250000,
-      "projected_revenue": 4237287,
-      "expected_revenue_change_pct": 0.8832386666666667,
-      "confidence": 0.9585795108993089,
-      "current_orders": 75,
-      "avg_rating": 4.63,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "tiki_278152303",
-      "product_name": "Giá đỡ điện thoại khi cắm sạc tiện lợi hàng nhập khẩu",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3920,
-      "predicted_price": 6515.62,
-      "price_diff": 2595.62,
-      "price_change_pct": 0.6621479591836735,
-      "current_revenue": 1070160,
-      "projected_revenue": 1778764.26,
-      "expected_revenue_change_pct": 0.6621479591836735,
-      "confidence": 0.9112808911508038,
-      "current_orders": 273,
-      "avg_rating": 4.47,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_274371195",
-      "product_name": "Khăn lau kính/lau điện thoại chống sương mù",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4000,
-      "predicted_price": 6515.62,
-      "price_diff": 2515.62,
-      "price_change_pct": 0.628905,
-      "current_revenue": 1248000,
-      "projected_revenue": 2032873.44,
-      "expected_revenue_change_pct": 0.628905,
-      "confidence": 0.9112808911508038,
-      "current_orders": 312,
-      "avg_rating": 4.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_247763618",
-      "product_name": "Giá đỡ điện thoại iCockpit tích hợp cổng sạc USB",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 220000,
-      "predicted_price": 103885.29,
-      "price_diff": -116114.71,
-      "price_change_pct": -0.5277941363636364,
-      "current_revenue": 30800000,
-      "projected_revenue": 14543940.6,
-      "expected_revenue_change_pct": -0.5277941363636364,
-      "confidence": 0.9329728010577821,
-      "current_orders": 140,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_275742132",
-      "product_name": "Miếng dán điện thoại trong ô tô (đen) 206038 ( hàng nhập khẩu )",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 2130000,
-      "projected_revenue": 3082137.69,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 213,
-      "avg_rating": 4.32,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980994",
-      "product_name": "Mã thẻ điện thoại Vinaphone 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3600000,
-      "projected_revenue": 5209246.8,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 360,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980931",
-      "product_name": "Mã thẻ điện thoại Viettel 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3000000,
-      "projected_revenue": 4341039,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 300,
-      "avg_rating": 4,
-      "total_reviews": 4
-    }
-  ],
-  "date_adjustment_info": {
-    "requested_from_date": "2025-11-20",
-    "requested_to_date": "2025-11-25",
-    "actual_from_date": "2025-11-20",
-    "actual_to_date": "2025-11-25",
-    "date_adjusted": false
-  },
-  "items": [
-    {
-      "product_key": "tiki_278890829",
-      "product_name": "Điện Thoại Samsung Galaxy A17 5G, Camera 50MP & IOS, Kính Cường Lực Gorilla Victus, AI Gemini - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2645000,
-      "predicted_price": 5696299.94,
-      "price_diff": 3051299.94,
-      "price_change_pct": 1.1536105633270322,
-      "current_revenue": 396750000,
-      "projected_revenue": 854444991,
-      "expected_revenue_change_pct": 1.1536105633270322,
-      "confidence": 0.9979494689319327,
-      "current_orders": 150,
-      "avg_rating": 4.185,
-      "total_reviews": 2
-    },
-    {
-      "product_key": "tiki_276393034",
-      "product_name": "Bao da kèm bàn phím cho iPad Air 5 2022 10.9 inch chính hãng Dux Ducis có bàn di chuột TrackPad - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 424279,
-      "predicted_price": 848710.46,
-      "price_diff": 424431.46,
-      "price_change_pct": 1.000359339019843,
-      "current_revenue": 31820925,
-      "projected_revenue": 63653284.5,
-      "expected_revenue_change_pct": 1.000359339019843,
-      "confidence": 1,
-      "current_orders": 75,
-      "avg_rating": 5,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "lazada_3254739423",
-      "product_name": "Samsung Galaxy M51 Ram 8/128Gb Battery 7000 with Nfc",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2799000,
-      "predicted_price": 21419.94,
-      "price_diff": -2777580.06,
-      "price_change_pct": -0.9923472883172562,
-      "current_revenue": 44784000,
-      "projected_revenue": 342719.04,
-      "expected_revenue_change_pct": -0.9923472883172562,
-      "confidence": 0.9516805369202714,
-      "current_orders": 16,
-      "avg_rating": 3.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_55387101",
-      "product_name": "Bảng số kiêm giá đỡ điện thoại trên ô tô (Màu ngẫu nhiên, sử dụng với mọi loại xe ô tô, điện thoại)",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 30000,
-      "predicted_price": 56497.16,
-      "price_diff": 26497.16,
-      "price_change_pct": 0.8832386666666667,
-      "current_revenue": 2250000,
-      "projected_revenue": 4237287,
-      "expected_revenue_change_pct": 0.8832386666666667,
-      "confidence": 0.9585795108993089,
-      "current_orders": 75,
-      "avg_rating": 4.63,
-      "total_reviews": 1
-    },
-    {
-      "product_key": "tiki_278152303",
-      "product_name": "Giá đỡ điện thoại khi cắm sạc tiện lợi hàng nhập khẩu",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3920,
-      "predicted_price": 6515.62,
-      "price_diff": 2595.62,
-      "price_change_pct": 0.6621479591836735,
-      "current_revenue": 1070160,
-      "projected_revenue": 1778764.26,
-      "expected_revenue_change_pct": 0.6621479591836735,
-      "confidence": 0.9112808911508038,
-      "current_orders": 273,
-      "avg_rating": 4.47,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_274371195",
-      "product_name": "Khăn lau kính/lau điện thoại chống sương mù",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4000,
-      "predicted_price": 6515.62,
-      "price_diff": 2515.62,
-      "price_change_pct": 0.628905,
-      "current_revenue": 1248000,
-      "projected_revenue": 2032873.44,
-      "expected_revenue_change_pct": 0.628905,
-      "confidence": 0.9112808911508038,
-      "current_orders": 312,
-      "avg_rating": 4.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_247763618",
-      "product_name": "Giá đỡ điện thoại iCockpit tích hợp cổng sạc USB",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 220000,
-      "predicted_price": 103885.29,
-      "price_diff": -116114.71,
-      "price_change_pct": -0.5277941363636364,
-      "current_revenue": 30800000,
-      "projected_revenue": 14543940.6,
-      "expected_revenue_change_pct": -0.5277941363636364,
-      "confidence": 0.9329728010577821,
-      "current_orders": 140,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_275742132",
-      "product_name": "Miếng dán điện thoại trong ô tô (đen) 206038 ( hàng nhập khẩu )",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 2130000,
-      "projected_revenue": 3082137.69,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 213,
-      "avg_rating": 4.32,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980994",
-      "product_name": "Mã thẻ điện thoại Vinaphone 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3600000,
-      "projected_revenue": 5209246.8,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 360,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_179980931",
-      "product_name": "Mã thẻ điện thoại Viettel 10K",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 10000,
-      "predicted_price": 14470.13,
-      "price_diff": 4470.13,
-      "price_change_pct": 0.447013,
-      "current_revenue": 3000000,
-      "projected_revenue": 4341039,
-      "expected_revenue_change_pct": 0.447013,
-      "confidence": 0.9505989234374536,
-      "current_orders": 300,
-      "avg_rating": 4,
-      "total_reviews": 4
-    }
-  ],
-  "total_count": 802,
-  "ai_summary_insights": [
-    "Sản phẩm 'Điện Thoại Samsung Galaxy A17 5G' hiện đang bị định giá thấp trên thị trường, có thể tăng giá lên tối thiểu 2,800,000 ₫ để tận dụng tiềm năng tăng doanh thu 115.4%.",
-    "Bao da kèm bàn phím cho iPad Air 5 có độ nhạy cảm về giá cao, doanh thu dự kiến tăng gấp đôi với giá đề xuất tối ưu, cho thấy rằng khách hàng sẵn sàng chi trả nhiều hơn cho sản phẩm này.",
-    "Sản phẩm 'Samsung Galaxy M51' cho thấy một dấu hiệu bất thường với sự giảm doanh thu 99.2%, có thể do giá hiện tại quá cao hoặc không còn hấp dẫn. Cần xem xét lại giá và tính năng để xác định nguyên nhân.",
-    "Sản phẩm 'Bảng số kiêm giá đỡ điện thoại' có tiềm năng tăng biên lợi nhuận lên 88.3% với việc điều chỉnh giá nhẹ, cho thấy nhu cầu cao trong phân khúc này.",
-    "Sản phẩm 'Giá đỡ điện thoại khi cắm sạc' có thể được tối ưu hóa hơn nữa với chiến lược bundle pricing để tăng giá trị cho người tiêu dùng và thúc đẩy doanh thu lên 66.2%."
-  ],
-  "ai_recommended_actions": [
-    "Tăng giá sản phẩm 'Điện Thoại Samsung Galaxy A17 5G' lên 2,800,000 ₫ để tận dụng tiềm năng doanh thu cao hơn.",
-    "Thực hiện chiến lược tâm lý giá cho sản phẩm 'Bao da kèm bàn phím cho iPad Air 5' bằng cách điều chỉnh giá thành 499,000 ₫ thay vì 500,000 ₫.",
-    "Thực hiện A/B testing cho sản phẩm 'Samsung Galaxy M51' để xác định giá tối ưu và tìm hiểu phản hồi từ khách hàng.",
-    "Tổ chức flash sale cho sản phẩm 'Bảng số kiêm giá đỡ điện thoại' với mức giá khuyến mãi trong khoảng thời gian ngắn để kích thích doanh thu.",
-    "Áp dụng chiến lược bundle pricing cho 'Giá đỡ điện thoại khi cắm sạc' bằng cách kết hợp nó với một sản phẩm liên quan khác để tăng giá trị cho người tiêu dùng.",
-    "Khảo sát ý kiến khách hàng về mức giá cho sản phẩm 'Samsung Galaxy M51' để hiểu rõ hơn về nhu cầu và kỳ vọng của họ.",
-    "Thực hiện quảng cáo tập trung vào các ưu điểm nổi bật của sản phẩm 'Điện Thoại Samsung Galaxy A17 5G' nhằm gia tăng nhận thức về giá trị và khuyến khích khách hàng chi tiêu nhiều hơn."
-  ],
-  "generated_at": "2025-11-30T14:47:10.271249",
-  "ai_model_used": "gpt-4o-mini",
-  "session_id": 1
-}
+Mục tiêu: đừng ép min_confidence, lưu lại request đúng như Analyst nhập.
+
+Bước 1 – Đừng override min_confidence quá mạnh
+
+Hiện tại đoạn normalize request kiểu:
+
+req["page_size"] = min(req.get("page_size", 50), 100)
+req["top_n"] = min(req.get("top_n", 50), 100)
+req["min_confidence"] = max(req.get("min_confidence", 0.70), 0.6)
+
+
+→ Bạn nên sửa thành:
+
+req["page_size"] = min(req.get("page_size", 50), 100)
+req["top_n"] = min(req.get("top_n", 50), 100)
+
+# Giữ nguyên giá trị user gửi, chỉ clamp trong khoảng 0–1
+min_conf = req.get("min_confidence", 0.7)
+req["min_confidence"] = max(0.0, min(min_conf, 1.0))
+
+
+Ý: Analyst nhập 0.4 thì cho phép 0.4, đừng auto đẩy lên 0.6.
+
+Bước 2 – Chuẩn hoá from_date/to_date
+
+Trước khi gọi _query_price_predictions, nên convert string → date (nếu chưa):
+
+from datetime import datetime
+
+for key in ["from_date", "to_date"]:
+    if isinstance(req.get(key), str):
+        req[key] = datetime.strptime(req[key], "%Y-%m-%d").date()
+
+1.2. Ở _query_price_by_category – dùng đúng khoảng ngày + data thật
+
+Mục tiêu:
+
+Thay product_metrics_global bằng aggregate từ fact_product_daily có join dim_date.
+
+Dùng prediction_confidence nếu đã có.
+
+Bắt đầu chuẩn bị để áp max_discount_pct, min_margin_pct.
+
+Bước 3 – Thêm CTE product_metrics_windowed
+
+Trong SQL hiện tại bạn có join dwh.product_metrics_global pm. Giờ sửa thành:
+
+WITH date_bounds AS (
+    SELECT 
+        $from_date::date AS from_date,
+        $to_date::date   AS to_date
+),
+product_metrics AS (
+    SELECT
+        f.product_sk,
+        f.platform_sk,
+        AVG(f.avg_price)       AS avg_price,
+        MIN(f.min_price)       AS min_price,
+        MAX(f.max_price)       AS max_price,
+        SUM(f.total_review_count) AS total_reviews,
+        AVG(f.avg_rating)      AS avg_rating,
+        SUM(f.total_orders)    AS total_orders,
+        SUM(f.total_revenue)   AS total_revenue
+    FROM dwh.fact_product_daily f
+    JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
+    JOIN date_bounds db ON dd.date_value BETWEEN db.from_date AND db.to_date
+    GROUP BY f.product_sk, f.platform_sk
+),
+ranked_predictions AS (
+    ...
+)
+
+
+Rồi ở phần filtered_results:
+
+LEFT JOIN product_metrics pm
+    ON pm.product_sk = latest_predictions.product_sk
+   AND pm.platform_sk = latest_predictions.platform_sk
+
+
+→ Bỏ join với dwh.product_metrics_global.
+
+Như vậy mọi metric avg_price, total_reviews, total_orders, total_revenue đều “đúng khoảng thời gian” mà Analyst chọn.
+
+Bước 4 – Dùng prediction_confidence thay vì tính từ CI
+
+Trong latest_predictions hiện đang:
+
+latest_predictions AS (
+    SELECT
+        product_sk,
+        platform_sk,
+        predicted_price,
+        ci_upper,
+        ci_lower,
+        created_at,
+        GREATEST(0.0, LEAST(1.0,
+            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+        )) AS confidence
+    FROM ranked_predictions
+    WHERE rn = 1
+)
+
+
+Sửa thành:
+
+latest_predictions AS (
+    SELECT
+        product_sk,
+        platform_sk,
+        predicted_price,
+        ci_upper,
+        ci_lower,
+        created_at,
+        COALESCE(prediction_confidence,
+                 GREATEST(0.0, LEAST(1.0,
+                   1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                 ))
+        ) AS confidence
+    FROM ranked_predictions
+    WHERE rn = 1
+)
+
+
+Giả sử bạn đã sửa run_price_predictions.py để fill cột prediction_confidence rồi.
+
+Bước 5 – Áp min_confidence, min_price_change_pct, max_discount_pct, min_margin_pct
+
+Trong WHERE của CTE filtered_results, hiện bạn đã có filter:
+
+WHERE
+    pm.avg_price > 0
+    AND latest_predictions.confidence >= $min_confidence
+    AND ABS(latest_predictions.predicted_price - pm.avg_price) / pm.avg_price >= $min_price_change_pct
+
+
+Giờ:
+
+Clamp giảm giá tối đa (max_discount_pct):
+
+Nếu bạn muốn làm ở SQL: chỉ nhận những rec mà giá đề xuất không thấp hơn một ngưỡng:
+
+AND (latest_predictions.predicted_price >= pm.avg_price * (1 - $max_discount_pct))
+
+
+Hoặc nếu làm ở Python layer sau khi fetch rows: chỉnh recommended_price = max(recommended_price, current_price * (1 - max_discount_pct)) rồi recalc diff.
+
+Áp min_margin_pct nếu đã có avg_margin_pct:
+
+Nếu đã thêm avg_margin_pct vào product_metrics (hoặc join product_metrics_global chỉ để lấy margin):
+
+AND COALESCE(pm.avg_margin_pct, 0) >= $min_margin_pct
+
+
+Nếu chưa có margin thật → tạm thời đừng dùng min_margin_pct, ghi chú “chưa áp dụng”.
+
+Bước 6 – Tính current_orders, current_revenue từ cột mới thay vì “fake”
+
+Trong SELECT filtered_results, hiện đang làm:
+
+current_orders = scale từ review + random/hash.
+
+current_revenue = current_orders * avg_price.
+
+Giờ bạn đã có pm.total_orders, pm.total_revenue trong khoảng from/to. Nên:
+
+pm.total_orders      AS current_orders,
+pm.total_revenue     AS current_revenue,
+CASE 
+  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0
+  THEN pm.total_revenue * (latest_predictions.predicted_price / NULLIF(pm.avg_price, 0))
+  ELSE NULL
+END AS projected_revenue,
+...
+
+
+Nếu total_revenue toàn kỳ, có thể dùng luôn; nếu bạn muốn “per day” thì chia thêm, nhưng đồ án dùng tổng là được.
+
+expected_revenue_change_pct vẫn = predicted_price / avg_price - 1.
+
+1.3. Ở _query_price_by_product_keys – làm giống by_category
+
+Bước 7 – Dùng lại “product_metrics_windowed”
+
+Trong _query_price_by_product_keys, tạo CTE product_metrics giống Bước 3 nhưng filter theo:
+
+WHERE dd.date_value BETWEEN $from_date AND $to_date
+  AND dp.product_key = ANY($product_keys)
+
+
+Sau đó join product_metrics pm với latest_predictions y hệt by_category.
+
+Bước 8 – Không dùng product_metrics_global nữa
+
+Đảm bảo không còn join dwh.product_metrics_global pm ở cuối.
+
+Bước 9 – Áp các rule y chang by_category
+
+min_confidence, min_price_change_pct, max_discount_pct, min_margin_pct → logic giống hệt _query_price_by_category để tránh 2 luồng khác nhau.
+
+1.4. Ở _calculate_price_kpis – dùng revenue thật
+
+Hiện tại KPI function đang tính:
+
+num_products, num_with_recommendation, current_total_revenue, projected_total_revenue, expected_revenue_uplift_pct, avg_confidence…
+
+Sau khi bạn đổi query:
+
+current_revenue = pm.total_revenue → sum lên.
+
+projected_revenue = pm.total_revenue * (predicted / avg_price) → sum lên.
+
+Bước 10 – Đảm bảo:
+
+current_total_revenue = sum(item["current_revenue"] for item in items if item["current_revenue"] is not None)
+projected_total_revenue = sum(item["projected_revenue"] for item in items if item["projected_revenue"] is not None)
+
+expected_revenue_uplift_pct = (
+    (projected_total_revenue / current_total_revenue - 1.0)
+    if current_total_revenue > 0 else 0.0
+)
+
+2. Recommendation DSS – /dss/reco/run
+2.1. Ở run_product_recommendation_dss
+
+Bước 1 – Chuẩn hóa min_co_purchase_rate
+
+Trong request model đã có min_co_purchase_rate nhưng service chưa dùng.
+
+Thêm:
+
+min_cpr = req.get("min_co_purchase_rate")
+if min_cpr is not None:
+    req["min_co_purchase_rate"] = max(0.0, min(float(min_cpr), 1.0))
+
+
+Rồi truyền vào _query_product_recommendations.
+
+2.2. Ở _query_recommendations_by_product
+
+Giả sử bạn đã thêm cột vào ml.fact_product_recommendation:
+co_purchase_count, co_purchase_rate, avg_bundle_revenue, window_days.
+
+Bước 2 – Chọn thêm các cột này ra
+
+Trong SELECT hiện tại, thêm:
+
+rec.co_purchase_count,
+rec.co_purchase_rate,
+rec.avg_bundle_revenue,
+rec.window_days
+
+
+Bước 3 – Áp filter theo min_co_purchase_rate (nếu có)
+
+Trong WHERE:
+
+WHERE
+    dp_src.product_key = $source_product_key
+    AND rec.similarity_score >= $min_similarity
+    AND (
+        $min_co_purchase_rate IS NULL
+        OR COALESCE(rec.co_purchase_rate, 0) >= $min_co_purchase_rate
+    )
+
+
+Lưu ý: nếu dùng parameter positional ($1, $2, ...) thì thêm đúng thứ tự.
+
+Bước 4 – Map vào dict trả về
+
+Trong Python, khi build result:
+
+"co_purchase_rate": float(row["co_purchase_rate"]) if row["co_purchase_rate"] is not None else None,
+"avg_bundle_revenue": float(row["avg_bundle_revenue"]) if row["avg_bundle_revenue"] is not None else None,
+"co_purchase_count": row["co_purchase_count"],
+"window_days": row["window_days"],
+
+2.3. Ở _query_recommendations_by_category
+
+Bước 5 – Top-K “per source” thay vì top-K global
+
+Thay vì LIMIT top_k toàn bộ, bạn nên dùng window:
+
+SELECT * FROM (
+   SELECT
+      ...,
+      ROW_NUMBER() OVER (
+          PARTITION BY rec.source_product_sk
+          ORDER BY rec.similarity_score DESC, COALESCE(rec.co_purchase_rate, 0) DESC
+      ) AS rn
+   FROM ...
+   WHERE ...
+) ranked
+WHERE ranked.rn <= $top_k
+
+
+=> Mỗi sản phẩm nguồn có tối đa top_k gợi ý.
+
+Bước 6 – Áp min_co_purchase_rate
+
+Tương tự by_product:
+
+AND (
+  $min_co_purchase_rate IS NULL
+  OR COALESCE(rec.co_purchase_rate, 0) >= $min_co_purchase_rate
+)
+
+2.4. Ở _calculate_reco_kpis
+
+Hiện tại chỉ dùng:
+
+avg_similarity, avg_orders_for_recommended.
+
+Bước 7 – Thêm vài KPI mới dùng co_purchase_*
+
+Ví dụ:
+
+co_purchase_rates = [r["co_purchase_rate"] for r in recommendations if r.get("co_purchase_rate") is not None]
+avg_co_purchase_rate = float(np.mean(co_purchase_rates)) if co_purchase_rates else 0.0
+
+kpi["avg_co_purchase_rate"] = avg_co_purchase_rate
+kpi["num_recs_with_co_purchase"] = len(co_purchase_rates)
+
+
+→ Phần này để AI summarizer và Analyst có thêm context (“đa phần các rec có co_purchase_rate ~ 30%…”).
+
+3. Sentiment DSS – /dss/review/run
+3.1. Ở _query_review_sentiment
+
+Mục tiêu: dùng đúng from_date / to_date → chỉ lấy review trong khoảng đó.
+
+Giả sử dwh.fact_review có date_sk.
+
+Bước 1 – Thêm join với dim_date và filter theo ngày
+
+Trong CTE review_stats:
+
+WITH review_stats AS (
+    SELECT
+        r.product_sk,
+        COUNT(*) AS total_reviews,
+        SUM(CASE WHEN sent.sentiment_label = 'positive' THEN 1 ELSE 0 END) AS positive_count,
+        SUM(CASE WHEN sent.sentiment_label = 'neutral' THEN 1 ELSE 0 END)  AS neutral_count,
+        SUM(CASE WHEN sent.sentiment_label = 'negative' THEN 1 ELSE 0 END) AS negative_count,
+        AVG(r.rating) AS avg_rating,
+        ...
+    FROM dwh.fact_review r
+    LEFT JOIN ml.fact_review_sentiment sent
+           ON sent.review_id = r.review_sk
+          AND sent.model_sk = $model_sk
+    JOIN dwh.dim_date dd ON dd.date_sk = r.date_sk
+    LEFT JOIN dwh.dim_platform dpl ON ...
+    LEFT JOIN dwh.dim_product dp ON ...
+    LEFT JOIN dwh.dim_category dc ON ...
+    WHERE
+        dd.date_value BETWEEN $from_date AND $to_date
+        AND {platform/category filters}
+    GROUP BY r.product_sk
+    HAVING COUNT(*) >= $min_reviews_per_product
+)
+
+
+Nếu bạn đang gắn platform_code và category filter trong where_clause dynamic thì chỉ cần chèn thêm dd.date_value BETWEEN vào đó, nhớ điều chỉnh thứ tự param.
+
+Bước 2 – Cập nhật danh sách params để include from/to
+
+Ở phần Python build query:
+
+Thêm from_date & to_date vào params ngay sau model_sk (hoặc thứ tự bạn chọn).
+
+Đảm bảo $ index trong SQL khớp.
+
+3.2. Xử lý sentiment_focus ở Python
+
+Bước 3 – Giữ như hiện tại nhưng cho phép Analyst tinh chỉnh
+
+Hiện tại logic:
+
+if sentiment_focus == "only_negative":
+    data = [p for p in data if p["is_critical"]]
+elif sentiment_focus == "only_positive":
+    data = [p for p in data if p["positive_pct"] >= 0.7]
+
+
+Gợi ý:
+
+Cho phép FE gửi thêm:
+
+positive_threshold (default 0.7)
+
+Dùng:
+
+positive_threshold = request.get("positive_threshold", 0.7)
+...
+elif sentiment_focus == "only_positive":
+    data = [p for p in data if p["positive_pct"] >= positive_threshold]
+
+3.3. “Reasons” – giữ lại nhưng rõ ràng hơn
+
+Ngay sau khi bạn tạo top_negative_reasons / top_positive_reasons từ review text:
+
+Bước 4 – Nếu không có text, gắn lý do business rõ ràng
+
+Ví dụ:
+
+if not top_negative_reasons:
+    if product["negative_pct"] > negative_threshold:
+        top_negative_reasons = [
+            "Tỷ lệ đánh giá tiêu cực cao hơn ngưỡng cho phép",
+            f"{product['negative_pct']*100:.1f}% review là negative"
+        ]
+
+
+Cái này để AI có input hay hơn, Analyst nhìn vào cũng hiểu “vì sao critical”.
+
+4. Kết luận – đường đi nước bước
+
+Tóm tắt lại các group việc cần làm trong code:
+
+Price DSS
+
+Bỏ clamp min_confidence >= 0.6.
+
+_query_price_by_category & _query_price_by_product_keys:
+
+Dùng CTE aggregate từ fact_product_daily + dim_date theo from/to.
+
+Dùng prediction_confidence nếu có.
+
+Áp max_discount_pct, min_margin_pct (nếu có margin).
+
+Tính current_orders, current_revenue, projected_revenue từ dữ liệu thật.
+
+_calculate_price_kpis: dùng sum(current_revenue/projected_revenue) thật.
+
+Recommendation DSS
+
+Nhận & clamp min_co_purchase_rate.
+
+Ở 2 query:
+
+Select co_purchase_*.
+
+Filter co_purchase_rate nếu người dùng set.
+
+By_category: dùng window ROW_NUMBER để top_k mỗi source.
+
+KPI: thêm avg_co_purchase_rate.
+
+Sentiment DSS
+
+Join dim_date & filter dd.date_value BETWEEN from_date AND to_date.
+
+Cho phép FE điều chỉnh positive_threshold.
+
+Cải thiện “reasons” khi thiếu review text.

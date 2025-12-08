@@ -6,11 +6,15 @@ Queries data from Postgres (fact & ML tables) and structures results
 import logging
 import json
 import asyncio
+import hashlib
 from datetime import date, datetime
 from typing import Dict, Any, List, Optional
 import asyncpg
+import time
 
 from app.services.ai_summarizer import get_ai_summarizer
+from app.services.activity_logger import ACTIVITY_LOG_TABLE
+from app.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +27,31 @@ class DSSService:
         # AI summarizer for DSS insights
         self.ai_summarizer = get_ai_summarizer()
 
+    def _build_cache_key(self, prefix: str, payload: Dict[str, Any]) -> str:
+        """Stable cache key from dict payload."""
+        serialized = json.dumps(payload, sort_keys=True, default=str)
+        digest = hashlib.md5(serialized.encode()).hexdigest()[:12]
+        return f"{prefix}:{digest}"
+
     # ============================================
     # HELPER METHODS
     # ============================================
+
+    def _convert_decimals_to_float(self, obj):
+        """
+        Recursively convert Decimal objects to float for JSON serialization.
+        PostgreSQL numeric fields return Decimal which json.dumps() can't handle.
+        """
+        from decimal import Decimal
+        
+        if isinstance(obj, Decimal):
+            return float(obj)
+        elif isinstance(obj, dict):
+            return {k: self._convert_decimals_to_float(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_decimals_to_float(item) for item in obj]
+        else:
+            return obj
 
     async def _get_latest_available_date(self, target_date: date) -> Optional[date]:
         """
@@ -61,38 +87,109 @@ class DSSService:
         Now creates an analysis session and returns session_id for decision linking.
         """
         logger.info(f"Running Price Prediction DSS: {request}")
+        req = dict(request)
 
-        # 1. Query price predictions + fact data
-        data = await self._query_price_predictions(request)
-
-        # 2. Calculate KPIs
-        kpi_summary = self._calculate_price_kpis(data, request)
-
-        # 3. Build DSS_RESULT_RAW (input cho AI summarizer)
-        dss_result_raw = {
-            "scenario": "price_prediction",
-            "filters": {
-                "from_date": str(request.get("from_date")),
-                "to_date": str(request.get("to_date")),
-                "platforms": request.get("platforms", []),
-                "categories": request.get("categories", []),
-            },
-            "kpi_summary": kpi_summary,
-            "table_data": data["items"],
-            "date_adjustment_info": {
-                "requested_from_date": str(request.get("from_date")),
-                "requested_to_date": str(request.get("to_date")),
-                "actual_from_date": str(data.get("actual_from_date")),
-                "actual_to_date": str(data.get("actual_to_date")),
-                "date_adjusted": data.get("date_adjusted", False),
-            },
-        }
-
-        # 4. Generate AI insights
-        ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", dss_result_raw)
+        # Clamp heavy params
+        req["page_size"] = min(req.get("page_size", 50), 100)
+        req["top_n"] = min(req.get("top_n", 50), 100)
         
-        ai_summary_insights = ai_result.get("summary_insights", [])
-        ai_recommended_actions = ai_result.get("recommended_actions", [])
+        # Allow user-specified min_confidence, only clamp to valid range [0, 1]
+        min_conf = req.get("min_confidence", 0.7)
+        req["min_confidence"] = max(0.0, min(min_conf, 1.0))
+        
+        ai_mode = req.get("ai_mode", "full")
+        
+        # Convert date strings to date objects if needed
+        for key in ["from_date", "to_date"]:
+            if isinstance(req.get(key), str):
+                req[key] = datetime.strptime(req[key], "%Y-%m-%d").date()
+
+        # 0. Check Cache
+        # Cache key based on request filters (excluding user_id/pagination if needed, but pagination affects result so keep it)
+        cache_key = self._build_cache_key("dss_price", req)
+        cached_result = await cache.get(cache_key)
+        
+        if cached_result:
+            logger.info(f"Cache HIT for Price DSS: {cache_key}")
+            dss_result_raw = cached_result["dss_result_raw"]
+            ai_summary_insights = cached_result["ai_summary_insights"]
+            ai_recommended_actions = cached_result["ai_recommended_actions"]
+            # Handle backward compatibility for cached results without ai_input_stats
+            ai_input_stats = cached_result.get("ai_input_stats")
+            if ai_input_stats is None:
+                kpi_summary = dss_result_raw["kpi_summary"]
+                ai_input_stats = {
+                    "scenario": "price_prediction",
+                    "kpi_keys": list(kpi_summary.keys()),
+                    "table_rows_for_ai": len(dss_result_raw.get("table_data", [])),
+                }
+            else:
+                kpi_summary = dss_result_raw["kpi_summary"]
+            # Rehydrate data structure for response consistency
+            table_items = dss_result_raw.get("table_data", [])
+            date_info = dss_result_raw.get("date_adjustment_info", {})
+            data = {
+                "items": table_items,
+                "total_count": dss_result_raw.get("total_count") or len(table_items),
+                "date_adjusted": date_info.get("date_adjusted"),
+                "actual_from_date": date_info.get("actual_from_date"),
+                "actual_to_date": date_info.get("actual_to_date"),
+            }
+        else:
+            logger.info(f"Cache MISS for Price DSS: {cache_key}")
+            
+            # 1. Query price predictions + fact data
+            data = await self._query_price_predictions(req)
+
+            # 2. Calculate KPIs
+            kpi_summary = self._calculate_price_kpis(data, request)
+
+            # 3. Build DSS_RESULT_RAW (input cho AI summarizer)
+            dss_result_raw = {
+                "scenario": "price_prediction",
+                "filters": {
+                    "from_date": str(request.get("from_date")),
+                    "to_date": str(request.get("to_date")),
+                    "platforms": request.get("platforms", []),
+                    "categories": request.get("categories", []),
+                },
+                "kpi_summary": kpi_summary,
+                "table_data": data["items"],
+                "total_count": data.get("total_count", len(data["items"])),
+                "date_adjustment_info": {
+                    "requested_from_date": str(request.get("from_date")),
+                    "requested_to_date": str(request.get("to_date")),
+                    "actual_from_date": str(data.get("actual_from_date")),
+                    "actual_to_date": str(data.get("actual_to_date")),
+                    "date_adjusted": data.get("date_adjusted", False),
+                },
+            }
+
+            # 4. Generate AI insights
+            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
+            if ai_mode == "full" and self.ai_summarizer.available:
+                ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
+            else:
+                ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+
+            # NEW: summarize what AI actually received
+            ai_input_stats = {
+                "scenario": "price_prediction",
+                "kpi_keys": list(kpi_summary.keys()),
+                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
+            }
+
+            # Cache the result (TTL 1 hour)
+            cache_payload = {
+                "dss_result_raw": dss_result_raw,
+                "ai_summary_insights": ai_summary_insights,
+                "ai_recommended_actions": ai_recommended_actions,
+                "ai_input_stats": ai_input_stats
+            }
+            await cache.set(cache_key, cache_payload, ttl=3600)
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -110,7 +207,7 @@ class DSSService:
                     "price_prediction",
                     user_id,
                     json.dumps(dss_result_raw["filters"]),
-                    json.dumps(kpi_summary),
+                    json.dumps(self._convert_decimals_to_float(kpi_summary)),
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     json.dumps(dss_result_raw["date_adjustment_info"]),
@@ -134,12 +231,31 @@ class DSSService:
             if self.ai_summarizer.available
             else "rule-based-fallback",
             "session_id": session_id,  # NEW: Session ID for decision linking
+            "ai_input_stats": ai_input_stats,   # 👈 NEW
         }
 
     async def _query_price_predictions(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Query price predictions from database (OPTIMIZED)
-
+        Query price predictions from database (OPTIMIZED with dual-mode support)
+        
+        Supports two modes:
+        - by_category: Filter by platforms/categories, get top N products
+        - by_product: Get predictions for specific product keys
+        """
+        scope_mode = request.get("scope_mode", "by_category")
+        
+        # Route to appropriate method based on scope_mode
+        if scope_mode == "by_product":
+            return await self._query_price_by_product_keys(request)
+        else:  # by_category (default)
+            return await self._query_price_by_category(request)
+    
+    async def _query_price_by_category(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Query price predictions BY_CATEGORY mode
+        
+        Filter by platforms + categories + ML rules → sort by revenue_uplift DESC → get top N
+        
         Optimizations:
         - Window function instead of DISTINCT ON
         - Parameterized queries for all filters
@@ -184,8 +300,9 @@ class DSSService:
         offset = (page - 1) * page_size
 
         # Build parameterized query
-        params: List[Any] = [from_date, adjusted_to_date]
-        param_idx = 3
+        # OPTIMIZATION: Removed from_date/to_date from params as they are not used in product_metrics_global join
+        params: List[Any] = []
+        param_idx = 1
         conditions: List[str] = []
 
         if platforms:
@@ -216,15 +333,52 @@ class DSSService:
         offset_param = f"${param_idx}"
         params.append(offset)
         param_idx += 1
+        
+        # Add from_date, to_date, max_discount_pct to params
+        from_date_param = f"${param_idx}"
+        params.append(from_date)
+        param_idx += 1
+        
+        to_date_param = f"${param_idx}"
+        params.append(adjusted_to_date)
+        param_idx += 1
+        
+        max_discount_pct = request.get("max_discount_pct", 0.15)
+        max_discount_param = f"${param_idx}"
+        params.append(max_discount_pct)
+        param_idx += 1
 
-        # OPTIMIZED QUERY with window function
+        # OPTIMIZED QUERY with windowed metrics from fact_product_daily
         sql = f"""
-            WITH ranked_predictions AS (
+            WITH date_bounds AS (
+                SELECT 
+                    {from_date_param}::date AS from_date,
+                    {to_date_param}::date   AS to_date
+            ),
+            product_metrics AS (
+                SELECT
+                    f.product_sk,
+                    f.platform_sk,
+                    AVG(f.avg_price)       AS avg_price,
+                    MIN(f.min_price)       AS min_price,
+                    MAX(f.max_price)       AS max_price,
+                    SUM(f.total_review_count) AS total_reviews,
+                    AVG(f.avg_rating)      AS avg_rating,
+                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
+                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
+                CROSS JOIN date_bounds db
+                WHERE dd.date_value BETWEEN db.from_date AND db.to_date
+                GROUP BY f.product_sk, f.platform_sk
+            ),
+            ranked_predictions AS (
                 -- Use window function instead of DISTINCT ON for better performance
                 SELECT 
                     pred.product_sk,
                     pred.platform_sk,
                     pred.predicted_price,
+                    pred.prediction_confidence,
                     pred.ci_upper,
                     pred.ci_lower,
                     pred.created_at,
@@ -242,24 +396,15 @@ class DSSService:
                     ci_upper,
                     ci_lower,
                     created_at,
-                    -- Pre-calculate confidence to avoid repeated computation
-                    GREATEST(0.0, LEAST(1.0, 
-                        1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-                    )) AS confidence
+                    -- Use prediction_confidence if available, fallback to CI calculation
+                    COALESCE(
+                        prediction_confidence,
+                        GREATEST(0.0, LEAST(1.0, 
+                            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                        ))
+                    ) AS confidence
                 FROM ranked_predictions
                 WHERE rn = 1
-            ),
-            product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    f.platform_sk,
-                    AVG(f.avg_price) AS current_price,
-                    SUM(f.total_review_count) AS total_reviews,
-                    AVG(f.avg_rating) AS avg_rating
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN $1 AND $2
-                GROUP BY f.product_sk, f.platform_sk
             ),
             filtered_results AS (
                 SELECT
@@ -272,83 +417,31 @@ class DSSService:
                         dc.category_lvl1,
                         'Uncategorized'
                     ) AS category_name,
-                    COALESCE(pm.current_price, 0) AS current_price,
+                    pm.avg_price AS current_price,
                     pred.predicted_price,
-                    (pred.predicted_price - COALESCE(pm.current_price, 0)) AS price_diff,
+                    (pred.predicted_price - pm.avg_price) AS price_diff,
                     CASE 
-                        WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                        ELSE (pred.predicted_price / pm.current_price - 1)
+                        WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
+                        ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS price_change_pct,
                     
-                    -- CALCULATE ORDERS & REVENUE WITH RANDOMNESS
-                    -- 1. Calculate Mock Orders
+                    -- Use REAL data from fact_product_daily aggregates
+                    pm.total_orders AS current_orders,
+                    pm.total_revenue AS current_revenue,
                     CASE 
-                        WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                            -- Has reviews: 1 review ≈ 75 sales
-                            CAST(pm.total_reviews * 75 AS INT)
-                        ELSE
-                            -- No reviews: Mock based on price + randomness
-                            -- Base: <100k=300, <500k=150, <2M=50, >2M=20
-                            -- Random: +/- 30% using hash of product_key
-                            CAST(
-                                (CASE 
-                                    WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                    WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                    WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
-                                    ELSE 20
-                                END) * 
-                                (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                            AS INT)
-                    END AS current_orders,
-
-                    -- 2. Calculate Revenue from Orders
-                    (
-                        CASE 
-                            WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                                CAST(pm.total_reviews * 75 AS INT)
-                            ELSE
-                                CAST(
-                                    (CASE 
-                                        WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                        WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                        WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
-                                        ELSE 20
-                                    END) * 
-                                    (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                                AS INT)
-                        END
-                    ) * COALESCE(pm.current_price, 0) AS current_revenue,
-
-                    CASE 
-                        WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                        ELSE 
-                            -- Projected Revenue = Current Revenue * (Predicted Price / Current Price)
-                            (
-                                CASE 
-                                    WHEN COALESCE(pm.total_reviews, 0) > 0 THEN
-                                        CAST(pm.total_reviews * 75 AS INT)
-                                    ELSE
-                                        CAST(
-                                            (CASE 
-                                                WHEN COALESCE(pm.current_price, 0) < 100000 THEN 300
-                                                WHEN COALESCE(pm.current_price, 0) < 500000 THEN 150
-                                                WHEN COALESCE(pm.current_price, 0) < 2000000 THEN 50
-                                                ELSE 20
-                                            END) * 
-                                            (1.0 + ((ABS(hashtext(dp.product_key)) % 61) - 30) / 100.0)
-                                        AS INT)
-                                END
-                            ) * COALESCE(pm.current_price, 0) * (pred.predicted_price / pm.current_price)
+                      WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
+                      THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
+                      ELSE NULL
                     END AS projected_revenue,
                     
                     CASE 
-                        WHEN COALESCE(pm.current_price, 0) = 0 THEN 0
-                        ELSE (pred.predicted_price / pm.current_price - 1)
+                        WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
+                        ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS expected_revenue_change_pct,
                     pred.confidence,
                     pm.avg_rating,
-                    COALESCE(pm.total_reviews, 0) AS total_reviews,
-                    ABS(pred.predicted_price / NULLIF(pm.current_price, 0) - 1)
+                    pm.total_reviews,
+                    ABS((pred.predicted_price - pm.avg_price) / NULLIF(pm.avg_price, 0))
                         AS abs_revenue_change
                 FROM latest_predictions pred
                 JOIN dwh.dim_product dp 
@@ -358,15 +451,18 @@ class DSSService:
                 LEFT JOIN dwh.dim_category dc 
                     ON dp.category_sk = dc.category_sk
                 LEFT JOIN product_metrics pm 
-                    ON dp.product_sk = pm.product_sk 
-                   AND pred.platform_sk = pm.platform_sk
+                    ON pm.product_sk = pred.product_sk 
+                   AND pm.platform_sk = pred.platform_sk
                 WHERE {where_clause}
-                  AND COALESCE(pm.current_price, 0) > 0
+                  AND pm.avg_price > 0
                   AND pred.confidence >= {confidence_param}
                   AND ABS(
-                      (pred.predicted_price - COALESCE(pm.current_price, 0))
-                      / NULLIF(pm.current_price, 0)
+                      (pred.predicted_price - pm.avg_price)
+                      / NULLIF(pm.avg_price, 0)
                   ) > {price_change_param}
+                  AND pred.predicted_price >= pm.avg_price * (1 - {max_discount_param})
+                  -- TODO: Uncomment when margin data is available
+                  -- AND COALESCE(pm.avg_margin_pct, 0) >= $min_margin_pct
             )
             SELECT
                 *,
@@ -376,70 +472,11 @@ class DSSService:
             LIMIT {limit_param} OFFSET {offset_param}
         """
 
-        # COUNT query (without pagination)
-        count_sql = f"""
-            WITH ranked_predictions AS (
-                SELECT 
-                    pred.product_sk,
-                    pred.platform_sk,
-                    pred.predicted_price,
-                    pred.ci_upper,
-                    pred.ci_lower,
-                    pred.created_at,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY pred.product_sk, pred.platform_sk
-                        ORDER BY pred.created_at DESC
-                    ) AS rn
-                FROM ml.fact_price_prediction pred
-            ),
-            latest_predictions AS (
-                SELECT
-                    product_sk,
-                    platform_sk,
-                    predicted_price,
-                    ci_upper,
-                    ci_lower,
-                    created_at,
-                    GREATEST(0.0, LEAST(1.0, 
-                        1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
-                    )) AS confidence
-                FROM ranked_predictions
-                WHERE rn = 1
-            ),
-            product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    f.platform_sk,
-                    AVG(f.avg_price) AS current_price
-                FROM dwh.fact_product_daily f
-                JOIN dwh.dim_date dd ON f.date_sk = dd.date_sk
-                WHERE dd.date_value BETWEEN $1 AND $2
-                GROUP BY f.product_sk, f.platform_sk
-            )
-            SELECT COUNT(*)
-            FROM latest_predictions pred
-            JOIN dwh.dim_product dp ON pred.product_sk = dp.product_sk
-            JOIN dwh.dim_platform dpl ON pred.platform_sk = dpl.platform_sk
-            LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm 
-                ON dp.product_sk = pm.product_sk
-               AND pred.platform_sk = pm.platform_sk
-            WHERE {where_clause}
-              AND COALESCE(pm.current_price, 0) > 0
-              AND pred.confidence >= {confidence_param}
-              AND ABS(
-                  (pred.predicted_price - COALESCE(pm.current_price, 0))
-                  / NULLIF(pm.current_price, 0)
-              ) > {price_change_param}
-        """
-
-        # Params for count_sql = params without LIMIT/OFFSET
-        count_params = params[:-2]
-
         try:
             rows = await self.db.fetch(sql, *params)
-            total_count_row = await self.db.fetchrow(count_sql, *count_params)
-            total_count = total_count_row["count"] if total_count_row else 0
+            
+            # Get total_count from first row (COUNT(*) OVER() returns same value for all rows)
+            total_count = rows[0]["total_count"] if rows else 0
 
             items = []
             for row in rows:
@@ -450,16 +487,19 @@ class DSSService:
                         "platform": row["platform"],
                         "category_name": row["category_name"],
                         "current_price": float(row["current_price"]),
-                        "predicted_price": float(row["predicted_price"]),
+
+                        # *** CHÍNH Ở ĐÂY ***
+                        "recommended_price": float(row["predicted_price"]),
+                        "predicted_price": float(row["predicted_price"]),  # giữ lại nếu FE đang dùng
                         "price_diff": float(row["price_diff"]),
                         "price_change_pct": float(row["price_change_pct"]),
-                        "current_revenue": float(row["current_revenue"]),
-                        "projected_revenue": float(row["projected_revenue"]),
+                        "current_revenue": float(row["current_revenue"]) if row["current_revenue"] is not None else 0.0,
+                        "projected_revenue": float(row["projected_revenue"]) if row["projected_revenue"] is not None else 0.0,
                         "expected_revenue_change_pct": float(
                             row["expected_revenue_change_pct"]
                         ),
                         "confidence": float(row["confidence"]),
-                        "current_orders": int(row["current_orders"]),
+                        "current_orders": int(row["current_orders"]) if row["current_orders"] is not None else 0,
                         # Mock avg_rating when null: deterministic hash-based value (3.5-4.5 range)
                         "avg_rating": float(row["avg_rating"])
                         if row["avg_rating"] is not None
@@ -485,6 +525,215 @@ class DSSService:
                 "actual_to_date": to_date,
             }
 
+    async def _query_price_by_product_keys(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Query price predictions BY_PRODUCT mode
+        
+        Get predictions for specific product keys - returns all records for those products
+       (không dùng top_n, mà trả về hết dữ liệu trong date range)
+        """
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        product_keys = request.get("product_keys", [])
+        
+        if not product_keys:
+            logger.error("product_keys is empty for BY_PRODUCT mode")
+            return {
+                "items": [],
+                "total_count": 0,
+                "date_adjusted": False,
+                "actual_from_date": from_date,
+                "actual_to_date": to_date,
+            }
+        
+        # Convert dates if needed
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+        
+        # Check and adjust dates
+        adjusted_to_date = await self._get_latest_available_date(to_date)
+        if adjusted_to_date is None:
+            logger.error("No data available in database")
+            return {
+                "items": [],
+                "total_count": 0,
+                "date_adjusted": False,
+                "actual_from_date": from_date,
+                "actual_to_date": to_date,
+            }
+        
+        if adjusted_to_date != to_date and from_date:
+            from_date = min(from_date, adjusted_to_date)
+        
+        min_confidence = request.get("min_confidence", 0.70)
+        min_price_change_pct = request.get("min_price_change_pct", 0.02)
+        max_discount_pct = request.get("max_discount_pct", 0.15)
+        
+        # Build parameterized query
+        params: List[Any] = [from_date, adjusted_to_date, product_keys, min_confidence, min_price_change_pct, max_discount_pct]
+        
+        # Query for BY_PRODUCT mode - get all records for selected products
+        sql = """
+            WITH date_bounds AS (
+                SELECT 
+                    $1::date AS from_date,
+                    $2::date   AS to_date
+            ),
+            product_metrics AS (
+                SELECT
+                    f.product_sk,
+                    f.platform_sk,
+                    AVG(f.avg_price)       AS avg_price,
+                    MIN(f.min_price)       AS min_price,
+                    MAX(f.max_price)       AS max_price,
+                    SUM(f.total_review_count) AS total_reviews,
+                    AVG(f.avg_rating)      AS avg_rating,
+                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
+                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
+                CROSS JOIN date_bounds db
+                WHERE dd.date_value BETWEEN db.from_date AND db.to_date
+                GROUP BY f.product_sk, f.platform_sk
+            ),
+            ranked_predictions AS (
+                SELECT 
+                    pred.product_sk,
+                    pred.platform_sk,
+                    pred.predicted_price,
+                    pred.prediction_confidence,
+                    pred.ci_upper,
+                    pred.ci_lower,
+                    pred.created_at,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY pred.product_sk, pred.platform_sk
+                        ORDER BY pred.created_at DESC
+                    ) AS rn
+                FROM ml.fact_price_prediction pred
+            ),
+            latest_predictions AS (
+                SELECT
+                    product_sk,
+                    platform_sk,
+                    predicted_price,
+                    ci_upper,
+                    ci_lower,
+                    created_at,
+                    COALESCE(
+                        prediction_confidence,
+                        GREATEST(0.0, LEAST(1.0, 
+                            1.0 - (ci_upper - ci_lower) / NULLIF(predicted_price, 0)
+                        ))
+                    ) AS confidence
+                FROM ranked_predictions
+                WHERE rn = 1
+            )
+            SELECT
+                dp.product_key,
+                dp.product_name,
+                dpl.platform_code AS platform,
+                COALESCE(
+                    dc.category_lvl2,
+                    dc.category_lvl1,
+                    'Uncategorized'
+                ) AS category_name,
+                pm.avg_price AS current_price,
+                pred.predicted_price,
+                (pred.predicted_price - pm.avg_price) AS price_diff,
+                CASE 
+                    WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
+                    ELSE (pred.predicted_price / pm.avg_price - 1)
+                END AS price_change_pct,
+                
+                -- Use REAL data from fact_product_daily aggregates
+                pm.total_orders AS current_orders,
+                pm.total_revenue AS current_revenue,
+                CASE 
+                  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
+                  THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
+                  ELSE NULL
+                END AS projected_revenue,
+                
+                CASE 
+                    WHEN pm.avg_price = 0 OR pm.avg_price IS NULL THEN 0
+                    ELSE (pred.predicted_price / pm.avg_price - 1)
+                END AS expected_revenue_change_pct,
+                pred.confidence,
+                pm.avg_rating,
+                pm.total_reviews
+            FROM latest_predictions pred
+            JOIN dwh.dim_product dp 
+                ON pred.product_sk = dp.product_sk
+            JOIN dwh.dim_platform dpl 
+                ON pred.platform_sk = dpl.platform_sk
+            LEFT JOIN dwh.dim_category dc 
+                ON dp.category_sk = dc.category_sk
+            LEFT JOIN product_metrics pm 
+                ON pm.product_sk = pred.product_sk 
+               AND pm.platform_sk = pred.platform_sk
+            WHERE dp.product_key = ANY($3::text[])
+              AND pm.avg_price > 0
+              AND pred.confidence >= $4
+              AND ABS(
+                  (pred.predicted_price - pm.avg_price)
+                  / NULLIF(pm.avg_price, 0)
+              ) > $5
+              AND pred.predicted_price >= pm.avg_price * (1 - $6)
+            ORDER BY dp.product_key, pred.confidence DESC
+        """
+        
+        params.extend([min_confidence, min_price_change_pct])
+        
+        try:
+            rows = await self.db.fetch(sql, *params)
+            
+            items = []
+            for row in rows:
+                items.append(
+                    {
+                        "product_key": row["product_key"],
+                        "product_name": row["product_name"],
+                        "platform": row["platform"],
+                        "category_name": row["category_name"],
+                        "current_price": float(row["current_price"]),
+                        "recommended_price": float(row["predicted_price"]),
+                        "predicted_price": float(row["predicted_price"]),
+                        "price_diff": float(row["price_diff"]),
+                        "price_change_pct": float(row["price_change_pct"]),
+                        "current_revenue": float(row["current_revenue"]) if row["current_revenue"] is not None else 0.0,
+                        "projected_revenue": float(row["projected_revenue"]) if row["projected_revenue"] is not None else 0.0,
+                        "expected_revenue_change_pct": float(
+                            row["expected_revenue_change_pct"]
+                        ),
+                        "confidence": float(row["confidence"]),
+                        "current_orders": int(row["current_orders"]) if row["current_orders"] is not None else 0,
+                        "avg_rating": float(row["avg_rating"])
+                        if row["avg_rating"] is not None
+                        else round(3.5 + (abs(hash(row["product_key"])) % 100) / 100, 1),
+                        "total_reviews": int(row["total_reviews"]),
+                    }
+                )
+            
+            return {
+                "items": items,
+                "total_count": len(items),
+                "date_adjusted": adjusted_to_date != to_date,
+                "actual_from_date": from_date,
+                "actual_to_date": adjusted_to_date,
+            }
+        except Exception as e:
+            logger.exception(f"Error querying price predictions by product keys: {e}")
+            return {
+                "items": [],
+                "total_count": 0,
+                "date_adjusted": False,
+                "actual_from_date": from_date,
+                "actual_to_date": to_date,
+            }
+
+
     def _calculate_price_kpis(self, data: Dict[str, Any], request: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate KPI summary for price prediction scenario."""
         items = data.get("items", [])
@@ -494,6 +743,8 @@ class DSSService:
                 "num_with_recommendation": 0,
                 "current_revenue": 0.0,
                 "projected_revenue": 0.0,
+                "current_total_revenue": 0.0,
+                "projected_total_revenue": 0.0,
                 "expected_revenue_uplift_pct": 0.0,
                 "avg_confidence": 0.0,
             }
@@ -501,8 +752,9 @@ class DSSService:
         num_products = len(items)
         num_with_reco = len([i for i in items if i["price_change_pct"] != 0])
 
-        current_revenue = sum(i["current_revenue"] for i in items)
-        projected_revenue = sum(i["projected_revenue"] for i in items)
+        # Handle None values in revenue calculations
+        current_revenue = sum(i["current_revenue"] for i in items if i.get("current_revenue") is not None)
+        projected_revenue = sum(i["projected_revenue"] for i in items if i.get("projected_revenue") is not None)
 
         expected_uplift_pct = (
             (projected_revenue / current_revenue - 1) if current_revenue > 0 else 0.0
@@ -529,36 +781,97 @@ class DSSService:
         user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """Run Product Recommendation DSS analysis"""
-
         logger.info(f"Running Product Recommendation DSS: {request}")
-
-        # 1. Query recommendations
-        recommendations = await self._query_product_recommendations(request)
-
-        # 2. Calculate KPIs
-        kpi_summary = self._calculate_reco_kpis(recommendations, request)
-
-        # 3. Build DSS_RESULT_RAW
-        dss_result_raw = {
-            "scenario": "product_recommendation",
-            "filters": {
-                "from_date": str(request.get("from_date")),
-                "to_date": str(request.get("to_date")),
-                "platforms": request.get("platforms", []),
-                "categories": request.get("categories", []),
-                "scope_mode": request.get("scope_mode", "by_category"),
-            },
-            "kpi_summary": kpi_summary,
-            "table_data": recommendations,
-        }
-
-        # 4. Generate AI insights
-        ai_result = self.ai_summarizer.summarize_with_ai(
-            "product_recommendation", dss_result_raw
-        )
+        req = dict(request)
+        req["top_k"] = min(req.get("top_k", 10), 50)
+        req["min_similarity"] = req.get("min_similarity", 0.5)  # Respect user input, default 0.5
         
-        ai_summary_insights = ai_result.get("summary_insights", [])
-        ai_recommended_actions = ai_result.get("recommended_actions", [])
+        # Normalize min_co_purchase_rate
+        min_cpr = req.get("min_co_purchase_rate")
+        if min_cpr is not None:
+            req["min_co_purchase_rate"] = max(0.0, min(float(min_cpr), 1.0))
+        
+        ai_mode = req.get("ai_mode", "full")
+
+        # 0. Check Cache
+        cache_key = self._build_cache_key("dss_reco", req)
+        cached_result = await cache.get(cache_key)
+        
+        if cached_result:
+            logger.info(f"Cache HIT for Reco DSS: {cache_key}")
+            dss_result_raw = cached_result["dss_result_raw"]
+            ai_summary_insights = cached_result["ai_summary_insights"]
+            ai_recommended_actions = cached_result["ai_recommended_actions"]
+            # Handle backward compatibility for cached results without ai_input_stats
+            ai_input_stats = cached_result.get("ai_input_stats")
+            if ai_input_stats is None:
+                kpi_summary = dss_result_raw["kpi_summary"]
+                ai_input_stats = {
+                    "scenario": "product_recommendation",
+                    "kpi_keys": list(kpi_summary.keys()),
+                    "table_rows_for_ai": len(dss_result_raw.get("table_data", [])),
+                }
+            else:
+                kpi_summary = dss_result_raw["kpi_summary"]
+        else:
+            logger.info(f"Cache MISS for Reco DSS: {cache_key}")
+            
+            # 1. Query recommendations
+            recommendations = await self._query_product_recommendations(req)
+
+            # 2. Calculate KPIs (convert Decimals for JSON safety)
+            kpi_summary = self._convert_decimals_to_float(
+                self._calculate_reco_kpis(recommendations, request)
+            )
+            # Convert table data to avoid Decimal in AI payload/cache
+            recommendations = self._convert_decimals_to_float(recommendations)
+
+            # 3. Build DSS_RESULT_RAW
+            dss_result_raw = {
+                "scenario": "product_recommendation",
+                "filters": {
+                    "from_date": str(request.get("from_date")),
+                    "to_date": str(request.get("to_date")),
+                    "platforms": request.get("platforms", []),
+                    "categories": request.get("categories", []),
+                    "scope_mode": request.get("scope_mode", "by_category"),
+                },
+                "kpi_summary": kpi_summary,
+                "table_data": recommendations,
+            }
+
+            # 4. Generate AI insights (send a moderate sample for context)
+            ai_payload = {
+                **dss_result_raw,
+                "table_data": dss_result_raw["table_data"][:15],
+            }
+            if ai_mode == "full" and self.ai_summarizer.available:
+                ai_result = self.ai_summarizer.summarize_with_ai(
+                    "product_recommendation", ai_payload
+                )
+            else:
+                ai_result = self.ai_summarizer._get_fallback_response(
+                    "product_recommendation", ai_payload
+                )
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+
+            # NEW: summarize AI input
+            ai_input_stats = {
+                "scenario": "product_recommendation",
+                "kpi_keys": list(kpi_summary.keys()),
+                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
+            }
+
+            # Cache the result
+            cache_payload = {
+                "dss_result_raw": dss_result_raw,
+                "ai_summary_insights": ai_summary_insights,
+                "ai_recommended_actions": ai_recommended_actions,
+                "ai_input_stats": ai_input_stats
+            }
+            await cache.set(cache_key, cache_payload, ttl=3600)
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -576,7 +889,7 @@ class DSSService:
                     "product_recommendation",
                     user_id,
                     json.dumps(dss_result_raw["filters"]),
-                    json.dumps(kpi_summary),
+                    json.dumps(self._convert_decimals_to_float(kpi_summary)),
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     "/dss/reco/run"
@@ -596,6 +909,7 @@ class DSSService:
             if self.ai_summarizer.available
             else "rule-based-fallback",
             "session_id": session_id,  # NEW: Session ID for decision linking
+            "ai_input_stats": ai_input_stats,  # 👈 NEW
         }
 
     async def _query_product_recommendations(
@@ -624,41 +938,70 @@ class DSSService:
 
         top_k = request.get("top_k", 10)
         min_similarity = request.get("min_similarity", 0.5)
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
 
+        cache_key = self._build_cache_key(
+            "reco:by_product",
+            {
+                "source_product_key": source_product_key,
+                "top_k": top_k,
+                "min_similarity": min_similarity,
+                "from_date": from_date,
+                "to_date": to_date,
+            },
+        )
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        # Get min_co_purchase_rate from request
+        min_co_purchase_rate = request.get("min_co_purchase_rate")
+
+        # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
         sql = """
-            WITH product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    AVG(f.avg_price) AS avg_price,
-                    SUM(f.total_review_count) AS total_orders
-                FROM dwh.fact_product_daily f
-                GROUP BY f.product_sk
-            )
             SELECT
                 dp_src.product_key AS source_product_key,
                 dp_src.product_name AS source_product_name,
                 dp_rec.product_key AS recommended_product_key,
                 dp_rec.product_name AS recommended_product_name,
-                SUBSTRING(dp_rec.product_key FROM '^(.*?)_') AS platform,
+                COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) AS platform,
                 COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
                 COALESCE(pm_rec.avg_price, 0) AS avg_price,
                 COALESCE(pm_rec.total_orders, 0) AS total_orders,
                 rec.similarity_score,
+                rec.co_purchase_count,
+                rec.co_purchase_rate,
+                rec.avg_bundle_revenue,
+                rec.window_days,
                 COALESCE(rec.recommendation_type, 'cross_sell') AS recommendation_type
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+            LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm_rec ON dp_rec.product_sk = pm_rec.product_sk
+            LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE dp_src.product_key = $1
               AND rec.similarity_score >= $2
+              AND (
+                  $4 IS NULL
+                  OR COALESCE(rec.co_purchase_rate, 0) >= $4
+              )
             ORDER BY rec.similarity_score DESC, rec.rank ASC
             LIMIT $3
         """
 
         try:
-            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k)
-            return [dict(row) for row in rows]
+            # Pass min_co_purchase_rate as 4th parameter
+            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, min_co_purchase_rate)
+            result = self._dedupe_recommendations([dict(row) for row in rows])
+            # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
+            await cache.set(cache_key, result, ttl=3600)
+            return result
         except Exception as e:
             logger.error(f"Error querying recommendations by product: {e}")
             return []
@@ -672,63 +1015,116 @@ class DSSService:
         categories = request.get("categories")
         top_k = request.get("top_k", 10)
         min_similarity = request.get("min_similarity", 0.5)
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
 
         params: List[Any] = [min_similarity]
         param_idx = 2
 
         platform_filter = ""
         if platforms:
-            platform_filter = (
-                f"AND SUBSTRING(dp_rec.product_key FROM '^(.*?)_') = ANY(${param_idx})"
-            )
+            # Platform derived from product_key prefix (dim_product has no platform_sk)
+            platform_filter = f"AND COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) = ANY(${param_idx})"
             params.append(platforms)
             param_idx += 1
 
         category_filter = ""
         if categories:
-            category_filter = (
-                f"AND CAST(dc.category_sk AS TEXT) = ANY(${param_idx})"
-            )
+            category_filter = f"AND CAST(dc.category_sk AS TEXT) = ANY(${param_idx})"
             params.append(categories)
             param_idx += 1
+        
+        # Get min_co_purchase_rate
+        min_co_purchase_rate = request.get("min_co_purchase_rate")
+        min_cpr_param = None
+        if min_co_purchase_rate is not None:
+            min_cpr_param = f"${param_idx}"
+            params.append(min_co_purchase_rate)
+            param_idx += 1
 
+        cache_key = self._build_cache_key(
+            "reco:by_category",
+            {
+                "platforms": platforms,
+                "categories": categories,
+                "top_k": top_k,
+                "min_similarity": min_similarity,
+                "min_co_purchase_rate": min_co_purchase_rate,
+                "from_date": from_date,
+                "to_date": to_date,
+            },
+        )
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        # Build min_co_purchase_rate filter clause
+        min_cpr_filter = ""
+        if min_cpr_param:
+            min_cpr_filter = f"AND COALESCE(rec.co_purchase_rate, 0) >= {min_cpr_param}"
+
+        # OPTIMIZED: Pre-filter source products by category to avoid full table scan
+        # Fix platform filter for CTE - extract replacements outside f-string to avoid backslash syntax error
+        underscore = '_'
+        platform_filter_for_cte = platform_filter.replace('dpl_rec.platform_code', f'split_part(dp.product_key, {repr(underscore)}, 1)').replace('dp_rec.product_key', 'dp.product_key')
+        
         sql = f"""
-            WITH product_metrics AS (
-                SELECT
-                    f.product_sk,
-                    AVG(f.avg_price) AS avg_price,
-                    SUM(f.total_review_count) AS total_orders
-                FROM dwh.fact_product_daily f
-                GROUP BY f.product_sk
+            WITH filtered_sources AS (
+                -- Get source products matching category/platform filters
+                SELECT DISTINCT dp.product_sk
+                FROM dwh.dim_product dp
+                LEFT JOIN dwh.dim_category dc ON dp.category_sk = dc.category_sk
+                WHERE 1=1
+                  {category_filter}
+                  {platform_filter_for_cte}
             )
-            SELECT
-                dp_src.product_key AS source_product_key,
-                dp_src.product_name AS source_product_name,
-                dp_rec.product_key AS recommended_product_key,
-                dp_rec.product_name AS recommended_product_name,
-                SUBSTRING(dp_rec.product_key FROM '^(.*?)_') AS platform,
-                COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
-                COALESCE(pm_rec.avg_price, 0) AS avg_price,
-                COALESCE(pm_rec.total_orders, 0) AS total_orders,
-                rec.similarity_score,
-                COALESCE(rec.recommendation_type, 'cross_sell') AS recommendation_type
-            FROM ml.fact_product_recommendation rec
-            JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
-            JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
-            LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
-            LEFT JOIN product_metrics pm_rec ON dp_rec.product_sk = pm_rec.product_sk
-            WHERE rec.similarity_score >= $1
-              {platform_filter}
-              {category_filter}
-            ORDER BY pm_rec.total_orders DESC, rec.similarity_score DESC
-            LIMIT {top_k}
+            SELECT * FROM (
+                SELECT
+                    dp_src.product_key AS source_product_key,
+                    dp_src.product_name AS source_product_name,
+                    dp_rec.product_key AS recommended_product_key,
+                    dp_rec.product_name AS recommended_product_name,
+                    COALESCE(dpl_rec.platform_code, split_part(dp_rec.product_key, '_', 1)) AS platform,
+                    COALESCE(dc.category_lvl2, dc.category_lvl1, 'Uncategorized') AS category_name,
+                    COALESCE(pm_rec.avg_price, 0) AS avg_price,
+                    COALESCE(pm_rec.total_orders, 0) AS total_orders,
+                    rec.similarity_score,
+                    rec.co_purchase_count,
+                    rec.co_purchase_rate,
+                    rec.avg_bundle_revenue,
+                    rec.window_days,
+                    COALESCE(rec.recommendation_type, 'cross_sell') AS recommendation_type,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY rec.source_product_sk
+                        ORDER BY rec.similarity_score DESC, COALESCE(rec.co_purchase_rate, 0) DESC
+                    ) AS rn
+                FROM ml.fact_product_recommendation rec
+                INNER JOIN filtered_sources fs ON rec.source_product_sk = fs.product_sk
+                JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
+                JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+                LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
+                LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
+                LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
+                WHERE rec.similarity_score >= $1
+                  {min_cpr_filter}
+            ) ranked
+            WHERE ranked.rn <= {top_k}
+            ORDER BY ranked.total_orders DESC NULLS LAST, ranked.similarity_score DESC
+            LIMIT 1000
         """
 
         try:
             rows = await self.db.fetch(sql, *params)
-            return [dict(row) for row in rows]
+            result = self._dedupe_recommendations([dict(row) for row in rows])
+            # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
+            await cache.set(cache_key, result, ttl=3600)
+            return result
         except Exception as e:
-            logger.error(f"Error querying recommendations by category: {e}")
+            logger.exception(f"Error querying recommendations by category: {e}")
             return []
 
     def _calculate_reco_kpis(
@@ -749,15 +1145,68 @@ class DSSService:
         source_products = {r["source_product_key"] for r in recommendations}
         num_source_products = len(source_products)
 
-        avg_similarity = sum(r["similarity_score"] for r in recommendations) / num_recommendations
-        avg_orders = sum(r["total_orders"] for r in recommendations) / num_recommendations
+        # Robust numeric casts to avoid str/Decimal issues from DB driver
+        similarity_values: List[float] = []
+        order_values: List[float] = []
+        co_purchase_rates: List[float] = []
+        
+        for r in recommendations:
+            try:
+                similarity_values.append(float(r.get("similarity_score", 0) or 0))
+            except (TypeError, ValueError):
+                similarity_values.append(0.0)
+            try:
+                order_values.append(float(r.get("total_orders", 0) or 0))
+            except (TypeError, ValueError):
+                order_values.append(0.0)
+            # Collect co_purchase_rate values
+            cpr = r.get("co_purchase_rate")
+            if cpr is not None:
+                try:
+                    co_purchase_rates.append(float(cpr))
+                except (TypeError, ValueError):
+                    pass
+
+        avg_similarity = sum(similarity_values) / num_recommendations if num_recommendations else 0.0
+        avg_orders = sum(order_values) / num_recommendations if num_recommendations else 0.0
+        avg_co_purchase_rate = sum(co_purchase_rates) / len(co_purchase_rates) if co_purchase_rates else 0.0
 
         return {
             "num_source_products": num_source_products,
             "num_recommendations": num_recommendations,
             "avg_similarity": avg_similarity,
             "avg_orders_for_recommended": avg_orders,
+            "avg_co_purchase_rate": avg_co_purchase_rate,
+            "num_recs_with_co_purchase": len(co_purchase_rates),
         }
+
+    def _dedupe_recommendations(
+        self, records: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Deduplicate recommendation rows by (source_product_key, recommended_product_key),
+        keeping the one with higher similarity_score (then higher total_orders).
+        """
+        dedup: Dict[tuple, Dict[str, Any]] = {}
+        for row in records:
+            key = (
+                row.get("source_product_key"),
+                row.get("recommended_product_key"),
+            )
+            if key not in dedup:
+                dedup[key] = row
+                continue
+            existing = dedup[key]
+
+            def _score(item: Dict[str, Any]) -> tuple:
+                sim = float(item.get("similarity_score") or 0)
+                orders = float(item.get("total_orders") or 0)
+                return (sim, orders)
+
+            if _score(row) > _score(existing):
+                dedup[key] = row
+
+        return list(dedup.values())
 
     # ============================================
     # REVIEW SENTIMENT DSS
@@ -771,33 +1220,62 @@ class DSSService:
         """Run Review Sentiment Analysis DSS"""
 
         logger.info(f"Running Review Sentiment DSS: {request}")
+        req = dict(request)
+        ai_mode = req.get("ai_mode", "full")
 
-        # 1. Query sentiment data
-        sentiment_data = await self._query_review_sentiment(request)
-
-        # 2. Calculate KPIs
-        kpi_summary = self._calculate_sentiment_kpis(sentiment_data, request)
-
-        # 3. Build DSS_RESULT_RAW
-        dss_result_raw = {
-            "scenario": "review_sentiment",
-            "filters": {
-                "from_date": str(request.get("from_date")),
-                "to_date": str(request.get("to_date")),
-                "platforms": request.get("platforms", []),
-                "categories": request.get("categories", []),
-            },
-            "kpi_summary": kpi_summary,
-            "table_data": sentiment_data,
-        }
-
-        # 4. Generate AI insights
-        ai_result = self.ai_summarizer.summarize_with_ai(
-            "review_sentiment", dss_result_raw
-        )
+        # 0. Check Cache
+        cache_key = self._build_cache_key("dss_sentiment", req)
+        cached_result = await cache.get(cache_key)
         
-        ai_summary_insights = ai_result.get("summary_insights", [])
-        ai_recommended_actions = ai_result.get("recommended_actions", [])
+        if cached_result:
+            logger.info(f"Cache HIT for Sentiment DSS: {cache_key}")
+            dss_result_raw = cached_result["dss_result_raw"]
+            ai_summary_insights = cached_result["ai_summary_insights"]
+            ai_recommended_actions = cached_result["ai_recommended_actions"]
+            kpi_summary = dss_result_raw["kpi_summary"]
+        else:
+            logger.info(f"Cache MISS for Sentiment DSS: {cache_key}")
+            
+            # 1. Query sentiment data
+            sentiment_data = await self._query_review_sentiment(req)
+
+            # 2. Calculate KPIs
+            kpi_summary = self._calculate_sentiment_kpis(sentiment_data, request)
+
+            # 3. Build DSS_RESULT_RAW
+            dss_result_raw = {
+                "scenario": "review_sentiment",
+                "filters": {
+                    "from_date": str(request.get("from_date")),
+                    "to_date": str(request.get("to_date")),
+                    "platforms": request.get("platforms", []),
+                    "categories": request.get("categories", []),
+                },
+                "kpi_summary": kpi_summary,
+                "table_data": sentiment_data,
+            }
+
+            # 4. Generate AI insights
+            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
+            if ai_mode == "full" and self.ai_summarizer.available:
+                ai_result = self.ai_summarizer.summarize_with_ai(
+                    "review_sentiment", ai_payload
+                )
+            else:
+                ai_result = self.ai_summarizer._get_fallback_response(
+                    "review_sentiment", ai_payload
+                )
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+            
+            # Cache the result
+            cache_payload = {
+                "dss_result_raw": dss_result_raw,
+                "ai_summary_insights": ai_summary_insights,
+                "ai_recommended_actions": ai_recommended_actions
+            }
+            await cache.set(cache_key, cache_payload, ttl=3600)
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -815,7 +1293,7 @@ class DSSService:
                     "review_sentiment",
                     user_id,
                     json.dumps(dss_result_raw["filters"]),
-                    json.dumps(kpi_summary),
+                    json.dumps(self._convert_decimals_to_float(kpi_summary)),
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     "/dss/review/run"
@@ -1387,20 +1865,22 @@ class DSSService:
                 
                 # Step 4: Log activity
                 await self.db.execute(
-                    """
-                    INSERT INTO iam.user_activity_logs (user_id, action, resource, details, status)
+                    f"""
+                    INSERT INTO {ACTIVITY_LOG_TABLE} (user_id, action, resource, details, status)
                     VALUES ($1, $2, $3, $4, $5)
                     """,
                     user_id,
                     "dss_save_decision",
                     "/dss/decisions",
-                    json.dumps({
-                        "decision_id": decision_id,
-                        "scenario_key": scenario_key,
-                        "num_actions": len(action_ids),
-                        "status": payload.get("status", "DRAFT")
-                    }),
-                    "success"
+                    json.dumps(
+                        {
+                            "decision_id": decision_id,
+                            "scenario_key": scenario_key,
+                            "num_actions": len(action_ids),
+                            "status": payload.get("status", "DRAFT"),
+                        }
+                    ),
+                    "success",
                 )
             
             # Transaction committed
@@ -1442,12 +1922,14 @@ class DSSService:
             
             if from_date:
                 conditions.append(f"d.created_at >= ${param_idx}")
-                params.append(from_date)
+                # Convert string to date object for asyncpg
+                params.append(datetime.fromisoformat(from_date).date() if isinstance(from_date, str) else from_date)
                 param_idx += 1
             
             if to_date:
                 conditions.append(f"d.created_at <= ${param_idx}")
-                params.append(to_date)
+                # Convert string to date object for asyncpg
+                params.append(datetime.fromisoformat(to_date).date() if isinstance(to_date, str) else to_date)
                 param_idx += 1
             
             where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""

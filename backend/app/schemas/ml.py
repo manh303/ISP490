@@ -129,8 +129,8 @@ class OnlineSentimentRequest(BaseModel):
     product_key: Optional[str] = None
     review_text: str
     model_name: Optional[str] = Field(
-        "sentiment_bert",
-        description="Tên model, mặc định 'sentiment_bert'"
+        "sentiment_tfidf_logreg",
+        description="Tên model, mặc định 'sentiment_tfidf_logreg'"
     )
     model_version: Optional[str] = None
 
@@ -152,3 +152,4 @@ class MLStatusSummary(BaseModel):
     models_training: int
     predictions_last_7_days: int
     recommendations_last_7_days: int
+    sentiment_reviews_last_7_days: int

@@ -1,45 +1,54 @@
 #!/usr/bin/env python3
+"""
+Check database schema to verify columns exist before creating indexes
+"""
 import asyncio
 import asyncpg
+import os
 
-DATABASE_URL = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
+async def check_schema():
+    """Check if required columns exist in tables"""
+    
+    database_url = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
+    
+    conn = await asyncpg.connect(database_url)
+    
+    try:
+        # Check dwh.dim_product columns
+        print("\n=== dwh.dim_product columns ===")
+        rows = await conn.fetch("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_schema = 'dwh' AND table_name = 'dim_product'
+            ORDER BY ordinal_position;
+        """)
+        for row in rows:
+            print(f"  {row['column_name']}: {row['data_type']}")
+        
+        # Check dwh.fact_product_daily columns
+        print("\n=== dwh.fact_product_daily columns ===")
+        rows = await conn.fetch("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_schema = 'dwh' AND table_name = 'fact_product_daily'
+            ORDER BY ordinal_position;
+        """)
+        for row in rows:
+            print(f"  {row['column_name']}: {row['data_type']}")
+        
+        # Check ml.fact_product_recommendation columns
+        print("\n=== ml.fact_product_recommendation columns ===")
+        rows = await conn.fetch("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_schema = 'ml' AND table_name = 'fact_product_recommendation'
+            ORDER BY ordinal_position;
+        """)
+        for row in rows:
+            print(f"  {row['column_name']}: {row['data_type']}")
+            
+    finally:
+        await conn.close()
 
-async def main():
-    conn = await asyncpg.connect(DATABASE_URL)
-    
-    # Check ods_product_clean schema
-    print("=== ods_product_clean columns ===")
-    cols = await conn.fetch("""
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'ods_product_clean'
-        ORDER BY ordinal_position
-    """)
-    for col in cols:
-        print(f"  {col['column_name']}: {col['data_type']}")
-    
-    # Check stg_raw_products schema
-    print("\n=== stg_raw_products columns ===")
-    cols = await conn.fetch("""
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'stg_raw_products'
-        ORDER BY ordinal_position
-    """)
-    for col in cols:
-        print(f"  {col['column_name']}: {col['data_type']}")
-    
-    # Check ods_price_point schema
-    print("\n=== ods_price_point columns ===")
-    cols = await conn.fetch("""
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'ods_price_point'
-        ORDER BY ordinal_position
-    """)
-    for col in cols:
-        print(f"  {col['column_name']}: {col['data_type']}")
-    
-    await conn.close()
-
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(check_schema())
