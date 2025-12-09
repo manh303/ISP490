@@ -569,6 +569,56 @@ class AnalyticsService:
         
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(sql, *params)
+        
+        # FALLBACK: If product_metrics_global is empty, query directly from fact_product_daily
+        if not rows:
+            # Build new fallback conditions for date-based query
+            fallback_conditions = ["d.date_value >= CURRENT_DATE - INTERVAL '90 days'"]
+            fallback_params: List[Any] = []
+            fallback_idx = 1
+            
+            if platform_code:
+                fallback_conditions.append(f"split_part(p.product_key, '_', 1) = ${fallback_idx}")
+                fallback_params.append(platform_code)
+                fallback_idx += 1
+                
+            if category_key:
+                fallback_conditions.append(f"p.category_sk = ${fallback_idx}")
+                fallback_params.append(int(category_key))
+                fallback_idx += 1
+            
+            fallback_where = "WHERE " + " AND ".join(fallback_conditions)
+            
+            # Map metric to aggregation
+            fallback_metric_map = {
+                "revenue": "SUM(f.avg_price * COALESCE(f.total_review_count, 1))",
+                "review_count": "SUM(f.total_review_count)",
+                "avg_rating": "AVG(f.avg_rating)",
+            }
+            fallback_metric = fallback_metric_map.get(metric, fallback_metric_map["revenue"])
+            
+            fallback_sql = f"""
+                SELECT
+                    p.product_key,
+                    p.product_name,
+                    split_part(p.product_key, '_', 1) AS platform_code,
+                    p.category_sk AS category_key,
+                    COALESCE(c.category_std_key, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
+                    COALESCE(SUM(f.avg_price * COALESCE(f.total_review_count, 1)), 0) AS total_revenue,
+                    COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
+                    AVG(f.avg_rating) AS avg_rating,
+                    AVG(f.avg_price) AS avg_price
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+                JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+                LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
+                {fallback_where}
+                GROUP BY p.product_key, p.product_name, p.category_sk, c.category_std_key, c.category_lvl2, c.category_lvl1
+                ORDER BY {fallback_metric} DESC NULLS LAST
+                LIMIT {limit}
+            """
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(fallback_sql, *fallback_params)
 
         return [
             TopProductItem(
@@ -955,7 +1005,7 @@ class AnalyticsService:
                 product_key=r["product_key"],
                 product_name=r["product_name"],
                 platform_code=r["platform_code"],
-                category_key=str(r.get("category_key")) if r.get("category_key") is not None else None,
+                category_key=str(r.get(" category_key")) if r.get("category_key") is not None else None,
                 avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
                 total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                 avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
@@ -963,4 +1013,190 @@ class AnalyticsService:
             )
             for r in rows
         ]
+
+    async def get_rating_distribution(
+        self,
+        from_date: date,
+        to_date: date,
+        platform_code: Optional[str] = None,
+        category_key: Optional[str] = None,
+    ):
+        """
+        Get review distribution by rating buckets (1-5 stars).
+        
+        Returns count and percentage of reviews in each rating bucket.
+        Used for Rating Distribution histogram chart.
+        """
+        # Build platform filter
+        platform_filter = ""
+        if platform_code:
+            platform_filter = "AND pl.platform_code = $3"
+        
+        # Build category filter
+        category_filter = ""
+        if category_key:
+            param_num = 4 if platform_code else 3
+            category_filter = f"AND p.category_sk = ${param_num}"
+        
+        # Main query: count products by rating bucket
+        sql = f"""
+            WITH product_ratings AS (
+                SELECT
+                    p.product_sk,
+                    AVG(f.avg_rating) as product_avg_rating
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+                JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+                JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+                WHERE d.date_value BETWEEN $1 AND $2
+                {platform_filter}
+                {category_filter}
+                GROUP BY p.product_sk
+            ),
+            rating_buckets AS (
+                SELECT
+                    CASE
+                        WHEN product_avg_rating IS NULL THEN 0
+                        WHEN product_avg_rating >= 1.0 AND product_avg_rating < 2.0 THEN 1
+                        WHEN product_avg_rating >= 2.0 AND product_avg_rating < 3.0 THEN 2
+                        WHEN product_avg_rating >= 3.0 AND product_avg_rating < 4.0 THEN 3
+                        WHEN product_avg_rating >= 4.0 AND product_avg_rating < 5.0 THEN 4
+                        WHEN product_avg_rating >= 5.0 THEN 5
+                        ELSE 0
+                    END AS rating_bucket,
+                    COUNT(*) AS product_count
+                FROM product_ratings
+                GROUP BY rating_bucket
+            )
+            SELECT
+                rating_bucket,
+                product_count
+            FROM rating_buckets
+            ORDER BY rating_bucket;
+        """
+        
+        # Prepare params
+        params = [from_date, to_date]
+        if platform_code:
+            params.append(platform_code)
+        if category_key:
+            params.append(int(category_key))  # Convert to int
+        
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
+        
+        # Convert to response format
+        from app.schemas.analytics import RatingDistributionData
+        result = []
+        for row in rows:
+            result.append(RatingDistributionData(
+                rating_bucket=row['rating_bucket'],
+                product_count=row['product_count']
+            ))
+        
+        return result
+
+    async def get_critical_products(
+        self,
+        from_date: date,
+        to_date: date,
+        platform_code: Optional[str] = None,
+        category_key: Optional[str] = None,
+        limit: int = 10,
+    ):
+        """
+        Get products with critical issues (low rating or high negative sentiment).
+        
+        Criteria for critical products:
+        - avg_rating < 3.5
+        
+        Returns sorted by negative_pct DESC, then avg_rating ASC.
+        """
+        # Build platform filter
+        platform_filter = ""
+        if platform_code:
+            platform_filter = "AND pl.platform_code = $3"
+        
+        # Build category filter
+        category_filter = ""
+        if category_key:
+            param_num = 4 if platform_code else 3
+            category_filter = f"AND p.category_sk = ${param_num}"
+        
+        # Determine limit parameter number
+        limit_param = "$3"
+        if platform_code:
+            limit_param = "$4"
+        if category_key:
+            if platform_code:
+                limit_param = "$5"
+            else:
+                limit_param = "$4"
+        
+        sql = f"""
+            WITH product_stats AS (
+                SELECT
+                    p.product_key,
+                    p.product_name,
+                    pl.platform_code,
+                    c.category_std_key AS category_name,
+                    AVG(f.avg_rating) AS avg_rating,
+                    SUM(f.total_review_count) AS total_reviews,
+                    -- Calculate negative reviews estimate based on avg rating
+                    CASE
+                        WHEN AVG(f.avg_rating) < 2.5 THEN 50.0
+                        WHEN AVG(f.avg_rating) < 3.5 THEN 30.0
+                        ELSE 10.0
+                    END AS negative_pct
+                FROM dwh.fact_product_daily f
+                JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+                JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+                JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+                LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
+                WHERE d.date_value BETWEEN $1 AND $2
+                {platform_filter}
+                {category_filter}
+                GROUP BY p.product_key, p.product_name, pl.platform_code, c.category_std_key
+                HAVING AVG(f.avg_rating) < 3.5 OR SUM(f.total_review_count) > 0
+            )
+            SELECT
+               product_key,
+                product_name,
+                platform_code,
+                COALESCE(category_name, 'Unknown') as category_name,
+                COALESCE(avg_rating, 0.0) as avg_rating,
+                COALESCE(total_reviews, 0) as total_reviews,
+                negative_pct
+            FROM product_stats
+            WHERE avg_rating < 3.5
+            ORDER BY negative_pct DESC, avg_rating ASC
+            LIMIT {limit_param};
+        """
+        
+        # Prepare params
+        params = [from_date, to_date]
+        if platform_code:
+            params.append(platform_code)
+        if category_key:
+            params.append(int(category_key))  # Convert to int
+        params.append(limit)
+        
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
+        
+        # Convert to response format
+        from app.schemas.analytics import CriticalProductItem
+        result = []
+        for row in rows:
+            result.append(CriticalProductItem(
+                product_key=row['product_key'],
+                product_name=row['product_name'],
+                platform_code=row['platform_code'],
+                category_name=row['category_name'],
+                avg_rating=float(row['avg_rating']) if row['avg_rating'] else 0.0,
+                total_reviews=int(row['total_reviews']) if row['total_reviews'] else 0,
+                negative_pct=float(row['negative_pct']) if row['negative_pct'] else 0.0,
+            ))
+        
+        return result
     

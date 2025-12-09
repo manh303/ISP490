@@ -1162,13 +1162,22 @@ class DSSService:
         """
 
         try:
+            logger.info(f"🔍 Reco by category - params: {params}")
+            logger.info(f"📝 Reco by category - SQL first 500 chars: {sql[:500]}")
+            
             rows = await self.db.fetch(sql, *params)
+            logger.info(f"✅ Reco query returned {len(rows)} raw rows")
+            
             result = self._dedupe_recommendations([dict(row) for row in rows])
+            logger.info(f"📦 After deduplication: {len(result)} unique recommendations")
+            
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
             await cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
-            logger.exception(f"Error querying recommendations by category: {e}")
+            logger.exception(f"❌ Error querying recommendations by category: {e}")
+            logger.error(f"Failed params: {params}")
+            logger.error(f"Failed SQL (first 1000 chars): {sql[:1000]}")
             return []
 
     def _calculate_reco_kpis(
@@ -2320,3 +2329,169 @@ class DSSService:
             except Exception as update_error:
                 logger.error(f"[AI_ASYNC] Failed to update error status: {update_error}")
 
+    # ============================================
+    # ANALYSIS SESSION HISTORY
+    # ============================================
+
+    async def list_analysis_sessions(
+        self,
+        user_id: Optional[int] = None,
+        scenario_key: Optional[str] = None,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20
+    ) -> Dict[str, Any]:
+        """List DSS analysis sessions with optional filters."""
+        
+        conditions = []
+        params = []
+        param_idx = 1
+        
+        if user_id:
+            conditions.append(f"s.user_id = ${param_idx}")
+            params.append(user_id)
+            param_idx += 1
+        
+        if scenario_key:
+            conditions.append(f"s.scenario_key = ${param_idx}")
+            params.append(scenario_key)
+            param_idx += 1
+        
+        if from_date:
+            conditions.append(f"s.generated_at >= ${param_idx}::timestamp")
+            params.append(from_date)
+            param_idx += 1
+        
+        if to_date:
+            conditions.append(f"s.generated_at <= ${param_idx}::timestamp")
+            params.append(to_date)
+            param_idx += 1
+        
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
+        
+        # Pagination params
+        limit_param = f"${param_idx}"
+        params.append(page_size)
+        param_idx += 1
+        
+        offset_param = f"${param_idx}"
+        params.append((page - 1) * page_size)
+        
+        # Scenario name mapping
+        scenario_names = {
+            'price_prediction': 'Price Prediction',
+            'product_recommendation': 'Product Recommendation',
+            'review_sentiment': 'Review Sentiment'
+        }
+        
+        try:
+            sql = f"""
+                SELECT 
+                    s.session_id,
+                    s.scenario_key,
+                    s.filters_json,
+                    s.kpi_summary_json,
+                    s.ai_generation_status,
+                    s.ai_model_used,
+                    s.generated_at,
+                    s.source_endpoint,
+                    u.email AS user_email,
+                    CASE WHEN d.decision_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_decision,
+                    d.decision_id,
+                    COUNT(*) OVER() AS total_count
+                FROM dss.dss_analysis_session s
+                LEFT JOIN iam.iam_user u ON s.user_id = u.user_id
+                LEFT JOIN dss.dss_decision d ON s.session_id = d.session_id
+                WHERE {where_clause}
+                ORDER BY s.generated_at DESC
+                LIMIT {limit_param} OFFSET {offset_param}
+            """
+            
+            rows = await self.db.fetch(sql, *params)
+            
+            total_count = rows[0]["total_count"] if rows else 0
+            
+            items = []
+            for row in rows:
+                items.append({
+                    "session_id": row["session_id"],
+                    "scenario_key": row["scenario_key"],
+                    "scenario_name": scenario_names.get(row["scenario_key"], row["scenario_key"]),
+                    "filters": json.loads(row["filters_json"]) if row["filters_json"] else {},
+                    "kpi_summary": json.loads(row["kpi_summary_json"]) if row["kpi_summary_json"] else {},
+                    "ai_generation_status": row["ai_generation_status"],
+                    "ai_model_used": row["ai_model_used"],
+                    "generated_at": row["generated_at"].isoformat() if row["generated_at"] else None,
+                    "source_endpoint": row["source_endpoint"],
+                    "user_email": row["user_email"],
+                    "has_decision": row["has_decision"],
+                    "decision_id": row["decision_id"]
+                })
+            
+            return {
+                "total": total_count,
+                "page": page,
+                "page_size": page_size,
+                "items": items
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error listing analysis sessions: {e}")
+            raise
+
+    async def get_session_detail(self, session_id: int) -> Dict[str, Any]:
+        """Get full details of a DSS analysis session."""
+        
+        scenario_names = {
+            'price_prediction': 'Price Prediction',
+            'product_recommendation': 'Product Recommendation',
+            'review_sentiment': 'Review Sentiment'
+        }
+        
+        try:
+            row = await self.db.fetchrow(
+                """
+                SELECT 
+                    s.*,
+                    u.email AS user_email,
+                    d.decision_id,
+                    d.title AS decision_title,
+                    d.status AS decision_status
+                FROM dss.dss_analysis_session s
+                LEFT JOIN iam.iam_user u ON s.user_id = u.user_id
+                LEFT JOIN dss.dss_decision d ON s.session_id = d.session_id
+                WHERE s.session_id = $1
+                """,
+                session_id
+            )
+            
+            if not row:
+                raise ValueError(f"Session {session_id} not found")
+            
+            return {
+                "session_id": row["session_id"],
+                "scenario_key": row["scenario_key"],
+                "scenario_name": scenario_names.get(row["scenario_key"], row["scenario_key"]),
+                "filters": json.loads(row["filters_json"]) if row["filters_json"] else {},
+                "kpi_summary": json.loads(row["kpi_summary_json"]) if row["kpi_summary_json"] else {},
+                "ai_summary_insights": json.loads(row["ai_summary_insights"]) if row["ai_summary_insights"] else [],
+                "ai_recommended_actions": json.loads(row["ai_recommended_actions"]) if row["ai_recommended_actions"] else [],
+                "date_adjustment_info": json.loads(row["date_adjustment_info"]) if row["date_adjustment_info"] else {},
+                "ai_generation_status": row["ai_generation_status"],
+                "ai_model_used": row["ai_model_used"],
+                "generated_at": row["generated_at"].isoformat() if row["generated_at"] else None,
+                "source_endpoint": row["source_endpoint"],
+                "user_email": row["user_email"],
+                "decision": {
+                    "decision_id": row["decision_id"],
+                    "title": row["decision_title"],
+                    "status": row["decision_status"]
+                } if row["decision_id"] else None
+            }
+            
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.exception(f"Error getting session detail: {e}")
+            raise

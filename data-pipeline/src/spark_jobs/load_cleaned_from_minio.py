@@ -40,6 +40,7 @@ from pyspark.sql.window import Window
 from pyspark.sql.types import DoubleType, LongType, StringType, BooleanType
 from pyspark.sql.functions import udf
 from pyspark.sql import functions as F
+from pyspark import StorageLevel
 
 from psycopg2.extras import execute_batch
 import psycopg2
@@ -83,8 +84,8 @@ SAVE_TO_MINIO = os.getenv("SAVE_TO_MINIO", "true").lower() == "true"
 # --------------------------
 # Postgres / Data Warehouse
 # --------------------------
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5433")
+DB_HOST = os.getenv("DB_HOST", "postgres")
+DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "ecommerce_dss")
 DB_USER = os.getenv("DB_USER", "dss_user")
 DB_PASSWORD = os.getenv(
@@ -511,7 +512,15 @@ def create_spark_session():
     )
 
     spark.sparkContext.setLogLevel("WARN")
-    print(" Spark session created")
+    
+    # Configure checkpoint directory for memory optimization
+    # ⚠️ DISABLED: S3A filesystem not initialized at this point
+    # checkpoint_dir = f"s3a://{MINIO_CLEANED_BUCKET}/spark-checkpoints"
+    # spark.sparkContext.setCheckpointDir(checkpoint_dir)
+    # print(f"✓ Checkpoint directory configured: {checkpoint_dir}")
+    # Note: Using persist/unpersist strategy instead - equally effective
+    
+    print("✓ Spark session created")
     return spark
 
 
@@ -749,34 +758,44 @@ def clean_data(df):
 # ============================================================
 def map_categories(df):
     print("\n" + "=" * 60)
-    print(" STEP 2.5: CATEGORY MAPPING (using mapping table)")
+    print("✓ STEP 2.5: CATEGORY MAPPING (using mapping table)")
     print("=" * 60)
 
-    # DEBUG: Check sample categories before mapping
-    print("\n[DEBUG] Sample raw categories (first 20):")
+    # Get Spark  session from DataFrame
+    spark = df.sql_ctx.sparkSession
+
+    # ✅ OPTIMIZATION: Broadcast mapping dict to all executors
+    print(f"\n[INFO] Total category mappings configured: {len(CATEGORY_MAPPINGS)}")
+    mapping_dict = {k.lower(): v for (k, v) in CATEGORY_MAPPINGS}
+    print(f"[INFO] Unique category patterns: {len(mapping_dict)}")
+    
+    # Broadcast for efficient distribution
+    mapping_broadcast = spark.sparkContext.broadcast(mapping_dict)
+    print("✓ Category mappings broadcasted to executors")
+    
+    # Count plural variants
+    plural_count = sum(1 for k in mapping_dict.keys() if k.endswith('s') and k not in ['access', 'wireless'])
+    print(f"[INFO] Including {plural_count} plural variants for Lazada compatibility")
+
+    # ✅ OPTIMIZATION: Reduce sample size to avoid driver OOM
+    print("\n[DEBUG] Sample raw categories (first 10):")
     if "category" in df.columns:
-        sample_cats = df.select("category", "product_name").distinct().limit(20).collect()
-        for i, row in enumerate(sample_cats[:20], 1):
+        sample_cats = df.select("category", "product_name").distinct().limit(10).collect()
+        for i, row in enumerate(sample_cats, 1):
             cat = row["category"] if row["category"] else "NULL"
             name = row["product_name"][:50] if row["product_name"] else "NULL"
             print(f"  {i}. Category: '{cat}' | Product: '{name}'")
     else:
         print("[WARN] 'category' column missing in DataFrame")
 
-    # ✅ NEW: Create sorted mapping dict (longest keywords first for better matching)
-    print(f"\n[INFO] Total category mappings configured: {len(CATEGORY_MAPPINGS)}")
-    mapping_dict = {k.lower(): v for (k, v) in CATEGORY_MAPPINGS}
-    print(f"[INFO] Unique category patterns: {len(mapping_dict)}")
-    
-    # Count plural variants
-    plural_count = sum(1 for k in mapping_dict.keys() if k.endswith('s') and k not in ['access', 'wireless'])
-    print(f"[INFO] Including {plural_count} plural variants for Lazada compatibility")
-
+    # ✅ OPTIMIZATION: Use broadcast variable in UDF
     def _map_category_enhanced(category_text, product_name):
         if not category_text and not product_name:
             return None
 
-        sorted_mappings = sorted(mapping_dict.items(), key=lambda x: len(x[0]), reverse=True)
+        # Access broadcast value
+        mappings = mapping_broadcast.value
+        sorted_mappings = sorted(mappings.items(), key=lambda x: len(x[0]), reverse=True)
 
         # 1. Ưu tiên product_name
         if product_name:
@@ -835,11 +854,15 @@ def map_categories(df):
     )
     mapping_dict = {unidecode(k.lower()): v for (k, v) in CATEGORY_MAPPINGS}
 
-    # ✅ DEBUG: Show before mapping stats
+    # ✅ OPTIMIZATION: Reduce sample size to avoid driver OOM
     print("\n[DEBUG] Before mapping - checking for potential matches:")
-    before_sample = df_mapped.select("category_text").limit(1000).collect()
+    before_sample = df_mapped.select("category_text").limit(100).collect()
     plural_found = sum(1 for row in before_sample if row["category_text"] and row["category_text"].endswith('s'))
-    print(f"  Found {plural_found}/1000 categories ending in 's' (likely plural)")
+    print(f"  Found {plural_found}/100 categories ending in 's' (likely plural)")
+
+    # ✅ OPTIMIZATION: Repartition for better parallelism
+    df_mapped = df_mapped.repartition(200)
+    print("✓ DataFrame repartitioned for parallel processing")
 
     # Map using both category and product_name
     df_mapped = df_mapped.withColumn(
@@ -877,24 +900,24 @@ def map_categories(df):
         )
     )
 
-    # ✅ NEW: Enhanced unmapped category analysis
+    # ✅ OPTIMIZATION: Enhanced unmapped category analysis (reduced samples)
     print("\n[DEBUG] Analyzing unmapped categories (will become OTHER)...")
     
-    # Get frequency distribution of unmapped categories
+    # Get frequency distribution of unmapped categories (reduced from 30 to 15)
     unmapped_freq = (df_mapped.filter(col("category_std") == "OTHER")
                      .groupBy("category")
                      .count()
                      .orderBy(col("count").desc())
-                     .limit(30)
+                     .limit(15)
                      .collect())
     
-    print(f"\n[DEBUG] Top 30 unmapped category patterns by frequency:")
+    print(f"\n[DEBUG] Top 15 unmapped category patterns by frequency:")
     for i, row in enumerate(unmapped_freq, 1):
         cat = row["category"] if row["category"] else "NULL"
         count = row["count"]
         print(f"  {i:2d}. '{cat}' → {count:,} products")
     
-    # ✅ NEW: Platform distribution of OTHER categories
+    # ✅ OPTIMIZATION: Platform distribution of OTHER categories
     print(f"\n[DEBUG] OTHER category distribution by platform:")
     other_by_platform = (df_mapped.filter(col("category_std") == "OTHER")
                         .groupBy("source_platform")
@@ -909,9 +932,9 @@ def map_categories(df):
         pct = (count / total_other * 100) if total_other > 0 else 0
         print(f"  {platform}: {count:,} ({pct:.1f}% of OTHER)")
     
-    # Show sample products from unmapped categories
-    print(f"\n[DEBUG] Sample unmapped products (first 50):")
-    unmapped_samples = df_mapped.filter(col("category_std") == "OTHER").select("category", "product_name", "source_platform").limit(50).collect()
+    # ✅ OPTIMIZATION: Show sample products (reduced from 50 to  20)
+    print(f"\n[DEBUG] Sample unmapped products (first 20):")
+    unmapped_samples = df_mapped.filter(col("category_std") == "OTHER").select("category", "product_name", "source_platform").limit(20).collect()
     for i, row in enumerate(unmapped_samples, 1):
         cat = row["category"] if row["category"] else "NULL"
         name = row["product_name"][:40] if row["product_name"] else "NULL"
@@ -1441,6 +1464,8 @@ def load_fact_product_daily(df_dedup, conn, mappings):
     """
     Tạo và load dwh.fact_product_daily từ df_dedup.
     Grain: (snapshot_date, global_product_id_synced, source_platform_std)
+    
+    ✅ OPTIMIZED: Process từng ngày để giảm memory usage
     """
     print("[INFO] Loading fact_product_daily...")
 
@@ -1457,27 +1482,19 @@ def load_fact_product_daily(df_dedup, conn, mappings):
     if "rating" not in df.columns:
         df = df.withColumn("rating", F.lit(None).cast(DoubleType()))
 
-    agg_df = (
-        df.where(
-            F.col("snapshot_date").isNotNull()
-            & F.col("global_product_id_synced").isNotNull()
-            & F.col("source_platform_std").isNotNull()
-        )
-        .groupBy("snapshot_date", "global_product_id_synced", "source_platform_std")
-        .agg(
-            F.count("*").alias("snapshot_count"),
-            F.avg("price").alias("avg_price"),
-            F.min("price").alias("min_price"),
-            F.max("price").alias("max_price"),
-            F.expr("percentile_approx(price, 0.5)").alias("median_price"),
-            F.stddev("price").alias("price_stddev"),
-            F.sum(F.col("review_count")).alias("total_review_count"),
-            F.avg("rating").alias("avg_rating"),
-        )
+    # ✅ NEW: Lấy danh sách các ngày unique
+    distinct_dates = (
+        df.where(F.col("snapshot_date").isNotNull())
+        .select("snapshot_date")
+        .distinct()
+        .collect()
     )
-
-    agg_pdf = agg_df.toPandas()
-
+    
+    unique_dates = sorted([row["snapshot_date"] for row in distinct_dates])
+    total_dates = len(unique_dates)
+    
+    print(f"  📅 Processing {total_dates} unique dates...")
+    
     insert_fact_sql = f"""
         INSERT INTO {DWH_SCHEMA}.fact_product_daily (
             date_sk, product_sk, platform_sk,
@@ -1507,61 +1524,89 @@ def load_fact_product_daily(df_dedup, conn, mappings):
             return None
         return v
 
-    rows = []
-    for _, r in agg_pdf.iterrows():
-        d = r["snapshot_date"]
-        if isinstance(d, str):
-            d = datetime.strptime(d, "%Y-%m-%d").date()
-
-        product_key = str(r["global_product_id_synced"])[:100]
-        platform_code = str(r["source_platform_std"]).strip()
-
-        date_sk = date_map.get(d)
-        product_sk = product_map.get(product_key)
-        platform_sk = platform_map.get(platform_code)
-
-        if date_sk is None or product_sk is None or platform_sk is None:
-            continue  # bỏ các dòng không map được key
-
-        total_review_count = int(r["total_review_count"]) if not pd.isna(r["total_review_count"]) else 0
-        snapshot_count = int(r["snapshot_count"]) if not pd.isna(r["snapshot_count"]) else 0
-
-        rows.append(
-            (
-                date_sk,
-                product_sk,
-                platform_sk,
-                "VND",
-                safe_num(r["min_price"]),
-                safe_num(r["max_price"]),
-                safe_num(r["avg_price"]),
-                safe_num(r["median_price"]),
-                safe_num(r["price_stddev"]),
-                total_review_count,
-                safe_num(r["avg_rating"]),
-                snapshot_count,
+    cur = conn.cursor()
+    total_rows_inserted = 0
+    
+    # ✅ Process từng ngày
+    for idx, snapshot_date in enumerate(unique_dates, 1):
+        # Filter data cho từng ngày
+        df_day = df.where(F.col("snapshot_date") == snapshot_date)
+        
+        # Aggregate chỉ cho ngày này
+        agg_df_day = (
+            df_day.where(
+                F.col("snapshot_date").isNotNull()
+                & F.col("global_product_id_synced").isNotNull()
+                & F.col("source_platform_std").isNotNull()
+            )
+            .groupBy("snapshot_date", "global_product_id_synced", "source_platform_std")
+            .agg(
+                F.count("*").alias("snapshot_count"),
+                F.avg("price").alias("avg_price"),
+                F.min("price").alias("min_price"),
+                F.max("price").alias("max_price"),
+                F.expr("percentile_approx(price, 0.5)").alias("median_price"),
+                F.stddev("price").alias("price_stddev"),
+                F.sum(F.col("review_count")).alias("total_review_count"),
+                F.avg("rating").alias("avg_rating"),
             )
         )
 
-    if not rows:
-        print("  ⚠ Không có rows nào để insert vào fact_product_daily")
-        return
+        # Convert to Pandas chỉ cho ngày này
+        agg_pdf_day = agg_df_day.toPandas()
+        
+        if agg_pdf_day.empty:
+            continue
 
-    # ✅ Tối ưu: commit theo batch nhỏ hơn để tránh long-running transaction
-    cur = conn.cursor()
-    batch_size = 1000
-    total_rows = len(rows)
-    
-    for i in range(0, total_rows, batch_size):
-        batch = rows[i:i+batch_size]
-        execute_batch(cur, insert_fact_sql, batch, page_size=500)
-        conn.commit()  # Commit từng batch để giải phóng connection
-        if (i + batch_size) % 5000 == 0:
-            print(f"  [PROGRESS] Loaded {min(i+batch_size, total_rows)}/{total_rows} rows...")
+        rows = []
+        for _, r in agg_pdf_day.iterrows():
+            d = r["snapshot_date"]
+            if isinstance(d, str):
+                d = datetime.strptime(d, "%Y-%m-%d").date()
+
+            product_key = str(r["global_product_id_synced"])[:100]
+            platform_code = str(r["source_platform_std"]).strip()
+
+            date_sk = date_map.get(d)
+            product_sk = product_map.get(product_key)
+            platform_sk = platform_map.get(platform_code)
+
+            if date_sk is None or product_sk is None or platform_sk is None:
+                continue
+
+            total_review_count = int(r["total_review_count"]) if not pd.isna(r["total_review_count"]) else 0
+            snapshot_count = int(r["snapshot_count"]) if not pd.isna(r["snapshot_count"]) else 0
+
+            rows.append(
+                (
+                    date_sk,
+                    product_sk,
+                    platform_sk,
+                    "VND",
+                    safe_num(r["min_price"]),
+                    safe_num(r["max_price"]),
+                    safe_num(r["avg_price"]),
+                    safe_num(r["median_price"]),
+                    safe_num(r["price_stddev"]),
+                    total_review_count,
+                    safe_num(r["avg_rating"]),
+                    snapshot_count,
+                )
+            )
+
+        # Insert batch cho ngày này
+        if rows:
+            execute_batch(cur, insert_fact_sql, rows, page_size=500)
+            conn.commit()
+            total_rows_inserted += len(rows)
+            
+        # Progress reporting
+        if idx % 5 == 0 or idx == total_dates:
+            print(f"  [PROGRESS] Processed {idx}/{total_dates} dates, inserted {total_rows_inserted} rows...")
     
     cur.close()
 
-    print(f"  ✅ Loaded/updated {len(rows)} rows into fact_product_daily")
+    print(f"  ✅ Loaded/updated {total_rows_inserted} rows into fact_product_daily ({total_dates} dates)")
 
 
 from psycopg2.extras import execute_batch  # đã import trên đầu rồi, chỉ nhắc lại
@@ -2523,11 +2568,27 @@ def load_review_dimensions_to_dwh(df):
                     reviewer_id SERIAL PRIMARY KEY,
                     reviewer_name VARCHAR(500),
                     source_platform VARCHAR(50),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(reviewer_name, source_platform)
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """
             cur.execute(create_table_sql)
+            conn.commit()
+            
+            # ✅ FIX: Ensure UNIQUE constraint exists (idempotent)
+            alter_constraint_sql = f"""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint 
+                        WHERE conname = 'dim_reviewer_unique_name_platform'
+                    ) THEN
+                        ALTER TABLE {dim_reviewer_table}
+                        ADD CONSTRAINT dim_reviewer_unique_name_platform
+                        UNIQUE (reviewer_name, source_platform);
+                    END IF;
+                END $$;
+            """
+            cur.execute(alter_constraint_sql)
             conn.commit()
 
             insert_sql = f"""
@@ -2942,19 +3003,32 @@ def main():
             print(" Failed to load raw data")
             return 1
 
+        # ✅ OPTIMIZATION: Cache raw data for reuse
+        df_raw.persist(StorageLevel.MEMORY_AND_DISK)
+        print("✓ Raw data cached (MEMORY_AND_DISK)")
+        
         df_cleaned = clean_data(df_raw)
         if df_cleaned is None:
             print(" Failed to clean data")
             return 1
+        
+        # ✅ OPTIMIZATION: Unpersist raw data (no longer needed)
+        df_raw.unpersist()
+        print("✓ Raw data unpersisted")
 
         df_mapped = map_categories(df_cleaned)
         df_std = standardize_data(df_mapped)
         df_synced = synchronize_identifiers(df_std)
 
+        # ✅ OPTIMIZATION: Persist and force evaluation to break lineage
         df_dedup = deduplicate_data(df_synced)
         if df_dedup is None:
             print(" Failed to deduplicate data")
             return 1
+        
+        df_dedup.persist(StorageLevel.MEMORY_AND_DISK)
+        dedup_count = df_dedup.count()  # Force evaluation
+        print(f"✓ Deduplication completed and cached: {dedup_count:,} records")
 
         validate_data(df_dedup)
 
@@ -2984,49 +3058,70 @@ def main():
             print(" Failed to save cleaned data")
             return 1
 
-        # ===== REVIEW DATA PIPELINE =====
-        print("\n" + "=" * 60)
-        print(" STARTING REVIEW DATA PIPELINE")
-        print("=" * 60)
+        # ===== REVIEW DATA PIPELINE (OPTIONAL - CONTROLLED BY ENV VAR) =====
+        # ⚡ QUICK FIX: Skip reviews to prevent OOM, process products only
+        PROCESS_REVIEWS = os.getenv("PROCESS_REVIEWS", "false").lower() == "true"
+        
+        if PROCESS_REVIEWS:
+            print("\n" + "=" * 60)
+            print("✓ STARTING REVIEW DATA PIPELINE")
+            print("=" * 60)
 
-        df_reviews_raw = load_review_data(spark)
-        if df_reviews_raw is not None:
-            df_reviews_clean = clean_review_data(df_reviews_raw)
-            df_reviews_std = standardize_review_data(df_reviews_clean)
-            df_reviews_synced = synchronize_review_identifiers(df_reviews_std)
-            df_reviews_dedup = deduplicate_review_data(df_reviews_synced)
-            validate_review_data(df_reviews_dedup)
-            df_reviews_sentiment = analyze_sentiment(df_reviews_dedup)
-            df_reviews_time = add_review_time_features(df_reviews_sentiment)
+            df_reviews_raw = load_review_data(spark)
+            if df_reviews_raw is not None:
+                df_reviews_clean = clean_review_data(df_reviews_raw)
+                df_reviews_std = standardize_review_data(df_reviews_clean)
+                df_reviews_synced = synchronize_review_identifiers(df_reviews_std)
+                df_reviews_dedup = deduplicate_review_data(df_reviews_synced)
+                validate_review_data(df_reviews_dedup)
+                # ✅ OPTIMIZATION: Persist and force evaluation after sentiment analysis
+                df_reviews_sentiment = analyze_sentiment(df_reviews_dedup)
+                df_reviews_sentiment.persist(StorageLevel.MEMORY_AND_DISK)
+                sentiment_count = df_reviews_sentiment.count()  # Force evaluation
+                print(f"✓ Sentiment analysis completed and cached: {sentiment_count:,} reviews")
+                
+                df_reviews_time = add_review_time_features(df_reviews_sentiment)
 
-            # (OPTIONAL) dim_reviewer – anh muốn thì giữ, không muốn thì bỏ luôn dòng này
-            load_review_dimensions_to_dwh(df_reviews_dedup)
+                # (OPTIONAL) dim_reviewer – anh muốn thì giữ, không muốn thì bỏ luôn dòng này
+                load_review_dimensions_to_dwh(df_reviews_dedup)
 
-            # Aggregate theo ngày (dùng cho fact_review_daily)
-            df_reviews_agg = aggregate_reviews_daily(df_reviews_time)
+                # Aggregate theo ngày (dùng cho fact_review_daily)
+                df_reviews_agg = aggregate_reviews_daily(df_reviews_time)
 
-            # === ĐẨY VÀO STAR SCHEMA FACT_REVIEW + FACT_REVIEW_DAILY ===
-            try:
-                conn_reviews = psycopg2.connect(
-                    host=DB_HOST,
-                    port=DB_PORT,
-                    database=DB_NAME,
-                    user=DB_USER,
-                    password=DB_PASSWORD,
-                )
-                # dùng lại mappings của phần product (date_map, product_map, platform_map)
-                load_fact_review_star(df_reviews_time, conn_reviews, mappings)
-                load_fact_review_daily_star(df_reviews_agg, conn_reviews, mappings)
-            finally:
-                conn_reviews.close()
+                # === ĐẨY VÀO STAR SCHEMA FACT_REVIEW + FACT_REVIEW_DAILY ===
+                try:
+                    conn_reviews = psycopg2.connect(
+                        host=DB_HOST,
+                        port=DB_PORT,
+                        database=DB_NAME,
+                        user=DB_USER,
+                        password=DB_PASSWORD,
+                    )
+                    # dùng lại mappings của phần product (date_map, product_map, platform_map)
+                    load_fact_review_star(df_reviews_time, conn_reviews, mappings)
+                    load_fact_review_daily_star(df_reviews_agg, conn_reviews, mappings)
+                finally:
+                    conn_reviews.close()
 
-            # Lưu parquet + MinIO (giữ nguyên)
-            save_review_results(df_reviews_dedup, df_reviews_agg)
+                # Lưu parquet + MinIO (giữ nguyên)
+                save_review_results(df_reviews_dedup, df_reviews_agg)
+            else:
+                print(" ⚠ Skipping review pipeline - no review data found")
         else:
-            print(" ⚠ Skipping review pipeline - no review data found")
+            print("\n" + "=" * 60)
+            print("⚠️ REVIEW PIPELINE SKIPPED")
+            print("=" * 60)
+            print("ℹ️  Reason: PROCESS_REVIEWS environment variable is not set to 'true'")
+            print("ℹ️  To enable: Set PROCESS_REVIEWS=true in environment")
+            print("ℹ️  This is a temporary measure to prevent OOM errors")
+            print("=" * 60)
 
         print("\n" + "=" * 60)
-        print(" PIPELINE COMPLETED SUCCESSFULLY! (STAR DWH + MinIO + Reviews)")
+        if PROCESS_REVIEWS:
+            print("✓ PIPELINE COMPLETED SUCCESSFULLY! (Products + Reviews → DWH)")
+        else:
+            print("✓ PIPELINE COMPLETED SUCCESSFULLY! (Products Only → DWH)")
+            print("ℹ️  Reviews skipped - set PROCESS_REVIEWS=true to enable")
         print("=" * 60)
         return 0
 

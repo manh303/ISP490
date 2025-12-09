@@ -46,21 +46,10 @@ class CachedAnalyticsService(AnalyticsService):
         platform_code: Optional[str] = None,
         category_key: Optional[str] = None,
     ):
-        """Get overview KPIs - WITH CACHING"""
-        # Build cache key
-        cache_key = f"analytics:kpis:{from_date}:{to_date}:{platform_code}:{category_key}"
-        
-        # Try cache first
-        cached = await cache.get(cache_key)
-        if cached:
-            return cached
-        
-        # Cache miss - query database
-        result = await super().get_overview_kpis(from_date, to_date, platform_code, category_key)
-        
-        # Cache for 5 minutes
-        await cache.set(cache_key, result, ttl=300)
-        return result
+        """Get overview KPIs - CACHING DISABLED (serialization issue)"""
+        # TODO: Fix Pydantic model serialization in cache before re-enabling
+        # Cache was causing validation errors when returning string instead of model
+        return await super().get_overview_kpis(from_date, to_date, platform_code, category_key)
     
     async def get_overview_trends(
         self,
@@ -99,23 +88,12 @@ class CachedAnalyticsService(AnalyticsService):
         category_key: Optional[str] = None,
         limit: int = 20,
     ):
-        """Get top products - WITH CACHING"""
-        # Build cache key
-        cache_key = f"analytics:top_products:{from_date}:{to_date}:{metric}:{platform_code}:{category_key}:{limit}"
-        
-        # Try cache first
-        cached = await cache.get(cache_key)
-        if cached:
-            return cached
-        
-        # Cache miss - query database
-        result = await super().get_top_products(
+        """Get top products - CACHING DISABLED (serialization issue)"""
+        # TODO: Fix Pydantic model serialization in cache before re-enabling
+        # Cache was causing validation errors when returning string instead of model
+        return await super().get_top_products(
             from_date, to_date, metric, platform_code, category_key, limit
         )
-        
-        # Cache for 10 minutes
-        await cache.set(cache_key, result, ttl=600)
-        return result
     
     async def get_product_timeseries(
         self,

@@ -1,9 +1,37 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { saveDSSDecision, SaveDSSDecisionRequest, DSSActionItem } from '../../services/DSSApi';
+
+// Interface for product data from DSS Results
+interface ProductData {
+  product_key: string;
+  product_name: string;
+  platform?: string;
+  category_name?: string;
+  current_price?: number;
+  recommended_price?: number;
+  predicted_price?: number;
+  price_change_pct?: number;
+  confidence?: number;
+}
+
+// Interface for prefill state from DSS Results
+interface PrefillState {
+  scenario_key?: string;
+  kpi_summary?: Record<string, any>;
+  filters?: Record<string, any>;
+  ai_summary_insights?: string[];
+  ai_recommended_actions?: string[];
+  title?: string;
+  description?: string;
+  table_data?: ProductData[];
+}
 
 const DSSDecisionCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefillState = location.state as PrefillState | undefined;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +50,63 @@ const DSSDecisionCreatePage: React.FC = () => {
     status: 'PLANNED'
   });
 
+  // Generate auto-description based on scenario and prefill data
+  const generateDescription = (state: PrefillState): string => {
+    const scenarioNames: Record<string, string> = {
+      'price_prediction': 'Price Optimization & Revenue Impact',
+      'product_recommendation': 'Cross-sell / Upsell Recommendations',
+      'review_sentiment': 'Review Sentiment Analysis'
+    };
+
+    const scenarioName = scenarioNames[state.scenario_key || 'price_prediction'] || state.scenario_key;
+    const filters = state.filters || {};
+    const fromDate = filters.from_date || 'N/A';
+    const toDate = filters.to_date || 'N/A';
+    const platforms = (filters.platforms || []).join(', ') || 'All platforms';
+    const categories = (filters.categories || []).join(', ') || 'All categories';
+
+    // Extract top 2-3 insights
+    const insights = (state.ai_summary_insights || []).slice(0, 3);
+    const insightsText = insights.length > 0
+      ? insights.join('; ')
+      : 'Analysis results are available for review.';
+
+    // Build description based on scenario
+    let businessGoal = '';
+    if (state.scenario_key === 'price_prediction') {
+      businessGoal = 'optimize pricing strategy and maximize revenue while maintaining healthy profit margins';
+    } else if (state.scenario_key === 'product_recommendation') {
+      businessGoal = 'implement cross-sell/upsell bundles for high-potential product pairs to increase basket value';
+    } else if (state.scenario_key === 'review_sentiment') {
+      businessGoal = 'reduce negative review rate and improve average rating through targeted quality improvements';
+    }
+
+    return `This decision was created from the ${scenarioName} scenario for the period ${fromDate} to ${toDate} on ${platforms}, categories: ${categories}.
+
+Analysis findings: ${insightsText}
+
+The objective of this decision is to ${businessGoal} through the action items listed below.`;
+  };
+
+  // Prefill form from DSS Results state
+  useEffect(() => {
+    if (prefillState) {
+      // Auto-generate description if not provided
+      const autoDescription = prefillState.description || generateDescription(prefillState);
+
+      setFormData(prev => ({
+        ...prev,
+        scenario_key: prefillState.scenario_key || prev.scenario_key,
+        title: prefillState.title || prev.title,
+        description: autoDescription,
+        kpi_summary: prefillState.kpi_summary,
+        filters: prefillState.filters,
+        ai_summary_insights: prefillState.ai_summary_insights,
+        ai_recommended_actions: prefillState.ai_recommended_actions
+      }));
+    }
+  }, [prefillState]);
+
   const handleInputChange = (field: keyof SaveDSSDecisionRequest, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -29,6 +114,28 @@ const DSSDecisionCreatePage: React.FC = () => {
   const handleActionChange = (field: keyof DSSActionItem, value: any) => {
     setCurrentAction(prev => ({ ...prev, [field]: value }));
   };
+
+  // Handle product selection - auto-fill current and recommended values
+  const handleProductSelect = (productKey: string) => {
+    const product = products.find(p => p.product_key === productKey);
+    if (product) {
+      setCurrentAction(prev => ({
+        ...prev,
+        product_key: product.product_key,
+        current_value: product.current_price,
+        recommended_value: product.recommended_price || product.predicted_price,
+        unit: 'VND'
+      }));
+    } else {
+      setCurrentAction(prev => ({
+        ...prev,
+        product_key: productKey
+      }));
+    }
+  };
+
+  // Get products from prefill state
+  const products = prefillState?.table_data || [];
 
   const addAction = () => {
     if (!currentAction.action_type || !currentAction.target_level) {
@@ -110,7 +217,76 @@ const DSSDecisionCreatePage: React.FC = () => {
           ← Back to Decisions
         </button>
         <h1 className="text-3xl font-bold text-gray-900">Create New DSS Decision</h1>
+        {prefillState && (
+          <p className="text-sm text-gray-500 mt-1">Pre-filled with data from DSS analysis</p>
+        )}
       </div>
+
+      {/* Prefilled Data Summary */}
+      {prefillState && (prefillState.kpi_summary || prefillState.ai_summary_insights) && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+          <h3 className="font-semibold text-blue-900 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Analysis Summary (Read-only)
+          </h3>
+
+          {/* KPI Summary */}
+          {prefillState.kpi_summary && (
+            <div>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">KPI Summary</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Object.entries(prefillState.kpi_summary).map(([key, value]) => (
+                  <div key={key} className="bg-white rounded p-2 text-center">
+                    <p className="text-xs text-gray-500 capitalize">{key.replace(/_/g, ' ')}</p>
+                    <p className="font-semibold text-gray-900">
+                      {typeof value === 'number' ? value.toLocaleString('vi-VN') : String(value)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Insights */}
+          {prefillState.ai_summary_insights && prefillState.ai_summary_insights.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">AI Insights</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                {prefillState.ai_summary_insights.slice(0, 3).map((insight, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    {insight}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* AI Recommended Actions */}
+          {prefillState.ai_recommended_actions && prefillState.ai_recommended_actions.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">AI Recommended Actions</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                {prefillState.ai_recommended_actions.slice(0, 3).map((action, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <span className="text-green-500 mr-2">✓</span>
+                    {action}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Products available */}
+          {products.length > 0 && (
+            <p className="text-xs text-blue-600">
+              {products.length} products available from analysis for action selection
+            </p>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
@@ -222,15 +398,30 @@ const DSSDecisionCreatePage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Key
+                  Product {products.length > 0 ? `(${products.length} available)` : ''}
                 </label>
-                <input
-                  type="text"
-                  value={currentAction.product_key || ''}
-                  onChange={(e) => handleActionChange('product_key', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="e.g., tiki_123456"
-                />
+                {products.length > 0 ? (
+                  <select
+                    value={currentAction.product_key || ''}
+                    onChange={(e) => handleProductSelect(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  >
+                    <option value="">-- Select Product --</option>
+                    {products.map((product) => (
+                      <option key={product.product_key} value={product.product_key}>
+                        {product.product_name} ({product.platform || 'N/A'}) - {product.current_price?.toLocaleString('vi-VN')} VND
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={currentAction.product_key || ''}
+                    onChange={(e) => handleActionChange('product_key', e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    placeholder="e.g., tiki_123456"
+                  />
+                )}
               </div>
 
               <div>

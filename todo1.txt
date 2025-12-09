@@ -1,1172 +1,245 @@
-2025-12-08 16:33:23,081 INFO app.api.v1.dss: ▶ /dss/price/run START user_id=1 request={'from_date': datetime.date(2025, 12, 8), 'to_date': datetime.date(2025, 12, 8), 'platforms': ['tiki', 'lazada'], 'categories': ['1', '2'], 'product_keys': ['string'], 'page': 1, 'page_size': 50, 'scope_mode': <PriceScopeMode.BY_CATEGORY: 'by_category'>, 'top_n': 50, 'max_discount_pct': 0.15, 'min_margin_pct': 0.1, 'min_confidence': 0.7, 'min_price_change_pct': 0.02, 'ai_mode': 'full'}
-2025-12-08 16:33:23,081 INFO app.api.v1.dss: DEBUG_API: request.min_price_change_pct = 0.02 (type: <class 'float'>)
-2025-12-08 16:33:23,081 INFO app.services.dss_service: Running Price Prediction DSS: {'from_date': datetime.date(2025, 12, 8), 'to_date': datetime.date(2025, 12, 8), 'platforms': ['tiki', 'lazada'], 'categories': ['1', '2'], 'product_keys': ['string'], 'page': 1, 'page_size': 50, 'scope_mode': <PriceScopeMode.BY_CATEGORY: 'by_category'>, 'top_n': 50, 'max_discount_pct': 0.15, 'min_margin_pct': 0.1, 'min_confidence': 0.7, 'min_price_change_pct': 0.02, 'ai_mode': 'full'}
-2025-12-08 16:33:23,142 INFO app.services.dss_service: Cache MISS for Price DSS: dss_price:97ba359b7c35
-2025-12-08 16:33:28,692 INFO app.services.dss_service: Created analysis session 195 for price prediction (AI status: pending)
-2025-12-08 16:33:28,692 INFO app.services.dss_service: 🚀 Started async AI generation for session 195
-2025-12-08 16:33:28,692 INFO app.api.v1.dss: ✅ /dss/price/run DONE in 5.61s (session_id=195)
-2025-12-08 16:33:28,693 INFO app.services.dss_service: [AI_ASYNC] Starting AI generation for session 195
-2025-12-08 16:33:30,571 INFO app.services.ai_summarizer: [AI_DEBUG] scenario=price_prediction, kpi_keys=['num_products', 'num_with_recommendation', 'current_revenue', 'projected_revenue', 'expected_revenue_uplift_pct', 'avg_confidence'], table_rows=10
-2025-12-08 16:33:30,572 INFO app.services.ai_summarizer: [AI_DEBUG] first_row={"product_key": "tiki_263675862", "product_name": "Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế", "platform": "tiki", "category_name": "Mobile Phones", "current_price": 3199000.0, "recommended_price": 4990544.66, "predicted_price": 4990544.66, "price_diff": 1791544.66, "price_change_pct": 0.5600327164738981, "current_revenue": 0.0, "projected_revenue": 0.0, "expected_revenue_change_pct": 0.5600327164738981, "confidence": 0.9983376824444649, "current_orders": 0, "avg_rating": 4.0, "total_reviews": 4}
-2025-12-08 16:33:30,572 INFO app.services.ai_summarizer: Trying Google Gemini for AI summarization...
-2025-12-08 16:33:30,808 WARNING app.services.ai_summarizer: ⚠️  Google Gemini rate limit (attempt 1/1): 429 You exceeded your current qquota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current
-2025-12-08 16:33:30,808 INFO app.services.ai_summarizer: Trying OpenAI for AI summarization...
-2025-12-08 16:33:30,808 INFO app.services.ai_summarizer: OpenAI generate with model=gpt-4o-mini
-2025-12-08 16:33:43,064 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-2025-12-08 16:33:43,078 INFO app.services.ai_summarizer: ✅ AI summarization successful using OpenAI
-2025-12-08 16:33:43,078 INFO app.services.dss_service: [AI_ASYNC] ✅ AI generation completed in 12.51s using models/gemini-pro-latest  
-INFO:     127.0.0.1:62307 - "POST /api/v1/dss/price/run?user_id=1 HTTP/1.1" 200 OK
-2025-12-08 16:33:43,255 INFO app.services.dss_service: [AI_ASYNC] Session 195 updated with AI results
-
-
-{
-  "scenario": "price_prediction",
-  "filters": {
-    "from_date": "2025-12-08",
-    "to_date": "2025-12-08",
-    "platforms": [
-      "tiki",
-      "lazada"
-    ],
-    "categories": [
-      "1",
-      "2"
-    ],
-    "scope_mode": "by_category",
-    "product_keys": [
-      "string"
-    ]
-  },
-  "kpi_summary": {
-    "num_products": 30,
-    "num_with_recommendation": 30,
-    "current_revenue": 0,
-    "projected_revenue": 0,
-    "expected_revenue_uplift_pct": 0,
-    "avg_confidence": 0.9673641785383766
-  },
-  "table_data": [
-    {
-      "product_key": "tiki_263675862",
-      "product_name": "Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3199000,
-      "recommended_price": 4990544.66,
-      "predicted_price": 4990544.66,
-      "price_diff": 1791544.66,
-      "price_change_pct": 0.5600327164738981,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.5600327164738981,
-      "confidence": 0.9983376824444649,
-      "current_orders": 0,
-      "avg_rating": 4,
-      "total_reviews": 4
-    },
-    {
-      "product_key": "tiki_17921443",
-      "product_name": "Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17925120",
-      "product_name": "Ốp lưng cho điện thoại Samsung Galaxy A50 CB 27 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921509",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 5 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17920150",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 75 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17920485",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 Plus CB 41 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17919959",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 Plus CB 25 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921863",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 58 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921584",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 19 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921955",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 29 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921247",
-      "product_name": "Ốp lưng cho điện thoại Iphone 5s CB 21 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17920365",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 55 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17922116",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 78 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921722",
-      "product_name": "Ốp lưng cho điện thoại Iphone 8 mẫu CB 40 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921351",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 15 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 44644.66,
-      "predicted_price": 44644.66,
-      "price_diff": 9644.66,
-      "price_change_pct": 0.2755617142857143,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.2755617142857143,
-      "confidence": 0.9436187888988291,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278833657",
-      "product_name": "Điện Thoại Samsung Galaxy A07 4GB/128GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2718000,
-      "recommended_price": 3391259.26,
-      "predicted_price": 3391259.26,
-      "price_diff": 673259.26,
-      "price_change_pct": 0.2477039220014717,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.2477039220014717,
-      "confidence": 0.9950738741219095,
-      "current_orders": 0,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_273412211",
-      "product_name": "Điện thoại Xiaomi Redmi 13C (4+128GB) | 6.74\" 90Hz| Media Tek Helio G85| 5000mAh - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2699000,
-      "recommended_price": 3288770.69,
-      "predicted_price": 3288770.69,
-      "price_diff": 589770.69,
-      "price_change_pct": 0.2185145201926639,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.2185145201926639,
-      "confidence": 0.9966499093313191,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278820676",
-      "product_name": "Điện Thoại Xiaomi 15T Pro 5G 12GB/512GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 16429000,
-      "recommended_price": 19485887.5,
-      "predicted_price": 19485887.5,
-      "price_diff": 3056887.5,
-      "price_change_pct": 0.18606655913324,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.18606655913324,
-      "confidence": 0.9988304612761415,
-      "current_orders": 0,
-      "avg_rating": 3.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_273373420",
-      "product_name": "Điện thoại Xiaomi Redmi 13C (4GB/128GB) - Hàng chính hãng - Bảo hành 18 tháng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2699000,
-      "recommended_price": 3088700.06,
-      "predicted_price": 3088700.06,
-      "price_diff": 389700.06,
-      "price_change_pct": 0.1443868321600593,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.1443868321600593,
-      "confidence": 0.9954007738776681,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 2
-    },
-    {
-      "product_key": "tiki_278843336",
-      "product_name": "Điện Thoại Xiaomi POCO M6 8GB/256GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3979000,
-      "recommended_price": 4251269.07,
-      "predicted_price": 4251269.07,
-      "price_diff": 272269.07,
-      "price_change_pct": 0.0684265066599648,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0684265066599648,
-      "confidence": 0.9959248897882627,
-      "current_orders": 0,
-      "avg_rating": 3.8,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278600678",
-      "product_name": "Điện Thoại Samsung Galaxy S25 FE (8/128GB), Concert Camera 50MP, Pin bền bỉ, Trợ thủ AI thông minh - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 13490000,
-      "recommended_price": 14301918.27,
-      "predicted_price": 14301918.27,
-      "price_diff": 811918.27,
-      "price_change_pct": 0.0601866767976279,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0601866767976279,
-      "confidence": 0.9959245739697546,
-      "current_orders": 0,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_52977720",
-      "product_name": "Ốp lưng in cho Realme 2 Mẫu Chuột Che Mắt",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 42000,
-      "recommended_price": 44454.8,
-      "predicted_price": 44454.8,
-      "price_diff": 2454.8,
-      "price_change_pct": 0.05844761904761905,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.05844761904761905,
-      "confidence": 0.9545277450354067,
-      "current_orders": 0,
-      "avg_rating": 4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_52977731",
-      "product_name": "Ốp lưng in cho Realme 3 Mẫu Chuột Che Mắt",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 42000,
-      "recommended_price": 44454.8,
-      "predicted_price": 44454.8,
-      "price_diff": 2454.8,
-      "price_change_pct": 0.05844761904761905,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.05844761904761905,
-      "confidence": 0.9545277450354067,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278892326",
-      "product_name": "USB Bluetooth v5.4 Baseus BA04 kết nối 20m truyền âm thanh không dây cho laptop, smartphone, tablet - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 231830,
-      "recommended_price": 245214.83,
-      "predicted_price": 245214.83,
-      "price_diff": 13384.83,
-      "price_change_pct": 0.057735538972523,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.057735538972523,
-      "confidence": 0.9589566014420906,
-      "current_orders": 0,
-      "avg_rating": 3.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278580633",
-      "product_name": "Điện thoại Xiaomi Redmi 15 (8GB/128GB) - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4519000,
-      "recommended_price": 4763315.62,
-      "predicted_price": 4763315.62,
-      "price_diff": 244315.62,
-      "price_change_pct": 0.0540640894003098,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0540640894003098,
-      "confidence": 0.9932471428378705,
-      "current_orders": 0,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278580531",
-      "product_name": "Điện thoại Xiaomi Redmi 15 (6GB/128GB) - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4149000,
-      "recommended_price": 4349503.79,
-      "predicted_price": 4349503.79,
-      "price_diff": 200503.79,
-      "price_change_pct": 0.0483258110388045,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0483258110388045,
-      "confidence": 0.9970150939907562,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3243493852",
-      "product_name": "LEOBOG | Black Emperor Magnetic Switch Pink Emperor Magnetic Switch Jade Emperor Magnetic Switch Mechanical Keyboard Switches",
-      "platform": "lazada",
-      "category_name": "Computers",
-      "current_price": 94000,
-      "recommended_price": 97325.51,
-      "predicted_price": 97325.51,
-      "price_diff": 3325.51,
-      "price_change_pct": 0.03537776595744681,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.03537776595744681,
-      "confidence": 0.9402631437533695,
-      "current_orders": 0,
-      "avg_rating": 4,
-      "total_reviews": 7
-    },
-    {
-      "product_key": "tiki_277041250",
-      "product_name": "Điện Thoại Xiaomi 14T Pro 5G 12GB/512GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 14349000,
-      "recommended_price": 14746450.23,
-      "predicted_price": 14746450.23,
-      "price_diff": 397450.23,
-      "price_change_pct": 0.0276988103700606,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0276988103700606,
-      "confidence": 0.9954277077568925,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_273990229",
-      "product_name": "Điện Thoại Xiaomi Redmi Note 13 6GB/128GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3609000,
-      "recommended_price": 3685614.21,
-      "predicted_price": 3685614.21,
-      "price_diff": 76614.21,
-      "price_change_pct": 0.0212286533665835,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0212286533665835,
-      "confidence": 0.9941627992583629,
-      "current_orders": 0,
-      "avg_rating": 4.1,
-      "total_reviews": 6
-    },
-    {
-      "product_key": "tiki_277811118",
-      "product_name": "Điện Thoại Xiaomi Redmi Note 14 5G 8GB/256GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 5909000,
-      "recommended_price": 6030549.82,
-      "predicted_price": 6030549.82,
-      "price_diff": 121549.82,
-      "price_change_pct": 0.0205702860044001,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0205702860044001,
-      "confidence": 0.9912319868704774,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    }
-  ],
-  "total_count": 30,
-  "date_adjustment_info": {
-    "requested_from_date": "2025-12-08",
-    "requested_to_date": "2025-12-08",
-    "actual_from_date": "2025-12-08",
-    "actual_to_date": "2025-12-08",
-    "date_adjusted": false
-  },
-  "items": [
-    {
-      "product_key": "tiki_263675862",
-      "product_name": "Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3199000,
-      "recommended_price": 4990544.66,
-      "predicted_price": 4990544.66,
-      "price_diff": 1791544.66,
-      "price_change_pct": 0.5600327164738981,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.5600327164738981,
-      "confidence": 0.9983376824444649,
-      "current_orders": 0,
-      "avg_rating": 4,
-      "total_reviews": 4
-    },
-    {
-      "product_key": "tiki_17921443",
-      "product_name": "Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17925120",
-      "product_name": "Ốp lưng cho điện thoại Samsung Galaxy A50 CB 27 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921509",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 5 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17920150",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 75 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17920485",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 Plus CB 41 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17919959",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 Plus CB 25 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921863",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 58 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921584",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 mẫu CB 19 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921955",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 29 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921247",
-      "product_name": "Ốp lưng cho điện thoại Iphone 5s CB 21 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17920365",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6S Plus CB 55 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17922116",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 78 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921722",
-      "product_name": "Ốp lưng cho điện thoại Iphone 8 mẫu CB 40 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 45022.81,
-      "predicted_price": 45022.81,
-      "price_diff": 10022.81,
-      "price_change_pct": 0.286366,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.286366,
-      "confidence": 0.9478311104971013,
-      "current_orders": 0,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17921351",
-      "product_name": "Ốp lưng cho điện thoại Iphone 7 mẫu CB 15 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 35000,
-      "recommended_price": 44644.66,
-      "predicted_price": 44644.66,
-      "price_diff": 9644.66,
-      "price_change_pct": 0.2755617142857143,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.2755617142857143,
-      "confidence": 0.9436187888988291,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278833657",
-      "product_name": "Điện Thoại Samsung Galaxy A07 4GB/128GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2718000,
-      "recommended_price": 3391259.26,
-      "predicted_price": 3391259.26,
-      "price_diff": 673259.26,
-      "price_change_pct": 0.2477039220014717,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.2477039220014717,
-      "confidence": 0.9950738741219095,
-      "current_orders": 0,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_273412211",
-      "product_name": "Điện thoại Xiaomi Redmi 13C (4+128GB) | 6.74\" 90Hz| Media Tek Helio G85| 5000mAh - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2699000,
-      "recommended_price": 3288770.69,
-      "predicted_price": 3288770.69,
-      "price_diff": 589770.69,
-      "price_change_pct": 0.2185145201926639,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.2185145201926639,
-      "confidence": 0.9966499093313191,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278820676",
-      "product_name": "Điện Thoại Xiaomi 15T Pro 5G 12GB/512GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 16429000,
-      "recommended_price": 19485887.5,
-      "predicted_price": 19485887.5,
-      "price_diff": 3056887.5,
-      "price_change_pct": 0.18606655913324,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.18606655913324,
-      "confidence": 0.9988304612761415,
-      "current_orders": 0,
-      "avg_rating": 3.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_273373420",
-      "product_name": "Điện thoại Xiaomi Redmi 13C (4GB/128GB) - Hàng chính hãng - Bảo hành 18 tháng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 2699000,
-      "recommended_price": 3088700.06,
-      "predicted_price": 3088700.06,
-      "price_diff": 389700.06,
-      "price_change_pct": 0.1443868321600593,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.1443868321600593,
-      "confidence": 0.9954007738776681,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 2
-    },
-    {
-      "product_key": "tiki_278843336",
-      "product_name": "Điện Thoại Xiaomi POCO M6 8GB/256GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3979000,
-      "recommended_price": 4251269.07,
-      "predicted_price": 4251269.07,
-      "price_diff": 272269.07,
-      "price_change_pct": 0.0684265066599648,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0684265066599648,
-      "confidence": 0.9959248897882627,
-      "current_orders": 0,
-      "avg_rating": 3.8,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278600678",
-      "product_name": "Điện Thoại Samsung Galaxy S25 FE (8/128GB), Concert Camera 50MP, Pin bền bỉ, Trợ thủ AI thông minh - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 13490000,
-      "recommended_price": 14301918.27,
-      "predicted_price": 14301918.27,
-      "price_diff": 811918.27,
-      "price_change_pct": 0.0601866767976279,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0601866767976279,
-      "confidence": 0.9959245739697546,
-      "current_orders": 0,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_52977720",
-      "product_name": "Ốp lưng in cho Realme 2 Mẫu Chuột Che Mắt",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 42000,
-      "recommended_price": 44454.8,
-      "predicted_price": 44454.8,
-      "price_diff": 2454.8,
-      "price_change_pct": 0.05844761904761905,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.05844761904761905,
-      "confidence": 0.9545277450354067,
-      "current_orders": 0,
-      "avg_rating": 4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_52977731",
-      "product_name": "Ốp lưng in cho Realme 3 Mẫu Chuột Che Mắt",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 42000,
-      "recommended_price": 44454.8,
-      "predicted_price": 44454.8,
-      "price_diff": 2454.8,
-      "price_change_pct": 0.05844761904761905,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.05844761904761905,
-      "confidence": 0.9545277450354067,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278892326",
-      "product_name": "USB Bluetooth v5.4 Baseus BA04 kết nối 20m truyền âm thanh không dây cho laptop, smartphone, tablet - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 231830,
-      "recommended_price": 245214.83,
-      "predicted_price": 245214.83,
-      "price_diff": 13384.83,
-      "price_change_pct": 0.057735538972523,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.057735538972523,
-      "confidence": 0.9589566014420906,
-      "current_orders": 0,
-      "avg_rating": 3.7,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278580633",
-      "product_name": "Điện thoại Xiaomi Redmi 15 (8GB/128GB) - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4519000,
-      "recommended_price": 4763315.62,
-      "predicted_price": 4763315.62,
-      "price_diff": 244315.62,
-      "price_change_pct": 0.0540640894003098,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0540640894003098,
-      "confidence": 0.9932471428378705,
-      "current_orders": 0,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_278580531",
-      "product_name": "Điện thoại Xiaomi Redmi 15 (6GB/128GB) - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 4149000,
-      "recommended_price": 4349503.79,
-      "predicted_price": 4349503.79,
-      "price_diff": 200503.79,
-      "price_change_pct": 0.0483258110388045,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0483258110388045,
-      "confidence": 0.9970150939907562,
-      "current_orders": 0,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3243493852",
-      "product_name": "LEOBOG | Black Emperor Magnetic Switch Pink Emperor Magnetic Switch Jade Emperor Magnetic Switch Mechanical Keyboard Switches",
-      "platform": "lazada",
-      "category_name": "Computers",
-      "current_price": 94000,
-      "recommended_price": 97325.51,
-      "predicted_price": 97325.51,
-      "price_diff": 3325.51,
-      "price_change_pct": 0.03537776595744681,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.03537776595744681,
-      "confidence": 0.9402631437533695,
-      "current_orders": 0,
-      "avg_rating": 4,
-      "total_reviews": 7
-    },
-    {
-      "product_key": "tiki_277041250",
-      "product_name": "Điện Thoại Xiaomi 14T Pro 5G 12GB/512GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 14349000,
-      "recommended_price": 14746450.23,
-      "predicted_price": 14746450.23,
-      "price_diff": 397450.23,
-      "price_change_pct": 0.0276988103700606,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0276988103700606,
-      "confidence": 0.9954277077568925,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_273990229",
-      "product_name": "Điện Thoại Xiaomi Redmi Note 13 6GB/128GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 3609000,
-      "recommended_price": 3685614.21,
-      "predicted_price": 3685614.21,
-      "price_diff": 76614.21,
-      "price_change_pct": 0.0212286533665835,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0212286533665835,
-      "confidence": 0.9941627992583629,
-      "current_orders": 0,
-      "avg_rating": 4.1,
-      "total_reviews": 6
-    },
-    {
-      "product_key": "tiki_277811118",
-      "product_name": "Điện Thoại Xiaomi Redmi Note 14 5G 8GB/256GB - Hàng Chính Hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 5909000,
-      "recommended_price": 6030549.82,
-      "predicted_price": 6030549.82,
-      "price_diff": 121549.82,
-      "price_change_pct": 0.0205702860044001,
-      "current_revenue": 0,
-      "projected_revenue": 0,
-      "expected_revenue_change_pct": 0.0205702860044001,
-      "confidence": 0.9912319868704774,
-      "current_orders": 0,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    }
-  ],
-  "ai_summary_insights": [
-    "Analyzing approximately 30 products within the selected scope.",
-    "Analyzed 30 products with 30 having price recommendations. Average model confidence: 96.7%",
-    "Top 1 by impact: 'Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế' (tiki) - Current ₫3,199,000, Recommended ₫4,990,545 (+56.0%), Revenue impact: +56.0%",
-    "Top 2 by impact: 'Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng' (tiki) - Current ₫35,000, Recommended ₫45,023 (+28.6%), Revenue impact: +28.6%",
-    "10 products have confidence ≥80%, making them low-risk candidates for immediate adjustment"
-  ],
-  "ai_recommended_actions": [
-    "[PRIORITY: HIGH] Adjust price for 'Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế' (tiki) from ₫3,199,000 to ₫4,990,545 (+56.0%). Expected revenue change: +56.0%. Confidence: 99.8%, Current orders: 0",
-    "[PRIORITY: HIGH] Adjust price for 'Ốp lưng cho điện thoại Iphone Xs Max mẫu XB 74 - Hàng chính hãng' (tiki) from ₫35,000 to ₫45,023 (+28.6%). Expected revenue change: +28.6%. Confidence: 94.8%, Current orders: 0",
-    "[PRIORITY: HIGH] Adjust price for 'Ốp lưng cho điện thoại Samsung Galaxy A50 CB 27 - Hàng chính hãng' (tiki) from ₫35,000 to ₫45,023 (+28.6%). Expected revenue change: +28.6%. Confidence: 94.8%, Current orders: 0",
-    "[CATEGORY: Mobile Phones] Apply +28.6% average price adjustment to 7 products, prioritizing 7 items with confidence ≥75%",
-    "[PLATFORM: tiki] Prioritize tiki with 10 recommendations (10 high-confidence). Average suggested change: +31.4%",
-    "[A/B TEST] Run 2-week price test for 'Điện thoại OPPO A77 4GB+4GB/128GB - Sạc siêu nhanh 33W - Hàng nhập khẩu nhật - Bản quốc tế': 50% traffic at current ₫3,199,000, 50% at recommended ₫4,990,545. Track conversion rate, revenue per session, and customer feedback",
-    "[MONITORING] Track daily: (1) Revenue per product (+/-5% alert), (2) Conversion rate changes (+/-10% alert), (3) Competitor pricing. Weekly review for first month post-implementation"
-  ],
-  "generated_at": "2025-12-08T16:33:28.692904",
-  "ai_model_used": "rule-based-fallback",
-  "ai_generation_status": "pending",
-  "session_id": 195,
-  "ai_input_stats": {
-    "scenario": "price_prediction",
-    "kpi_keys": [
-      "num_products",
-      "num_with_recommendation",
-      "current_revenue",
-      "projected_revenue",
-      "expected_revenue_uplift_pct",
-      "avg_confidence"
-    ],
-    "table_rows_for_ai": 10
-  }
-}
+2025-12-09, 02:29:35 +07] {subprocess.py:93} INFO - [INFO] Writing to local: /tmp/cleaned_data/cleaned_20251208_192935
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:49 ERROR TransportRequestHandler: Error sending result RpcResponse[requestId=7675569083813983298,body=NioManagedBuffer[buf=java.nio.HeapByteBuffer[pos=0 lim=81 cap=156]]] to /172.18.0.9:33142; closing connection
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - io.netty.channel.StacklessClosedChannelException
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at io.netty.channel.AbstractChannel$AbstractUnsafe.write(Object, ChannelPromise)(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:49 ERROR TaskSchedulerImpl: Lost executor 1 on 172.18.0.9: Command exited with code 137
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:49 WARN TaskSetManager: Lost task 0.0 in stage 201.0 (TID 2756) (172.18.0.9 executor 1): ExecutorLostFailure (executor 1 exited caused by one of the running tasks) Reason: Command exited with code 137
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:50 WARN TaskSetManager: Lost task 0.1 in stage 201.0 (TID 2757) (172.18.0.10 executor 2): FetchFailed(BlockManagerId(1, 172.18.0.9, 43323, None), shuffleId=63, mapIndex=0, mapId=2726, reduceId=0, message=
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - org.apache.spark.shuffle.FetchFailedException
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.errors.SparkCoreErrors$.fetchFailedError(SparkCoreErrors.scala:437)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.throwFetchFailedException(ShuffleBlockFetcherIterator.scala:1236)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:971)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:86)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.next(CompletionIterator.scala:29)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.sort_addToSorter_0$(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.processNext(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.WholeStageCodegenEvaluatorFactory$WholeStageCodegenPartitionEvaluator$$anon$1.hasNext(WholeStageCodegenEvaluatorFactory.scala:43)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1(SortAggregateExec.scala:62)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1$adapted(SortAggregateExec.scala:59)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2(RDD.scala:877)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2$adapted(RDD.scala:877)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.CoalescedRDD.$anonfun$compute$1(CoalescedRDD.scala:99)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatDataWriter.writeWithIterator(FileFormatDataWriter.scala:91)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.$anonfun$executeTask$1(FileFormatWriter.scala:403)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.Utils$.tryWithSafeFinallyAndFailureCallbacks(Utils.scala:1397)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.executeTask(FileFormatWriter.scala:410)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.WriteFilesExec.$anonfun$doExecuteWrite$1(WriteFiles.scala:100)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2(RDD.scala:890)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2$adapted(RDD.scala:890)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:93)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:161)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.Task.run(Task.scala:141)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.lang.Thread.run(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - Caused by: org.apache.spark.ExecutorDeadException: [INTERNAL_ERROR_NETWORK] The relative remote executor(Id: 1), which maintains the block data to fetch is dead.
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService$$anon$2.createAndStart(NettyBlockTransferService.scala:141)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.transferAllOutstanding(RetryingBlockTransferor.java:173)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.start(RetryingBlockTransferor.java:152)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService.fetchBlocks(NettyBlockTransferService.scala:151)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.sendRequest(ShuffleBlockFetcherIterator.scala:374)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.send$1(ShuffleBlockFetcherIterator.scala:1203)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.fetchUpToMaxBytes(ShuffleBlockFetcherIterator.scala:1195)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.initialize(ShuffleBlockFetcherIterator.scala:715)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.<init>(ShuffleBlockFetcherIterator.scala:194)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.shuffle.BlockStoreShuffleReader.read(BlockStoreShuffleReader.scala:73)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.ShuffledRowRDD.compute(ShuffledRowRDD.scala:232)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	... 27 more
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - )
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:50 WARN TaskSetManager: Lost task 2.0 in stage 201.0 (TID 2758) (172.18.0.10 executor 2): FetchFailed(BlockManagerId(1, 172.18.0.9, 43323, None), shuffleId=63, mapIndex=0, mapId=2726, reduceId=90, message=
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - org.apache.spark.shuffle.FetchFailedException
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.errors.SparkCoreErrors$.fetchFailedError(SparkCoreErrors.scala:437)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.throwFetchFailedException(ShuffleBlockFetcherIterator.scala:1236)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:971)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:86)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.next(CompletionIterator.scala:29)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.sort_addToSorter_0$(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.processNext(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.WholeStageCodegenEvaluatorFactory$WholeStageCodegenPartitionEvaluator$$anon$1.hasNext(WholeStageCodegenEvaluatorFactory.scala:43)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1(SortAggregateExec.scala:62)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1$adapted(SortAggregateExec.scala:59)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2(RDD.scala:877)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2$adapted(RDD.scala:877)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.CoalescedRDD.$anonfun$compute$1(CoalescedRDD.scala:99)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.executeTask(FileFormatWriter.scala:385)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.WriteFilesExec.$anonfun$doExecuteWrite$1(WriteFiles.scala:100)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2(RDD.scala:890)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2$adapted(RDD.scala:890)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:93)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:161)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.Task.run(Task.scala:141)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.lang.Thread.run(Unknown Source)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - Caused by: org.apache.spark.ExecutorDeadException: [INTERNAL_ERROR_NETWORK] The relative remote executor(Id: 1), which maintains the block data to fetch is dead.
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService$$anon$2.createAndStart(NettyBlockTransferService.scala:141)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.transferAllOutstanding(RetryingBlockTransferor.java:173)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.start(RetryingBlockTransferor.java:152)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService.fetchBlocks(NettyBlockTransferService.scala:151)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.sendRequest(ShuffleBlockFetcherIterator.scala:374)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.send$1(ShuffleBlockFetcherIterator.scala:1203)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.fetchUpToMaxBytes(ShuffleBlockFetcherIterator.scala:1195)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.initialize(ShuffleBlockFetcherIterator.scala:715)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.<init>(ShuffleBlockFetcherIterator.scala:194)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.shuffle.BlockStoreShuffleReader.read(BlockStoreShuffleReader.scala:73)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.ShuffledRowRDD.compute(ShuffledRowRDD.scala:232)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	... 24 more
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 
+[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - )
+[2025-12-09, 02:31:31 +07] {job.py:218} ERROR - Job heartbeat got an exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3371, in _wrap_pool_connect
+    return fn()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 327, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 894, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 493, in checkout
+    rec = pool._do_get()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 256, in _do_get
+    return self._create_connection()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 273, in _create_connection
+    return _ConnectionRecord(self)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 388, in __init__
+    self.__connect()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 691, in __connect
+    pool.logger.debug("Error on connect(): %s", e)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    compat.raise_(
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 686, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 574, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 598, in connect
+    return self.dbapi.connect(*cargs, **cparams)
+  File "/home/airflow/.local/lib/python3.9/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "***-db" to address: Temporary failure in name resolution
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/jobs/job.py", line 213, in heartbeat
+    heartbeat_callback(session)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/utils/session.py", line 76, in wrapper
+    return func(*args, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/jobs/local_task_job_runner.py", line 261, in heartbeat_callback
+    self.task_instance.refresh_from_db()
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/utils/session.py", line 79, in wrapper
+    return func(*args, session=session, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 1821, in refresh_from_db
+    _refresh_from_db(task_instance=self, session=session, lock_for_update=lock_for_update)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 510, in _refresh_from_db
+    ti = TaskInstance.get_task_instance(
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/api_internal/internal_api_call.py", line 115, in wrapper
+    return func(*args, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/utils/session.py", line 76, in wrapper
+    return func(*args, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 1807, in get_task_instance
+    return query.one_or_none()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2850, in one_or_none
+    return self._iter().one_or_none()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2916, in _iter
+    result = self.session.execute(
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1716, in execute
+    conn = self._connection_for_bind(bind)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1555, in _connection_for_bind
+    return self._transaction._connection_for_bind(
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 750, in _connection_for_bind
+    conn = bind.connect()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/future/engine.py", line 412, in connect
+    return super(Engine, self).connect()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3325, in connect
+    return self._connection_cls(self, close_with_result=close_with_result)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 96, in __init__
+    else engine.raw_connection()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3404, in raw_connection
+    return self._wrap_pool_connect(self.pool.connect, _connection)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3374, in _wrap_pool_connect
+    Connection._handle_dbapi_exception_noconnection(
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2208, in _handle_dbapi_exception_noconnection
+    util.raise_(
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3371, in _wrap_pool_connect
+    return fn()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 327, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 894, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 493, in checkout
+    rec = pool._do_get()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 256, in _do_get
+    return self._create_connection()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 273, in _create_connection
+    return _ConnectionRecord(self)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 388, in __init__
+    self.__connect()
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 691, in __connect
+    pool.logger.debug("Error on connect(): %s", e)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    compat.raise_(
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 686, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 574, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 598, in connect
+    return self.dbapi.connect(*cargs, **cparams)
+  File "/home/airflow/.local/lib/python3.9/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not translate host name "***-db" to address: Temporary failure in name resolution
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+[2025-12-09, 02:31:32 +07] {job.py:221} ERROR - Job heartbeat failed with error. Scheduler may go into unhealthy state

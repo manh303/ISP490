@@ -36,7 +36,7 @@ export interface PricePredictionRequest {
   categories?: string[];
   page?: number;
   page_size?: number;
-  scope_mode?: 'top_n' | 'specific_products';
+  scope_mode?: 'top_n' | 'specific_products' | 'by_product' | 'by_category';
   top_n?: number;
   product_keys?: string[];
   max_discount_pct?: number;
@@ -79,6 +79,8 @@ export interface PricePredictionResponse {
     total_reviews: number;
   }>;
   total_count: number;
+  session_id?: number;  // Added for async AI polling
+  ai_generation_status?: 'pending' | 'generating' | 'completed' | 'failed' | 'skipped';  // Added for async AI polling
   ai_summary_insights: string[];
   ai_recommended_actions: string[];
   generated_at: string;
@@ -255,6 +257,7 @@ export interface DSSScenario {
   description: string;
   endpoint: string;
   use_cases: string[];
+  kpi_outputs?: string[];
   required_inputs: string[];
   optional_inputs: string[];
 }
@@ -432,6 +435,96 @@ export const getDSSDecisionDetail = async (decisionId: number): Promise<DSSDecis
   return response.data;
 };
 
+/**
+ * Poll AI Generation Status
+ * 
+ * After running a DSS analysis, use this to check if async AI generation has completed.
+ * Poll every 2-3 seconds until status is 'completed' or 'failed'.
+ * 
+ * @param sessionId - Session ID from DSS run response
+ * @returns AI generation status and updated insights/actions
+ */
+export const pollAIGenerationStatus = async (sessionId: number): Promise<{
+  session_id: number;
+  ai_generation_status: 'pending' | 'generating' | 'completed' | 'failed' | 'skipped';
+  ai_summary_insights?: string[];
+  ai_recommended_actions?: string[];
+  ai_model_used?: string;
+  error_message?: string;
+}> => {
+  const response = await api.get(`/v1/dss/price/${sessionId}/ai-summary`);
+  return response.data;
+};
 
+// ============================================
+// DSS ANALYSIS SESSIONS (HISTORY)
+// ============================================
 
+export interface DSSSessionItem {
+  session_id: number;
+  scenario_key: string;
+  scenario_name: string;
+  filters: Record<string, any>;
+  kpi_summary: Record<string, any>;
+  ai_generation_status: string;
+  ai_model_used: string;
+  generated_at: string;
+  source_endpoint: string;
+  user_email?: string;
+  has_decision: boolean;
+  decision_id?: number;
+}
 
+export interface DSSSessionListResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  items: DSSSessionItem[];
+}
+
+export interface DSSSessionDetailResponse {
+  session_id: number;
+  scenario_key: string;
+  scenario_name: string;
+  filters: Record<string, any>;
+  kpi_summary: Record<string, any>;
+  ai_summary_insights: string[];
+  ai_recommended_actions: string[];
+  date_adjustment_info: Record<string, any>;
+  ai_generation_status: string;
+  ai_model_used: string;
+  generated_at: string;
+  source_endpoint: string;
+  user_email?: string;
+  decision?: {
+    decision_id: number;
+    title: string;
+    status: string;
+  };
+}
+
+/**
+ * List DSS Analysis Sessions (History)
+ * 
+ * Get paginated list of DSS runs that may or may not have been saved as decisions.
+ */
+export const listDSSSessions = async (params: {
+  scenario_key?: string;
+  from_date?: string;
+  to_date?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<DSSSessionListResponse> => {
+  const response = await api.get('/v1/dss/sessions', { params });
+  return response.data;
+};
+
+/**
+ * Get DSS Session Detail
+ * 
+ * Get full details of a specific DSS analysis session including KPIs and AI insights.
+ */
+export const getDSSSessionDetail = async (sessionId: number): Promise<DSSSessionDetailResponse> => {
+  const response = await api.get(`/v1/dss/sessions/${sessionId}`);
+  return response.data;
+};

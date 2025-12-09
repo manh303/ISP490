@@ -25,8 +25,16 @@ from app.schemas.dss_decision import (
     DSSDecisionDetailResponse,
 )
 from app.services.dss_service import DSSService
+from app.api.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
+
+# Optional auth dependency - returns user_id or None if not authenticated
+async def get_optional_user_id(
+    current_user: Dict[str, Any] = Depends(get_current_user)
+) -> int:
+    """Get user_id from authenticated user token"""
+    return current_user.get("user_id", current_user.get("sub"))
 
 router = APIRouter(prefix="/dss", tags=["DSS - Decision Support System"])
 
@@ -101,8 +109,8 @@ async def get_dss_service(db=Depends(get_db_connection)) -> DSSService:
 )
 async def run_price_prediction_dss(
     request: PricePredictionRequest,
-    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
+    user_id: int = Depends(get_optional_user_id),
 ):
     """
     Run Price Prediction DSS Analysis
@@ -211,8 +219,8 @@ async def get_ai_summary_status(
 )
 async def run_product_recommendation_dss(
     request: ProductRecommendationRequest,
-    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
+    user_id: int = Depends(get_optional_user_id),
 ):
     """
     Run Product Recommendation DSS Analysis
@@ -272,8 +280,8 @@ async def run_product_recommendation_dss(
 )
 async def run_review_sentiment_dss(
     request: ReviewSentimentRequest,
-    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
+    user_id: int = Depends(get_optional_user_id),
 ):
     """
     Run Review Sentiment DSS Analysis
@@ -641,8 +649,8 @@ async def list_dss_scenarios():
 )
 async def save_dss_decision(
     request: SaveDSSDecisionRequest,
-    user_id: int = 1,  # TODO: Get from authentication middleware
     service: DSSService = Depends(get_dss_service),
+    user_id: int = Depends(get_optional_user_id),
 ):
     """
     Save a DSS Decision with Action Plan
@@ -838,4 +846,109 @@ async def get_dss_decision_detail(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.exception(f"Error getting decision detail: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ============================================
+# ANALYSIS SESSION HISTORY
+# ============================================
+
+
+@router.get(
+    "/sessions",
+    response_model=Dict[str, Any],
+    operation_id="list_dss_sessions_v1",
+)
+async def list_dss_sessions(
+    scenario_key: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+    service: DSSService = Depends(get_dss_service),
+    user_id: int = Depends(get_optional_user_id),
+):
+    """
+    List DSS Analysis Sessions (History)
+    
+    **Purpose:**
+    Retrieve paginated list of DSS analysis sessions (runs) that may or may not have been saved as decisions.
+    
+    **Query Parameters:**
+    - `scenario_key`: Filter by scenario (price_prediction, product_recommendation, review_sentiment)
+    - `from_date`: Filter by generated_at >= from_date (ISO format)
+    - `to_date`: Filter by generated_at <= to_date (ISO format)
+    - `page`: Page number (default: 1)
+    - `page_size`: Items per page (default: 20)
+    
+    **Example:**
+    ```
+    GET /dss/sessions?scenario_key=price_prediction&page=1&page_size=10
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "total": 50,
+      "page": 1,
+      "page_size": 20,
+      "items": [
+        {
+          "session_id": 123,
+          "scenario_key": "price_prediction",
+          "scenario_name": "Price Prediction",
+          "filters": {...},
+          "kpi_summary": {...},
+          "ai_generation_status": "completed",
+          "ai_model_used": "rule-based-fallback",
+          "generated_at": "2025-12-09T10:30:00",
+          "has_decision": false
+        }
+      ]
+    }
+    ```
+    """
+    try:
+        result = await service.list_analysis_sessions(
+            user_id=user_id,
+            scenario_key=scenario_key,
+            from_date=from_date,
+            to_date=to_date,
+            page=page,
+            page_size=page_size
+        )
+        return result
+    except Exception as e:
+        logger.exception(f"Error listing sessions: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get(
+    "/sessions/{session_id}",
+    response_model=Dict[str, Any],
+    operation_id="get_dss_session_detail_v1",
+)
+async def get_dss_session_detail(
+    session_id: int,
+    service: DSSService = Depends(get_dss_service),
+):
+    """
+    Get DSS Session Detail
+    
+    **Purpose:**
+    Retrieve full details of a specific DSS analysis session including KPIs and AI insights.
+    Can be used to resume/continue with a previous analysis.
+    
+    **Example:**
+    ```
+    GET /dss/sessions/123
+    ```
+    """
+    try:
+        result = await service.get_session_detail(session_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error getting session detail: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

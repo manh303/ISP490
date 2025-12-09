@@ -21,6 +21,8 @@ from app.schemas.analytics import (
     PriceVsRevenueItem,
     OverviewReportResponse,
     ProductReportResponse,
+    RatingDistributionData,
+    CriticalProductItem,
 )
 from app.services.analytics_service import AnalyticsService
 from app.db_config import DATABASE_URL
@@ -465,3 +467,35 @@ async def get_products_by_category_all_platforms(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
+
+# ====== QUALITY & SENTIMENT ======
+
+@router.get("/quality/rating-distribution", response_model=List[RatingDistributionData], dependencies=[Depends(require_role("ANALYST"))])
+async def get_rating_distribution(
+    from_date: date = Query(..., description="Ngày bắt đầu (YYYY-MM-DD)"),
+    to_date: date = Query(..., description="Ngày kết thúc (YYYY-MM-DD)"),
+    platform_code: Optional[str] = Query(None, description="tiki / lazada, nếu null thì tất cả"),
+    category_key: Optional[str] = Query(None, description="category_sk, nếu null thì tất cả"),
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """
+    Get rating distribution by rating buckets (1-5 stars).
+    Used for histogram chart showing product count in each rating bucket.
+    """
+    return await service.get_rating_distribution(from_date, to_date, platform_code, category_key)
+
+
+@router.get("/quality/critical-products", response_model=List[CriticalProductItem], dependencies=[Depends(require_role("ANALYST"))])
+async def get_critical_products(
+    from_date: date = Query(..., description="Ngày bắt đầu (YYYY-MM-DD)"),
+    to_date: date = Query(..., description="Ngày kết thúc (YYYY-MM-DD)"),
+    platform_code: Optional[str] = Query(None, description="tiki / lazada, nếu null thì tất cả"),
+    category_key: Optional[str] = Query(None, description="category_sk, nếu null thì tất cả"),
+    limit: int = Query(10, ge=1, le=50, description="Số lượng sản phẩm critical tối đa"),
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """
+    Get products with critical issues (low rating < 3.5 or high negative sentiment).
+    Sorted by negative_pct DESC, then avg_rating ASC.
+    """
+    return await service.get_critical_products(from_date, to_date, platform_code, category_key, limit)
