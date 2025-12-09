@@ -56,7 +56,7 @@ const MLOverview: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">🤖 ML Overview</h1>
           <p className="text-gray-600">
-            Tổng quan về các mô hình AI và dự đoán của hệ thống
+            Overview of the system's AI models and predictions
           </p>
           <button
             onClick={fetchData}

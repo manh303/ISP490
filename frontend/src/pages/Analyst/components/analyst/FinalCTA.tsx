@@ -14,15 +14,15 @@ export function FinalCTA() {
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/50 text-white rounded-full text-sm mb-6">
             <Sparkles className="w-4 h-4" />
-            <span>Sẵn Sàng Bắt Đầu</span>
+            <span>Ready to Start</span>
           </div>
 
           <h2 className="text-3xl lg:text-5xl text-white mb-6">
-            Khám Phá Dữ Liệu – Tạo Ra Chiến Lược Thông Minh
+            Discover Data – Create Smart Strategies
           </h2>
 
           <p className="text-lg text-blue-100 mb-10 leading-relaxed">
-            Tham gia cùng hàng trăm nhà phân tích đang sử dụng DSS Analytics để biến dữ liệu thành lợi thế cạnh tranh
+            Join hundreds of analysts using DSS Analytics to turn data into competitive advantage
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -30,7 +30,7 @@ export function FinalCTA() {
               size="lg" 
               className="bg-white text-blue-600 hover:bg-blue-50 group text-lg px-8 py-6"
             >
-              Đăng Nhập Analyst Portal
+              Login to Analyst Portal
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
@@ -38,7 +38,7 @@ export function FinalCTA() {
               variant="outline" 
               className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-6"
             >
-              Đặt Lịch Demo
+              Schedule Demo
             </Button>
           </div>
 
@@ -46,11 +46,11 @@ export function FinalCTA() {
           <div className="grid grid-cols-3 gap-8 mt-16 pt-16 border-t border-white/20">
             <div>
               <p className="text-3xl text-white mb-2">500+</p>
-              <p className="text-sm text-blue-100">Nhà Phân Tích</p>
+              <p className="text-sm text-blue-100">Analysts</p>
             </div>
             <div>
               <p className="text-3xl text-white mb-2">10k+</p>
-              <p className="text-sm text-blue-100">Báo Cáo/Tháng</p>
+              <p className="text-sm text-blue-100">Reports/Month</p>
             </div>
             <div>
               <p className="text-3xl text-white mb-2">99.9%</p>

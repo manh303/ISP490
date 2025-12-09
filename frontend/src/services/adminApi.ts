@@ -29,27 +29,60 @@ api.interceptors.request.use(
 /* ------------------------- Activity Logs ------------------------- */
 
 /**
- * Get all activity logs with optional filters
- * @param params - Optional filters: user_id, action, start_date, end_date
- * @returns Promise with activity logs data
+ * Get all activity logs with comprehensive filtering options
+ * @param params - Filters: page, limit, sort, user_id, user_email, role, module, action, status, start_date, end_date, keyword
+ * @returns Promise with activity logs data including pagination
  */
 export const getActivityLogs = async (params?: {
+  page?: number;
+  limit?: number;
+  sort?: string;
   user_id?: string;
+  user_email?: string;
+  role?: string;
+  module?: string;
   action?: string;
+  status?: string;
   start_date?: string;
   end_date?: string;
+  keyword?: string;
 }) => {
   const response = await api.get('/v1/admin/activity-logs', { params });
   return response.data;
 };
 
 /**
- * Get activity statistics
- * @param params - Optional: days (default 7)
- * @returns Promise with activity stats data
+ * Get detailed information for a single activity log
+ * @param logId - The ID of the activity log
+ * @returns Promise with detailed log data
  */
-export const getActivityStats = async (params?: { days?: number }) => {
-  const response = await api.get('/v1/admin/activity-stats', { params });
+export const getActivityLogDetail = async (logId: number) => {
+  const response = await api.get(`/v1/admin/activity-logs/${logId}`);
   return response.data;
 };
+
+/**
+ * Export activity logs to CSV format
+ * @param params - Same filters as getActivityLogs except page/limit
+ * @returns Promise with CSV blob for download
+ */
+export const exportActivityLogs = async (params?: {
+  user_id?: string;
+  user_email?: string;
+  role?: string;
+  module?: string;
+  action?: string;
+  status?: string;
+  start_date?: string;
+  end_date?: string;
+  keyword?: string;
+}) => {
+  const response = await api.get('/v1/admin/activity-logs/export', {
+    params,
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+
 

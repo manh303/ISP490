@@ -8,14 +8,14 @@ import logging
 from datetime import datetime
 from app.services.activity_logger import ActivityLogger
 from app.services.admin_service import AdminService
-from models.admin import (
+from app.models.admin import (
     UserCreateRequest, 
     UserUpdateRequest, 
     UserPasswordUpdateRequest,
     UserListResponse, 
     UserActionResponse
 )
-from models.shared import UserResponse
+from app.models.shared import UserResponse
 from app.constants.roles import validate_role_code
 from app.api.dependencies import require_role
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ router = APIRouter(
 async def get_database():
     """Get database connection from main app"""
     try:
-        from main import db_manager
+        from backend.main import db_manager
         if not db_manager.is_connected:
             await db_manager.connect()
         return db_manager
@@ -259,27 +259,157 @@ async def delete_user(
 
 @router.get("/activity-logs", dependencies=[Depends(require_role("ADMIN"))])
 async def get_activity_logs(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Results per page"),
+    sort: str = Query("-created_at", description="Sort field (prefix with - for descending)"),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    user_email: Optional[str] = Query(None, description="Filter by user email"),
+    role: Optional[str] = Query(None, description="Filter by role"),
+    module: Optional[str] = Query(None, description="Filter by module (IAM, Analytics, DSS, ML, DataPipeline)"),
+    action: Optional[str] = Query(None, description="Filter by action"),
+    status: Optional[str] = Query(None, description="Filter by status (success/error)"),
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    keyword: Optional[str] = Query(None, description="Keyword search in resource, message, action"),
     db=Depends(get_database)
 ):
-    start = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
-    end = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
-    """Get all activity logs with optional filters"""
+    """
+    Get activity logs with comprehensive filtering options
+    
+    **Filters:**
+    - `user_email`: Search by email (partial match)
+    - `role`: Filter by user role
+    - `module`: Filter by system module
+    - `action`: Filter by action type
+    - `status`: Filter by status (success/error)
+    - `start_date`, `end_date`: Date range filter
+    - `keyword`: Search across multiple fields
+    
+    **Sorting:**
+    - Use field name for ascending, prefix with `-` for descending
+    - Example: `sort=-created_at` for newest first
+    """
     try:
         activity_logger = ActivityLogger(db)
         result = await activity_logger.get_activity_logs(
-            page=1,
-            limit=10000,
+            page=page,
+            limit=limit,
+            sort=sort,
             user_id=user_id,
-            start_date=start,
-            end_date=end
+            user_email=user_email,
+            role=role,
+            module=module,
+            action=action,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+            keyword=keyword
         )
-        return {"success": True, "data": result}
+        return {
+            "success": True,
+            "data": result["logs"],
+            "pagination": result["pagination"]
+        }
     except Exception as e:
         logger.error(f"Get activity logs error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get activity logs")
 
+@router.get("/activity-logs/export", dependencies=[Depends(require_role("ADMIN"))])
+async def export_activity_logs(
+    user_id: Optional[int] = Query(None, description="Filter by user ID"),
+    user_email: Optional[str] = Query(None, description="Filter by user email"),
+    role: Optional[str] = Query(None, description="Filter by role"),
+    module: Optional[str] = Query(None, description="Filter by module"),
+    action: Optional[str] = Query(None, description="Filter by action"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    keyword: Optional[str] = Query(None, description="Keyword search"),
+    db=Depends(get_database)
+):
+    """
+    Export activity logs to CSV format
+    
+    **Uses same filters as the main activity logs endpoint**
+    
+    Returns a CSV file with columns:
+    - Time
+    - User Email
+    - Full Name
+    - Role
+    - Action
+    - Module
+    - Resource Type
+    - Resource
+    - Status
+    - IP Address
+    - Message
+    """
+    try:
+        from fastapi.responses import StreamingResponse
+        import io
+        
+        activity_logger = ActivityLogger(db)
+        csv_data = await activity_logger.export_logs(
+            user_id=user_id,
+            user_email=user_email,
+            role=role,
+            module=module,
+            action=action,
+            status=status,
+            start_date=start_date,
+            end_date=end_date,
+            keyword=keyword
+        )
+        
+        # Create filename with timestamp
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"activity_logs_{timestamp}.csv"
+        
+        # Return as streaming response
+        output = io.BytesIO(csv_data.encode('utf-8'))
+        
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        logger.error(f"Export activity logs error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to export activity logs")
+
+@router.get("/activity-logs/{log_id}", dependencies=[Depends(require_role("ADMIN"))])
+async def get_activity_log_detail(
+    log_id: int,
+    db=Depends(get_database)
+):
+    """
+    Get detailed information for a single activity log
+    
+    **Returns comprehensive details including:**
+    - User information
+    - Module and action
+    - Resource details
+    - Request information (method, path, payload)
+    - Before/After data (for modifications)
+    - Response status and messages
+    """
+    try:
+        activity_logger = ActivityLogger(db)
+        log_detail = await activity_logger.get_log_detail(log_id)
+        
+        if not log_detail:
+            raise HTTPException(status_code=404, detail="Activity log not found")
+        
+        return {
+            "success": True,
+            "data": log_detail
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get activity log detail error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get activity log detail")
 
 

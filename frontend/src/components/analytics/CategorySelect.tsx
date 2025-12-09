@@ -18,7 +18,7 @@ interface CategorySelectProps {
   placeholder?: string;
 }
 
-export function CategorySelect({ value, onValueChange, platformCode, parentCategoryKey, placeholder = 'Chọn danh mục' }: CategorySelectProps) {
+export function CategorySelect({ value, onValueChange, platformCode, parentCategoryKey, placeholder = 'Select category' }: CategorySelectProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,18 +46,18 @@ export function CategorySelect({ value, onValueChange, platformCode, parentCateg
     return (
       <Button variant="outline" disabled className="w-[200px]">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Đang tải...
+        Loading...
       </Button>
     );
   }
 
   return (
     <Select value={value} onValueChange={(val) => onValueChange(val === 'all' ? undefined : val)}>
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[200px] bg-white">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Tất cả danh mục</SelectItem>
+      <SelectContent className="bg-white max-h-60 overflow-y-auto">
+        <SelectItem value="all">All categories</SelectItem>
         {categories.map((category) => (
           <SelectItem key={category.category_key} value={category.category_key}>
             {category.category_name}

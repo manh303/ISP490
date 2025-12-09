@@ -26,17 +26,17 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
         const newErrors: Partial<Record<keyof CreateRoleData, string>> = {};
 
         if (!formData.role_code.trim()) {
-            newErrors.role_code = "Mã vai trò không được để trống";
+            newErrors.role_code = "Role code cannot be empty";
         } else if (!/^[A-Z_]+$/.test(formData.role_code)) {
-            newErrors.role_code = "Mã vai trò chỉ được chứa chữ in hoa và dấu gạch dưới";
+            newErrors.role_code = "Role code can only contain uppercase letters and underscores";
         }
 
         if (!formData.role_name.trim()) {
-            newErrors.role_name = "Tên vai trò không được để trống";
+            newErrors.role_name = "Role name cannot be empty";
         }
 
         if (!formData.description.trim()) {
-            newErrors.description = "Mô tả không được để trống";
+            newErrors.description = "Description cannot be empty";
         }
 
         setErrors(newErrors);
@@ -53,12 +53,12 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
         setIsSubmitting(true);
         try {
             const response = await createRole(formData);
-            showToast(response.message || "Tạo vai trò thành công!", "success");
+            showToast(response.message || "Role created successfully!", "success");
             onSuccess();
         } catch (err: any) {
             console.error("Error creating role:", err);
             const detail = err?.response?.data?.detail;
-            let errorMsg = "Không thể tạo vai trò";
+            let errorMsg = "Unable to create role";
             if (typeof detail === 'string') {
                 errorMsg = detail;
             } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -84,7 +84,7 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
         <div className="bg-white rounded-lg shadow-lg p-6">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Tạo vai trò mới</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Create New Role</h2>
                 <Button variant="ghost" size="sm" onClick={onClose}>
                     <X className="h-5 w-5" />
                 </Button>
@@ -95,14 +95,14 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
                 {/* Role Code */}
                 <div className="space-y-2">
                     <Label htmlFor="role_code">
-                        Mã vai trò <span className="text-red-500">*</span>
+                        Role Code <span className="text-red-500">*</span>
                     </Label>
                     <Input
                         id="role_code"
                         type="text"
                         value={formData.role_code}
                         onChange={(e) => handleChange('role_code', e.target.value.toUpperCase())}
-                        placeholder="VD: ADMIN, DATA_ENGINEER"
+                        placeholder="E.g: ADMIN, DATA_ENGINEER"
                         className={errors.role_code ? 'border-red-500' : ''}
                         disabled={isSubmitting}
                     />
@@ -110,14 +110,14 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
                         <p className="text-sm text-red-500">{errors.role_code}</p>
                     )}
                     <p className="text-xs text-gray-500">
-                        Mã vai trò chỉ được chứa chữ in hoa và dấu gạch dưới (_)
+                        Role code can only contain uppercase letters and underscores (_)
                     </p>
                 </div>
 
                 {/* Role Name */}
                 <div className="space-y-2">
                     <Label htmlFor="role_name">
-                        Tên vai trò <span className="text-red-500">*</span>
+                        Role Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
                         id="role_name"
@@ -136,13 +136,13 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
                 {/* Description */}
                 <div className="space-y-2">
                     <Label htmlFor="description">
-                        Mô tả <span className="text-red-500">*</span>
+                        Description <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
-                        placeholder="Nhập mô tả chi tiết về vai trò này..."
+                        placeholder="Enter detailed description about this role..."
                         rows={4}
                         className={errors.description ? 'border-red-500' : ''}
                         disabled={isSubmitting}
@@ -160,13 +160,13 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
                         onClick={onClose}
                         disabled={isSubmitting}
                     >
-                        Hủy
+                        Cancel
                     </Button>
                     <Button 
                         type="submit" 
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Đang tạo...' : 'Tạo vai trò'}
+                        {isSubmitting ? 'Creating...' : 'Create Role'}
                     </Button>
                 </div>
             </form>

@@ -66,14 +66,14 @@ const ModelsListPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 sm:gap-0">
         <h1 className="text-2xl font-bold">Models Management</h1>
-        <Button onClick={handleCreateModel}>Create New Model</Button>
+        <Button onClick={handleCreateModel} className="w-full sm:w-auto">Create New Model</Button>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <div className="w-48">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6 w-full">
+        <div className="w-full sm:w-48">
           <Select
             options={modelTypeOptions}
             defaultValue={filters.type}
@@ -81,7 +81,7 @@ const ModelsListPage: React.FC = () => {
             placeholder="Filter by Type"
           />
         </div>
-        <div className="w-48">
+        <div className="w-full sm:w-48">
           <Select
             options={statusOptions}
             defaultValue={filters.status}
@@ -92,17 +92,17 @@ const ModelsListPage: React.FC = () => {
       </div>
 
       {/* Models Table */}
-      <div className="bg-white rounded-lg shadow">
-        <Table>
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <Table className="min-w-[600px]">
           <thead>
             <tr>
-              <th className="px-4 py-3 text-left">Model Name</th>
-              <th className="px-4 py-3 text-left">Type</th>
-              <th className="px-4 py-3 text-left">Version</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Training Until</th>
-              <th className="px-4 py-3 text-left">Created At</th>
-              <th className="px-4 py-3 text-left">Actions</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Model Name</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Type</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Version</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Training Until</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Created At</th>
+              <th className="px-4 py-3 text-left whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -117,10 +117,10 @@ const ModelsListPage: React.FC = () => {
             ) : (
               models.map((model) => (
                 <tr key={model.model_sk} className="border-t">
-                  <td className="px-4 py-3">{model.model_name}</td>
-                  <td className="px-4 py-3 capitalize">{model.model_type}</td>
-                  <td className="px-4 py-3">{model.model_version}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">{model.model_name}</td>
+                  <td className="px-4 py-3 capitalize whitespace-nowrap">{model.model_type}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{model.model_version}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded text-sm ${
                       model.status === 'active' ? 'bg-green-100 text-green-800' :
                       model.status === 'deprecated' ? 'bg-red-100 text-red-800' :
@@ -129,14 +129,15 @@ const ModelsListPage: React.FC = () => {
                       {model.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{new Date(model.training_data_until).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">{new Date(model.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                  <td className="px-4 py-3 whitespace-nowrap">{new Date(model.training_data_until).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{new Date(model.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex gap-2 flex-wrap">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleViewModel(model.model_sk)}
+                        className="min-w-[60px]"
                       >
                         View
                       </Button>
@@ -144,6 +145,7 @@ const ModelsListPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditModel(model.model_sk)}
+                        className="min-w-[60px]"
                       >
                         Edit
                       </Button>

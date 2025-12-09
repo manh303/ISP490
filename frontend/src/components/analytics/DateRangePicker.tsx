@@ -4,7 +4,7 @@ import { Button } from '../ui/figma/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/figma/popover';
 import { Calendar as CalendarComponent } from '../ui/figma/calendar';
 import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+// import { vi } from 'date-fns/locale';
 interface DateRangePickerProps {
   fromDate: Date | undefined;
   toDate: Date | undefined;
@@ -16,13 +16,13 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
   const [isOpen, setIsOpen] = useState(false);
 
   const formatDateRange = () => {
-    if (!fromDate && !toDate) return 'Chọn khoảng thời gian';
+    if (!fromDate && !toDate) return 'Select time period';
     if (fromDate && toDate) {
       return `${format(fromDate, 'dd/MM/yyyy')} - ${format(toDate, 'dd/MM/yyyy')}`;
     }
-    if (fromDate) return `Từ ${format(fromDate, 'dd/MM/yyyy')}`;
-    if (toDate) return `Đến ${format(toDate, 'dd/MM/yyyy')}`;
-    return 'Chọn khoảng thời gian';
+    if (fromDate) return `From ${format(fromDate, 'dd/MM/yyyy')}`;
+    if (toDate) return `To ${format(toDate, 'dd/MM/yyyy')}`;
+    return 'Select time period';
   };
 
   return (
@@ -38,25 +38,25 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
         <div className="p-3">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Từ ngày</label>
+              <label className="text-sm font-medium mb-2 block">From date</label>
               <CalendarComponent
                 mode="single"
                 selected={fromDate}
                 onSelect={onFromDateChange}
                 initialFocus
-                locale={vi}
-                weekStartsOn={1}
+                // locale={vi}
+                // weekStartsOn={1}
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Đến ngày</label>
+              <label className="text-sm font-medium mb-2 block">To date</label>
               <CalendarComponent
                 mode="single"
                 selected={toDate}
                 onSelect={onToDateChange}
                 initialFocus
-                locale={vi}
-                weekStartsOn={1}
+                // locale={vi}
+                // weekStartsOn={1}
               />
             </div>
           </div>
@@ -69,12 +69,12 @@ export function DateRangePicker({ fromDate, toDate, onFromDateChange, onToDateCh
                 onToDateChange(undefined);
               }}
             >
-              Xóa
+              Clear
             </Button>
             <Button
               size="sm"
               onClick={() => setIsOpen(false)}>
-              Áp dụng
+              Apply
             </Button>
           </div>
         </div>

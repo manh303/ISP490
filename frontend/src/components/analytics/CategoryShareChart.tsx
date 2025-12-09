@@ -9,7 +9,7 @@ interface CategoryShareChartProps {
 
 export function CategoryShareChart({
   data,
-  title = 'Tỷ Trọng Danh Mục'
+  title = 'Category Share'
 }: CategoryShareChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -19,7 +19,7 @@ export function CategoryShareChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
-          Không có dữ liệu
+          No data available
         </div>
       </div>
     );
@@ -44,10 +44,10 @@ export function CategoryShareChart({
         <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
           <p className="font-medium text-gray-900">{data.name}</p>
           <p className="text-sm text-gray-600">
-            Doanh thu: {(data.value / 1000000).toFixed(1)}M ₫
+            Revenue: {(data.value / 1000000).toFixed(1)}M ₫
           </p>
           <p className="text-sm text-gray-600">
-            Tỷ trọng: {(data.percentage * 100).toFixed(1)}%
+            Share: {(data.percentage * 100).toFixed(1)}%
           </p>
         </div>
       );
@@ -78,7 +78,7 @@ export function CategoryShareChart({
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={renderLabel}
+                label={false}
                 labelLine={false}
               >
                 {chartData.map((entry, index) => (
@@ -92,7 +92,7 @@ export function CategoryShareChart({
 
         {/* Legend */}
         <div className="space-y-2">
-          <h4 className="font-medium text-gray-900 mb-3">Chi tiết danh mục</h4>
+          <h4 className="font-medium text-gray-900 mb-3">Category Details</h4>
           {chartData.map((item, index) => (
             <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
               <div className="flex items-center gap-2">
@@ -122,13 +122,13 @@ export function CategoryShareChart({
             <div className="text-2xl font-bold text-indigo-600">
               {data.length}
             </div>
-            <div className="text-sm text-gray-600">Tổng danh mục</div>
+            <div className="text-sm text-gray-600">Total Categories</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-green-600">
               {(data.reduce((sum, item) => sum + item.revenue, 0) / 1000000).toFixed(1)}M ₫
             </div>
-            <div className="text-sm text-gray-600">Tổng doanh thu</div>
+            <div className="text-sm text-gray-600">Total Revenue</div>
           </div>
         </div>
       </div>

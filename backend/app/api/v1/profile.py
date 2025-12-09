@@ -3,12 +3,8 @@ Profile Management API
 """
 from fastapi import APIRouter, HTTPException, Depends
 import logging
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from app.api.dependencies import get_current_user
-
-from models.user import (
+from app.models.user import (
     EmailChangeConfirmIn, 
     EmailChangeRequestIn,
     ProfileUpdateRequest,
@@ -34,7 +30,7 @@ router = APIRouter(
 async def get_database():
     """Get database connection"""
     try:
-        from main import db_manager
+        from backend.main import db_manager
         if not db_manager.is_connected:
             await db_manager.connect()
         return db_manager
@@ -104,7 +100,7 @@ async def update_my_profile(
             raise HTTPException(status_code=401, detail="User ID not found in token")
         
         # Update profile using update_user from AdminService
-        from models.admin import UserUpdateRequest
+        from app.models.admin import UserUpdateRequest
         update_data = UserUpdateRequest(
             full_name=profile_data.full_name,
             phone=profile_data.phone

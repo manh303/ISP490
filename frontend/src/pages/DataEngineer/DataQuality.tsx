@@ -111,10 +111,10 @@ const DataQuality: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Quản lý Chất lượng Dữ liệu
+          Data Quality Management
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          Giám sát và giải quyết vấn đề chất lượng dữ liệu trên tất cả các bảng
+          Monitor and resolve data quality issues across all tables
         </p>
       </div>
 
@@ -124,7 +124,7 @@ const DataQuality: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Tổng số Vấn đề</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Issues</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {getTotalIssues()}
                 </p>
@@ -136,7 +136,7 @@ const DataQuality: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Mở</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Open Issues</p>
                 <p className="text-2xl font-bold text-orange-600">
                   {getOpenIssues()}
                 </p>
@@ -148,7 +148,7 @@ const DataQuality: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Vấn đề Đã giải quyết</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Resolved Issues</p>
                 <p className="text-2xl font-bold text-green-600">
                   {getResolvedIssues()}
                 </p>
@@ -160,7 +160,7 @@ const DataQuality: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Thời gian Giải quyết Trung bình</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Average Resolution Time</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {getAvgResolutionHours()}
                 </p>
@@ -173,27 +173,29 @@ const DataQuality: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border mb-6">
-        <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <span className="font-medium text-gray-900 dark:text-white">Bộ lọc</span>
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 w-full">
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[120px]"
             >
-              <option value="OPEN">Mở</option>
-              <option value="IN_PROGRESS">Đang tiến hành</option>
-              <option value="RESOLVED">Đã giải quyết</option>
-              <option value="IGNORED">Bỏ qua</option>
+              <option value="OPEN">Open</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="IGNORED">Ignored</option>
             </select>
 
             <select
               value={filters.severity}
               onChange={(e) => handleFilterChange('severity', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[120px]"
             >
-              <option value="">Tất cả Mức độ nghiêm trọng</option>
+              <option value="">All Severities</option>
               <option value="CRITICAL">Critical</option>
               <option value="HIGH">High</option>
               <option value="MEDIUM">Medium</option>
@@ -202,18 +204,18 @@ const DataQuality: React.FC = () => {
 
             <input
               type="text"
-              placeholder="Tên lược đồ..."
+              placeholder="Schema name..."
               value={filters.schemaName}
               onChange={(e) => handleFilterChange('schemaName', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[140px] flex-1"
             />
 
             <button
               onClick={fetchData}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors min-w-[110px] justify-center"
             >
               <RefreshCw className="w-4 h-4" />
-              Làm mới
+              Refresh
             </button>
           </div>
         </div>
@@ -232,29 +234,29 @@ const DataQuality: React.FC = () => {
             <div className="text-center py-12">
               <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                Không tìm thấy Vấn đề
+                No Issues Found
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Tất cả kiểm tra chất lượng dữ liệu đều đang vượt qua
+                All data quality checks are currently passing
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {issues.map((issue) => (
                 <div key={issue.issue_id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2 sm:gap-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       {getSeverityIcon(issue.severity)}
-                      <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-gray-900 dark:text-white break-words max-w-[180px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg">
                           {issue.issue_type}
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                        <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
                           {issue.schema_name}.{issue.table_name}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 min-w-[90px]">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getSeverityColor(issue.severity)}`}>
                         {issue.severity}
                       </span>
@@ -264,21 +266,21 @@ const DataQuality: React.FC = () => {
                     </div>
                   </div>
 
-                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  <p className="text-gray-700 dark:text-gray-300 mb-3 break-words max-w-full md:max-w-2xl">
                     {issue.issue_description}
                   </p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex gap-4">
-                      <span>Hàng bị ảnh hưởng: {issue.affected_rows.toLocaleString()}</span>
-                      <span>Đã phát hiện: {new Date(issue.detected_at).toLocaleString()}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 gap-2 sm:gap-0">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                      <span>Affected Rows: {issue.affected_rows.toLocaleString()}</span>
+                      <span>Detected: {new Date(issue.detected_at).toLocaleString()}</span>
                     </div>
                     <div className="flex gap-2">
                       <button className="text-blue-600 hover:text-blue-800">
-                        Xem Chi tiết
+                        View Details
                       </button>
                       <button className="text-green-600 hover:text-green-800">
-                        Đánh dấu Đã giải quyết
+                        Mark as Resolved
                       </button>
                     </div>
                   </div>

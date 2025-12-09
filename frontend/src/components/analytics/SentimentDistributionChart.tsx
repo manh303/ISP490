@@ -8,7 +8,7 @@ interface SentimentDistributionChartProps {
 
 export function SentimentDistributionChart({ 
   data, 
-  title = 'Phân Bố Cảm Xúc' 
+  title = 'Sentiment Distribution' 
 }: SentimentDistributionChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -18,7 +18,7 @@ export function SentimentDistributionChart({
           <h3 className="font-semibold text-gray-900">{title}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
-          Không có dữ liệu
+          No data available
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ export function SentimentDistributionChart({
                 <div className="text-2xl font-bold text-gray-900">
                   {total.toLocaleString('vi-VN')}
                 </div>
-                <div className="text-xs text-gray-500">Sản phẩm</div>
+                <div className="text-xs text-gray-500">Products</div>
               </div>
             </div>
           </div>

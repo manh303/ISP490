@@ -16,7 +16,7 @@ interface PlatformSelectProps {
   placeholder?: string;
 }
 
-export function PlatformSelect({ value, onValueChange, placeholder = 'Chọn nền tảng' }: PlatformSelectProps) {
+export function PlatformSelect({ value, onValueChange, placeholder = 'Select platform' }: PlatformSelectProps) {
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,18 +39,18 @@ export function PlatformSelect({ value, onValueChange, placeholder = 'Chọn n�
     return (
       <Button variant="outline" disabled className="w-[200px]">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Đang tải...
+        Loading...
       </Button>
     );
   }
 
   return (
     <Select value={value} onValueChange={(val) => onValueChange(val === 'all' ? undefined : val)}>
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[200px] bg-white">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Tất cả nền tảng</SelectItem>
+      <SelectContent className="bg-white max-h-60 overflow-y-auto">
+        <SelectItem value="all">All platforms</SelectItem>
         {platforms.map((platform) => (
           <SelectItem key={platform.platform_code} value={platform.platform_code}>
             {platform.platform_name}

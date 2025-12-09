@@ -263,6 +263,85 @@ export interface DSSScenariosResponse {
   scenarios: DSSScenario[];
 }
 
+// DSS Decision Management
+export interface DSSActionItem {
+  action_type: string;
+  target_level: string;
+  product_key?: string;
+  product_sk?: number;
+  platform_sk?: number;
+  category_sk?: number;
+  current_value?: number;
+  recommended_value?: number;
+  chosen_value?: number;
+  unit?: string;
+  planned_start_date?: string;
+  planned_end_date?: string;
+  status: string;
+  note?: string;
+}
+
+export interface SaveDSSDecisionRequest {
+  scenario_key: string;
+  session_id?: number;
+  filters?: Record<string, any>;
+  kpi_summary?: Record<string, any>;
+  ai_summary_insights?: string[];
+  ai_recommended_actions?: string[];
+  date_adjustment_info?: Record<string, any>;
+  title: string;
+  description?: string;
+  status: string;
+  actions: DSSActionItem[];
+}
+
+export interface DSSDecisionSummary {
+  decision_id: number;
+  scenario_key: string;
+  title: string;
+  status: string;
+  created_by: number;
+  created_by_email?: string;
+  created_at: string;
+  num_actions: number;
+}
+
+export interface DSSDecisionListResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  items: DSSDecisionSummary[];
+}
+
+export interface DSSActionItemResponse extends DSSActionItem {
+  action_id: number;
+  product_name?: string;
+  category_name?: string;
+  platform_name?: string;
+}
+
+export interface DSSDecisionDetailResponse {
+  decision_id: number;
+  session_id: number;
+  scenario_key: string;
+  title: string;
+  description?: string;
+  status: string;
+  created_by: number;
+  created_by_email?: string;
+  created_at: string;
+  updated_at: string;
+  approved_by?: number;
+  approved_by_email?: string;
+  approved_at?: string;
+  filters: Record<string, any>;
+  kpi_summary: Record<string, any>;
+  ai_summary_insights: string[];
+  ai_recommended_actions: string[];
+  date_adjustment_info?: Record<string, any>;
+  actions: DSSActionItemResponse[];
+}
+
 /* ------------------------- API Functions ------------------------- */
 
 /**
@@ -322,36 +401,37 @@ export const getDSSScenarios = async (): Promise<DSSScenariosResponse> => {
   return response.data;
 };
 
-// AI Summary API
-export interface AISummarizeRequest {
-  model_type: string;
-  ml_results: any;
-  business_context?: {
-    platform?: string;
-    product_key?: string;
-    category?: string;
-  };
-}
-
-export interface AISummarizeResponse {
-  summary: string;
-  insights: string[];
-  recommendations: Array<{
-    type: string;
-    title: string;
-    description: string;
-    impact: string;
-    effort: string;
-    priority: string;
-  }>;
-  anomalies: string[];
-  risks: string[];
-}
-
 /**
- * Get AI Summary for DSS Results
+ * Save DSS Decision
  */
-export const getAISummary = async (data: AISummarizeRequest): Promise<AISummarizeResponse> => {
-  const response = await api.post('/v1/ai/summarize', data);
+export const saveDSSDecision = async (data: SaveDSSDecisionRequest): Promise<DSSDecisionDetailResponse> => {
+  const response = await api.post('/v1/dss/decisions', data);
   return response.data;
 };
+
+/**
+ * List DSS Decisions
+ */
+export const listDSSDecisions = async (params?: {
+  scenario_key?: string;
+  status?: string;
+  from_date?: string;
+  to_date?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<DSSDecisionListResponse> => {
+  const response = await api.get('/v1/dss/decisions', { params });
+  return response.data;
+};
+
+/**
+ * Get DSS Decision Detail
+ */
+export const getDSSDecisionDetail = async (decisionId: number): Promise<DSSDecisionDetailResponse> => {
+  const response = await api.get(`/v1/dss/decisions/${decisionId}`);
+  return response.data;
+};
+
+
+
+

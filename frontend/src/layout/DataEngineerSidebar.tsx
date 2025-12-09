@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <TableIcon />,
-    name: "Data Pipeline",
+    name: "Data Pipelines",
     path: "/dataengineer/pipelines",
   },
   {
@@ -54,11 +54,13 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <PieChartIcon />,
-    name: "Monitoring & Alerts",
+    icon: <TableIcon />,
+    name: "Business Metadata",
     subItems: [
-      { name: "Pipeline Performance", path: "/dataengineer/pipeline-performance", pro: false },
-      { name: "Alert History", path: "/dataengineer/alert-history", pro: false },
+      { name: "Sources", path: "/dataengineer/sources", pro: false },
+      { name: "Catalog", path: "/dataengineer/catalog", pro: false },
+      { name: "Glossary", path: "/dataengineer/glossary", pro: false },
+      { name: "Expectations & Jobs", path: "/dataengineer/expectations-jobs", pro: false },
     ],
   },
 ];
@@ -66,12 +68,12 @@ const navItems: NavItem[] = [
 const toolsItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
-    name: "Engineering Tools",
+    name: "Technical Tools",
     subItems: [
       { name: "SQL Editor", path: "/dataengineer/sql-editor", pro: false },
       { name: "Data Connectors", path: "/dataengineer/connectors", pro: false },
       { name: "API Management", path: "/dataengineer/api", pro: false },
-      { name: "Schema Designer", path: "/dataengineer/schema", pro: false },
+      { name: "Schema Design", path: "/dataengineer/schema", pro: false },
     ],
   },
   {
@@ -302,14 +304,14 @@ const DataEngineerSidebar: React.FC = () => {
               <img
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
-                alt="Data Engineering Panel"
+                alt="Data Engineering Dashboard"
                 width={150}
                 height={40}
               />
               <img
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
-                alt="Data Engineering Panel"
+                alt="Data Engineering Dashboard"
                 width={150}
                 height={40}
               />
@@ -352,7 +354,7 @@ const DataEngineerSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Engineering Tools"
+                  "Technical Tools"
                 ) : (
                   <HorizontaLDots />
                 )}

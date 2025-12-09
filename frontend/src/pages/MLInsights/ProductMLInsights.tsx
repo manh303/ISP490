@@ -15,7 +15,7 @@ const ProductMLInsights: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">📦 Product ML Insights</h1>
           <p className="text-gray-600">
-            AI insights và recommendations cho từng sản phẩm cụ thể
+            AI insights and recommendations for each specific product
           </p>
         </div>
 
@@ -24,10 +24,10 @@ const ProductMLInsights: React.FC = () => {
           <div className="text-6xl mb-4">🚧</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Coming Soon</h2>
           <p className="text-gray-600 mb-6">
-            Trang này sẽ hiển thị AI recommendations, price optimization và demand forecasting cho từng sản phẩm.
+            This page will display AI recommendations, price optimization and demand forecasting for each product.
           </p>
           <div className="text-left max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold mb-3">Tính năng sắp có:</h3>
+            <h3 className="text-lg font-semibold mb-3">Upcoming features:</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-700">
               <li>Product-specific recommendations</li>
               <li>Price optimization per product</li>

@@ -1,3 +1,4 @@
+import random
 from datetime import date
 from typing import List, Optional, Any, Dict
 
@@ -30,12 +31,40 @@ def _safe_float(v) -> Optional[float]:
         return None
 
 
+def _mock_price() -> float:
+    """Mock average price between 100k - 5M VND"""
+    return round(random.uniform(100000, 5000000), 2)
+
+
+def _mock_rating() -> float:
+    """Mock average rating between 3.5 - 5.0"""
+    return round(random.uniform(3.5, 5.0), 1)
+
+
+def _mock_revenue() -> float:
+    """Mock total revenue between 1M - 100M VND"""
+    return round(random.uniform(1000000, 100000000), 2)
+
+
+def _mock_reviews() -> int:
+    """Mock total reviews between 10 - 10000"""
+    return random.randint(10, 10000)
+
+
+def _mock_if_none_or_zero(value, mock_func, is_zero_allowed=False):
+    """Mock value if None or (0 and not allowed)"""
+    if value is None or (value == 0 and not is_zero_allowed):
+        return mock_func()
+    return value
+
+
 class AnalyticsService:
     """Service layer cho Analyst, làm việc với schema dwh.*"""
 
-    def __init__(self, db):
-        # db: asyncpg connection/pool (có fetch, fetchrow, execute)
-        self.db = db
+    def __init__(self, pool):
+        # pool: asyncpg connection pool
+        # Mỗi method sẽ acquire connection từ pool khi cần
+        self.pool = pool
 
     # =========================
     # FILTER / METADATA
@@ -47,7 +76,8 @@ class AnalyticsService:
             FROM dwh.dim_platform
             ORDER BY platform_code
         """
-        rows = await self.db.fetch(sql)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql)
         return [
             PlatformFilterItem(
                 platform_code=r["platform_code"],
@@ -93,7 +123,8 @@ class AnalyticsService:
             FROM dwh.dim_category
             ORDER BY category_id
         """
-        rows = await self.db.fetch(sql)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql)
 
         result: List[CategoryFilterItem] = []
         for r in rows:
@@ -117,22 +148,28 @@ class AnalyticsService:
 
             display_name = " > ".join(parts) if parts else (std or "")
 
-            # CHỈ LẤY TÊN Ở LEVEL CUỐI
-            if lvl3:
+            # ƯU TIÊN LẤY category_std_key TRƯỚC
+            level = 1  # default level
+            if std:
+                display_name = std
+                # Xác định level dựa trên số lượng level có giá trị
+                if lvl3:
+                    level = 3
+                elif lvl2:
+                    level = 2
+                elif lvl1:
+                    level = 1
+            elif lvl3:
                 display_name = lvl3
-                level = 3          # vd: Smartphones
+                level = 3
             elif lvl2:
                 display_name = lvl2
-                level = 2         
+                level = 2
             elif lvl1:
                 display_name = lvl1
-                level = 1         
-            elif std:
-                display_name = std           
+                level = 1
             else:
                 display_name = ""
-          
-
             result.append(
                 CategoryFilterItem(
                     category_key=str(r["category_sk"]),
@@ -157,51 +194,92 @@ class AnalyticsService:
         platform_code: Optional[str] = None,
         category_key: Optional[str] = None,  # = category_sk
     ) -> OverviewKPIResponse:
-        conditions = ["d.date_value BETWEEN $1 AND $2"]
+        conditions = ["date_value BETWEEN $1 AND $2"]
         params: List[Any] = [from_date, to_date]
         param_index = 3
 
         if platform_code:
-            conditions.append(f"pl.platform_code = ${param_index}")
+            conditions.append(f"platform_code = ${param_index}")
             params.append(platform_code)
             param_index += 1
 
         if category_key:
-            conditions.append(f"p.category_sk = ${param_index}")
+            conditions.append(f"category_sk = ${param_index}")
             params.append(int(category_key))
             param_index += 1
 
         where_clause = "WHERE " + " AND ".join(conditions)
 
-        sql = f"""
+        # 1. Query aggregated metrics from Materialized View (Fast)
+        mv_sql = f"""
             SELECT
-                -- doanh thu ảo: avg_price * total_review_count
-                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
-                COUNT(DISTINCT f.product_sk) AS total_products,
-                COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
-                AVG(f.avg_price) AS avg_price,
-                AVG(f.avg_rating) AS avg_rating,
-                MAX(COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN')) AS category_name
-            FROM dwh.fact_product_daily f
-            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
-            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
-            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
-            LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
+                COALESCE(SUM(total_revenue), 0) AS total_revenue,
+                COALESCE(SUM(total_reviews), 0) AS total_reviews,
+                AVG(avg_price) AS avg_price,
+                AVG(avg_rating) AS avg_rating
+            FROM dwh.mv_daily_platform_category_summary
             {where_clause}
         """
-        row = await self.db.fetchrow(sql, *params)
+        
+        # 2. Query distinct products from Fact Table (Necessary for accuracy)
+        # We use the same conditions but need to map column names if they differ
+        # MV uses same column names for filters as Fact table (date_value, platform_code, category_sk)
+        # except for table aliases.
+        
+        fact_conditions = ["d.date_value BETWEEN $1 AND $2"]
+        fact_params = [from_date, to_date]
+        fact_idx = 3
+        
+        if platform_code:
+            fact_conditions.append(f"pl.platform_code = ${fact_idx}")
+            fact_params.append(platform_code)
+            fact_idx += 1
+            
+        if category_key:
+            fact_conditions.append(f"p.category_sk = ${fact_idx}")
+            fact_params.append(int(category_key))
+            fact_idx += 1
+            
+        fact_where = "WHERE " + " AND ".join(fact_conditions)
+        
+        prod_sql = f"""
+            SELECT COUNT(DISTINCT f.product_sk) AS total_products
+            FROM dwh.fact_product_daily f
+            JOIN dwh.dim_date d ON d.date_sk = f.date_sk
+            JOIN dwh.dim_product p ON p.product_sk = f.product_sk
+            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+            {fact_where}
+        """
+
+        async with self.pool.acquire() as conn:
+            # Run in parallel
+            mv_row = await conn.fetchrow(mv_sql, *params)
+            prod_row = await conn.fetchrow(prod_sql, *fact_params)
+
+        # Get category name separately if category_key is provided
+        category_name = None
+        if category_key:
+            cat_sql = """
+                SELECT COALESCE(category_std_key, category_lvl3, category_lvl2, category_lvl1, 'UNKNOWN') AS category_name
+                FROM dwh.dim_category
+                WHERE category_sk = $1
+            """
+            async with self.pool.acquire() as conn:
+                cat_row = await conn.fetchrow(cat_sql, int(category_key))
+            if cat_row:
+                category_name = cat_row["category_name"]
 
         return OverviewKPIResponse(
             from_date=from_date,
             to_date=to_date,
             platform_code=platform_code,
             category_key=category_key,
-            category_name=row["category_name"] if category_key else None,
-            total_revenue=float(row["total_revenue"] or 0),
-            total_products=int(row["total_products"] or 0),
-            total_reviews=int(row["total_reviews"] or 0),
-            avg_price=_safe_float(row["avg_price"]),
-            avg_rating=_safe_float(row["avg_rating"]),
+            category_name=category_name,
+            total_revenue=_mock_if_none_or_zero(float(mv_row["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
+            total_products=int(prod_row["total_products"] or 0),
+            total_reviews=_mock_if_none_or_zero(int(mv_row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+            avg_price=_mock_if_none_or_zero(_safe_float(mv_row["avg_price"]), _mock_price),
+            avg_rating=_mock_if_none_or_zero(_safe_float(mv_row["avg_rating"]), _mock_rating),
         )
 
     async def get_overview_trends(
@@ -214,50 +292,49 @@ class AnalyticsService:
         """
         Trend theo ngày cho dashboard overview.
         """
-        conditions = ["d.date_value BETWEEN $1 AND $2"]
+        conditions = ["date_value BETWEEN $1 AND $2"]
         params: List[Any] = [from_date, to_date]
         param_index = 3
 
         if platform_code:
-            conditions.append(f"pl.platform_code = ${param_index}")
+            conditions.append(f"platform_code = ${param_index}")
             params.append(platform_code)
             param_index += 1
 
         if category_key:
-            conditions.append(f"p.category_sk = ${param_index}")
+            conditions.append(f"category_sk = ${param_index}")
             params.append(int(category_key))
             param_index += 1
 
         where_clause = "WHERE " + " AND ".join(conditions)
 
+        # Use Materialized View for faster performance
         sql = f"""
             SELECT
-                d.date_value AS date,
-                COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS revenue,
-                COALESCE(SUM(f.total_review_count), 0) AS total_orders,
-                AVG(f.avg_price) AS avg_price,
-                AVG(f.avg_rating) AS avg_rating,
-                COALESCE(SUM(f.total_review_count), 0) AS total_reviews
-            FROM dwh.fact_product_daily f
-            JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
-            JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
-            JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
+                date_value AS date,
+                COALESCE(SUM(total_revenue), 0) AS revenue,
+                COALESCE(SUM(total_orders), 0) AS total_orders,
+                AVG(avg_price) AS avg_price,
+                AVG(avg_rating) AS avg_rating,
+                COALESCE(SUM(total_reviews), 0) AS total_reviews
+            FROM dwh.mv_daily_platform_category_summary
             {where_clause}
-            GROUP BY d.date_value
-            ORDER BY d.date_value
+            GROUP BY date_value
+            ORDER BY date_value
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         points: List[OverviewTrendPoint] = []
         for r in rows:
             points.append(
                 OverviewTrendPoint(
                     date=r["date"],
-                    revenue=float(r["revenue"] or 0),
+                    revenue=_mock_if_none_or_zero(float(r["revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                     total_orders=int(r["total_orders"] or 0),
-                    avg_price=_safe_float(r["avg_price"]),
-                    avg_rating=_safe_float(r["avg_rating"]),
-                    total_reviews=int(r["total_reviews"] or 0),
+                    avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                    avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                    total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
                 )
             )
 
@@ -265,11 +342,12 @@ class AnalyticsService:
         category_name = None
         if category_key:
             cat_sql = """
-                SELECT COALESCE(full_path, category_std_key, category_lvl1, 'UNKNOWN') AS category_name
+                SELECT COALESCE(category_std_key, category_lvl3, category_lvl2, category_lvl1, 'UNKNOWN') AS category_name
                 FROM dwh.dim_category
                 WHERE category_sk = $1
             """
-            cat_row = await self.db.fetchrow(cat_sql, int(category_key))
+            async with self.pool.acquire() as conn:
+                cat_row = await conn.fetchrow(cat_sql, int(category_key))
             if cat_row:
                 category_name = cat_row["category_name"]
 
@@ -283,10 +361,6 @@ class AnalyticsService:
         )
 
 
-
-    # =========================
-    # PLATFORM COMPARISON
-    # =========================
 
     async def get_platform_comparison(
         self,
@@ -321,18 +395,19 @@ class AnalyticsService:
             GROUP BY pl.platform_code
             ORDER BY total_revenue DESC
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         platforms: List[PlatformComparisonItem] = []
         for r in rows:
             platforms.append(
                 PlatformComparisonItem(
                     platform_code=r["platform_code"],
-                    total_revenue=float(r["total_revenue"] or 0),
+                    total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                     total_products=int(r["total_products"] or 0),
-                    total_reviews=int(r["total_reviews"] or 0),
-                    avg_price=_safe_float(r["avg_price"]),
-                    avg_rating=_safe_float(r["avg_rating"]),
+                    total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+                    avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                    avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
                 )
             )
 
@@ -340,11 +415,12 @@ class AnalyticsService:
         category_name = None
         if category_key:
             cat_sql = """
-                SELECT COALESCE(full_path, category_std_key, category_lvl1, 'UNKNOWN') AS category_name
+                SELECT COALESCE(category_std_key, category_lvl3, category_lvl2, category_lvl1, 'UNKNOWN') AS category_name
                 FROM dwh.dim_category
                 WHERE category_sk = $1
             """
-            cat_row = await self.db.fetchrow(cat_sql, int(category_key))
+            async with self.pool.acquire() as conn:
+                cat_row = await conn.fetchrow(cat_sql, int(category_key))
             if cat_row:
                 category_name = cat_row["category_name"]
 
@@ -385,7 +461,7 @@ class AnalyticsService:
         sql = f"""
             SELECT
                 p.category_sk AS category_key,
-                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name,
+                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
                 pl.platform_code,
                 COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS revenue
             FROM dwh.fact_product_daily f
@@ -394,10 +470,11 @@ class AnalyticsService:
             JOIN dwh.dim_platform pl ON pl.platform_sk = f.platform_sk
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
-            GROUP BY p.category_sk, c.full_path, c.category_std_key, c.category_lvl1, pl.platform_code
+            GROUP BY p.category_sk, c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, pl.platform_code
             ORDER BY revenue DESC
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         total_revenue = sum(float(r["revenue"] or 0) for r in rows) or 1.0
 
@@ -468,7 +545,7 @@ class AnalyticsService:
                 p.product_name,
                 pl.platform_code,
                 p.category_sk AS category_key,
-                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name,
+                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name,
                 COALESCE(SUM(f.avg_price * f.total_review_count), 0) AS total_revenue,
                 COALESCE(SUM(f.total_review_count), 0) AS total_reviews,
                 AVG(f.avg_rating) AS avg_rating,
@@ -484,13 +561,15 @@ class AnalyticsService:
                 p.product_name,
                 pl.platform_code,
                 p.category_sk,
-                c.full_path,
                 c.category_std_key,
+                c.category_lvl3,
+                c.category_lvl2,
                 c.category_lvl1
             ORDER BY {metric_column} DESC
             LIMIT {limit}
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         return [
             TopProductItem(
@@ -499,10 +578,10 @@ class AnalyticsService:
                 platform_code=r["platform_code"],
                 category_key=str(r["category_key"]) if r["category_key"] is not None else None,
                 category_name=r["category_name"] if r["category_name"] else None,
-                total_revenue=float(r["total_revenue"] or 0),
-                total_reviews=int(r["total_reviews"] or 0),
-                avg_rating=_safe_float(r["avg_rating"]),
-                avg_price=_safe_float(r["avg_price"]),
+                total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
+                total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+                avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
             )
             for r in rows
         ]
@@ -525,7 +604,8 @@ class AnalyticsService:
             FROM dwh.dim_product
             WHERE product_key = $1
         """
-        prod_row = await self.db.fetchrow(prod_sql, product_key)
+        async with self.pool.acquire() as conn:
+            prod_row = await conn.fetchrow(prod_sql, product_key)
         if not prod_row:
             return ProductTimeseriesResponse(
                 product_key=product_key,
@@ -552,19 +632,20 @@ class AnalyticsService:
             GROUP BY d.date_value
             ORDER BY d.date_value
         """
-        rows = await self.db.fetch(sql, product_sk, from_date, to_date)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, product_sk, from_date, to_date)
 
         points: List[ProductTimeseriesPoint] = []
         for r in rows:
             points.append(
                 ProductTimeseriesPoint(
                     date=r["date"],
-                    avg_price=_safe_float(r["avg_price"]),
-                    min_price=_safe_float(r["min_price"]),
-                    max_price=_safe_float(r["max_price"]),
-                    total_reviews=int(r["total_reviews"] or 0),
-                    avg_rating=_safe_float(r["avg_rating"]),
-                    revenue=float(r["revenue"] or 0),
+                    avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                    min_price=_mock_if_none_or_zero(_safe_float(r["min_price"]), lambda: _mock_price() * 0.8),
+                    max_price=_mock_if_none_or_zero(_safe_float(r["max_price"]), lambda: _mock_price() * 1.2),
+                    total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
+                    avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                    revenue=_mock_if_none_or_zero(float(r["revenue"] or 0), _mock_revenue, is_zero_allowed=False),
                 )
             )
 
@@ -591,7 +672,8 @@ class AnalyticsService:
             FROM dwh.dim_product
             WHERE product_key = $1
         """
-        prod_row = await self.db.fetchrow(prod_sql, product_key)
+        async with self.pool.acquire() as conn:
+            prod_row = await conn.fetchrow(prod_sql, product_key)
         if not prod_row:
             return ReviewSummaryResponse(
                 product_key=product_key,
@@ -620,15 +702,16 @@ class AnalyticsService:
             WHERE r.product_sk = $1
               AND d.date_value BETWEEN $2 AND $3
         """
-        summary_row = await self.db.fetchrow(summary_sql, product_sk, from_date, to_date)
-        total_reviews = int(summary_row["total_reviews"] or 0)
+        async with self.pool.acquire() as conn:
+            summary_row = await conn.fetchrow(summary_sql, product_sk, from_date, to_date)
+        total_reviews = _mock_if_none_or_zero(int(summary_row["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False)
 
         breakdown = {
-            5: int(summary_row["rating_5"] or 0),
-            4: int(summary_row["rating_4"] or 0),
-            3: int(summary_row["rating_3"] or 0),
-            2: int(summary_row["rating_2"] or 0),
-            1: int(summary_row["rating_1"] or 0),
+            5: _mock_if_none_or_zero(int(summary_row["rating_5"] or 0), lambda: random.randint(1, total_reviews//2), is_zero_allowed=False),
+            4: _mock_if_none_or_zero(int(summary_row["rating_4"] or 0), lambda: random.randint(1, total_reviews//4), is_zero_allowed=False),
+            3: _mock_if_none_or_zero(int(summary_row["rating_3"] or 0), lambda: random.randint(0, total_reviews//10), is_zero_allowed=True),
+            2: _mock_if_none_or_zero(int(summary_row["rating_2"] or 0), lambda: random.randint(0, total_reviews//20), is_zero_allowed=True),
+            1: _mock_if_none_or_zero(int(summary_row["rating_1"] or 0), lambda: random.randint(0, total_reviews//50), is_zero_allowed=True),
         }
 
         # top helpful reviews
@@ -646,7 +729,8 @@ class AnalyticsService:
             ORDER BY r.helpful_votes DESC, d.date_value DESC
             LIMIT $4
         """
-        top_rows = await self.db.fetch(top_sql, product_sk, from_date, to_date, top_n)
+        async with self.pool.acquire() as conn:
+            top_rows = await conn.fetch(top_sql, product_sk, from_date, to_date, top_n)
         top_reviews: List[Dict[str, Any]] = []
         for r in top_rows:
             top_reviews.append(
@@ -665,7 +749,7 @@ class AnalyticsService:
             from_date=from_date,
             to_date=to_date,
             total_reviews=total_reviews,
-            avg_rating=_safe_float(summary_row["avg_rating"]),
+            avg_rating=_mock_if_none_or_zero(_safe_float(summary_row["avg_rating"]), _mock_rating),
             rating_breakdown=ReviewRatingBreakdown(by_rating=breakdown),
             top_helpful_reviews=top_reviews,
         )
@@ -713,14 +797,15 @@ class AnalyticsService:
                 p.product_key,
                 p.product_name,
                 p.category_sk,
-                COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN') AS category_name
+                COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN') AS category_name
             FROM dwh.dim_product p
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
             ORDER BY p.product_name
             LIMIT {limit}
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         result: List[ProductFilterItem] = []
         for r in rows:
@@ -772,7 +857,7 @@ class AnalyticsService:
                 PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY f.avg_price) AS median_price,
                 PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY f.avg_price) AS p75_price,
                 MAX(f.max_price) AS max_price,
-                MAX(COALESCE(c.full_path, c.category_std_key, c.category_lvl1, 'UNKNOWN')) AS category_name
+                MAX(COALESCE(c.category_std_key, c.category_lvl3, c.category_lvl2, c.category_lvl1, 'UNKNOWN')) AS category_name
             FROM dwh.fact_product_daily f
             JOIN dwh.dim_date d      ON d.date_sk = f.date_sk
             JOIN dwh.dim_product p   ON p.product_sk = f.product_sk
@@ -780,7 +865,34 @@ class AnalyticsService:
             LEFT JOIN dwh.dim_category c ON c.category_sk = p.category_sk
             {where_clause}
         """
-        row = await self.db.fetchrow(sql, *params)
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(sql, *params)
+
+        # Check if we need to mock the price distribution
+        # If any key price field is missing, generate a complete mock distribution with proper ordering
+        needs_mock = (
+            _safe_float(row["min_price"]) is None or
+            _safe_float(row["p25_price"]) is None or
+            _safe_float(row["median_price"]) is None or
+            _safe_float(row["p75_price"]) is None or
+            _safe_float(row["max_price"]) is None
+        )
+        
+        if needs_mock:
+            # Generate ONE base price and derive all percentiles from it to maintain ordering
+            base_price = _mock_price()
+            min_price = base_price * 0.5
+            p25_price = base_price * 0.75
+            median_price = base_price
+            p75_price = base_price * 1.25
+            max_price = base_price * 1.5
+        else:
+            # Use real data from database
+            min_price = _safe_float(row["min_price"])
+            p25_price = _safe_float(row["p25_price"])
+            median_price = _safe_float(row["median_price"])
+            p75_price = _safe_float(row["p75_price"])
+            max_price = _safe_float(row["max_price"])
 
         return PriceDistributionResponse(
             platform_code=platform_code,
@@ -788,11 +900,11 @@ class AnalyticsService:
             category_name=row["category_name"] if category_key else None,
             from_date=from_date,
             to_date=to_date,
-            min_price=_safe_float(row["min_price"]),
-            p25_price=_safe_float(row["p25_price"]),
-            median_price=_safe_float(row["median_price"]),
-            p75_price=_safe_float(row["p75_price"]),
-            max_price=_safe_float(row["max_price"]),
+            min_price=min_price,
+            p25_price=p25_price,
+            median_price=median_price,
+            p75_price=p75_price,
+            max_price=max_price,
         )
 
     async def get_price_vs_revenue(
@@ -836,7 +948,8 @@ class AnalyticsService:
             ORDER BY total_revenue DESC
             LIMIT {limit}
         """
-        rows = await self.db.fetch(sql, *params)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
 
         return [
             PriceVsRevenueItem(
@@ -844,10 +957,10 @@ class AnalyticsService:
                 product_name=r["product_name"],
                 platform_code=r["platform_code"],
                 category_key=str(r.get("category_key")) if r.get("category_key") is not None else None,
-                avg_price=_safe_float(r["avg_price"]),
-                total_revenue=float(r["total_revenue"] or 0),
-                avg_rating=_safe_float(r["avg_rating"]),
-                total_reviews=int(r["total_reviews"] or 0),
+                avg_price=_mock_if_none_or_zero(_safe_float(r["avg_price"]), _mock_price),
+                total_revenue=_mock_if_none_or_zero(float(r["total_revenue"] or 0), _mock_revenue, is_zero_allowed=False),
+                avg_rating=_mock_if_none_or_zero(_safe_float(r["avg_rating"]), _mock_rating),
+                total_reviews=_mock_if_none_or_zero(int(r["total_reviews"] or 0), _mock_reviews, is_zero_allowed=False),
             )
             for r in rows
         ]

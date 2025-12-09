@@ -107,7 +107,7 @@ export function ProductAnalytics() {
       setOverviewKPIs(kpisData);
     } catch (err) {
       console.error('Error loading analytics data:', err);
-      setError('Không thể tải dữ liệu phân tích. Vui lòng thử lại.');
+      setError('Unable to load analytics data. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -169,7 +169,7 @@ export function ProductAnalytics() {
       <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải dữ liệu phân tích...</p>
+          <p className="text-gray-600">Loading analytics data...</p>
         </div>
       </div>
     );
@@ -183,7 +183,7 @@ export function ProductAnalytics() {
           <p className="text-red-600 mb-4">{error}</p>
           <Button onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Thử lại
+            Retry
           </Button>
         </div>
       </div>
@@ -202,7 +202,7 @@ export function ProductAnalytics() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={handleRefresh}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Làm mới
+                  Refresh
                 </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -220,7 +220,7 @@ export function ProductAnalytics() {
           <div className="px-6 py-4 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Thời gian:</label>
+                <label className="text-sm font-medium">Time:</label>
                 <DateRangePicker
                   fromDate={fromDate}
                   toDate={toDate}
@@ -229,14 +229,14 @@ export function ProductAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Nền tảng:</label>
+                <label className="text-sm font-medium">Platform:</label>
                 <PlatformSelect
                   value={platformCode}
                   onValueChange={(value) => setPlatformCode(value || '')}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Danh mục:</label>
+                <label className="text-sm font-medium">Category:</label>
                 <CategorySelect
                   value={categoryKey}
                   onValueChange={(value) => setCategoryKey(value || '')}
@@ -244,7 +244,7 @@ export function ProductAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Chỉ số:</label>
+                <label className="text-sm font-medium">Metrics:</label>
                 <MetricSelect
                   value={metric}
                   onValueChange={setMetric}
@@ -256,29 +256,29 @@ export function ProductAnalytics() {
           {/* Overview KPIs */}
           {overviewKPIs && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-              <h3 className="text-gray-900 font-semibold mb-3">Tổng Quan</h3>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Tổng sản phẩm</div>
-                  <div className="text-2xl font-bold text-gray-900">
+              <h3 className="text-gray-900 font-semibold mb-3">Overview</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                  <div className="text-sm text-gray-600 mb-1">Total Products</div>
+                  <div className="font-bold text-gray-900 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {overviewKPIs?.total_products?.toLocaleString('vi-VN')}
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Đánh giá trung bình</div>
-                  <div className="text-2xl font-bold text-blue-600">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                  <div className="text-sm text-gray-600 mb-1">Average Rating</div>
+                  <div className="font-bold text-blue-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {overviewKPIs?.avg_rating?.toFixed(2)} ⭐
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
-                  <div className="text-2xl font-bold text-purple-600">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                  <div className="text-sm text-gray-600 mb-1">Total Reviews</div>
+                  <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {(overviewKPIs?.total_reviews / 1000)?.toFixed(0)}K
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">Giá trung bình</div>
-                  <div className="text-2xl font-bold text-green-600">
+                <div className="font-bold text-purple-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
+                  <div className="text-sm text-gray-600 mb-1">Average Price</div>
+                  <div className="font-bold text-green-600 break-words text-xl md:text-2xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {overviewKPIs?.avg_price?.toLocaleString('vi-VN')} VND
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export function ProductAnalytics() {
 
           {/* Charts Section */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
-            <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Phân Tích Sản Phẩm</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Product Analysis Charts</h3>
 
             {/* Row 1: Price vs Revenue */}
             <div className="grid grid-cols-1 gap-4">
@@ -304,10 +304,10 @@ export function ProductAnalytics() {
             <Table>
               <TableHeader>
                 <TableRow className="border-gray-200 hover:bg-gray-50">
-                  <TableHead className="text-gray-600">Tên sản phẩm</TableHead>
+                  <TableHead className="text-gray-600">Product Name</TableHead>
                   <TableHead className="text-gray-600">Rating</TableHead>
-                  <TableHead className="text-gray-600">Số review</TableHead>
-                  <TableHead className="text-gray-600">Giá trung bình</TableHead>
+                  <TableHead className="text-gray-600">Number of Reviews</TableHead>
+                  <TableHead className="text-gray-600">Average Price</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -335,7 +335,7 @@ export function ProductAnalytics() {
             <div className="px-6 py-4 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-gray-900 font-semibold">
-                  Chi tiết sản phẩm: {selectedProduct.product_name}
+                  Product Details: {selectedProduct.product_name}
                 </h3>
                 <Button
                   variant="outline"
@@ -346,7 +346,7 @@ export function ProductAnalytics() {
                     setProductReviewSummary(null);
                   }}
                 >
-                  Đóng
+                  Close
                 </Button>
               </div>
 
@@ -366,11 +366,11 @@ export function ProductAnalytics() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Product Analytics - Phân tích sản phẩm
+              Product Analytics - Product Analysis
             </div>
             <Button>
               <FileDown className="h-4 w-4 mr-2" />
-              Xuất báo cáo
+              Export Report
             </Button>
           </div>
         </div>

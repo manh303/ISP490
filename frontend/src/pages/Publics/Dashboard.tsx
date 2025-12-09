@@ -27,63 +27,63 @@ export function Dashboard({
   const modules = [
     {
       icon: GitBranch,
-      title: "Phân Tích Kịch Bản",
+      title: "Scenario Analysis",
       description:
-        "Mô phỏng và đánh giá các kịch bản kinh doanh",
+        "Simulate and evaluate business scenarios",
       color: "blue",
       page: "scenario" as Page,
-      stats: "12 kịch bản đang hoạt động",
+      stats: "12 active scenarios",
     },
     {
       icon: DollarSign,
-      title: "Báo Cáo Doanh Thu",
-      description: "Theo dõi doanh thu theo thời gian thực",
+      title: "Revenue Report",
+      description: "Monitor real-time revenue",
       color: "red",
       page: "revenue" as Page,
-      stats: "2.4M VNĐ hôm nay",
+      stats: "2.4M VNĐ today",
     },
     {
       icon: TrendingUp,
-      title: "Dự Báo Xu Hướng",
-      description: "Dự đoán xu hướng thị trường với AI",
+      title: "Trend Forecast",
+      description: "Predict market trends with AI",
       color: "yellow",
       page: "forecast" as Page,
-      stats: "95% độ chính xác",
+      stats: "95% accuracy",
     },
     {
       icon: Settings,
-      title: "Tối Ưu Vận Hành",
-      description: "Cải thiện hiệu suất và quy trình",
+      title: "Operation Optimization",
+      description: "Improve performance and processes",
       color: "green",
       page: "operation" as Page,
-      stats: "18% cải thiện",
+      stats: "18% improvement",
     },
   ];
 
   const quickStats = [
     {
-      label: "Tổng Doanh Thu",
+      label: "Total Revenue",
       value: "48.5M",
       change: "+12.5%",
       trend: "up",
       icon: DollarSign,
     },
     {
-      label: "Khách Hàng",
+      label: "Customers",
       value: "1,234",
       change: "+8.2%",
       trend: "up",
       icon: Users,
     },
     {
-      label: "Đơn Hàng",
+      label: "Orders",
       value: "856",
       change: "-2.3%",
       trend: "down",
       icon: ShoppingCart,
     },
     {
-      label: "Hoạt Động",
+      label: "Activity",
       value: "92%",
       change: "+5.1%",
       trend: "up",
@@ -134,7 +134,7 @@ export function Dashboard({
               variant="outline"
               onClick={() => navigateTo("home")}
             >
-              Trang Chủ
+              Home
             </Button>
             <Button
               variant="ghost"
@@ -142,7 +142,7 @@ export function Dashboard({
               className="gap-2"
             >
               <LogOut className="w-4 h-4" />
-              Đăng Xuất
+              Logout
             </Button>
           </div>
         </div>
@@ -153,11 +153,10 @@ export function Dashboard({
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-gray-900 mb-2">
-            Chào mừng trở lại! 👋
+            Welcome back! 👋
           </h1>
           <p className="text-gray-600">
-            Đây là tổng quan về các chỉ số kinh doanh và module
-            hệ thống của bạn
+            This is an overview of your business metrics and system modules
           </p>
         </div>
 
@@ -200,7 +199,7 @@ export function Dashboard({
         {/* Modules Section */}
         <div className="mb-8">
           <h2 className="text-gray-900 mb-6">
-            Các Module Hệ Thống
+            System Modules
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {modules.map((module) => {
@@ -236,7 +235,7 @@ export function Dashboard({
                     <Button
                       className={`w-full ${colors.bg} text-white gap-2 group-hover:gap-4 transition-all`}
                     >
-                      Truy cập module
+                      Access module
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -249,18 +248,17 @@ export function Dashboard({
         {/* Recent Activity */}
         <Card className="p-6">
           <h3 className="text-gray-900 mb-4">
-            Hoạt Động Gần Đây
+            Recent Activity
           </h3>
           <div className="space-y-4">
             <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
               <div className="flex-1">
                 <p className="text-gray-900 text-sm">
-                  Phân tích kịch bản "Mở rộng thị trường" đã
-                  hoàn thành
+                  Scenario analysis "Market Expansion" has been completed
                 </p>
                 <p className="text-gray-500 text-xs">
-                  2 giờ trước
+                  2 hours ago
                 </p>
               </div>
             </div>
@@ -268,10 +266,10 @@ export function Dashboard({
               <div className="w-2 h-2 bg-green-500 rounded-full" />
               <div className="flex-1">
                 <p className="text-gray-900 text-sm">
-                  Báo cáo doanh thu Q1 đã được tạo
+                  Q1 revenue report has been generated
                 </p>
                 <p className="text-gray-500 text-xs">
-                  5 giờ trước
+                  5 hours ago
                 </p>
               </div>
             </div>
@@ -279,10 +277,10 @@ export function Dashboard({
               <div className="w-2 h-2 bg-yellow-500 rounded-full" />
               <div className="flex-1">
                 <p className="text-gray-900 text-sm">
-                  Dự báo xu hướng cho tháng tới đã sẵn sàng
+                  Trend forecast for next month is ready
                 </p>
                 <p className="text-gray-500 text-xs">
-                  1 ngày trước
+                  1 day ago
                 </p>
               </div>
             </div>

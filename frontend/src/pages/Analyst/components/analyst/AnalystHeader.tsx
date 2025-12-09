@@ -2,7 +2,7 @@ import { Button } from "../../../../components/ui/figma/button";
 import { BarChart3 } from "lucide-react";
 
 export function AnalystHeader() {
-  const menuItems = ["Dashboard", "Báo Cáo", "Insights", "Liên Hệ"];
+  const menuItems = ["Dashboard", "Reports", "Insights", "Contact"];
 
   return (
     <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
@@ -31,7 +31,7 @@ export function AnalystHeader() {
 
           {/* CTA Button */}
           <Button className="bg-blue-600 hover:bg-blue-700">
-            Đăng Nhập Analyst
+            Login Analyst
           </Button>
         </div>
       </div>

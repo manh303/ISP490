@@ -8,7 +8,7 @@ interface RatingDistributionChartProps {
 
 export function RatingDistributionChart({ 
   data, 
-  title = 'Phân Bố Đánh Giá' 
+  title = 'Rating Distribution' 
 }: RatingDistributionChartProps) {
   if (!data || data.length === 0) {
     return (

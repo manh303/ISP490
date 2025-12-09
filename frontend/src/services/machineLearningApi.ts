@@ -155,33 +155,15 @@ export interface DSSRunResponse {
   metrics?: Record<string, any>;
 }
 
-export interface AISummarizeRequest {
-  model_type: string;
-  ml_results: Record<string, any>;
-  business_context?: Record<string, any>;
-}
-
-export interface AISummarizeResponse {
-  summary: string;
-  insights: string[];
-  anomalies: string[];
-  risks: string[];
-  recommendations: {
-    title: string;
-    description: string;
-    impact: 'Cao' | 'Trung bình' | 'Thấp';
-    effort: 'Cao' | 'Trung bình' | 'Thấp';
-    priority: 'Cao' | 'Trung bình' | 'Thấp';
-  }[];
-}
 
 // Thêm interface cho kết quả /v1/ml/status/summary
 export interface StatusSummary {
-  total_models: number;
-  active_models: number;
-  failed_models: number;
-  last_updated: string;
-  [key: string]: any; // Cho phép mở rộng nếu API trả thêm trường khác
+  models_total: number;
+  models_active: number;
+  models_deprecated: number;
+  models_training: number;
+  predictions_last_7_days: number;
+  recommendations_last_7_days: number;
 }
 
 /* ------------------------- API Functions ------------------------- */
@@ -283,21 +265,5 @@ export const onlineSentiment = async (data: OnlineSentimentRequest): Promise<Onl
  */
 export const getStatusSummary = async (): Promise<StatusSummary> => {
   const response = await api.get('/v1/ml/status/summary');
-  return response.data;
-};
-
-/**
- * Run DSS Analysis
- */
-export const runDSSAnalysis = async (data: DSSRunRequest): Promise<DSSRunResponse> => {
-  const response = await api.post('/api/v1/dss/run', data);
-  return response.data;
-};
-
-/**
- * Get AI Summary
- */
-export const getAISummary = async (data: AISummarizeRequest): Promise<AISummarizeResponse> => {
-  const response = await api.post('/api/v1/ai/summarize', data);
   return response.data;
 };

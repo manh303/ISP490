@@ -46,6 +46,7 @@ import { SendMessagePage } from "./pages/Publics/SendMessagePage.js";
 import { ExplorePage } from "./pages/Publics/ExplorePage.js";
 import AdminPage from "./pages/Admin/AdminPage.js";
 import AdminUserManagement from "./pages/Admin/AdminUserManagement";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
 import RoleManagement from "./pages/Admin/RoleManagement";
 import ActivityLogsPage from "./pages/Admin/ActivityLogsPage";
 import ActivityStatsPage from "./pages/Admin/ActivityStatsPage";
@@ -92,7 +93,17 @@ import PipelinePerformancePage from "./pages/DataEngineer/PipelinePerformancePag
 import DataVolumeTrendsPage from "./pages/DataEngineer/DataVolumeTrendsPage.tsx";
 import DSSResults from "./pages/Analyst/DSSResults.tsx";
 import ReportsPage from "./pages/Analyst/ReportsPage";
+import DSSDecisionsPage from "./pages/Analyst/DSSDecisionsPage";
+import DSSDecisionDetailPage from "./pages/Analyst/DSSDecisionDetailPage";
+import DSSDecisionCreatePage from "./pages/Analyst/DSSDecisionCreatePage";
+
+// Business Metadata Pages
+import SourcesPage from "./pages/DataEngineer/SourcesPage";
+import CatalogPage from "./pages/DataEngineer/CatalogPage";
+import GlossaryPage from "./pages/DataEngineer/GlossaryPage";
+import ExpectationsJobsPage from "./pages/DataEngineer/ExpectationsJobsPage";
 import DSSScenarios from "./pages/Analyst/DSSScenarios.tsx";
+// import AdminDashboard from "./components/dashboard/roles/AdminDashboard.tsx";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
 function UserDetailsWrapper() {
@@ -188,7 +199,7 @@ export default function App() {
             }
           >
             <Route path="/admin/home" element={<AdminPage />} />
-            <Route path="/admin/dashboard" element={<VietnamElectronicsDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUserManagement />} />
             <Route path="/admin/roles" element={<RoleManagement />} />
             {/* <Route path="/admin/users/details" element={<UserProfiles />} /> */}
@@ -212,7 +223,7 @@ export default function App() {
           {/* Analyst Layout - Protected Routes */}
           <Route
             element={
-              <ProtectedRoute requiredRole="ANALYST">
+              <ProtectedRoute requiredRole={["ANALYST", "ADMIN"]}>
                 <AnalystLayout />
               </ProtectedRoute>
             }
@@ -224,6 +235,9 @@ export default function App() {
             <Route path="/analyst/dss/:modelId/results" element={<DSSResults />} />
             <Route path="/analyst/dss-scenarios" element={<DSSScenarios />} />
             <Route path="/analyst/product-review/:productKey" element={<ProductReviewDetails />} />
+            <Route path="/analyst/dss-decisions" element={<DSSDecisionsPage />} />
+            <Route path="/analyst/dss-decisions/create" element={<DSSDecisionCreatePage />} />
+            <Route path="/analyst/dss-decisions/:decisionId" element={<DSSDecisionDetailPage />} />
             <Route path="/analyst/analytics-dashboard" element={<AnalyticsDashboard />} />
             <Route path="/analyst/product-analytics" element={<ProductAnalytics />} />
             <Route path="/analyst/review-analytics" element={<ReviewAnalytics />} />
@@ -274,6 +288,12 @@ export default function App() {
             <Route path="/dataengineer/logs" element={<Blank />} />
             <Route path="/dataengineer/settings" element={<Blank />} />
             <Route path="/dataengineer/profile" element={<UserProfiles />} />
+
+            {/* Business Metadata Pages */}
+            <Route path="/dataengineer/sources" element={<SourcesPage />} />
+            <Route path="/dataengineer/catalog" element={<CatalogPage />} />
+            <Route path="/dataengineer/glossary" element={<GlossaryPage />} />
+            <Route path="/dataengineer/expectations-jobs" element={<ExpectationsJobsPage />} />
           </Route>
           {/* MLISidebar Layout - Protected Routes */}
           <Route

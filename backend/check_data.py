@@ -1,5 +1,5 @@
 import asyncio
-from app.main import db_manager
+from backend.main import db_manager
 
 async def check():
     await db_manager.connect()

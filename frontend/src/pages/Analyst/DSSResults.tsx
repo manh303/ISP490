@@ -13,17 +13,17 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
 
   const models = {
     price_prediction: {
-      name: 'Dự đoán Giá',
+      name: 'Price Prediction',
       icon: <TrendingUp className="w-6 h-6" />,
       color: '#3B82F6'
     },
     product_recommendation: {
-      name: 'Gợi ý Sản phẩm',
+      name: 'Product Recommendations',
       icon: <Users className="w-6 h-6" />,
       color: '#10B981'
     },
     review_sentiment: {
-      name: 'Phân tích Cảm xúc Đánh giá',
+      name: 'Review Sentiment Analysis',
       icon: <MessageSquare className="w-6 h-6" />,
       color: '#F59E0B'
     }
@@ -55,42 +55,42 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           },
           aiSummary: {
             insights: [
-              "Giá sản phẩm đang có xu hướng giảm nhẹ trong tuần qua",
-              "Mức giá dự đoán 1,185,000 VND nằm trong khoảng tin cậy 1,155,000 - 1,215,000 VND",
-              "Độ chính xác của mô hình là 92.5%, cho thấy dự đoán khá đáng tin cậy"
+              "Product prices have been trending slightly downward over the past week",
+              "The predicted price of 1,185,000 VND falls within the confidence interval of 1,155,000 - 1,215,000 VND",
+              "The model's accuracy is 92.5%, indicating fairly reliable predictions"
             ],
             anomalies: [
-              "Giá thực tế ngày 03/11 cao hơn dự kiến 2%, có thể do chương trình khuyến mãi đặc biệt"
+              "Actual price on 03/11 was 2% higher than expected, possibly due to special promotional programs"
             ],
             risks: [
-              "Rủi ro cạnh tranh giá từ đối thủ trên cùng platform",
-              "Thị trường có thể biến động nếu có sự kiện đặc biệt trong tháng 12"
+              "Risk of price competition from competitors on the same platform",
+              "Market may fluctuate if there are special events in December"
             ]
           },
           aiActions: [
             {
               type: 'pricing',
-              title: 'Giảm giá 5% cho sản phẩm này',
-              description: 'Dựa trên dự đoán giá, đề xuất giảm 5% để tăng tính cạnh tranh',
-              impact: 'Cao',
-              effort: 'Thấp',
-              priority: 'Cao'
+              title: 'Reduce price by 5% for this product',
+              description: 'Based on price prediction, suggest reducing by 5% to increase competitiveness',
+              impact: 'High',
+              effort: 'Low',
+              priority: 'High'
             },
             {
               type: 'marketing',
-              title: 'Tăng quảng cáo trên Tiki',
-              description: 'Tăng ngân sách quảng cáo 20% trong tuần tới để tận dụng xu hướng giá',
-              impact: 'Trung bình',
-              effort: 'Trung bình',
-              priority: 'Trung bình'
+              title: 'Increase advertising on Tiki',
+              description: 'Increase advertising budget by 20% next week to take advantage of price trends',
+              impact: 'Medium',
+              effort: 'Medium',
+              priority: 'Medium'
             },
             {
               type: 'inventory',
-              title: 'Điều chỉnh tồn kho',
-              description: 'Giảm nhập hàng 10% trong tháng tới để tránh tồn kho',
-              impact: 'Thấp',
-              effort: 'Thấp',
-              priority: 'Thấp'
+              title: 'Adjust inventory',
+              description: 'Reduce incoming goods by 10% next month to avoid overstock',
+              impact: 'Low',
+              effort: 'Low',
+              priority: 'Low'
             }
           ]
         };
@@ -110,43 +110,43 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           },
           aiSummary: {
             insights: [
-              "Khách hàng có sở thích mạnh với smartphone cao cấp (iPhone, Samsung)",
-              "Độ tương đồng cao nhất là 95% với iPhone 15 Pro",
-              "Trung bình độ tương đồng của top 5 sản phẩm là 84%"
+              "Customer has strong preference for premium smartphones (iPhone, Samsung)",
+              "Highest similarity is 95% with iPhone 15 Pro",
+              "Average similarity of top 5 products is 84%"
             ],
             anomalies: [
-              "Khách hàng này chưa mua smartphone trong 6 tháng qua",
-              "Có xu hướng tìm kiếm sản phẩm giá cao hơn mức trung bình"
+              "This customer hasn't purchased a smartphone in the past 6 months",
+              "Has a tendency to search for products priced higher than average"
             ],
             risks: [
-              "Rủi ro khách hàng hủy đơn nếu giá thay đổi",
-              "Cạnh tranh từ flash sale có thể làm giảm tỷ lệ chuyển đổi"
+              "Risk of customer canceling order if price changes",
+              "Competition from flash sales may reduce conversion rate"
             ]
           },
           aiActions: [
             {
               type: 'promotion',
-              title: 'Gửi voucher 500k cho iPhone 15 Pro',
-              description: 'Tạo ưu đãi đặc biệt cho sản phẩm được recommend cao nhất',
-              impact: 'Cao',
-              effort: 'Thấp',
-              priority: 'Cao'
+              title: 'Send 500k voucher for iPhone 15 Pro',
+              description: 'Create special offer for the highest recommended product',
+              impact: 'High',
+              effort: 'Low',
+              priority: 'High'
             },
             {
               type: 'email',
-              title: 'Gửi email marketing với top 3 sản phẩm',
-              description: 'Tạo campaign email personalized với sản phẩm được recommend',
-              impact: 'Trung bình',
-              effort: 'Thấp',
-              priority: 'Cao'
+              title: 'Send marketing email with top 3 products',
+              description: 'Create personalized email campaign with recommended products',
+              impact: 'Medium',
+              effort: 'Low',
+              priority: 'High'
             },
             {
               type: 'segmentation',
-              title: 'Thêm vào nhóm khách hàng VIP',
-              description: 'Phân loại khách hàng vào segment cao cấp để có ưu đãi riêng',
-              impact: 'Thấp',
-              effort: 'Thấp',
-              priority: 'Trung bình'
+              title: 'Add to VIP customer group',
+              description: 'Classify customer into premium segment for exclusive offers',
+              impact: 'Low',
+              effort: 'Low',
+              priority: 'Medium'
             }
           ]
         };
@@ -163,52 +163,52 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             avgSentiment: 'Positive',
             sentimentScore: 0.68,
             keyPhrases: [
-              { phrase: 'chất lượng tốt', sentiment: 'positive', frequency: 23 },
-              { phrase: 'giao hàng nhanh', sentiment: 'positive', frequency: 18 },
-              { phrase: 'giá hợp lý', sentiment: 'positive', frequency: 15 },
-              { phrase: 'hỏng hóc', sentiment: 'negative', frequency: 12 },
-              { phrase: 'chậm trễ', sentiment: 'negative', frequency: 8 }
+              { phrase: 'good quality', sentiment: 'positive', frequency: 23 },
+              { phrase: 'fast delivery', sentiment: 'positive', frequency: 18 },
+              { phrase: 'reasonable price', sentiment: 'positive', frequency: 15 },
+              { phrase: 'malfunction', sentiment: 'negative', frequency: 12 },
+              { phrase: 'delay', sentiment: 'negative', frequency: 8 }
             ]
           },
           aiSummary: {
             insights: [
-              "58.2% đánh giá tích cực, cho thấy sản phẩm được đón nhận tốt",
-              "Điểm sentiment trung bình là 0.68, nằm trong mức chấp nhận được",
-              "Các từ khóa tích cực chủ yếu liên quan đến chất lượng và giao hàng"
+              "58.2% positive reviews, indicating good product reception",
+              "Average sentiment score is 0.68, within acceptable range",
+              "Positive keywords mainly relate to quality and delivery"
             ],
             anomalies: [
-              "Tăng 15% đánh giá tiêu cực trong tuần qua",
-              "Một số review đề cập đến vấn đề chất lượng sản phẩm"
+              "15% increase in negative reviews over the past week",
+              "Some reviews mention product quality issues"
             ],
             risks: [
-              "Rủi ro danh tiếng nếu không xử lý kịp thời các review tiêu cực",
-              "Có thể ảnh hưởng đến tỷ lệ chuyển đổi nếu trend tiêu cực tiếp tục"
+              "Reputation risk if negative reviews are not handled promptly",
+              "May affect conversion rate if negative trend continues"
             ]
           },
           aiActions: [
             {
               type: 'response',
-              title: 'Trả lời tất cả review tiêu cực trong 24h',
-              description: 'Tạo response template và giao cho team CS xử lý ngay',
-              impact: 'Cao',
-              effort: 'Trung bình',
-              priority: 'Cao'
+              title: 'Respond to all negative reviews within 24h',
+              description: 'Create response template and assign to CS team for immediate handling',
+              impact: 'High',
+              effort: 'Medium',
+              priority: 'High'
             },
             {
               type: 'improvement',
-              title: 'Kiểm tra chất lượng sản phẩm',
-              description: 'Yêu cầu QC kiểm tra lô hàng mới để tránh vấn đề tương tự',
-              impact: 'Cao',
-              effort: 'Cao',
-              priority: 'Cao'
+              title: 'Check product quality',
+              description: 'Request QC to inspect new shipments to avoid similar issues',
+              impact: 'High',
+              effort: 'High',
+              priority: 'High'
             },
             {
               type: 'monitoring',
-              title: 'Tăng cường monitor review',
-              description: 'Thiết lập alert khi tỷ lệ review tiêu cực > 30%',
-              impact: 'Thấp',
-              effort: 'Thấp',
-              priority: 'Trung bình'
+              title: 'Strengthen review monitoring',
+              description: 'Set up alert when negative review rate > 30%',
+              impact: 'Low',
+              effort: 'Low',
+              priority: 'Medium'
             }
           ]
         };
@@ -228,9 +228,9 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
   const recommendations = (dssResults?.ai_recommended_actions || []).map((action: string) => ({
     title: action,
     description: action,
-    impact: 'Trung bình',
-    effort: 'Trung bình',
-    priority: 'Trung bình'
+    impact: 'Medium',
+    effort: 'Medium',
+    priority: 'Medium'
   }));
 
   const formatCurrency = (amount: number) => {
@@ -242,9 +242,9 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'cao': return 'bg-red-100 text-red-800';
-      case 'trung bình': return 'bg-yellow-100 text-yellow-800';
-      case 'thấp': return 'bg-green-100 text-green-800';
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -257,30 +257,30 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Tổng số sản phẩm</h4>
+                <h4 className="font-medium text-blue-900">Total Products</h4>
                 <p className="text-2xl font-bold text-blue-600">{priceData?.kpi_summary?.num_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Sản phẩm có khuyến nghị</h4>
+                <h4 className="font-medium text-green-900">Recommended Products</h4>
                 <p className="text-2xl font-bold text-green-600">{priceData?.kpi_summary?.num_with_recommendation || 0}</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900">Tăng trưởng doanh thu dự kiến</h4>
+                <h4 className="font-medium text-purple-900">Expected Revenue Growth</h4>
                 <p className="text-2xl font-bold text-purple-600">{priceData?.kpi_summary?.expected_revenue_uplift_pct ? `${priceData.kpi_summary.expected_revenue_uplift_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
             </div>
             <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-4">Khuyến nghị tối ưu hóa giá</h4>
+              <h4 className="font-medium mb-4">Price Optimization Recommendations</h4>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá hiện tại</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá dự đoán</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thay đổi giá</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tác động doanh thu</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Độ tin cậy</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price Change</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue Impact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -329,21 +329,21 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Sản phẩm nguồn</h4>
+                <h4 className="font-medium text-blue-900">Source Product</h4>
                 <p className="text-2xl font-bold text-blue-600">{recoData?.kpi_summary?.num_source_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Tổng số khuyến nghị</h4>
+                <h4 className="font-medium text-green-900">Total Recommendations</h4>
                 <p className="text-2xl font-bold text-green-600">{recoData?.kpi_summary?.num_recommendations || 0}</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-900">Độ tương đồng trung bình</h4>
+                <h4 className="font-medium text-purple-900">Average Similarity</h4>
                 <p className="text-2xl font-bold text-purple-600">{recoData?.kpi_summary?.avg_similarity || 'N/A'}</p>
               </div>
             </div>
             <div className="bg-white rounded-lg border overflow-hidden">
               <div className="p-4 border-b">
-                <h4 className="font-medium">Khuyến nghị sản phẩm</h4>
+                <h4 className="font-medium">Product Recommendations</h4>
               </div>
               <div className="divide-y">
                 {(recoData?.table_data as any[])?.map((rec: any, index: number) => (
@@ -381,21 +381,21 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Tổng số đánh giá</h4>
+                <h4 className="font-medium text-blue-900">Total Reviews</h4>
                 <p className="text-2xl font-bold text-blue-600">{sentimentData?.kpi_summary?.total_reviews || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-900">Đánh giá tích cực</h4>
+                <h4 className="font-medium text-green-900">Positive Reviews</h4>
                 <p className="text-2xl font-bold text-green-600">{sentimentData?.kpi_summary?.avg_positive_pct ? `${sentimentData.kpi_summary.avg_positive_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
-                <h4 className="font-medium text-red-900">Sản phẩm quan trọng</h4>
+                <h4 className="font-medium text-red-900">Critical Products</h4>
                 <p className="text-2xl font-bold text-red-600">{sentimentData?.kpi_summary?.num_products_with_critical_negative || 0}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium mb-4">Phân bố cảm xúc</h4>
+                <h4 className="font-medium mb-4">Sentiment Distribution</h4>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -417,7 +417,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 </ResponsiveContainer>
               </div>
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium mb-4">Phân tích sản phẩm hàng đầu</h4>
+                <h4 className="font-medium mb-4">Top Products Analysis</h4>
                 <div className="space-y-3">
                   {(sentimentData?.table_data as any[])?.slice(0, 5).map((product: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onClick={() => navigate(`/analyst/product-review/${product.product_key}`)}>
@@ -442,7 +442,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
         );
 
       default:
-        return <div>Không có kết quả ML nào</div>;
+        return <div>No ML results available</div>;
     }
   };
 
@@ -462,10 +462,10 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {currentModel.name} - Kết quả DSS
+              {currentModel.name} - DSS Results
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Thông tin kinh doanh và hiểu biết chiến lược được hỗ trợ bởi AI
+              AI-powered business intelligence and strategic insights
             </p>
           </div>
         </div>
@@ -475,7 +475,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <TrendingUp className="w-6 h-6 mr-2" />
-          Kết quả ML & Trực quan hóa
+          ML Results & Visualization
         </h2>
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
           {renderMLResults()}
@@ -486,12 +486,12 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <Lightbulb className="w-6 h-6 mr-2" />
-          Tóm tắt Phân tích AI
+          AI Analysis Summary
         </h2>
         <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Những hiểu biết chính</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Insights</h3>
               <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
                 {insights.map((insight: string, index: number) => (
                   <li key={index}>{insight}</li>
@@ -501,7 +501,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div>
               <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
                 <AlertTriangle className="w-4 h-4 mr-1" />
-                Các bất thường được phát hiện
+                Detected Anomalies
               </h3>
               <ul className="list-disc list-inside space-y-1 text-orange-800 dark:text-orange-200">
                 {anomalies.map((anomaly: string, index: number) => (
@@ -510,7 +510,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Đánh giá rủi ro</h3>
+              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Risk Assessment</h3>
               <ul className="list-disc list-inside space-y-1 text-red-800 dark:text-red-200">
                 {risks.map((risk: string, index: number) => (
                   <li key={index}>{risk}</li>
@@ -525,7 +525,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <Target className="w-6 h-6 mr-2" />
-          Khuyến nghị hành động của AI
+          AI Action Recommendations
         </h2>
         <div className="space-y-4">
           {recommendations.map((action: { title: string; description: string; impact: string; effort: string; priority: string }, index: number) => (
@@ -536,7 +536,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                   <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(action.priority)}`}>
                     {action.priority}
                   </span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${action.impact === 'Cao' ? 'bg-green-100 text-green-800' : action.impact === 'Trung bình' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                  <span className={`px-2 py-1 text-xs rounded-full ${action.impact === 'High' ? 'bg-green-100 text-green-800' : action.impact === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
                     Impact: {action.impact}
                   </span>
                 </div>
@@ -545,7 +545,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Effort: {action.effort}</span>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                  Thực hiện hành động
+                  Execute Action
                 </button>
               </div>
             </div>

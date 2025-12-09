@@ -69,7 +69,7 @@ export function ProductDetailAnalytics() {
       setProductReport(reportData);
     } catch (err) {
       console.error('Error loading product detail analytics data:', err);
-      setError('Không thể tải dữ liệu chi tiết sản phẩm. Vui lòng thử lại.');
+      setError('Unable to load product detail data. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -100,7 +100,7 @@ export function ProductDetailAnalytics() {
       <div className="border border-gray-200 bg-white rounded-lg overflow-hidden shadow-sm flex items-center justify-center" style={{ height: '800px' }}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải dữ liệu chi tiết sản phẩm...</p>
+          <p className="text-gray-600">Loading product detail data...</p>
         </div>
       </div>
     );
@@ -114,7 +114,7 @@ export function ProductDetailAnalytics() {
           <p className="text-red-600 mb-4">{error}</p>
           <Button onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Thử lại
+            Retry
           </Button>
         </div>
       </div>
@@ -133,7 +133,7 @@ export function ProductDetailAnalytics() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={loadAnalyticsData}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Làm mới
+                  Refresh
                 </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -151,7 +151,7 @@ export function ProductDetailAnalytics() {
           <div className="px-6 py-4 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Thời gian:</label>
+                <label className="text-sm font-medium">Time:</label>
                 <DateRangePicker
                   fromDate={fromDate}
                   toDate={toDate}
@@ -160,14 +160,14 @@ export function ProductDetailAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Nền tảng:</label>
+                <label className="text-sm font-medium">Platform:</label>
                 <PlatformSelect
                   value={platformCode}
                   onValueChange={(value) => setPlatformCode(value || 'tiki')}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Danh mục:</label>
+                <label className="text-sm font-medium">Category:</label>
                 <CategorySelect
                   value={categoryKey}
                   onValueChange={(value) => setCategoryKey(value || '')}
@@ -175,7 +175,7 @@ export function ProductDetailAnalytics() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Sản phẩm:</label>
+                <label className="text-sm font-medium">Product:</label>
                 <ProductSearch
                   value={productName}
                   onProductSelect={(productKey, productName) => {
@@ -184,7 +184,7 @@ export function ProductDetailAnalytics() {
                   }}
                   platformCode={platformCode}
                   categoryKey={categoryKey}
-                  placeholder="Tìm kiếm sản phẩm..."
+                  placeholder="Search products..."
                   className="w-64"
                 />
               </div>
@@ -194,32 +194,32 @@ export function ProductDetailAnalytics() {
           {/* Product Summary */}
           {productReport?.review_summary && (
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-              <h3 className="text-gray-900 font-semibold mb-3">Tóm Tắt Sản Phẩm</h3>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <h3 className="text-gray-900 font-semibold mb-3">Product Summary</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="h-5 w-5 text-yellow-500" />
-                    <div className="text-sm text-gray-600">Đánh giá trung bình</div>
+                    <div className="text-sm text-gray-600">Average Rating</div>
                   </div>
-                  <div className="text-xl font-bold text-gray-900">
+                  <div className="font-bold text-gray-900 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {productReport.review_summary.avg_rating?.toFixed(1)}/5
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare className="h-5 w-5 text-blue-500" />
-                    <div className="text-sm text-gray-600">Tổng đánh giá</div>
+                    <div className="text-sm text-gray-600">Total Reviews</div>
                   </div>
-                  <div className="text-xl font-bold text-blue-600">
+                  <div className="font-bold text-blue-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {productReport.review_summary.total_reviews?.toLocaleString('vi-VN')}
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col items-start">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="h-5 w-5 text-purple-500" />
-                    <div className="text-sm text-gray-600">Đánh giá trung bình</div>
+                    <div className="text-sm text-gray-600">Average Rating</div>
                   </div>
-                  <div className="text-xl font-bold text-purple-600">
+                  <div className="font-bold text-purple-600 break-words text-base md:text-xl max-w-[120px] md:max-w-full" style={{wordBreak: 'break-word'}}>
                     {productReport.review_summary.avg_rating?.toFixed(2)}
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export function ProductDetailAnalytics() {
 
           {/* Product Charts */}
           <div className="px-6 py-4 border-b border-gray-200 bg-white overflow-auto">
-            <h3 className="text-gray-900 font-semibold mb-4">Biểu Đồ Chi Tiết Sản Phẩm</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">Product Detail Charts</h3>
 
             <div className="grid grid-cols-1 gap-6">
               {productReport?.timeseries && productReport.timeseries.points && productReport.timeseries.points.length > 0 && (
@@ -243,14 +243,14 @@ export function ProductDetailAnalytics() {
               {!productId && (
                 <div className="text-center py-12 text-gray-500">
                   <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Vui lòng chọn sản phẩm để xem chi tiết phân tích</p>
+                  <p>Please select a product to view detailed analysis</p>
                 </div>
               )}
 
               {productId && !productReport?.timeseries && !productReport?.review_summary && (
                 <div className="text-center py-12 text-gray-500">
                   <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Không tìm thấy dữ liệu cho sản phẩm này</p>
+                  <p>No data found for this product</p>
                 </div>
               )}
             </div>
@@ -259,11 +259,11 @@ export function ProductDetailAnalytics() {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div className="text-gray-600 text-sm">
-              Product Detail Analytics - Phân tích chi tiết sản phẩm
+              Product Detail Analytics - Product Detail Analysis
             </div>
             <Button>
               <FileDown className="h-4 w-4 mr-2" />
-              Xuất báo cáo
+              Export Report
             </Button>
           </div>
         </div>

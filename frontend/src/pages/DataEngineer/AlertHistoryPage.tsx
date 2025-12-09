@@ -32,7 +32,7 @@ const AlertHistoryPage: React.FC = () => {
       setAlerts(data);
     } catch (err) {
       console.error('Error fetching alert history:', err);
-      setError('Không thể tải lịch sử cảnh báo');
+      setError('Failed to load alert history');
     } finally {
       setLoading(false);
     }
@@ -100,10 +100,10 @@ const AlertHistoryPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Lịch sử Cảnh báo
+            Alert History
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Giám sát và theo dõi cảnh báo và thông báo hệ thống
+            Monitor and track system alerts and notifications
           </p>
         </div>
         <button
@@ -111,7 +111,7 @@ const AlertHistoryPage: React.FC = () => {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Làm mới
+          Refresh
         </button>
       </div>
 
@@ -123,7 +123,7 @@ const AlertHistoryPage: React.FC = () => {
               <AlertTriangle className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Tổng số Cảnh báo</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Alerts</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
             </div>
           </div>
@@ -135,7 +135,7 @@ const AlertHistoryPage: React.FC = () => {
               <AlertTriangle className="w-6 h-6 text-red-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Cảnh báo Đang hoạt động</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Alerts</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.active}</p>
             </div>
           </div>
@@ -147,7 +147,7 @@ const AlertHistoryPage: React.FC = () => {
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Đã giải quyết</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Resolved</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.resolved}</p>
             </div>
           </div>
@@ -159,7 +159,7 @@ const AlertHistoryPage: React.FC = () => {
               <XCircle className="w-6 h-6 text-red-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Nghiêm trọng</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Severity</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.critical}</p>
             </div>
           </div>
@@ -170,50 +170,50 @@ const AlertHistoryPage: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border">
         <div className="flex items-center mb-4">
           <Filter className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bộ lọc</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Filters</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Trạng thái
+              Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="ALL">Tất cả Trạng thái</option>
-              <option value="ACTIVE">Đang hoạt động</option>
-              <option value="RESOLVED">Đã giải quyết</option>
-              <option value="ACKNOWLEDGED">Đã xác nhận</option>
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="ACKNOWLEDGED">Acknowledged</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Mức độ nghiêm trọng
+              Severity
             </label>
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="ALL">Tất cả Mức độ</option>
-              <option value="CRITICAL">Nghiêm trọng</option>
-              <option value="HIGH">Cao</option>
-              <option value="MEDIUM">Trung bình</option>
-              <option value="LOW">Thấp</option>
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Lược đồ
+              Schema
             </label>
             <select
               value={schemaFilter}
               onChange={(e) => setSchemaFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="ALL">Tất cả Lược đồ</option>
+              <option value="ALL">All Schemas</option>
               {uniqueSchemas.map(schema => (
                 <option key={schema} value={schema}>{schema}</option>
               ))}
@@ -221,17 +221,17 @@ const AlertHistoryPage: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Khoảng thời gian
+              Time Period
             </label>
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="1d">24 giờ qua</option>
-              <option value="7d">7 ngày qua</option>
-              <option value="30d">30 ngày qua</option>
-              <option value="90d">90 ngày qua</option>
+              <option value="1d">Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
             </select>
           </div>
         </div>
@@ -256,7 +256,7 @@ const AlertHistoryPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border">
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Lịch sử Cảnh báo ({filteredAlerts.length} cảnh báo)
+              Alert History ({filteredAlerts.length} alerts)
             </h2>
           </div>
           <div className="p-6">
@@ -264,13 +264,13 @@ const AlertHistoryPage: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Trạng thái</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Mức độ nghiêm trọng</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Thông điệp</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Bảng</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Mã Công việc</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Đã tạo</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Đã giải quyết</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Severity</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Message</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Table</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Job ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Created</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">Resolved</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -323,10 +323,10 @@ const AlertHistoryPage: React.FC = () => {
               <div className="text-center py-12">
                 <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                  Không tìm thấy Cảnh báo
+                  No Alerts Found
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Không có cảnh báo nào khớp với tiêu chí bộ lọc hiện tại.
+                  No alerts match the current filter criteria.
                 </p>
               </div>
             )}
