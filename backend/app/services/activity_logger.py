@@ -151,12 +151,24 @@ class ActivityLogger:
             if start_date:
                 param_count += 1
                 where_conditions.append(f"l.created_at >= ${param_count}")
-                params.append(start_date)
+                # Convert string to date if needed
+                if isinstance(start_date, str):
+                    from datetime import datetime as dt
+                    start_date_parsed = dt.strptime(start_date[:10], "%Y-%m-%d").date()
+                else:
+                    start_date_parsed = start_date
+                params.append(start_date_parsed)
 
             if end_date:
                 param_count += 1
                 where_conditions.append(f"l.created_at <= ${param_count}")
-                params.append(end_date)
+                # Convert string to date if needed
+                if isinstance(end_date, str):
+                    from datetime import datetime as dt
+                    end_date_parsed = dt.strptime(end_date[:10], "%Y-%m-%d").date()
+                else:
+                    end_date_parsed = end_date
+                params.append(end_date_parsed)
 
             if keyword:
                 param_count += 1

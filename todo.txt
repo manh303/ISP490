@@ -1,72 +1,15 @@
-﻿1. Mục đích của description
+﻿ype 'DSSDecisionSummary[]' is not assignable to type 'DSSDecision[]'.
+  Type 'DSSDecisionSummary' is missing the following properties from type 'DSSDecision': scenario_name, owner_email, updated_atts(2322)
+DSSAnalyticsUsage.tsx(40, 5): The expected type comes from property 'recentDecisions' which is declared here on type 'IntrinsicAttributes & DSSAnalyticsUsageProps'
 
-Giải thích ngắn gọn vì sao có decision này.
+Property 'owner_email' does not exist on type 'DSSDecisionSummary'.
 
-Tóm tắt bối cảnh phân tích (scenario, thời gian, platform/category).
+ype 'unknown[]' is not assignable to type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.ts(2322)
+adminDashboardApi.ts(128, 5): The expected type comes from property 'availableUsers' which is declared here on type 'AuditLogData'
 
-Ghi lại kết luận chính + mục tiêu hành động.
+Type 'unknown[]' is not assignable to type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.ts(2322)
+adminDashboardApi.ts(129, 5): The expected type comes from property 'availableActions' which is declared here on type 'AuditLogData'
 
-Đọc riêng description vẫn hiểu được: “Quyết định này đang xử lý vấn đề gì, ở đâu, trong khoảng thời gian nào”.
-
-2. Cấu trúc gợi ý cho description
-
-Bạn có thể thống nhất 3–4 câu theo format:
-
-Bối cảnh + scenario
-
-“Quyết định này được tạo từ DSS Price Optimization / Product Recommendation / Review Sentiment…”
-
-Phạm vi phân tích
-
-Thời gian, platform, category, segment…
-
-Phát hiện chính (1–3 ý)
-
-Tăng/giảm doanh thu kỳ vọng, nhóm sản phẩm có vấn đề, cơ hội cross-sell…
-
-Mục tiêu của decision
-
-Tăng doanh thu, cải thiện rating, giảm negative review, tối ưu danh mục…
-
-3. Template chung (tiếng Việt)
-
-Bạn có thể dùng template như này để auto-prefill từ FE (ghép từ filters + kpi_summary + ai_summary_insights):
-
-Description (template):
-
-“Quyết định này được tạo từ kịch bản {scenario_name} cho giai đoạn {from_date} – {to_date} trên {platforms}, ngành hàng {categories}.
-
-Phân tích cho thấy: {insight_1}; {insight_2}; {insight_3}.
-
-Mục tiêu của decision là {business_goal} thông qua các hành động được liệt kê trong kế hoạch bên dưới.”
-
-Trong đó:
-
-{scenario_name} = Price Optimization / Cross-sell Recommendation / Review Sentiment
-
-{insight_n} = lấy 1–3 dòng đầu từ ai_summary_insights
-
-{business_goal} = Analyst nhập tay (“tăng doanh thu”, “giảm tỷ lệ review 1–2 sao”, “tăng cross-sell”…).
-
-4. Ví dụ cụ thể cho từng scenario
-4.1. Price Optimization
-
-“Quyết định này được tạo từ kịch bản Price Optimization & Revenue Impact cho giai đoạn 01/12/2025 – 07/12/2025 trên nền tảng Tiki, ngành hàng Điện thoại & Phụ kiện.
-Phân tích cho thấy một nhóm ~150 sản phẩm đang bị định giá thấp so với thị trường, 35 sản phẩm có thể giảm giá nhẹ để tăng tỷ lệ chuyển đổi, và tổng uplift doanh thu kỳ vọng khoảng +8–10% nếu áp dụng mức giá khuyến nghị.
-Mục tiêu của decision là điều chỉnh giá bán cho các SKU trọng tâm để tối đa hoá doanh thu nhưng vẫn đảm bảo biên lợi nhuận.”
-
-4.2. Product Recommendation (Cross-sell / Upsell)
-
-“Quyết định này được tạo từ kịch bản Cross-sell / Upsell Recommendations cho giai đoạn Black Friday 2025 trên Tiki & Lazada, ngành hàng Laptop & Phụ kiện.
-Kết quả DSS đề xuất ~80 cặp sản phẩm có độ tương đồng cao (similarity > 0.8) với tỷ lệ mua kèm tốt, tập trung vào combo laptop – chuột – balo.
-Mục tiêu của decision là triển khai gói khuyến mãi cross-sell/upsell cho các combo có tiềm năng cao để tăng doanh thu giỏ hàng.”
-
-4.3. Review Sentiment
-
-“Quyết định này được tạo từ kịch bản Review Sentiment Analysis cho giai đoạn tháng 11/2025 trên nền tảng Lazada, ngành hàng Đồ gia dụng nhà bếp.
-Phân tích sentiment cho thấy 27 sản phẩm có tỷ lệ review tiêu cực > 30%, chủ yếu liên quan tới chất lượng đóng gói, thời gian giao hàng và độ bền sản phẩm. Rating trung bình của nhóm này chỉ khoảng 3.1–3.3 sao.
-Mục tiêu của decision là giảm tỷ lệ review tiêu cực và nâng rating trung bình nhóm sản phẩm này bằng việc cải thiện mô tả, quy trình CSKH và chính sách hậu mãi.”
-
-5. Tóm tắt nhanh để bạn ghi vào tài liệu
-
-Description trong DSS Decision không phải log kỹ thuật mà là phần mô tả business: nêu rõ kịch bản DSS, phạm vi phân tích (thời gian, platform, category), các insight chính mà hệ thống phát hiện và mục tiêu của quyết định. Nội dung nên khoảng 3–5 câu, đủ để người đọc không cần mở lại màn DSS Results vẫn hiểu “tại sao có decision này và nó đang giải quyết vấn đề gì”.
+Property 'owner_email' does not exist on type 'DSSDecisionSummary'.

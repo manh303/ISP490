@@ -401,6 +401,12 @@ def extract_reviews_from_product(page, product_url: str, product_id: str, produc
         print(f"{LOG_PREFIX} Extracted {len(reviews)} reviews")
         
     except Exception as e:
+        error_str = str(e).lower()
+        # Re-raise browser closed/crashed exceptions to stop the main loop
+        if "closed" in error_str or "browser" in error_str or "target page" in error_str:
+            print(f"{LOG_PREFIX} ⚠️  Browser closed/crashed. Stopping crawler.")
+            print(f"{LOG_PREFIX} Error: {e}")
+            raise  # Propagate to main loop to stop crawling
         print(f"{LOG_PREFIX} Error: {e}")
     
     return reviews
