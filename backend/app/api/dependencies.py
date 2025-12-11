@@ -11,7 +11,7 @@ security = HTTPBearer()
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     try:
         from app.utils.auth_helpers import decode_access_token
-        from app.core.config import settings
+        from app.core.settings import settings
 
         token = credentials.credentials
         payload = decode_access_token(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
