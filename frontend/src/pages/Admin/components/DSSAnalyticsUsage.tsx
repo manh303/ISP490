@@ -145,7 +145,7 @@ export default function DSSAnalyticsUsage({
                         </Badge>
                     )}
                 </h2>
-                <Link to="/dss/scenarios">
+                <Link to="/analyst/dss-scenarios">
                     <Button variant="outline" size="sm">
                         View DSS Scenarios
                         <ArrowRight className="w-4 h-4 ml-2" />

@@ -276,14 +276,6 @@ export function AnalyticsDashboard() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
                 </Button>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Dashboard
-                </Button>
-                <Button variant="outline" size="sm">
-                  <FileDown className="h-4 w-4 mr-2" />
-                  Export Data
-                </Button>
               </div>
               {/* Hiển thị thông báo lỗi cục bộ nếu có */}
               {(analyticsError || topProductsError) && (
@@ -324,20 +316,6 @@ export function AnalyticsDashboard() {
                   value={categoryKey}
                   onValueChange={setCategoryKey}
                 />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Criteria:</label>
-                <Select value={metric} onValueChange={v => setMetric(v as 'revenue' | 'review_count' | 'avg_rating' | 'price_growth')}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Select criteria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="revenue">Revenue</SelectItem>
-                    <SelectItem value="review_count">Review count</SelectItem>
-                    <SelectItem value="avg_rating">Avg rating</SelectItem>
-                    <SelectItem value="price_growth">Price growth</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>

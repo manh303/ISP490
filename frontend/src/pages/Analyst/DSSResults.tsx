@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, MessageSquare, Lightbulb, Target, AlertTriangle, Save, Calendar, Info } from 'lucide-react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface DSSResultsProps { }
 
@@ -311,6 +311,13 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
     switch (modelId) {
       case 'price_prediction':
         const priceData = mlResults as any; // PricePredictionResponse
+        const tableData = priceData?.table_data || [];
+        const [currentPage, setCurrentPage] = React.useState(1);
+        const itemsPerPage = 15;
+        const totalPages = Math.ceil(tableData.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedData = tableData.slice(startIndex, startIndex + itemsPerPage);
+
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -327,67 +334,145 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 <p className="text-2xl font-bold text-purple-600">{priceData?.kpi_summary?.expected_revenue_uplift_pct ? `${priceData.kpi_summary.expected_revenue_uplift_pct.toFixed(1)}%` : 'N/A'}</p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-4">Price Optimization Recommendations</h4>
+            <div className="bg-white rounded-lg border">
+              <div className="p-4 border-b flex items-center justify-between">
+                <h4 className="font-medium">Price Optimization Recommendations</h4>
+                <span className="text-sm text-gray-500">
+                  Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, tableData.length)} of {tableData.length} products
+                </span>
+              </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Predicted Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price Change</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue Impact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[40%]">Product</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[13%]">Current Price</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[13%]">Predicted Price</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Change</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">Revenue Impact</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">Confidence</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {(priceData?.table_data as any[])?.slice(0, 10).map((item: any, index: number) => (
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedData.map((item: any, index: number) => (
                       <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3">
                           <button
                             onClick={() => navigate(`/analyst/product-review/${item.product_key}`)}
-                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-sm text-left line-clamp-2"
+                            title={item.product_name}
                           >
                             {item.product_name}
                           </button>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Key: {item.product_key}
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {item.product_key}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-4 py-3 text-right text-sm text-gray-600 whitespace-nowrap">
                           {formatCurrency(item.current_price)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-4 py-3 text-right text-sm font-medium text-gray-900 whitespace-nowrap">
                           {formatCurrency(item.recommended_price || item.predicted_price)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-2 py-1 text-xs rounded-full ${item.price_change_pct >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {item.price_change_pct >= 0 ? '+' : ''}{item.price_change_pct.toFixed(1)}%
+                        <td className="px-4 py-3 text-right">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${item.price_change_pct >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {item.price_change_pct >= 0 ? '+' : ''}{item.price_change_pct?.toFixed(1) || 0}%
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.expected_revenue_change_pct >= 0 ? '+' : ''}{item.expected_revenue_change_pct.toFixed(1)}%
+                        <td className="px-4 py-3 text-right text-sm">
+                          <span className={item.expected_revenue_change_pct >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {item.expected_revenue_change_pct >= 0 ? '+' : ''}{item.expected_revenue_change_pct?.toFixed(1) || 0}%
+                          </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {(item.confidence * 100).toFixed(1)}%
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500 rounded-full"
+                                style={{ width: `${(item.confidence || 0) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-600 w-12 text-right">
+                              {((item.confidence || 0) * 100).toFixed(0)}%
+                            </span>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-4 py-3 border-t flex items-center justify-between">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-8 h-8 text-sm rounded-lg ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <>
+                        <span className="px-1">...</span>
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="w-8 h-8 text-sm rounded-lg hover:bg-gray-100"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
 
       case 'product_recommendation':
         const recoData = mlResults as any; // ProductRecommendationResponse
+        const recoTableData = recoData?.table_data || [];
+        const [recoCurrentPage, setRecoCurrentPage] = React.useState(1);
+        const recoItemsPerPage = 10;
+        const recoTotalPages = Math.ceil(recoTableData.length / recoItemsPerPage);
+        const recoStartIndex = (recoCurrentPage - 1) * recoItemsPerPage;
+        const recoPaginatedData = recoTableData.slice(recoStartIndex, recoStartIndex + recoItemsPerPage);
+
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900">Source Product</h4>
+                <h4 className="font-medium text-blue-900">Source Products</h4>
                 <p className="text-2xl font-bold text-blue-600">{recoData?.kpi_summary?.num_source_products || 0}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
@@ -400,17 +485,20 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
               </div>
             </div>
             <div className="bg-white rounded-lg border overflow-hidden">
-              <div className="p-4 border-b">
+              <div className="p-4 border-b flex items-center justify-between">
                 <h4 className="font-medium">Product Recommendations</h4>
+                <span className="text-sm text-gray-500">
+                  Showing {recoStartIndex + 1}-{Math.min(recoStartIndex + recoItemsPerPage, recoTableData.length)} of {recoTableData.length} recommendations
+                </span>
               </div>
               <div className="divide-y">
-                {(recoData?.table_data as any[])?.map((rec: any, index: number) => (
+                {recoPaginatedData.map((rec: any, index: number) => (
                   <div key={index} className="p-4 hover:bg-gray-50">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-medium text-blue-600">Source:</span>
-                          <span className="text-sm text-gray-900">{rec.source_product_name}</span>
+                          <span className="text-sm text-gray-900 truncate max-w-xs">{rec.source_product_name}</span>
                         </div>
                         <h5 className="font-medium">{rec.recommended_product_name}</h5>
                         <div className="flex gap-4 text-sm text-gray-600 mt-1">
@@ -422,6 +510,59 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                   </div>
                 ))}
               </div>
+              {/* Pagination */}
+              {recoTotalPages > 1 && (
+                <div className="px-4 py-3 border-t flex items-center justify-between">
+                  <button
+                    onClick={() => setRecoCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={recoCurrentPage === 1}
+                    className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, recoTotalPages) }, (_, i) => {
+                      let pageNum;
+                      if (recoTotalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (recoCurrentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (recoCurrentPage >= recoTotalPages - 2) {
+                        pageNum = recoTotalPages - 4 + i;
+                      } else {
+                        pageNum = recoCurrentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setRecoCurrentPage(pageNum)}
+                          className={`w-8 h-8 text-sm rounded-lg ${recoCurrentPage === pageNum ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    {recoTotalPages > 5 && recoCurrentPage < recoTotalPages - 2 && (
+                      <>
+                        <span className="px-1">...</span>
+                        <button
+                          onClick={() => setRecoCurrentPage(recoTotalPages)}
+                          className="w-8 h-8 text-sm rounded-lg hover:bg-gray-100"
+                        >
+                          {recoTotalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setRecoCurrentPage(p => Math.min(recoTotalPages, p + 1))}
+                    disabled={recoCurrentPage === recoTotalPages}
+                    className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -429,10 +570,17 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
       case 'review_sentiment':
         const sentimentData = mlResults as any; // ReviewSentimentResponse
         const COLORS = ['#10B981', '#EF4444', '#6B7280'];
+
+        // Backend returns decimal (0.01 = 1%), so multiply by 100 for display
+        const avgPositivePct = (sentimentData?.kpi_summary?.avg_positive_pct || 0) * 100;
+        const avgNegativePct = (sentimentData?.kpi_summary?.avg_negative_pct || 0) * 100;
+        const avgNeutralPct = 100 - avgPositivePct - avgNegativePct;
+        const totalReviews = sentimentData?.kpi_summary?.total_reviews || 0;
+
         const sentimentChartData = [
-          { name: 'Positive', value: sentimentData?.kpi_summary?.avg_positive_pct || 0, count: Math.round((sentimentData?.kpi_summary?.total_reviews || 0) * (sentimentData?.kpi_summary?.avg_positive_pct || 0) / 100) },
-          { name: 'Negative', value: sentimentData?.kpi_summary?.avg_negative_pct || 0, count: Math.round((sentimentData?.kpi_summary?.total_reviews || 0) * (sentimentData?.kpi_summary?.avg_negative_pct || 0) / 100) },
-          { name: 'Neutral', value: 100 - (sentimentData?.kpi_summary?.avg_positive_pct || 0) - (sentimentData?.kpi_summary?.avg_negative_pct || 0), count: Math.round((sentimentData?.kpi_summary?.total_reviews || 0) * (100 - (sentimentData?.kpi_summary?.avg_positive_pct || 0) - (sentimentData?.kpi_summary?.avg_negative_pct || 0)) / 100) }
+          { name: 'Positive', value: avgPositivePct, count: Math.round(totalReviews * avgPositivePct / 100) },
+          { name: 'Negative', value: avgNegativePct, count: Math.round(totalReviews * avgNegativePct / 100) },
+          { name: 'Neutral', value: avgNeutralPct, count: Math.round(totalReviews * avgNeutralPct / 100) }
         ];
 
         return (
@@ -440,11 +588,11 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900">Total Reviews</h4>
-                <p className="text-2xl font-bold text-blue-600">{sentimentData?.kpi_summary?.total_reviews || 0}</p>
+                <p className="text-2xl font-bold text-blue-600">{totalReviews}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
                 <h4 className="font-medium text-green-900">Positive Reviews</h4>
-                <p className="text-2xl font-bold text-green-600">{sentimentData?.kpi_summary?.avg_positive_pct ? `${sentimentData.kpi_summary.avg_positive_pct.toFixed(1)}%` : 'N/A'}</p>
+                <p className="text-2xl font-bold text-green-600">{avgPositivePct.toFixed(1)}%</p>
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
                 <h4 className="font-medium text-red-900">Critical Products</h4>
@@ -454,45 +602,62 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-4 rounded-lg border">
                 <h4 className="font-medium mb-4">Sentiment Distribution</h4>
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie
-                      data={sentimentChartData}
+                      data={sentimentChartData.filter(d => d.value > 0.5)}
                       cx="50%"
-                      cy="50%"
+                      cy="45%"
                       labelLine={false}
-                      label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
-                      outerRadius={80}
+                      label={({ name, value }) => value > 5 ? `${value.toFixed(0)}%` : ''}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {sentimentChartData.map((entry, index) => (
+                      {sentimentChartData.filter(d => d.value > 0.5).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Tooltip formatter={(value: any) => `${Number(value).toFixed(1)}%`} />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      formatter={(value: any, entry: any) => {
+                        const item = sentimentChartData.find(d => d.name === value);
+                        return `${value}: ${item?.value.toFixed(1) || 0}%`;
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="bg-white p-4 rounded-lg border">
                 <h4 className="font-medium mb-4">Top Products Analysis</h4>
-                <div className="space-y-3">
-                  {(sentimentData?.table_data as any[])?.slice(0, 5).map((product: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onClick={() => navigate(`/analyst/product-review/${product.product_key}`)}>
-                      <div className="flex-1">
-                        <h5 className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{product.product_name}</h5>
-                        <p className="text-xs text-gray-600">{product.total_reviews} reviews</p>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-sm font-medium ${product.positive_pct > 50 ? 'text-green-600' : product.negative_pct > 30 ? 'text-red-600' : 'text-yellow-600'}`}>
-                          {product.positive_pct.toFixed(1)}% positive
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {(sentimentData?.table_data as any[])?.slice(0, 10).map((product: any, index: number) => {
+                    // Backend returns decimal, multiply by 100
+                    const productPositivePct = (product.positive_pct || 0) * 100;
+                    const productNegativePct = (product.negative_pct || 0) * 100;
+
+                    return (
+                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onClick={() => navigate(`/analyst/product-review/${product.product_key}`)}>
+                        <div className="flex-1 min-w-0 mr-3">
+                          <h5 className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline truncate" title={product.product_name}>{product.product_name}</h5>
+                          <p className="text-xs text-gray-600">{product.total_reviews} reviews</p>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {product.is_critical ? 'Critical' : 'Normal'}
+                        <div className="text-right flex-shrink-0">
+                          <div className={`text-sm font-medium ${productPositivePct > 50 ? 'text-green-600' : productNegativePct > 30 ? 'text-red-600' : 'text-yellow-600'}`}>
+                            {productPositivePct.toFixed(1)}% positive
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {product.is_critical ? '⚠️ Critical' : 'Normal'}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  {(!sentimentData?.table_data || sentimentData.table_data.length === 0) && (
+                    <p className="text-sm text-gray-500 text-center py-4">No products found</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -550,9 +715,9 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
             {/* AI Status Badge */}
             {dssResults.ai_generation_status && (
               <span className={`px-2 py-1 text-xs rounded-full ${dssResults.ai_generation_status === 'completed' ? 'bg-green-100 text-green-800' :
-                  dssResults.ai_generation_status === 'pending' || dssResults.ai_generation_status === 'generating' ? 'bg-yellow-100 text-yellow-800' :
-                    dssResults.ai_generation_status === 'failed' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
+                dssResults.ai_generation_status === 'pending' || dssResults.ai_generation_status === 'generating' ? 'bg-yellow-100 text-yellow-800' :
+                  dssResults.ai_generation_status === 'failed' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
                 }`}>
                 AI: {dssResults.ai_generation_status}
               </span>

@@ -79,7 +79,7 @@ const DSSInput: React.FC = () => {
     min_similarity: 50,
     min_co_purchase_rate: 5,
     // Sentiment defaults
-    min_reviews_per_product: 10,
+    min_reviews_per_product: 1,
     sentiment_focus: 'all',
     negative_threshold: 25
   });

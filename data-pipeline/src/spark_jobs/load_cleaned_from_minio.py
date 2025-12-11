@@ -631,7 +631,7 @@ def clean_data(df):
         )
 
         # ======================================================
-        #  SỬA LỖI LỚN NHẤT: brand_name CHỈ XUẤT HIỆN NẾU CÓ
+        #  brand_name CHỈ XUẤT HIỆN NẾU CÓ
         # ======================================================
 
         if "brand_name" in df_cleaned.columns and "brand" in df_cleaned.columns:

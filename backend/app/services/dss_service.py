@@ -379,16 +379,20 @@ class DSSService:
                     {to_date_param}::date   AS to_date
             ),
             product_metrics AS (
+                -- ESTIMATE orders/revenue from reviews (since actual order data not available from crawled sources)
+                -- Conversion factor: 1 review ≈ 15 orders (assuming ~6-7% of buyers leave reviews)
                 SELECT
                     f.product_sk,
                     f.platform_sk,
                     AVG(f.avg_price)       AS avg_price,
                     MIN(f.min_price)       AS min_price,
                     MAX(f.max_price)       AS max_price,
-                    SUM(f.total_review_count) AS total_reviews,
+                    SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
                     AVG(f.avg_rating)      AS avg_rating,
-                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
-                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                    -- Estimated orders = reviews × conversion_factor (15)
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 AS estimated_orders,
+                    -- Estimated revenue = estimated_orders × avg_price
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 * AVG(f.avg_price) AS estimated_revenue
                 FROM dwh.fact_product_daily f
                 JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
                 CROSS JOIN date_bounds db
@@ -448,13 +452,14 @@ class DSSService:
                         ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS price_change_pct,
                     
-                    -- Use REAL data from fact_product_daily aggregates
-                    pm.total_orders AS current_orders,
-                    pm.total_revenue AS current_revenue,
+                    -- Use ESTIMATED data (derived from reviews since actual order data unavailable)
+                    pm.estimated_orders AS current_orders,
+                    pm.estimated_revenue AS current_revenue,
+                    -- Projected revenue = estimated_orders × predicted_price
                     CASE 
-                      WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
-                      THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
-                      ELSE NULL
+                      WHEN pm.estimated_orders > 0 AND pred.predicted_price > 0
+                      THEN pm.estimated_orders * pred.predicted_price
+                      ELSE 0
                     END AS projected_revenue,
                     
                     CASE 
@@ -605,16 +610,20 @@ class DSSService:
                     $2::date   AS to_date
             ),
             product_metrics AS (
+                -- ESTIMATE orders/revenue from reviews (since actual order data not available from crawled sources)
+                -- Conversion factor: 1 review ≈ 15 orders (assuming ~6-7% of buyers leave reviews)
                 SELECT
                     f.product_sk,
                     f.platform_sk,
                     AVG(f.avg_price)       AS avg_price,
                     MIN(f.min_price)       AS min_price,
                     MAX(f.max_price)       AS max_price,
-                    SUM(f.total_review_count) AS total_reviews,
+                    SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
                     AVG(f.avg_rating)      AS avg_rating,
-                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
-                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                    -- Estimated orders = reviews × conversion_factor (15)
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 AS estimated_orders,
+                    -- Estimated revenue = estimated_orders × avg_price
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 * AVG(f.avg_price) AS estimated_revenue
                 FROM dwh.fact_product_daily f
                 JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
                 CROSS JOIN date_bounds db
@@ -670,13 +679,14 @@ class DSSService:
                     ELSE (pred.predicted_price / pm.avg_price - 1)
                 END AS price_change_pct,
                 
-                -- Use REAL data from fact_product_daily aggregates
-                pm.total_orders AS current_orders,
-                pm.total_revenue AS current_revenue,
+                -- Use ESTIMATED data (derived from reviews since actual order data unavailable)
+                pm.estimated_orders AS current_orders,
+                pm.estimated_revenue AS current_revenue,
+                -- Projected revenue = estimated_orders × predicted_price
                 CASE 
-                  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
-                  THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
-                  ELSE NULL
+                  WHEN pm.estimated_orders > 0 AND pred.predicted_price > 0
+                  THEN pm.estimated_orders * pred.predicted_price
+                  ELSE 0
                 END AS projected_revenue,
                 
                 CASE 
@@ -778,6 +788,9 @@ class DSSService:
                 "projected_total_revenue": 0.0,
                 "expected_revenue_uplift_pct": 0.0,
                 "avg_confidence": 0.0,
+                "is_estimated": True,
+                "estimation_method": "review_based",
+                "estimation_note": "Revenue estimated from reviews (1 review ≈ 15 orders)",
             }
 
         num_products = len(items)
@@ -800,6 +813,10 @@ class DSSService:
             "projected_revenue": projected_revenue,
             "expected_revenue_uplift_pct": expected_uplift_pct,
             "avg_confidence": avg_confidence,
+            # Metadata: indicate revenue is estimated from reviews
+            "is_estimated": True,
+            "estimation_method": "review_based",
+            "estimation_note": "Revenue estimated from reviews (1 review ≈ 15 orders)",
         }
 
     # ============================================
@@ -1032,7 +1049,8 @@ class DSSService:
               AND rec.similarity_score >= $2
               AND (
                   $4::float IS NULL
-                  OR COALESCE(rec.co_purchase_rate, 0) >= $4::float
+                  OR rec.co_purchase_rate >= $4::float
+                  OR rec.co_purchase_rate IS NULL
               )
             ORDER BY rec.similarity_score DESC
             LIMIT $3
@@ -1107,9 +1125,10 @@ class DSSService:
             return cached
 
         # Build min_co_purchase_rate filter clause
+        # Use OR NULL to include records where co_purchase_rate hasn't been calculated yet
         min_cpr_filter = ""
         if min_cpr_param:
-            min_cpr_filter = f"AND COALESCE(rec.co_purchase_rate, 0) >= {min_cpr_param}"
+            min_cpr_filter = f"AND (rec.co_purchase_rate >= {min_cpr_param} OR rec.co_purchase_rate IS NULL)"
 
         # OPTIMIZED: Pre-filter source products by category to avoid full table scan
         # Fix platform filter for CTE - extract replacements outside f-string to avoid backslash syntax error

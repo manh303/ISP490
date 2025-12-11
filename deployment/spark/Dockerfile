@@ -18,6 +18,15 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Download Hadoop AWS JARs for S3A/MinIO support + PostgreSQL JDBC
+# These JARs enable spark.read.parquet("s3a://bucket/path") to work with MinIO
+# and JDBC connectivity to PostgreSQL
+RUN cd /opt/spark/jars && \
+    wget -q https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar && \
+    wget -q https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar && \
+    wget -q https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.1/postgresql-42.7.1.jar && \
+    echo "Downloaded Hadoop AWS + PostgreSQL JDBC JARs"
+
 # Upgrade pip
 RUN pip3 install --upgrade pip setuptools wheel
 

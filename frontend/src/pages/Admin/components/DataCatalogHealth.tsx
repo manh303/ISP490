@@ -133,7 +133,7 @@ export default function DataCatalogHealth({
                     <Database className="w-5 h-5 text-green-600" />
                     Data Catalog & Dataset Health
                 </h2>
-                <Link to="/data-catalog">
+                <Link to="/dataengineer/catalog">
                     <Button variant="outline" size="sm">
                         View All Datasets
                         <ArrowRight className="w-4 h-4 ml-2" />

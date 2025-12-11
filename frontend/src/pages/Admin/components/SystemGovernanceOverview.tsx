@@ -84,7 +84,7 @@ export default function SystemGovernanceOverview({
             icon: Database,
             color: 'text-green-600',
             bgColor: 'bg-green-50 dark:bg-green-950',
-            link: '/data-catalog',
+            link: '/admin/catalog',
         },
         {
             title: 'DSS & ML Assets',
@@ -97,7 +97,7 @@ export default function SystemGovernanceOverview({
             icon: Brain,
             color: 'text-orange-600',
             bgColor: 'bg-orange-50 dark:bg-orange-950',
-            link: '/dss/scenarios',
+            link: '/admin/dss-scenarios',
         },
     ];
 

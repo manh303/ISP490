@@ -222,7 +222,7 @@ class GeminiProvider(AIProvider):
         
         generation_config = {
             "temperature": 0.3,  # Lower for more deterministic outputs
-            "max_output_tokens": 2000,  # Increased for detailed product-level actions
+            "max_output_tokens": 3000,  # Increased for more detailed product-level actions (6 insights + 8 actions)
             "response_mime_type": "application/json",
         }
         
@@ -484,8 +484,8 @@ class AISummarizer:
                     # Nếu AI nói quá ít → merge thêm fallback rule-based
                     # If AI output is too short/incomplete, use fallback entirely instead of merging
                     # to avoid mixed language/quality issues
-                    MIN_INSIGHTS = 3
-                    MIN_ACTIONS = 3
+                    MIN_INSIGHTS = 4
+                    MIN_ACTIONS = 4
                     if len(summary) < MIN_INSIGHTS or len(actions) < MIN_ACTIONS:
                         logger.warning(
                             f"{provider.name} returned incomplete response "
@@ -496,10 +496,10 @@ class AISummarizer:
                         # Don't merge - use full fallback to maintain consistency
                         return self._get_fallback_response(scenario, dss_result_raw)
 
-                    # Limit output size
+                    # Limit output size - increased to 10 for more detailed analysis
                     result = {
-                        "summary_insights": summary[:7],
-                        "recommended_actions": actions[:7],
+                        "summary_insights": summary[:10],
+                        "recommended_actions": actions[:10],
                     }
 
                     logger.info(f"✅ AI summarization successful using {provider.name}")
@@ -659,7 +659,7 @@ III. PRICE OPTIMIZATION ANALYSIS - STRICT REQUIREMENTS
 
 **MANDATORY OUTPUT STRUCTURE** - You MUST follow this EXACTLY:
 
-1. **summary_insights** (exactly 5 insights):
+1. **summary_insights** (exactly 6 insights):
    Each insight MUST:
    - Reference AT LEAST 1 specific product name OR category/platform from the data above
    - Include specific numbers (prices in ₫, percentages, revenue amounts)
@@ -668,9 +668,9 @@ III. PRICE OPTIMIZATION ANALYSIS - STRICT REQUIREMENTS
    ✅ GOOD Example: "Laptop category: 'Dell Inspiron 15' can increase from ₫15,000,000 to ₫16,500,000 (+10.0%) with 85% confidence, projecting +12% revenue uplift from current ₫50,000,000"
    ❌ BAD Example: "Products show potential for price optimization" (too vague, no product names, no numbers)
 
-2. **recommended_actions** (exactly 7 actions):
+2. **recommended_actions** (exactly 8 actions):
    
-   **MUST include 3 PRODUCT-LEVEL actions** (use actual product names from table):
+   **MUST include 4 PRODUCT-LEVEL actions** (use actual product names from table):
    Format: "[PRIORITY: HIGH] Increase/decrease price for {{{{product_name}}}} ({{{{platform}}}}) from ₫{{{{current}}}} to ₫{{{{recommended}}}} ({{{{change_pct}}}}%), expecting {{{{revenue_pct}}}}% revenue change. Conditions: confidence={{{{conf}}}}%, current_orders={{{{orders}}}}"
    
    **MUST include 2 CATEGORY/PLATFORM-LEVEL actions**:
@@ -692,8 +692,8 @@ III. PRICE OPTIMIZATION ANALYSIS - STRICT REQUIREMENTS
 
 **OUTPUT FORMAT** - Return ONLY valid JSON (no markdown, no code blocks):
 {{
-  "summary_insights": ["insight1 with product name and numbers", "insight2 with category and %", "insight3...", "insight4...", "insight5..."],
-  "recommended_actions": ["[PRIORITY: HIGH] Product action 1", "[PRIORITY: HIGH] Product action 2", "[PRIORITY: HIGH] Product action 3", "[CATEGORY: X] Category action 1", "[CATEGORY: Y] Category action 2", "[A/B TEST] Test action", "[MONITORING] Monitor action"]
+  "summary_insights": ["insight1 with product name and numbers", "insight2 with category and %", "insight3...", "insight4...", "insight5...", "insight6..."],
+  "recommended_actions": ["[PRIORITY: HIGH] Product action 1", "[PRIORITY: HIGH] Product action 2", "[PRIORITY: HIGH] Product action 3", "[PRIORITY: HIGH] Product action 4", "[CATEGORY: X] Category action 1", "[CATEGORY: Y] Category action 2", "[A/B TEST] Test action", "[MONITORING] Monitor action"]
 }}
 """
         elif scenario == "product_recommendation":
@@ -731,7 +731,7 @@ ANALYZE THE SPECIFIC DATA PROVIDED TO DELIVER:
 
 CRITICAL REQUIREMENTS:
 - ✅ MUST be based on the provided JSON data, DO NOT use generic information.
-- ✅ Return exactly 4-6 "summary_insights" and 4-6 "recommended_actions".
+- ✅ Return exactly 5-8 "summary_insights" and 5-8 "recommended_actions".
 - ✅ **ALL TEXT MUST BE IN ENGLISH - NO VIETNAMESE WORDS**
 - ✅ EACH insight/action MUST contain at least 1 of the following:
   • Specific product name from table_data
@@ -777,7 +777,7 @@ III. REVIEW & SENTIMENT ANALYSIS - STRICT REQUIREMENTS
 
 **MANDATORY OUTPUT STRUCTURE** - You MUST follow this EXACTLY:
 
-1. **summary_insights** (exactly 5 insights):
+1. **summary_insights** (exactly 6 insights):
    Each insight MUST:
    - Reference AT LEAST 1 specific product name OR category/platform from the data
    - Include sentiment percentages (% positive, negative, neutral)
@@ -787,9 +787,9 @@ III. REVIEW & SENTIMENT ANALYSIS - STRICT REQUIREMENTS
    ✅ GOOD Example: "Mobile Phones category: 'Samsung Galaxy A70' has 68% positive sentiment (avg 4.2/5, 150 reviews) but 25% negative reviews mention battery life issues"
    ❌ BAD Example: "Products have mixed reviews" (too vague, no product names, no percentages)
 
-2. **recommended_actions** (exactly 7 actions):
+2. **recommended_actions** (exactly 8 actions):
    
-   **MUST include 3 PRODUCT-LEVEL actions** (use actual product names from data):
+   **MUST include 4 PRODUCT-LEVEL actions** (use actual product names from data):
    Format: "[PRIORITY: HIGH] Address {specific issue} for '{product_name}' ({platform}): {negative_sentiment}% of {review_count} reviews mention {issue}. Action: {specific solution with timeline}"
    
    **MUST include 2 CATEGORY/PLATFORM-LEVEL actions**:
@@ -819,8 +819,8 @@ III. REVIEW & SENTIMENT ANALYSIS - STRICT REQUIREMENTS
 
 **OUTPUT FORMAT** - Return ONLY valid JSON (no markdown, no code blocks):
 {
-  "summary_insights": ["insight1 with product and %", "insight2 with category and numbers", "insight3...", "insight4...", "insight5..."],
-  "recommended_actions": ["[PRIORITY: HIGH] Product action 1", "[PRIORITY: HIGH] Product action 2", "[PRIORITY: HIGH] Product action 3", "[CATEGORY: X] Category action 1", "[CATEGORY: Y] Category action 2", "[CUSTOMER SERVICE] Service action", "[MONITORING] Monitor action"]
+  "summary_insights": ["insight1 with product and %", "insight2 with category and numbers", "insight3...", "insight4...", "insight5...", "insight6..."],
+  "recommended_actions": ["[PRIORITY: HIGH] Product action 1", "[PRIORITY: HIGH] Product action 2", "[PRIORITY: HIGH] Product action 3", "[PRIORITY: HIGH] Product action 4", "[CATEGORY: X] Category action 1", "[CATEGORY: Y] Category action 2", "[CUSTOMER SERVICE] Service action", "[MONITORING] Monitor action"]
 }
 
 **IMPORTANT: All output must be in English.**
@@ -836,8 +836,8 @@ III. Analysis Requirements:
         
 IV. Desired Output:
 - Return JSON with 2 fields:
-  - "summary_insights": list of 3-7 bullet points summarizing key findings
-  - "recommended_actions": list of 3-7 specific, actionable steps
+  - "summary_insights": list of 5-10 bullet points summarizing key findings
+  - "recommended_actions": list of 5-10 specific, actionable steps
         
 Write concisely, clearly, using language accessible to non-technical business stakeholders.
 **IMPORTANT: All output must be in English.**

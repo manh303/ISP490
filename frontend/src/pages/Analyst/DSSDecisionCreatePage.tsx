@@ -34,6 +34,8 @@ const DSSDecisionCreatePage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productSearch, setProductSearch] = useState('');
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<SaveDSSDecisionRequest>({
@@ -50,55 +52,14 @@ const DSSDecisionCreatePage: React.FC = () => {
     status: 'PLANNED'
   });
 
-  // Generate auto-description based on scenario and prefill data
-  const generateDescription = (state: PrefillState): string => {
-    const scenarioNames: Record<string, string> = {
-      'price_prediction': 'Price Optimization & Revenue Impact',
-      'product_recommendation': 'Cross-sell / Upsell Recommendations',
-      'review_sentiment': 'Review Sentiment Analysis'
-    };
-
-    const scenarioName = scenarioNames[state.scenario_key || 'price_prediction'] || state.scenario_key;
-    const filters = state.filters || {};
-    const fromDate = filters.from_date || 'N/A';
-    const toDate = filters.to_date || 'N/A';
-    const platforms = (filters.platforms || []).join(', ') || 'All platforms';
-    const categories = (filters.categories || []).join(', ') || 'All categories';
-
-    // Extract top 2-3 insights
-    const insights = (state.ai_summary_insights || []).slice(0, 3);
-    const insightsText = insights.length > 0
-      ? insights.join('; ')
-      : 'Analysis results are available for review.';
-
-    // Build description based on scenario
-    let businessGoal = '';
-    if (state.scenario_key === 'price_prediction') {
-      businessGoal = 'optimize pricing strategy and maximize revenue while maintaining healthy profit margins';
-    } else if (state.scenario_key === 'product_recommendation') {
-      businessGoal = 'implement cross-sell/upsell bundles for high-potential product pairs to increase basket value';
-    } else if (state.scenario_key === 'review_sentiment') {
-      businessGoal = 'reduce negative review rate and improve average rating through targeted quality improvements';
-    }
-
-    return `This decision was created from the ${scenarioName} scenario for the period ${fromDate} to ${toDate} on ${platforms}, categories: ${categories}.
-
-Analysis findings: ${insightsText}
-
-The objective of this decision is to ${businessGoal} through the action items listed below.`;
-  };
-
   // Prefill form from DSS Results state
   useEffect(() => {
     if (prefillState) {
-      // Auto-generate description if not provided
-      const autoDescription = prefillState.description || generateDescription(prefillState);
-
       setFormData(prev => ({
         ...prev,
         scenario_key: prefillState.scenario_key || prev.scenario_key,
         title: prefillState.title || prev.title,
-        description: autoDescription,
+        description: '', // Let user enter description manually
         kpi_summary: prefillState.kpi_summary,
         filters: prefillState.filters,
         ai_summary_insights: prefillState.ai_summary_insights,
@@ -116,26 +77,38 @@ The objective of this decision is to ${businessGoal} through the action items li
   };
 
   // Handle product selection - auto-fill current and recommended values
-  const handleProductSelect = (productKey: string) => {
-    const product = products.find(p => p.product_key === productKey);
-    if (product) {
-      setCurrentAction(prev => ({
-        ...prev,
-        product_key: product.product_key,
-        current_value: product.current_price,
-        recommended_value: product.recommended_price || product.predicted_price,
-        unit: 'VND'
-      }));
-    } else {
-      setCurrentAction(prev => ({
-        ...prev,
-        product_key: productKey
-      }));
-    }
+  const handleProductSelect = (product: ProductData) => {
+    setCurrentAction(prev => ({
+      ...prev,
+      product_key: product.product_key,
+      current_value: product.current_price,
+      recommended_value: product.recommended_price || product.predicted_price,
+      unit: 'VND'
+    }));
+    setProductSearch(product.product_name);
+    setShowProductDropdown(false);
   };
 
   // Get products from prefill state
   const products = prefillState?.table_data || [];
+
+  // Filter products based on search
+  const filteredProducts = products.filter(p =>
+    p.product_name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.product_key.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  // Date preset helpers
+  const setDatePreset = (days: number) => {
+    const today = new Date();
+    const startDate = today.toISOString().split('T')[0];
+    const endDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setCurrentAction(prev => ({
+      ...prev,
+      planned_start_date: startDate,
+      planned_end_date: endDate
+    }));
+  };
 
   const addAction = () => {
     if (!currentAction.action_type || !currentAction.target_level) {
@@ -171,6 +144,7 @@ The objective of this decision is to ${businessGoal} through the action items li
       target_level: 'product',
       status: 'PLANNED'
     });
+    setProductSearch('');
   };
 
   const removeAction = (index: number) => {
@@ -207,6 +181,10 @@ The objective of this decision is to ${businessGoal} through the action items li
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN').format(amount);
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
@@ -224,7 +202,7 @@ The objective of this decision is to ${businessGoal} through the action items li
 
       {/* Prefilled Data Summary */}
       {prefillState && (prefillState.kpi_summary || prefillState.ai_summary_insights) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4 mb-6">
           <h3 className="font-semibold text-blue-900 flex items-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -258,21 +236,6 @@ The objective of this decision is to ${businessGoal} through the action items li
                   <li key={idx} className="flex items-start">
                     <span className="text-blue-500 mr-2">•</span>
                     {insight}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* AI Recommended Actions */}
-          {prefillState.ai_recommended_actions && prefillState.ai_recommended_actions.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium text-blue-800 mb-2">AI Recommended Actions</h4>
-              <ul className="text-sm text-gray-700 space-y-1">
-                {prefillState.ai_recommended_actions.slice(0, 3).map((action, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    {action}
                   </li>
                 ))}
               </ul>
@@ -320,10 +283,9 @@ The objective of this decision is to ${businessGoal} through the action items li
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="DRAFT">Draft</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="IMPLEMENTED">Implemented</option>
+                <option value="IMPLEMENTED">Submit for Implementation</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">Admin will review and approve/reject your decision</p>
             </div>
           </div>
 
@@ -350,7 +312,7 @@ The objective of this decision is to ${businessGoal} through the action items li
               onChange={(e) => handleInputChange('description', e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
               rows={3}
-              placeholder="Enter decision description"
+              placeholder="Describe the purpose and expected outcomes of this decision"
             />
           </div>
         </div>
@@ -396,23 +358,67 @@ The objective of this decision is to ${businessGoal} through the action items li
                 </select>
               </div>
 
-              <div>
+              {/* Improved Product Selection */}
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Product {products.length > 0 ? `(${products.length} available)` : ''}
                 </label>
                 {products.length > 0 ? (
-                  <select
-                    value={currentAction.product_key || ''}
-                    onChange={(e) => handleProductSelect(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  >
-                    <option value="">-- Select Product --</option>
-                    {products.map((product) => (
-                      <option key={product.product_key} value={product.product_key}>
-                        {product.product_name} ({product.platform || 'N/A'}) - {product.current_price?.toLocaleString('vi-VN')} VND
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={(e) => {
+                        setProductSearch(e.target.value);
+                        setShowProductDropdown(true);
+                      }}
+                      onFocus={() => setShowProductDropdown(true)}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="Search product..."
+                    />
+                    {showProductDropdown && filteredProducts.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {filteredProducts.slice(0, 10).map((product) => (
+                          <div
+                            key={product.product_key}
+                            onClick={() => handleProductSelect(product)}
+                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-sm text-gray-900 truncate">
+                              {product.product_name}
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                              <span>{product.product_key}</span>
+                              <span className="text-green-600 font-medium">
+                                {product.current_price ? `${formatCurrency(product.current_price)} VND` : 'N/A'}
+                              </span>
+                            </div>
+                            {product.recommended_price && (
+                              <div className="text-xs text-blue-600 mt-0.5">
+                                Recommended: {formatCurrency(product.recommended_price)} VND
+                                <span className={`ml-2 ${(product.price_change_pct || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  ({(product.price_change_pct || 0) >= 0 ? '+' : ''}{(product.price_change_pct || 0).toFixed(1)}%)
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {filteredProducts.length > 10 && (
+                          <div className="px-3 py-2 text-xs text-gray-500 text-center bg-gray-50">
+                            +{filteredProducts.length - 10} more products
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {showProductDropdown && (
+                      <button
+                        type="button"
+                        onClick={() => setShowProductDropdown(false)}
+                        className="fixed inset-0 z-0"
+                        tabIndex={-1}
+                      />
+                    )}
+                  </div>
                 ) : (
                   <input
                     type="text"
@@ -467,37 +473,73 @@ The objective of this decision is to ${businessGoal} through the action items li
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Unit
                 </label>
-                <input
-                  type="text"
-                  value={currentAction.unit || ''}
+                <select
+                  value={currentAction.unit || 'VND'}
                   onChange={(e) => handleActionChange('unit', e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="VND, %, score"
-                />
+                >
+                  <option value="VND">VND</option>
+                  <option value="%">%</option>
+                  <option value="score">Score</option>
+                  <option value="count">Count</option>
+                </select>
               </div>
 
-              <div>
+              {/* Date Range with Presets */}
+              <div className="lg:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
+                  Date Range
                 </label>
-                <input
-                  type="date"
-                  value={currentAction.planned_start_date || ''}
-                  onChange={(e) => handleActionChange('planned_start_date', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={currentAction.planned_end_date || ''}
-                  onChange={(e) => handleActionChange('planned_end_date', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(7)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next 7 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(14)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next 2 weeks
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(30)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next 30 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(90)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next quarter
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      value={currentAction.planned_start_date || ''}
+                      onChange={(e) => handleActionChange('planned_start_date', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={currentAction.planned_end_date || ''}
+                      onChange={(e) => handleActionChange('planned_end_date', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -537,6 +579,11 @@ The objective of this decision is to ${businessGoal} through the action items li
                   {action.chosen_value && (
                     <span className="text-gray-600 ml-2">
                       Value: {action.chosen_value} {action.unit}
+                    </span>
+                  )}
+                  {action.planned_start_date && action.planned_end_date && (
+                    <span className="text-gray-500 ml-2 text-sm">
+                      ({action.planned_start_date} → {action.planned_end_date})
                     </span>
                   )}
                 </div>

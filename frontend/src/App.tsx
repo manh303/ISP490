@@ -50,6 +50,10 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import RoleManagement from "./pages/Admin/RoleManagement";
 import ActivityLogsPage from "./pages/Admin/ActivityLogsPage";
 import ActivityStatsPage from "./pages/Admin/ActivityStatsPage";
+import GeneralSettingsPage from "./pages/Admin/GeneralSettingsPage";
+import NotificationSettingsPage from "./pages/Admin/NotificationSettingsPage";
+import SystemLogsPage from "./pages/Admin/SystemLogsPage";
+import UsageAnalyticsPage from "./pages/Admin/UsageAnalyticsPage";
 import AnalystPage from "./pages/Analyst/AnalystPage.js";
 import CustomerPage from "./pages/Customer/CustomerPage.js";
 // import { Dashboard } from "./pages/Publics/Dashboard.js";
@@ -104,6 +108,11 @@ import CatalogPage from "./pages/DataEngineer/CatalogPage";
 import GlossaryPage from "./pages/DataEngineer/GlossaryPage";
 import ExpectationsJobsPage from "./pages/DataEngineer/ExpectationsJobsPage";
 import DSSScenarios from "./pages/Analyst/DSSScenarios.tsx";
+import AISummarizerPage from "./pages/Analyst/AISummarizerPage";
+import WhatIfSimulatorPage from "./pages/Analyst/WhatIfSimulatorPage";
+import SegmentationPage from "./pages/Analyst/SegmentationPage";
+import SavedViewsPage from "./pages/Analyst/SavedViewsPage";
+import DSSAutoRunsPage from "./pages/Analyst/DSSAutoRunsPage";
 // import AdminDashboard from "./components/dashboard/roles/AdminDashboard.tsx";
 
 // Remove DashboardLayoutWrapper, use DashboardLayout as a layout route
@@ -205,20 +214,24 @@ export default function App() {
             <Route path="/admin/roles" element={<RoleManagement />} />
             {/* <Route path="/admin/users/details" element={<UserProfiles />} /> */}
             <Route path="/admin/deleted-users" element={<DeletedUsersList onSelectUser={() => { }} />} />
-            <Route path="/admin/analytics" element={<DSSPage />} />
+            <Route path="/admin/analytics" element={<UsageAnalyticsPage />} />
             <Route path="/admin/tables" element={<BasicTables />} />
             <Route path="/admin/export" element={<Blank />} />
             <Route path="/admin/import" element={<Blank />} />
-            <Route path="/admin/settings/general" element={<Blank />} />
+            <Route path="/admin/settings/general" element={<GeneralSettingsPage />} />
             <Route path="/admin/settings/security" element={<Blank />} />
             <Route path="/admin/settings/permissions" element={<Blank />} />
-            <Route path="/admin/logs" element={<Blank />} />
+            <Route path="/admin/logs" element={<SystemLogsPage />} />
             <Route path="/admin/activity-logs" element={<ActivityLogsPage />} />
-            <Route path="/admin/activity-stats" element={<ActivityStatsPage />} />
+            <Route path="/admin/activity-stats" element={<DataEngineerDashboard />} />
             <Route path="/admin/performance" element={<Blank />} />
             <Route path="/admin/errors" element={<Blank />} />
-            <Route path="/admin/notifications" element={<Blank />} />
+            <Route path="/admin/notifications" element={<NotificationSettingsPage />} />
             <Route path="/admin/profile" element={<UserProfiles />} />
+            {/* Admin Data & DSS Views - using same components but with Admin sidebar */}
+            <Route path="/admin/catalog" element={<CatalogPage />} />
+            <Route path="/admin/dss-scenarios" element={<DSSScenarios />} />
+            <Route path="/admin/pipelines" element={<DataPipeline />} />
           </Route>
 
           {/* Analyst Layout - Protected Routes */}
@@ -264,6 +277,12 @@ export default function App() {
             <Route path="/analyst/schedule" element={<Calendar />} />
             <Route path="/analyst/refresh" element={<Blank />} />
             <Route path="/analyst/alerts" element={<Alerts />} />
+            <Route path="/analyst/ai-summarizer" element={<AISummarizerPage />} />
+            <Route path="/analyst/what-if" element={<WhatIfSimulatorPage />} />
+            <Route path="/analyst/segmentation" element={<SegmentationPage />} />
+            <Route path="/analyst/saved-views" element={<SavedViewsPage />} />
+            <Route path="/analyst/dss-auto-runs" element={<DSSAutoRunsPage />} />
+            <Route path="/analyst/dss-input" element={<DSSInput />} />
             <Route path="/analyst/profile" element={<UserProfiles />} />
           </Route>
           {/* DataEngineerSidebar Layout - Protected Routes */}

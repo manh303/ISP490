@@ -1,15 +1,611 @@
-﻿ype 'DSSDecisionSummary[]' is not assignable to type 'DSSDecision[]'.
-  Type 'DSSDecisionSummary' is missing the following properties from type 'DSSDecision': scenario_name, owner_email, updated_atts(2322)
-DSSAnalyticsUsage.tsx(40, 5): The expected type comes from property 'recentDecisions' which is declared here on type 'IntrinsicAttributes & DSSAnalyticsUsageProps'
+﻿Đề xuất cấu trúc file mới (cụ thể cho đúng với các hàm bạn đang có).
 
-Property 'owner_email' does not exist on type 'DSSDecisionSummary'.
+Cho skeleton code + comment chi tiết để bạn copy logic từ load_cleaned_from_minio.py sang.
 
-ype 'unknown[]' is not assignable to type 'string[]'.
-  Type 'unknown' is not assignable to type 'string'.ts(2322)
-adminDashboardApi.ts(128, 5): The expected type comes from property 'availableUsers' which is declared here on type 'AuditLogData'
+Mục tiêu: giữ NGUYÊN logic hiện tại, chỉ “bóc” ra từng file cho dễ đọc, dễ test.
 
-Type 'unknown[]' is not assignable to type 'string[]'.
-  Type 'unknown' is not assignable to type 'string'.ts(2322)
-adminDashboardApi.ts(129, 5): The expected type comes from property 'availableActions' which is declared here on type 'AuditLogData'
+1. Gợi ý cấu trúc thư mục / file
 
-Property 'owner_email' does not exist on type 'DSSDecisionSummary'.
+Ví dụ tạo thư mục app/etl:
+
+app/
+  etl/
+    __init__.py
+    config.py              # Đọc .env, config MinIO, path, flag PROCESS_REVIEWS...
+    spark_session.py       # Tạo SparkSession đã cấu hình MinIO
+    extract.py             # Load raw products & reviews từ MinIO
+    product_transforms.py  # Clean + transform + mapping + standardize + sync ID + dedup + validate
+    product_aggregation.py # Aggregate daily + save cleaned parquet
+    dwh_loader.py          # Load dim_* + fact_product_daily
+    review_transforms.py   # Toàn bộ pipeline review (clean → std → sync ID → dedup → validate → sentiment → time features)
+    review_loader.py       # Load fact_review / fact_review_daily + save parquet
+    pipeline_main.py       # Hàm main orchestration (thay cho main() cũ trong load_cleaned_from_minio.py)
+
+2. config.py – gom toàn bộ ENV + constant
+# app/etl/config.py
+
+"""
+Config & constants for ETL pipeline.
+
+WHAT: Tập trung toàn bộ config (ENV, đường dẫn, bucket, flags) và constants (CATEGORY_MAPPINGS).
+WHY: Dễ quản lý, không lặp lại ở nhiều file. Khi đổi host MinIO hay thêm mapping chỉ sửa tại đây.
+"""
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ==== MinIO / S3 config ====
+MINIO_HOST = os.getenv("MINIO_HOST", "minio:9000")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin123")
+MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
+
+S3_ENDPOINT = f"http://{MINIO_HOST}" if not MINIO_SECURE else f"https://{MINIO_HOST}"
+S3_ACCESS_KEY = MINIO_ACCESS_KEY
+S3_SECRET_KEY = MINIO_SECRET_KEY
+
+# ==== Crawler outputs & cleaned paths ====
+CRAWLER_OUTPUT_DIR = os.getenv("CRAWLER_OUTPUT_DIR", "/app/data/outputs")
+MINIO_CLEANED_BUCKET = os.getenv("MINIO_CLEANED_BUCKET", "cleaned-data")
+MINIO_PROCESSED_REVIEWS_BUCKET = os.getenv(
+    "MINIO_PROCESSED_REVIEWS_BUCKET", "processed-reviews"
+)
+SAVE_TO_MINIO = os.getenv("SAVE_TO_MINIO", "true").lower() == "true"
+
+# ==== Feature flags ====
+PROCESS_REVIEWS = os.getenv("PROCESS_REVIEWS", "true").lower() == "true"
+
+# ==== Category mapping constants (cắt từ file cũ sang) ====
+CATEGORY_MAPPINGS = [
+    # TODO: copy nguyên list CATEGORY_MAPPINGS từ load_cleaned_from_minio.py vào đây
+    # Ví dụ:
+    ("laptop", "Electronics|Computers|Laptops"),
+    ("smartphone", "Electronics|Phones|Smartphones"),
+    # ...
+]
+
+3. spark_session.py – tạo SparkSession chuẩn
+# app/etl/spark_session.py
+
+"""
+WHAT: Tạo SparkSession với cấu hình MinIO/S3, shuffle, memory...
+WHY: Gom vào 1 chỗ để các pipeline khác (products, reviews) dùng chung.
+"""
+
+from pyspark.sql import SparkSession
+from .config import S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY
+
+def create_spark_session(app_name: str = "ecommerce_dss_etl") -> SparkSession:
+    """
+    Create and return a SparkSession configured to talk to MinIO (S3 compatible).
+
+    - Thiết lập fs.s3a.* để Spark đọc/ghi được MinIO.
+    - Set một số option performance (shuffle partitions, driver/executor memory...).
+    """
+    spark = (
+        SparkSession.builder.appName(app_name)
+        .config("spark.hadoop.fs.s3a.endpoint", S3_ENDPOINT)
+        .config("spark.hadoop.fs.s3a.access.key", S3_ACCESS_KEY)
+        .config("spark.hadoop.fs.s3a.secret.key", S3_SECRET_KEY)
+        .config("spark.hadoop.fs.s3a.path.style.access", "true")
+        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+        # Tùy chỉnh thêm từ file cũ nếu có
+        .getOrCreate()
+    )
+
+    spark.sparkContext.setLogLevel("WARN")
+    return spark
+
+
+Ở đây bạn copy các .config(...) từ create_spark_session cũ sang, giữ nguyên logic.
+
+4. extract.py – load raw từ MinIO
+# app/etl/extract.py
+
+"""
+WHAT: Hàm đọc raw product/review từ MinIO (hoặc local) vào Spark DataFrame.
+WHY: Gom logic Extract vào 1 nơi, dễ thay đổi source sau này.
+"""
+
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.functions import lit
+from .config import CRAWLER_OUTPUT_DIR
+
+def load_raw_products(spark: SparkSession) -> DataFrame:
+    """
+    Load raw product data (Tiki + Lazada + mass_crawl) từ các file JSON/Parquet.
+
+    - Đọc từ thư mục CRAWLER_OUTPUT_DIR
+    - Hợp nhất schema các nguồn
+    - Thêm cột 'source' nếu cần (tiki / lazada)
+    """
+    # TODO: copy logic từ load_raw_data() trong file cũ vào đây,
+    # nhưng đổi tên biến df_raw_products, thêm comment rõ từng bước.
+    #
+    # Ví dụ (pseudo):
+    # df_tiki = spark.read.json(f"{CRAWLER_OUTPUT_DIR}/tiki/*.jsonl").withColumn("source", lit("tiki"))
+    # df_lazada = spark.read.json(f"{CRAWLER_OUTPUT_DIR}/lazada/*.jsonl").withColumn("source", lit("lazada"))
+    # df_raw = df_tiki.unionByName(df_lazada, allowMissingColumns=True)
+    #
+    # return df_raw
+    raise NotImplementedError  # xóa dòng này sau khi copy code thật
+
+def load_raw_reviews(spark: SparkSession) -> DataFrame:
+    """
+    Load raw review data (nếu bật PROCESS_REVIEWS).
+    Cách làm tương tự load_raw_products.
+    """
+    # TODO: copy logic từ load_review_data() cũ.
+    raise NotImplementedError
+
+5. product_transforms.py – toàn bộ pipeline Transform cho product
+# app/etl/product_transforms.py
+
+"""
+Các bước TRANSFORM cho dữ liệu PRODUCT:
+- Data Cleaning
+- Category Mapping
+- Data Standardization
+- Synchronize Identifiers
+- Deduplicate
+- Validate
+
+Mỗi hàm tương ứng với 1 step trong sơ đồ "Data Standardization Tool".
+"""
+
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import (
+    col, when, regexp_replace, trim, upper, to_timestamp, to_date, concat_ws, lit
+)
+from .config import CATEGORY_MAPPINGS
+
+# 1. DATA CLEANING
+def clean_products(df_raw: DataFrame) -> DataFrame:
+    """
+    WHAT:
+        Làm sạch các field cơ bản từ dữ liệu crawler:
+        - đảm bảo có product_id, product_name, brand_name
+        - convert giá về dạng số
+        - tính data_quality_score
+
+    WHY:
+        Dữ liệu raw nhiều null, sai kiểu; nếu không clean
+        thì mapping/standardize và ML/DWH sẽ bị sai.
+
+    HOW:
+        Áp dụng các rule y hệt trong clean_data() cũ, nhưng thêm comment rõ ràng.
+    """
+    df = df_raw
+
+    # 1.1 Đảm bảo có product_id: nếu thiếu thì sinh từ URL
+    df = df.withColumn(
+        "product_id",
+        when(
+            col("product_id").isNull() | (trim(col("product_id")) == ""),
+            # Fallback: hash từ URL (đảm bảo stable theo URL)
+            # >>> Ở đây copy logic md5/url từ file cũ nếu bạn có
+            col("product_id")  # TODO: thay bằng hash(url)
+        ).otherwise(col("product_id"))
+    )
+
+    # 1.2 Chuẩn hóa product_name, null/blank -> "Unknown"
+    df = df.withColumn(
+        "product_name",
+        when(
+            col("product_name").isNull() | (trim(col("product_name")) == ""),
+            lit("Unknown")
+        ).otherwise(trim(col("product_name")))
+    )
+
+    # 1.3 Gộp brand & brand_name -> brand_name
+    # (copy nguyên logic if/else từ clean_data() cũ)
+    # - Ưu tiên brand_name non-null
+    # - Nếu chỉ có brand -> cast sang brand_name
+    # - Nếu không có gì -> "Unknown"
+    df = df.withColumn(
+        "brand_name",
+        # TODO: dùng when/otherwise giống file cũ
+        col("brand_name")
+    )
+
+    # 1.4 Chuẩn hóa giá: bỏ ký tự không phải số, cast long
+    df = df.withColumn(
+        "price_current",
+        when(col("price_current").isNotNull(),
+             regexp_replace(col("price_current").cast("string"), r"[^0-9]", ""))
+        .otherwise(lit("0")).cast("long")
+    )
+
+    df = df.withColumn(
+        "price_original",
+        when(col("price_original").isNotNull(),
+             regexp_replace(col("price_original").cast("string"), r"[^0-9]", ""))
+        .otherwise(lit("0")).cast("long")
+    )
+
+    # 1.5 Chuẩn hóa discount_percent
+    df = df.withColumn(
+        "discount_percent",
+        when(col("discount_percent").isNotNull(),
+             regexp_replace(col("discount_percent").cast("string"), r"[^0-9.]", ""))
+        .otherwise(lit("0")).cast("double")
+    )
+
+    # 1.6 Data quality score: record đủ tên & giá > 0
+    df = df.withColumn(
+        "data_quality_score",
+        when(
+            (col("product_name") != "Unknown") & (col("price_current") > 0),
+            lit(1.0)
+        ).otherwise(lit(0.0))
+    )
+
+    return df
+
+# 2. CATEGORY MAPPING
+def map_product_categories(df: DataFrame) -> DataFrame:
+    """
+    WHAT:
+        Map category thô từ Tiki/Lazada sang category_std chuẩn của DWH.
+
+    WHY:
+        Để dim_category và các phân tích theo category dùng chung 1 taxonomy.
+
+    HOW:
+        - Chuẩn hóa text category
+        - Dùng CATEGORY_MAPPINGS (keyword -> category_path)
+        - Ưu tiên match trong product_name, sau đó mới đến category_text
+    """
+    # TODO: copy toàn bộ logic map_categories() cũ vào đây,
+    # giữ nguyên UDF + debug/log, chỉ đổi tên hàm.
+    return df
+
+# 3. DATA STANDARDIZATION
+def standardize_products(df: DataFrame) -> DataFrame:
+    """
+    WHAT:
+        Chuẩn hóa platform, brand, product_name, giá, thời gian snapshot.
+
+    WHY:
+        Tạo canonical form để:
+        - hash ID chuẩn
+        - join dim/fact ổn định
+
+    HOW:
+        - source_platform_std: tiki/tiki_mass_crawl -> 'tiki', lazada/... -> 'lazada'
+        - brand_std: UPPER(TRIM(brand_name))
+        - product_name_std: trim + gộp space, null -> 'Unknown'
+        - price_current_vnd, price_original_vnd: cast double
+        - crawl_ts: to_timestamp(crawl_date), snapshot_date: to_date(crawl_ts)
+    """
+    df_std = df
+
+    # Platform chuẩn
+    df_std = df_std.withColumn("platform_raw", trim(col("source_platform")).cast("string"))
+    df_std = df_std.withColumn(
+        "source_platform_std",
+        when(col("platform_raw").isin("tiki", "tiki_mass_crawl"), lit("tiki"))
+        .when(col("platform_raw").isin("lazada", "lazada_mass_crawl"), lit("lazada"))
+        .otherwise(col("platform_raw"))
+    )
+
+    # Brand chuẩn
+    df_std = df_std.withColumn("brand_std", upper(trim(col("brand_name"))))
+
+    # Product name chuẩn
+    df_std = df_std.withColumn(
+        "product_name_std",
+        when(
+            col("product_name").isNotNull() & (trim(col("product_name")) != ""),
+            regexp_replace(trim(col("product_name")), r"\s+", " ")
+        ).otherwise(lit("Unknown"))
+    )
+
+    # Giá dạng double
+    df_std = df_std.withColumn("price_current_vnd", col("price_current").cast("double"))
+    df_std = df_std.withColumn("price_original_vnd", col("price_original").cast("double"))
+
+    # Thời gian snapshot
+    df_std = df_std.withColumn(
+        "crawl_ts",
+        # TODO: copy logic parse timestamp chính xác từ file cũ (2 format ISO & date-only)
+        to_timestamp(col("crawl_date"))
+    )
+    df_std = df_std.withColumn("snapshot_date", to_date(col("crawl_ts")))
+
+    return df_std
+
+# 4. SYNCHRONIZE IDENTIFIERS
+def sync_product_identifiers(df: DataFrame) -> DataFrame:
+    """
+    WHAT:
+        Sinh & đồng bộ các ID chuẩn:
+        - product_id_std
+        - global_product_id_synced
+        - product_master_id
+        - sku_id
+
+    WHY:
+        Đảm bảo mỗi sản phẩm & SKU có khóa ổn định để:
+        - dedup
+        - join dim/fact
+        - phân tích cross-platform
+
+    HOW:
+        - product_id_std = trim(product_id)
+        - global_product_id_synced = source_platform_std + '_' + product_id_std
+        - product_master_id = sha2(brand_std || product_name_std || category_std)
+        - sku_id = sha2(source_platform_std || seller_name || product_id_std)
+    """
+    from pyspark.sql.functions import sha2, concat_ws
+
+    df_id = df
+    df_id = df_id.withColumn("product_id_std", trim(col("product_id")).cast("string"))
+
+    df_id = df_id.withColumn(
+        "global_product_id_synced",
+        when(
+            col("product_id_std").isNotNull() & (col("product_id_std") != ""),
+            concat_ws("_", col("source_platform_std"), col("product_id_std"))
+        ).otherwise(trim(col("global_product_id")))
+    )
+
+    df_id = df_id.withColumn(
+        "product_master_id",
+        sha2(concat_ws("||", col("brand_std"), col("product_name_std"), col("category_std")), 256)
+    )
+
+    df_id = df_id.withColumn(
+        "sku_id",
+        sha2(concat_ws("||", col("source_platform_std"), col("seller_name"), col("product_id_std")), 256)
+    )
+
+    return df_id
+
+# 5. DEDUPLICATE
+def deduplicate_products(df: DataFrame) -> DataFrame:
+    """
+    WHAT:
+        Bỏ duplicate theo (global_product_id_synced, snapshot_date).
+
+    WHY:
+        Đảm bảo grain = 1 sản phẩm / platform / ngày.
+
+    HOW:
+        - Nếu có snapshot_date: dropDuplicates(["global_product_id_synced", "snapshot_date"])
+        - Nếu không: cảnh báo & dropDuplicates theo global_product_id_synced
+    """
+    if "snapshot_date" in df.columns:
+        return df.dropDuplicates(["global_product_id_synced", "snapshot_date"])
+    return df.dropDuplicates(["global_product_id_synced"])
+
+# 6. VALIDATE
+def validate_products(df: DataFrame) -> None:
+    """
+    WHAT:
+        Kiểm tra chất lượng dữ liệu sau khi dedup.
+
+    WHY:
+        Đảm bảo tỉ lệ record 'tốt' (có tên + giá > 0) đủ cao trước khi load DWH.
+
+    HOW:
+        - Đếm total_records
+        - Đếm valid_records (product_name != 'Unknown' & price_current > 0)
+        - Đếm missing_name, missing_price, missing_brand
+        - In ra log (và có thể ghi vào bảng metadata sau này)
+    """
+    total_records = df.count()
+    valid_records = df.filter(
+        (col("product_name") != "Unknown") & (col("price_current") > 0)
+    ).count()
+    # TODO: copy các thống kê chi tiết từ validate_data() cũ
+
+    print(f"[VALIDATION] total={total_records}, valid={valid_records}")
+
+
+Bạn copy tiếp logic đầy đủ từ map_categories, validate_data cũ vào. Ở đây mình chỉ cho skeleton + comment.
+
+6. product_aggregation.py – aggregate & save cleaned
+# app/etl/product_aggregation.py
+
+"""
+Aggregate dữ liệu product theo ngày & lưu cleaned dataset.
+"""
+
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import (
+    col, min as spark_min, max as spark_max, avg, stddev, count, expr
+)
+from .config import SAVE_TO_MINIO, MINIO_CLEANED_BUCKET, S3_ENDPOINT
+
+def aggregate_products_daily(df: DataFrame) -> DataFrame:
+    """
+    WHAT:
+        Tổng hợp dữ liệu product theo ngày / product / platform.
+
+    WHY:
+        Tạo dataset grain daily làm input trực tiếp cho fact_product_daily.
+
+    HOW:
+        Group by (snapshot_date, global_product_id_synced, source_platform_std)
+        -> tính min/max/avg/median/stddev price, total_review_count, avg_rating, snapshot_count
+    """
+    # TODO: copy logic aggregate từ load_fact_product_daily() cũ trước khi map sang SK.
+    return df
+
+def save_cleaned_products(df_dedup: DataFrame, spark) -> None:
+    """
+    WHAT:
+        Lưu cleaned dataset (sau dedup) về dạng Parquet, (và upload MinIO nếu bật).
+
+    WHY:
+        - Là "golden copy" của dữ liệu chuẩn
+        - Dùng cho debug, training ML, reload DWH sau này
+
+    HOW:
+        - Ghi Parquet ra thư mục /tmp/cleaned_data/cleaned_YYYYMMDD_HHMMSS
+        - Nếu SAVE_TO_MINIO = True -> upload lên MINIO_CLEANED_BUCKET
+    """
+    # TODO: copy logic save_cleaned_data() cũ vào.
+    pass
+
+7. dwh_loader.py – load dim & fact
+# app/etl/dwh_loader.py
+
+"""
+Load dữ liệu đã transform/aggregate vào Data Warehouse (schema dwh).
+"""
+
+from typing import Dict, Any, Tuple
+from pyspark.sql import DataFrame
+import psycopg2
+from psycopg2.extras import execute_batch
+
+# TODO: import config DB connection của bạn
+from app.database import get_sync_connection  # ví dụ
+
+def load_dimensions(df_dedup: DataFrame) -> Tuple[Any, Dict[str, Dict]]:
+    """
+    WHAT:
+        Load dim_date, dim_platform, dim_category, dim_brand, dim_product.
+
+    WHY:
+        Tạo metadata tables (dimension) làm trục phân tích cho fact.
+
+    HOW:
+        - Lấy distinct từ df_dedup
+        - Insert/Upsert vào dwh.dim_*
+        - Đọc lại dim để build mapping: date_map, platform_map, category_map, brand_map, product_map
+    """
+    # TODO: copy logic ensure_star_schema() + load_dimensions() cũ vào đây.
+    # Trả về (conn, mappings)
+    conn = get_sync_connection()
+    mappings = {}
+    return conn, mappings
+
+def load_fact_product_daily(df_daily: DataFrame, conn, mappings: Dict[str, Dict]) -> None:
+    """
+    WHAT:
+        Load dữ liệu aggregate daily vào dwh.fact_product_daily.
+
+    WHY:
+        Đây là fact chính để Analyst / DSS query.
+
+    HOW:
+        - Với mỗi row aggregate:
+            + Map date -> date_sk via mappings['date_map']
+            + Map global_product_id_synced -> product_sk
+            + Map source_platform_std -> platform_sk
+        - Insert via execute_batch (ON CONFLICT UPDATE nếu bạn đã bật)
+    """
+    # TODO: copy logic load_fact_product_daily() cũ, nhưng tách riêng khỏi các bước Transform.
+    pass
+
+8. review_transforms.py & review_loader.py
+
+Bạn làm tương tự: copy các hàm:
+
+clean_review_data
+
+standardize_review_data
+
+synchronize_review_identifiers
+
+deduplicate_review_data
+
+validate_review_data
+
+analyze_sentiment
+
+add_review_time_features
+
+aggregate_reviews_daily
+
+vào review_transforms.py
+và:
+
+load_fact_review_star
+
+load_fact_review_daily_star
+
+save_review_results
+
+vào review_loader.py.
+
+Thêm docstring + comment giống cách mình làm với product.
+
+9. pipeline_main.py – orchestrator (thay main() cũ)
+# app/etl/pipeline_main.py
+
+from .spark_session import create_spark_session
+from .extract import load_raw_products, load_raw_reviews
+from .product_transforms import (
+    clean_products, map_product_categories, standardize_products,
+    sync_product_identifiers, deduplicate_products, validate_products,
+)
+from .product_aggregation import aggregate_products_daily, save_cleaned_products
+from .dwh_loader import load_dimensions, load_fact_product_daily
+from .review_transforms import run_review_transform_pipeline  # bạn tự wrap các step review vào 1 hàm
+from .review_loader import load_fact_review_star, load_fact_review_daily_star
+from .config import PROCESS_REVIEWS
+
+def run_etl():
+    """
+    Orchestrate toàn bộ ETL:
+
+    1. Extract raw từ MinIO
+    2. Transform product (clean -> map category -> standardize -> sync ID -> dedup -> validate)
+    3. Aggregate product daily & lưu cleaned
+    4. Load dim_* & fact_product_daily vào DWH
+    5. (Optional) chạy pipeline review & load fact_review*
+    """
+    spark = create_spark_session()
+    try:
+        # 1. EXTRACT
+        df_raw_products = load_raw_products(spark)
+
+        # 2. TRANSFORM PRODUCTS
+        df_clean = clean_products(df_raw_products)
+        df_mapped = map_product_categories(df_clean)
+        df_std = standardize_products(df_mapped)
+        df_ids = sync_product_identifiers(df_std)
+        df_dedup = deduplicate_products(df_ids)
+        validate_products(df_dedup)
+
+        # 3. AGGREGATE & SAVE
+        df_daily = aggregate_products_daily(df_dedup)
+        save_cleaned_products(df_dedup, spark)
+
+        # 4. LOAD DWH (DIM + FACT PRODUCTS)
+        conn, mappings = load_dimensions(df_dedup)
+        load_fact_product_daily(df_daily, conn, mappings)
+
+        # 5. REVIEWS (optional)
+        if PROCESS_REVIEWS:
+            df_reviews_dedup, df_reviews_daily = run_review_transform_pipeline(
+                spark, mappings
+            )
+            load_fact_review_star(df_reviews_dedup, conn, mappings)
+            load_fact_review_daily_star(df_reviews_daily, conn, mappings)
+    finally:
+        spark.stop()
+
+if __name__ == "__main__":
+    run_etl()
+
+Cách làm thực tế (để không bị vỡ):
+
+Tạo sẵn các file như trên với skeleton + comment.
+
+Từ load_cleaned_from_minio.py copy nguyên thân hàm vào đúng file tương ứng, giữ logic y chang, chỉ đổi tên import.
+
+Chạy pipeline_main.py và so sánh:
+
+rowcount dim/fact,
+
+vài sample record,
+
+log validation.
+Nếu giống trước khi refactor → bạn đã tách file “chuẩn xác” mà không đổi behavior.

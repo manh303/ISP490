@@ -1,245 +1,53 @@
-2025-12-09, 02:29:35 +07] {subprocess.py:93} INFO - [INFO] Writing to local: /tmp/cleaned_data/cleaned_20251208_192935
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:49 ERROR TransportRequestHandler: Error sending result RpcResponse[requestId=7675569083813983298,body=NioManagedBuffer[buf=java.nio.HeapByteBuffer[pos=0 lim=81 cap=156]]] to /172.18.0.9:33142; closing connection
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - io.netty.channel.StacklessClosedChannelException
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at io.netty.channel.AbstractChannel$AbstractUnsafe.write(Object, ChannelPromise)(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:49 ERROR TaskSchedulerImpl: Lost executor 1 on 172.18.0.9: Command exited with code 137
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:49 WARN TaskSetManager: Lost task 0.0 in stage 201.0 (TID 2756) (172.18.0.9 executor 1): ExecutorLostFailure (executor 1 exited caused by one of the running tasks) Reason: Command exited with code 137
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:50 WARN TaskSetManager: Lost task 0.1 in stage 201.0 (TID 2757) (172.18.0.10 executor 2): FetchFailed(BlockManagerId(1, 172.18.0.9, 43323, None), shuffleId=63, mapIndex=0, mapId=2726, reduceId=0, message=
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - org.apache.spark.shuffle.FetchFailedException
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.errors.SparkCoreErrors$.fetchFailedError(SparkCoreErrors.scala:437)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.throwFetchFailedException(ShuffleBlockFetcherIterator.scala:1236)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:971)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:86)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.next(CompletionIterator.scala:29)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.sort_addToSorter_0$(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.processNext(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.WholeStageCodegenEvaluatorFactory$WholeStageCodegenPartitionEvaluator$$anon$1.hasNext(WholeStageCodegenEvaluatorFactory.scala:43)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1(SortAggregateExec.scala:62)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1$adapted(SortAggregateExec.scala:59)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2(RDD.scala:877)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2$adapted(RDD.scala:877)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.CoalescedRDD.$anonfun$compute$1(CoalescedRDD.scala:99)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatDataWriter.writeWithIterator(FileFormatDataWriter.scala:91)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.$anonfun$executeTask$1(FileFormatWriter.scala:403)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.Utils$.tryWithSafeFinallyAndFailureCallbacks(Utils.scala:1397)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.executeTask(FileFormatWriter.scala:410)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.WriteFilesExec.$anonfun$doExecuteWrite$1(WriteFiles.scala:100)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2(RDD.scala:890)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2$adapted(RDD.scala:890)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:93)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:161)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.Task.run(Task.scala:141)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.lang.Thread.run(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - Caused by: org.apache.spark.ExecutorDeadException: [INTERNAL_ERROR_NETWORK] The relative remote executor(Id: 1), which maintains the block data to fetch is dead.
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService$$anon$2.createAndStart(NettyBlockTransferService.scala:141)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.transferAllOutstanding(RetryingBlockTransferor.java:173)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.start(RetryingBlockTransferor.java:152)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService.fetchBlocks(NettyBlockTransferService.scala:151)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.sendRequest(ShuffleBlockFetcherIterator.scala:374)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.send$1(ShuffleBlockFetcherIterator.scala:1203)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.fetchUpToMaxBytes(ShuffleBlockFetcherIterator.scala:1195)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.initialize(ShuffleBlockFetcherIterator.scala:715)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.<init>(ShuffleBlockFetcherIterator.scala:194)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.shuffle.BlockStoreShuffleReader.read(BlockStoreShuffleReader.scala:73)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.ShuffledRowRDD.compute(ShuffledRowRDD.scala:232)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	... 27 more
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - )
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 25/12/08 19:30:50 WARN TaskSetManager: Lost task 2.0 in stage 201.0 (TID 2758) (172.18.0.10 executor 2): FetchFailed(BlockManagerId(1, 172.18.0.9, 43323, None), shuffleId=63, mapIndex=0, mapId=2726, reduceId=90, message=
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - org.apache.spark.shuffle.FetchFailedException
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.errors.SparkCoreErrors$.fetchFailedError(SparkCoreErrors.scala:437)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.throwFetchFailedException(ShuffleBlockFetcherIterator.scala:1236)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:971)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:86)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.next(CompletionIterator.scala:29)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:460)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.sort_addToSorter_0$(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage3.processNext(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.WholeStageCodegenEvaluatorFactory$WholeStageCodegenPartitionEvaluator$$anon$1.hasNext(WholeStageCodegenEvaluatorFactory.scala:43)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1(SortAggregateExec.scala:62)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.aggregate.SortAggregateExec.$anonfun$doExecute$1$adapted(SortAggregateExec.scala:59)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2(RDD.scala:877)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsWithIndexInternal$2$adapted(RDD.scala:877)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.CoalescedRDD.$anonfun$compute$1(CoalescedRDD.scala:99)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.nextCur(Iterator.scala:486)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at scala.collection.Iterator$$anon$11.hasNext(Iterator.scala:492)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.executeTask(FileFormatWriter.scala:385)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.datasources.WriteFilesExec.$anonfun$doExecuteWrite$1(WriteFiles.scala:100)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2(RDD.scala:890)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2$adapted(RDD.scala:890)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:93)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:161)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.scheduler.Task.run(Task.scala:141)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at java.base/java.lang.Thread.run(Unknown Source)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - Caused by: org.apache.spark.ExecutorDeadException: [INTERNAL_ERROR_NETWORK] The relative remote executor(Id: 1), which maintains the block data to fetch is dead.
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService$$anon$2.createAndStart(NettyBlockTransferService.scala:141)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.transferAllOutstanding(RetryingBlockTransferor.java:173)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.shuffle.RetryingBlockTransferor.start(RetryingBlockTransferor.java:152)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.network.netty.NettyBlockTransferService.fetchBlocks(NettyBlockTransferService.scala:151)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.sendRequest(ShuffleBlockFetcherIterator.scala:374)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.send$1(ShuffleBlockFetcherIterator.scala:1203)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.fetchUpToMaxBytes(ShuffleBlockFetcherIterator.scala:1195)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.initialize(ShuffleBlockFetcherIterator.scala:715)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.storage.ShuffleBlockFetcherIterator.<init>(ShuffleBlockFetcherIterator.scala:194)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.shuffle.BlockStoreShuffleReader.read(BlockStoreShuffleReader.scala:73)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.sql.execution.ShuffledRowRDD.compute(ShuffledRowRDD.scala:232)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:364)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	at org.apache.spark.rdd.RDD.iterator(RDD.scala:328)
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 	... 24 more
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - 
-[2025-12-09, 02:30:50 +07] {subprocess.py:93} INFO - )
-[2025-12-09, 02:31:31 +07] {job.py:218} ERROR - Job heartbeat got an exception
-Traceback (most recent call last):
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3371, in _wrap_pool_connect
-    return fn()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 327, in connect
-    return _ConnectionFairy._checkout(self)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 894, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 493, in checkout
-    rec = pool._do_get()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 256, in _do_get
-    return self._create_connection()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 273, in _create_connection
-    return _ConnectionRecord(self)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 388, in __init__
-    self.__connect()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 691, in __connect
-    pool.logger.debug("Error on connect(): %s", e)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
-    compat.raise_(
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
-    raise exception
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 686, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 574, in connect
-    return dialect.connect(*cargs, **cparams)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 598, in connect
-    return self.dbapi.connect(*cargs, **cparams)
-  File "/home/airflow/.local/lib/python3.9/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-psycopg2.OperationalError: could not translate host name "***-db" to address: Temporary failure in name resolution
-The above exception was the direct cause of the following exception:
-Traceback (most recent call last):
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/jobs/job.py", line 213, in heartbeat
-    heartbeat_callback(session)
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/utils/session.py", line 76, in wrapper
-    return func(*args, **kwargs)
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/jobs/local_task_job_runner.py", line 261, in heartbeat_callback
-    self.task_instance.refresh_from_db()
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/utils/session.py", line 79, in wrapper
-    return func(*args, session=session, **kwargs)
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 1821, in refresh_from_db
-    _refresh_from_db(task_instance=self, session=session, lock_for_update=lock_for_update)
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 510, in _refresh_from_db
-    ti = TaskInstance.get_task_instance(
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/api_internal/internal_api_call.py", line 115, in wrapper
-    return func(*args, **kwargs)
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/utils/session.py", line 76, in wrapper
-    return func(*args, **kwargs)
-  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 1807, in get_task_instance
-    return query.one_or_none()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2850, in one_or_none
-    return self._iter().one_or_none()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2916, in _iter
-    result = self.session.execute(
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1716, in execute
-    conn = self._connection_for_bind(bind)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1555, in _connection_for_bind
-    return self._transaction._connection_for_bind(
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 750, in _connection_for_bind
-    conn = bind.connect()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/future/engine.py", line 412, in connect
-    return super(Engine, self).connect()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3325, in connect
-    return self._connection_cls(self, close_with_result=close_with_result)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 96, in __init__
-    else engine.raw_connection()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3404, in raw_connection
-    return self._wrap_pool_connect(self.pool.connect, _connection)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3374, in _wrap_pool_connect
-    Connection._handle_dbapi_exception_noconnection(
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2208, in _handle_dbapi_exception_noconnection
-    util.raise_(
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
-    raise exception
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3371, in _wrap_pool_connect
-    return fn()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 327, in connect
-    return _ConnectionFairy._checkout(self)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 894, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 493, in checkout
-    rec = pool._do_get()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 256, in _do_get
-    return self._create_connection()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 273, in _create_connection
-    return _ConnectionRecord(self)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 388, in __init__
-    self.__connect()
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 691, in __connect
-    pool.logger.debug("Error on connect(): %s", e)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
-    compat.raise_(
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
-    raise exception
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 686, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 574, in connect
-    return dialect.connect(*cargs, **cparams)
-  File "/home/airflow/.local/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 598, in connect
-    return self.dbapi.connect(*cargs, **cparams)
-  File "/home/airflow/.local/lib/python3.9/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not translate host name "***-db" to address: Temporary failure in name resolution
-(Background on this error at: https://sqlalche.me/e/14/e3q8)
-[2025-12-09, 02:31:32 +07] {job.py:221} ERROR - Job heartbeat failed with error. Scheduler may go into unhealthy state
+PS C:\DoAn_FPT_FALL2025\ecommerce-dss-project> docker exec spark-master spark-submit --master spark://spark-master:7077 --executor-memory 2g --driver-memory 2g --conf spark.sql.shuffle.partitions=20 /app/src/spark_jobs/etl/convert_json_to_parquet.py
+
+============================================================
+ CONVERT JSON → PARQUET
+ Started: 2025-12-10T16:49:28.744847
+============================================================
+[INFO] Creating Spark session...
+25/12/10 16:49:29 INFO SparkContext: Running Spark version 3.5.0
+25/12/10 16:49:29 INFO SparkContext: OS info Linux, 5.15.167.4-microsoft-standard-WSL2, amd64
+25/12/10 16:49:29 INFO SparkContext: Java version 11.0.20.1
+25/12/10 16:49:29 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+25/12/10 16:49:30 INFO ResourceUtils: ==============================================================
+25/12/10 16:49:30 INFO ResourceUtils: No custom resources configured for spark.driver.
+25/12/10 16:49:30 INFO ResourceUtils: ==============================================================
+25/12/10 16:49:30 INFO SparkContext: Submitted application: EcommerceDSS-FullPipeline
+25/12/10 16:49:30 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(memory -> name: memory, amount: 2048, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+25/12/10 16:49:30 INFO ResourceProfile: Limiting resource is cpu
+25/12/10 16:49:30 INFO ResourceProfileManager: Added ResourceProfile id: 0
+25/12/10 16:49:30 INFO SecurityManager: Changing view acls to: spark
+25/12/10 16:49:30 INFO SecurityManager: Changing modify acls to: spark
+25/12/10 16:49:30 INFO SecurityManager: Changing view acls groups to:
+25/12/10 16:49:30 INFO SecurityManager: Changing modify acls groups to:
+25/12/10 16:49:30 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: spark; groups with view permissions: EMPTY; users with modify permissions: spark; groups with modify permissions: EMPTY
+25/12/10 16:49:33 INFO Utils: Successfully started service 'sparkDriver' on port 36193.
+25/12/10 16:49:33 INFO SparkEnv: Registering MapOutputTracker
+25/12/10 16:49:34 INFO SparkEnv: Registering BlockManagerMaster
+25/12/10 16:49:34 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+25/12/10 16:49:34 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+25/12/10 16:49:34 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/12/10 16:49:34 INFO DiskBlockManager: Created local directory at /tmp/blockmgr-f4ae7159-6e64-4fd1-a9c2-3dc9d6a45ca4
+25/12/10 16:49:34 INFO MemoryStore: MemoryStore started with capacity 1048.8 MiB
+25/12/10 16:49:34 INFO SparkEnv: Registering OutputCommitCoordinator
+25/12/10 16:49:35 INFO JettyUtils: Start Jetty 0.0.0.0:4040 for SparkUI
+25/12/10 16:49:35 WARN Utils: Service 'SparkUI' could not bind on port 4040. Attempting port 4041.
+25/12/10 16:49:35 INFO Utils: Successfully started service 'SparkUI' on port 4041.
+25/12/10 16:49:35 INFO StandaloneAppClient$ClientEndpoint: Connecting to master spark://spark-master:7077...
+25/12/10 16:49:36 INFO TransportClientFactory: Successfully created connection to spark-master/172.18.0.6:7077 after 139 ms (0 ms spent in bootstraps)
+25/12/10 16:49:37 INFO StandaloneSchedulerBackend: Connected to Spark cluster with app ID app-20251210164937-0001
+25/12/10 16:49:37 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 40921.
+25/12/10 16:49:37 INFO NettyBlockTransferService: Server created on spark-master:40921
+25/12/10 16:49:37 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+25/12/10 16:49:37 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, spark-master, 40921, None)
+25/12/10 16:49:37 INFO BlockManagerMasterEndpoint: Registering block manager spark-master:40921 with 1048.8 MiB RAM, BlockManagerId(driver, spark-master, 40921, None)
+25/12/10 16:49:37 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, spark-master, 40921, None)
+25/12/10 16:49:37 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, spark-master, 40921, None) 
+25/12/10 16:49:38 INFO StandaloneSchedulerBackend: SchedulerBackend is ready for scheduling beginning after reached minRegisteredResourcesRatio: 0.0
+✓ Spark session created
+
+[INFO] Converting: s3a://crawler-data/tiki/
+   → s3a://crawler-data/tiki_parquet/
+25/12/10 16:49:42 WARN MetricsConfig: Cannot locate configuration: tried hadoop-metrics2-s3a-file-system.properties,hadoop-metrics2.properties
+25/12/10 16:50:03 WARN TaskSchedulerImpl: Initial job has not accepted any resources; check your cluster UI to ensure that workers are registered and have sufficient resources
+25/12/10 16:50:18 WARN TaskSchedulerImpl: Initial job has not accepted any resources; check your cluster UI to ensure that workers are registered and have sufficient resources
