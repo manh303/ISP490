@@ -33,7 +33,7 @@ export function Header() {
       return 'Analyst Dashboard';
     } else if (hasRole('data_engineer')) {
       return 'Engineer Dashboard';
-       } else if (hasRole('ML')) {
+    } else if (hasRole('ML')) {
       return 'ML Dashboard';
     } else {
       return 'Dashboard';
@@ -69,25 +69,25 @@ export function Header() {
             onClick={() => handleNavigate('/')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Trang Chủ
+            Home
           </button>
           <button
             onClick={() => handleNavigate('/solutions')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Giải Pháp
+            Solutions
           </button>
           <button
             onClick={() => handleNavigate('/about')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Về Chúng Tôi
+            About Us
           </button>
           <button
             onClick={() => handleNavigate('/contact')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Liên Hệ
+            Contact
           </button>
         </nav>
 
@@ -107,7 +107,7 @@ export function Header() {
                 className="gap-2"
               >
                 <LogOut className="w-4 h-4" />
-                Đăng Xuất
+                Sign Out
               </Button>
             </>
           ) : (
@@ -116,13 +116,13 @@ export function Header() {
                 variant="outline"
                 onClick={() => handleNavigate('/signin')}
               >
-                Đăng Nhập
+                Sign In
               </Button>
               <Button
                 onClick={() => handleNavigate('/signup')}
                 className="inline-flex items-center justify-center gap-2 rounded-lg transition px-4 py-3 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
               >
-                Đăng Ký
+                Sign Up
               </Button>
             </>
           )}

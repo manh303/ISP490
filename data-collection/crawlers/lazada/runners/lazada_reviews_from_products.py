@@ -268,8 +268,8 @@ def clear_checkpoint():
 
 def load_product_urls_from_today() -> List[Dict[str, str]]:
     """Load product URLs from today's products data"""
-    # today = datetime.now().strftime("%Y-%m-%d")
-    today = "2025-12-10"
+    today = datetime.now().strftime("%Y-%m-%d")
+    # today = "2025-12-10"
     products_dir = Path(OUTPUT_DIR) / "lazada" / f"date={today}"
     
     if not products_dir.exists():

@@ -12,7 +12,7 @@ export default function VerifyCodeForm() {
   const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
-  // Lấy email từ sessionStorage cho từng luồng
+  // Get email from sessionStorage for each flow
   const resetEmail = sessionStorage.getItem('reset_email');
   const verifyEmail = sessionStorage.getItem('verify_email');
   const email = resetEmail || verifyEmail || '';
@@ -100,14 +100,14 @@ export default function VerifyCodeForm() {
       showToast("Verifying code...", "info", 2000);
 
       if (resetEmail) {
-        // Luồng quên mật khẩu: chỉ lưu OTP và chuyển sang reset password, không gọi API verifyEmail
+        // Forgot password flow: save OTP and navigate to reset password, don't call verifyEmail API
         sessionStorage.setItem('reset_otp', verificationCode);
         showToast('OTP verified. Please reset your password.', 'success', 1500);
         setTimeout(() => {
           navigate('/reset-password');
         }, 1000);
       } else if (verifyEmail) {
-        // Luồng đăng ký: gọi API verifyEmail
+        // Registration flow: call verifyEmail API
         const response = await authAPI.verifyEmail({
           email: verifyEmail,
           verification_code: verificationCode
@@ -126,7 +126,7 @@ export default function VerifyCodeForm() {
           showToast(`❌ ${errorMsg}`, "error");
         }
       } else {
-        // Không có email nào: báo lỗi
+        // No email found: show error
         setError('No verification context found. Please start from the correct flow.');
         showToast('❌ No verification context found.', 'error');
       }
@@ -161,21 +161,21 @@ export default function VerifyCodeForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Quay lại trang chủ
+          Back to Home
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="text-center">
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              {resetEmail ? 'Vui lòng nhập mã OTP' : verifyEmail ? 'Verify Email: Enter Code' : 'Verify Code'}
+              {resetEmail ? 'Please Enter OTP Code' : verifyEmail ? 'Verify Email: Enter Code' : 'Verify Code'}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {resetEmail
-                ? 'Vui lòng nhập mã OTP được gửi đến email của bạn để khôi phục mật khẩu.'
+                ? 'Please enter the OTP code sent to your email to recover your password.'
                 : verifyEmail
-                ? 'Enter the verification code sent to your email to activate your account.'
-                : 'Enter the 6-digit code sent to your email.'}
+                  ? 'Enter the verification code sent to your email to activate your account.'
+                  : 'Enter the 6-digit code sent to your email.'}
             </p>
             {/* <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               {email}
@@ -203,8 +203,8 @@ export default function VerifyCodeForm() {
                     onChange={(e) => handleInputChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
                     className={`w-12 h-12 text-center text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-colors ${error
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500"
-                        : "border-gray-300 focus:border-brand-500 focus:ring-brand-500/20 dark:border-gray-600 dark:focus:border-brand-400"
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500"
+                      : "border-gray-300 focus:border-brand-500 focus:ring-brand-500/20 dark:border-gray-600 dark:focus:border-brand-400"
                       } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
                     disabled={isLoading}
                   />
@@ -235,10 +235,10 @@ export default function VerifyCodeForm() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Đang xác thực ...
+                      Verifying...
                     </>
                   ) : (
-                    "Xác thực tài khoản"
+                    "Verify Account"
                   )}
                 </button>
               </div>
@@ -252,16 +252,16 @@ export default function VerifyCodeForm() {
                     onClick={handleResendCode}
                     disabled={countdown > 0 || isResending}
                     className={`${countdown > 0 || isResending
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-brand-500 hover:text-brand-600 dark:text-brand-400"
                       } transition-colors`}
                   >
                     {isResending ? (
-                      "Đang gửi..."
+                      "Sending..."
                     ) : countdown > 0 ? (
                       `Resend Code (${countdown}s)`
                     ) : (
-                      "Gửi lại mã xác thực"
+                      "Resend Verification Code"
                     )}
                   </button>
                 </p>
@@ -274,7 +274,7 @@ export default function VerifyCodeForm() {
               className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             >
               <ChevronLeftIcon className="size-5" />
-              Quay lại đăng nhập
+              Back to Sign In
             </Link>
           </div>
           {/* Demo hint */}

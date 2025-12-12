@@ -55,16 +55,16 @@ describe('SignInForm', () => {
   it('renders login form correctly', () => {
     renderWithProviders(<SignInForm />)
 
-    expect(screen.getByText('Chào mừng quay lại')).toBeInTheDocument()
+    expect(screen.getByText('Welcome back')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Email')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Mật khẩu')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Đăng nhập/i })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Sign in/i })).toBeInTheDocument()
   })
 
   it('shows validation errors for empty fields', async () => {
     renderWithProviders(<SignInForm />)
 
-    const loginButton = screen.getByRole('button', { name: /Đăng nhập/i })
+    const loginButton = screen.getByRole('button', { name: /Sign in/i })
     await userEvent.click(loginButton)
 
     expect(screen.getByText('Email is required')).toBeInTheDocument()
@@ -99,8 +99,8 @@ describe('SignInForm', () => {
     renderWithProviders(<SignInForm />)
 
     const emailInput = screen.getByPlaceholderText('Email')
-    const passwordInput = screen.getByPlaceholderText('Mật khẩu')
-    const loginButton = screen.getByRole('button', { name: /Đăng nhập/i })
+    const passwordInput = screen.getByPlaceholderText('Password')
+    const loginButton = screen.getByRole('button', { name: /Sign in/i })
 
     await userEvent.type(emailInput, 'admin@example.com')
     await userEvent.type(passwordInput, 'admin123')
@@ -120,8 +120,8 @@ describe('SignInForm', () => {
     renderWithProviders(<SignInForm />)
 
     const emailInput = screen.getByPlaceholderText('Email')
-    const passwordInput = screen.getByPlaceholderText('Mật khẩu')
-    const loginButton = screen.getByRole('button', { name: /Đăng nhập/i })
+    const passwordInput = screen.getByPlaceholderText('Password')
+    const loginButton = screen.getByRole('button', { name: /Sign in/i })
 
     await userEvent.type(emailInput, 'wrong@example.com')
     await userEvent.type(passwordInput, 'wrong')
@@ -137,7 +137,7 @@ describe('SignInForm', () => {
   it('toggles password visibility', async () => {
     renderWithProviders(<SignInForm />)
 
-    const passwordInput = screen.getByPlaceholderText('Mật khẩu') as HTMLInputElement
+    const passwordInput = screen.getByPlaceholderText('Password') as HTMLInputElement
     // The toggle button is an icon inside a span, likely unnamed. 
     // We can rely on clicking the icon if accessible, or by test-id if we added one.
     // Looking at source: 
@@ -155,7 +155,7 @@ describe('SignInForm', () => {
   it('handles remember me checkbox', async () => {
     renderWithProviders(<SignInForm />)
 
-    const rememberMeCheckbox = screen.getByLabelText(/Ghi nhớ đăng nhập/i) as HTMLInputElement
+    const rememberMeCheckbox = screen.getByLabelText(/Remember me/i) as HTMLInputElement
 
     expect(rememberMeCheckbox.checked).toBe(false)
 

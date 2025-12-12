@@ -586,8 +586,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      data-pipeline:
-        condition: service_started
     networks:
       - dss_network
     restart: unless-stopped
