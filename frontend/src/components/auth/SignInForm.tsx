@@ -109,25 +109,25 @@ export default function SignInForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Quay lại trang chủ
+          Back to Home
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8 text-center">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Chào mừng quay lại
+              Welcome back
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Đăng nhập tài khoản của bạn 
+              Sign in to your account
             </p>
           </div>
 
           {/* Success/Error Message */}
           {errors.general && (
             <div className={`flex items-center gap-2 p-3 mb-4 text-sm border rounded-lg ${errors.general.includes('✅')
-                ? 'text-green-700 bg-green-100 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-                : 'text-red-700 bg-red-100 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+              ? 'text-green-700 bg-green-100 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+              : 'text-red-700 bg-red-100 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
               }`}>
               {errors.general.includes('✅') ? (
                 <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -165,7 +165,7 @@ export default function SignInForm() {
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Mật khẩu"
+                      placeholder="Password"
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                       className={errors.password ? "border-red-500" : ""}
@@ -196,7 +196,7 @@ export default function SignInForm() {
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <label htmlFor="remember-me" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                    Ghi nhớ đăng nhập
+                    Remember me
                   </label>
                 </div>
                 <div>
@@ -222,10 +222,10 @@ export default function SignInForm() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Đang đăng nhập ...
+                        Signing in ...
                       </>
                     ) : (
-                      "Đăng nhập"
+                      "Sign in"
                     )}
                   </Button>
                 </div>
@@ -234,7 +234,7 @@ export default function SignInForm() {
                     to="/forgot-password"
                     className="text-sm text-blue-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   >
-                    Quên mật khẩu ?
+                    Forgot password?
                   </Link>
                 </div>
 
@@ -243,12 +243,12 @@ export default function SignInForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400">
-                Bạn chưa có tài khoản ? {""}
+                Don't have an account? {""}
                 <Link
                   to="/signup"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
-                  Tạo tài khoản
+                  Sign up
                 </Link>
               </p>
             </div>
@@ -256,5 +256,5 @@ export default function SignInForm() {
         </div>
       </div>
     </div>
-  );
+  )
 }

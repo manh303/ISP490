@@ -8,7 +8,6 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
-COPY postcss.config.js ./
 COPY eslint.config.js ./
 
 # Install dependencies

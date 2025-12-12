@@ -48,14 +48,15 @@ class WorkingLazadaReviewsCrawler:
         self.actions = None
 
         # Working configuration based on tests
+        # Increased timeouts to allow manual anti-bot clicking
         self.config = {
-            'page_load_timeout': 30,
-            'element_timeout': 15,
+            'page_load_timeout': 120,      # Increased from 30
+            'element_timeout': 60,          # Increased from 15
             'scroll_pause': 2,
-            'extraction_delay': (1, 2),
-            'page_delay': (3, 5),
-            'review_delay': (2, 3),
-            'max_reviews_per_product': 5  # Reduced for efficiency
+            'extraction_delay': (2, 4),
+            'page_delay': (5, 8),
+            'review_delay': (3, 5),
+            'max_reviews_per_product': 10   # Increased for more reviews
         }
 
         # Real Lazada selectors discovered from structure analysis
@@ -305,11 +306,17 @@ class WorkingLazadaReviewsCrawler:
             # Navigate to product page
             current_url = self.driver.current_url
             self.driver.get(product_url)
-            time.sleep(random.uniform(*self.config['review_delay']))
-
-            # Scroll down to potentially load reviews
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.7);")
-            time.sleep(2)
+            
+            # Wait longer for product page to load fully
+            time.sleep(5)  # Initial wait for page load
+            
+            # Scroll down to potentially load reviews section
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
+            time.sleep(3)
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.8);")
+            time.sleep(3)
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(3)  # Wait for lazy-loaded reviews
 
             # Look for reviews section - try multiple approaches
             review_elements = []
@@ -440,15 +447,21 @@ class WorkingLazadaReviewsCrawler:
 
                 # Check for anti-bot redirect
                 current_url = self.driver.current_url
-                if "punish" in current_url or "captcha" in current_url:
-                    logger.warning("Anti-bot detected, waiting and retrying...")
-                    time.sleep(10)  # Wait longer
-                    self.driver.get(page_url)  # Retry
-                    time.sleep(5)
+                if "punish" in current_url or "captcha" in current_url or "verify" in current_url:
+                    logger.warning("="*60)
+                    logger.warning("⚠️  ANTI-BOT DETECTED!")
+                    logger.warning("Please solve the CAPTCHA/verification in the browser window.")
+                    logger.warning("After solving, press ENTER in this terminal to continue...")
+                    logger.warning("="*60)
+                    input("\n>>> Press ENTER after solving anti-bot... ")
+                    time.sleep(2)
+                    self.driver.get(page_url)  # Retry after user clicks
+                    time.sleep(3)
                     current_url = self.driver.current_url
-                    if "punish" in current_url or "captcha" in current_url:
-                        logger.warning("Anti-bot still detected, skipping page")
+                    if "punish" in current_url or "captcha" in current_url or "verify" in current_url:
+                        logger.warning("Anti-bot still detected after retry, skipping page")
                         continue
+                    logger.info("✓ Anti-bot passed! Continuing...")
 
                 # Scroll to load products
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
@@ -462,6 +475,9 @@ class WorkingLazadaReviewsCrawler:
                     continue
 
                 logger.info(f"Found {len(product_elements)} products on page {page}")
+                
+                # Wait a bit after finding products to let page stabilize
+                time.sleep(3)
 
                 # Extract products (limit to first 10 for efficiency when extracting reviews)
                 page_products = []
@@ -511,16 +527,23 @@ class WorkingLazadaReviewsCrawler:
 
         return all_products
 
-    def run_working_crawl(self, max_pages: int = 2) -> Dict[str, Any]:
+    def run_working_crawl(self, max_pages: int = 2, category_url: str = None) -> Dict[str, Any]:
         """Run the working crawler"""
         logger.info("Starting Working Lazada Reviews Crawler")
+        logger.info("="*60)
+        logger.info("If anti-bot appears, you'll be prompted to solve it manually.")
+        logger.info("The browser will stay open until you press ENTER.")
+        logger.info("="*60)
 
         try:
             if not self.setup_working_driver():
                 raise Exception("Driver setup failed")
 
-            # Crawl smartphones category
-            category_url = "https://www.lazada.vn/dien-thoai-di-dong/"
+            # Allow custom category or default to smartphones
+            if not category_url:
+                category_url = "https://www.lazada.vn/dien-thoai-di-dong/"
+            
+            logger.info(f"Crawling category: {category_url}")
             products = self.crawl_lazada_category(category_url, max_pages)
 
             # Save results

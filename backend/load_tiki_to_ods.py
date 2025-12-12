@@ -8,11 +8,11 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 async def load_tiki_to_ods():
     conn = await asyncpg.connect(
-        host="dpg-d4b1rger433s738l401g-a.singapore-postgres.render.com",
-        port=5432,
-        database="ecommerce_dss_bh5f",
+        host="localhost",
+        port=5433,
+        database="ecommerce_dss",
         user="dss_user",
-        password="0ZskEPwcL5kSjLPNfclbB3cCSbLZWFDY"
+        password="dss_password_123"
     )
     
     print("Loading Tiki products from stg_raw_products to ods_product_clean...")

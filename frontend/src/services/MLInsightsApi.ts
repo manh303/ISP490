@@ -109,7 +109,7 @@ export const getPriceOptimization = async (
   if (recommendation) {
     params.recommendation = recommendation;
   }
-  
+
   const response = await api.get('/v1/ml/price-optimization', { params });
   return response.data;
 };
@@ -127,7 +127,7 @@ export const getDemandForecast = async (
   if (trend) {
     params.trend = trend;
   }
-  
+
   const response = await api.get('/v1/ml/demand-forecast', { params });
   return response.data;
 };

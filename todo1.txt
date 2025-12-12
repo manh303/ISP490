@@ -1,786 +1,342 @@
-{
-  "scenario": "price_prediction",
-  "filters": {
-    "from_date": "2025-12-01",
-    "to_date": "2025-12-03",
-    "platforms": [
-      "tiki",
-      "lazada"
-    ],
-    "categories": [
-      "1",
-      "2"
-    ]
-  },
-  "kpi_summary": {
-    "num_products": 20,
-    "num_with_recommendation": 20,
-    "current_revenue": 1162240400,
-    "projected_revenue": 2091817167,
-    "expected_revenue_uplift_pct": 0.799814536648356,
-    "avg_confidence": 0.9774169412509492
-  },
-  "table_data": [
-    {
-      "product_key": "lazada_2948381041",
-      "product_name": "[ SALE -RẺ VÔ ĐỊCH ] Điện thoại 4G giá rẻ Samsung Galaxy A70 2sim ram 6G/128G, Cấu hình Cao Chiến mọi Game mượt, Chụp ảnh đẹp BMS",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 299000,
-      "recommended_price": 1199132.11,
-      "predicted_price": 1199132.11,
-      "price_diff": 900132.11,
-      "price_change_pct": 3.0104752842809366,
-      "current_revenue": 203320000,
-      "projected_revenue": 815409834.8,
-      "expected_revenue_change_pct": 3.0104752842809366,
-      "confidence": 1,
-      "current_orders": 680,
-      "avg_rating": 4,
-      "total_reviews": 34
-    },
-    {
-      "product_key": "lazada_2788817265",
-      "product_name": "Mxmid G310 4g Phone - Trong Phu Mobile Standard 4g Network",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 279000,
-      "recommended_price": 481710.47,
-      "predicted_price": 481710.47,
-      "price_diff": 202710.47,
-      "price_change_pct": 0.7265608243727599,
-      "current_revenue": 11160000,
-      "projected_revenue": 19268418.8,
-      "expected_revenue_change_pct": 0.7265608243727599,
-      "confidence": 0.9716638917979092,
-      "current_orders": 40,
-      "avg_rating": 3.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2788819780",
-      "product_name": "Good V8 4g Phone - Promotional Standard 4g Network",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 299000,
-      "recommended_price": 502409.56,
-      "predicted_price": 502409.56,
-      "price_diff": 203409.56,
-      "price_change_pct": 0.6802995317725753,
-      "current_revenue": 11960000,
-      "projected_revenue": 20096382.400000002,
-      "expected_revenue_change_pct": 0.6802995317725753,
-      "confidence": 0.9757880602431211,
-      "current_orders": 40,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17919969",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 Plus CB 57 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 28000,
-      "recommended_price": 44644.66,
-      "predicted_price": 44644.66,
-      "price_diff": 16644.66,
-      "price_change_pct": 0.5944521428571429,
-      "current_revenue": 560000,
-      "projected_revenue": 892893.2000000001,
-      "expected_revenue_change_pct": 0.5944521428571429,
-      "confidence": 0.9436187888988291,
-      "current_orders": 20,
-      "avg_rating": 3.8,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2518541539",
-      "product_name": "Dây Cáp Loa 2 Đầu Giắc 3.5mm AUX-Đầu Mạ Vàng,Kết Nối Loa Với Điện Thoại,Laptop,Máy Tính,Tai Nghe,iPad,Tivi,Ô Tô",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 8000,
-      "recommended_price": 11633.17,
-      "predicted_price": 11633.17,
-      "price_diff": 3633.17,
-      "price_change_pct": 0.45414625,
-      "current_revenue": 800000,
-      "projected_revenue": 1163317,
-      "expected_revenue_change_pct": 0.45414625,
-      "confidence": 0.9584292157683589,
-      "current_orders": 100,
-      "avg_rating": 4.4,
-      "total_reviews": 5
-    },
-    {
-      "product_key": "lazada_3114412942",
-      "product_name": "[GIAO TẠI HCM] Google Tivi Xiaomi A 4K 65 inch L65MB-ASEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 12178800,
-      "recommended_price": 16792788.49,
-      "predicted_price": 16792788.49,
-      "price_diff": 4613988.49,
-      "price_change_pct": 0.3788541145268828,
-      "current_revenue": 243576000,
-      "projected_revenue": 335855769.8,
-      "expected_revenue_change_pct": 0.3788541145268828,
-      "confidence": 0.9988834492847233,
-      "current_orders": 20,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3114435755",
-      "product_name": "[GIAO TẠI HCM] Google Tivi Xiaomi A Pro QLED 4K 65 inch L65MB-APSEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 13624140,
-      "recommended_price": 18187526.78,
-      "predicted_price": 18187526.78,
-      "price_diff": 4563386.78,
-      "price_change_pct": 0.3349486118022862,
-      "current_revenue": 272482800,
-      "projected_revenue": 363750535.59999996,
-      "expected_revenue_change_pct": 0.3349486118022862,
-      "confidence": 0.9987030193667706,
-      "current_orders": 20,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3114450762",
-      "product_name": "[GIAO TẠI HCM] Google Tivi QLED Xiaomi A Pro 4K 55 inch L55MB-APSEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 10177560,
-      "recommended_price": 13195041.7,
-      "predicted_price": 13195041.7,
-      "price_diff": 3017481.7,
-      "price_change_pct": 0.2964838035835701,
-      "current_revenue": 203551200,
-      "projected_revenue": 263900834,
-      "expected_revenue_change_pct": 0.2964838035835701,
-      "confidence": 0.9980804509318072,
-      "current_orders": 20,
-      "avg_rating": 4.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3114597478",
-      "product_name": "[GIAO TẠI HCM] Google Tivi Xiaomi A 4K 43 inch L43MB-AUSEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 6730980,
-      "recommended_price": 8696402.14,
-      "predicted_price": 8696402.14,
-      "price_diff": 1965422.14,
-      "price_change_pct": 0.2919964314260331,
-      "current_revenue": 134619600,
-      "projected_revenue": 173928042.8,
-      "expected_revenue_change_pct": 0.2919964314260331,
-      "confidence": 0.9963875842567694,
-      "current_orders": 20,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3097197552",
-      "product_name": "New 5G international mobile phone 2 SIM shock discount phone free warranty super smooth handphone low price tester for HS support 2 SIM new arrival 10 processor cheap PC touch screen phones",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2138938,
-      "recommended_price": 2616613.32,
-      "predicted_price": 2616613.32,
-      "price_diff": 477675.32,
-      "price_change_pct": 0.2233235932972344,
-      "current_revenue": 42778760,
-      "projected_revenue": 52332266.4,
-      "expected_revenue_change_pct": 0.2233235932972344,
-      "confidence": 0.9887854274165355,
-      "current_orders": 20,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027267",
-      "product_name": "Bàn Phím dùng cho Laptop HP 6715b - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 203471,
-      "recommended_price": 248676.97,
-      "predicted_price": 248676.97,
-      "price_diff": 45205.97,
-      "price_change_pct": 0.2221740198848976,
-      "current_revenue": 4069420,
-      "projected_revenue": 4973539.4,
-      "expected_revenue_change_pct": 0.2221740198848976,
-      "confidence": 0.9892424296467823,
-      "current_orders": 20,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200026981",
-      "product_name": "Bàn phím dùng cho Laptop Dell Vostro 2420 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 177937,
-      "recommended_price": 217336.53,
-      "predicted_price": 217336.53,
-      "price_diff": 39399.53,
-      "price_change_pct": 0.2214240433411826,
-      "current_revenue": 3558740,
-      "projected_revenue": 4346730.600000001,
-      "expected_revenue_change_pct": 0.2214240433411826,
-      "confidence": 0.9580663683182942,
-      "current_orders": 20,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029414",
-      "product_name": "Bàn phím dùng cho Laptop HP 2000-2D11DX - Hàng Nhập Khẩu",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 188701,
-      "recommended_price": 228868.26,
-      "predicted_price": 228868.26,
-      "price_diff": 40167.26,
-      "price_change_pct": 0.2128619350188923,
-      "current_revenue": 3774020,
-      "projected_revenue": 4577365.2,
-      "expected_revenue_change_pct": 0.2128619350188923,
-      "confidence": 0.9822501818294944,
-      "current_orders": 20,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200026974",
-      "product_name": "Bàn Phím dùng cho Laptop AcerBàn Phím dùng cho Laptop Acer Aspire 4250 4252 4349 4350 4475Z 4552G 4752 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 164772,
-      "recommended_price": 199603.47,
-      "predicted_price": 199603.47,
-      "price_diff": 34831.47,
-      "price_change_pct": 0.2113919233850411,
-      "current_revenue": 3295440,
-      "projected_revenue": 3992069.4,
-      "expected_revenue_change_pct": 0.2113919233850411,
-      "confidence": 0.9760623900977272,
-      "current_orders": 20,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027015",
-      "product_name": "Bàn phím laptop dùng cho Acer 4736 4738 4739 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 164772,
-      "recommended_price": 199603.47,
-      "predicted_price": 199603.47,
-      "price_diff": 34831.47,
-      "price_change_pct": 0.2113919233850411,
-      "current_revenue": 3295440,
-      "projected_revenue": 3992069.4,
-      "expected_revenue_change_pct": 0.2113919233850411,
-      "confidence": 0.9760623900977272,
-      "current_orders": 20,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027032",
-      "product_name": "Bàn phím dùng cho laptop Dell 1425 1427 1428 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 164772,
-      "recommended_price": 199603.47,
-      "predicted_price": 199603.47,
-      "price_diff": 34831.47,
-      "price_change_pct": 0.2113919233850411,
-      "current_revenue": 3295440,
-      "projected_revenue": 3992069.4,
-      "expected_revenue_change_pct": 0.2113919233850411,
-      "confidence": 0.9760623900977272,
-      "current_orders": 20,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029756",
-      "product_name": "Bàn phím dùng cho laptop Dell Inspiron 15-5521 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 165558,
-      "recommended_price": 200108.32,
-      "predicted_price": 200108.32,
-      "price_diff": 34550.32,
-      "price_change_pct": 0.2086901267229611,
-      "current_revenue": 3311160,
-      "projected_revenue": 4002166.4,
-      "expected_revenue_change_pct": 0.2086901267229611,
-      "confidence": 0.9619867879556432,
-      "current_orders": 20,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029660",
-      "product_name": "Bàn phím dùng cho Laptop Dell Inspiron 14 3451 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 213873,
-      "recommended_price": 256491.05,
-      "predicted_price": 256491.05,
-      "price_diff": 42618.05,
-      "price_change_pct": 0.1992680235466842,
-      "current_revenue": 4277460,
-      "projected_revenue": 5129821,
-      "expected_revenue_change_pct": 0.1992680235466842,
-      "confidence": 0.9540523148858411,
-      "current_orders": 20,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027401",
-      "product_name": "Bàn phím dùng cho Laptop Asus F8 Series - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 216926,
-      "recommended_price": 259359.78,
-      "predicted_price": 259359.78,
-      "price_diff": 42433.78,
-      "price_change_pct": 0.1956140803776403,
-      "current_revenue": 4338520,
-      "projected_revenue": 5187195.6,
-      "expected_revenue_change_pct": 0.1956140803776403,
-      "confidence": 0.981723072096992,
-      "current_orders": 20,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029616",
-      "product_name": "Bàn phím dùng cho Laptop Asus P450 Series - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 210820,
-      "recommended_price": 251292.29,
-      "predicted_price": 251292.29,
-      "price_diff": 40472.29,
-      "price_change_pct": 0.1919755715776492,
-      "current_revenue": 4216400,
-      "projected_revenue": 5025845.8,
-      "expected_revenue_change_pct": 0.1919755715776492,
-      "confidence": 0.9624906120279297,
-      "current_orders": 20,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    }
-  ],
-  "total_count": 107,
-  "date_adjustment_info": {
-    "requested_from_date": "2025-12-01",
-    "requested_to_date": "2025-12-03",
-    "actual_from_date": "2025-12-01",
-    "actual_to_date": "2025-12-03",
-    "date_adjusted": false
-  },
-  "items": [
-    {
-      "product_key": "lazada_2948381041",
-      "product_name": "[ SALE -RẺ VÔ ĐỊCH ] Điện thoại 4G giá rẻ Samsung Galaxy A70 2sim ram 6G/128G, Cấu hình Cao Chiến mọi Game mượt, Chụp ảnh đẹp BMS",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 299000,
-      "recommended_price": 1199132.11,
-      "predicted_price": 1199132.11,
-      "price_diff": 900132.11,
-      "price_change_pct": 3.0104752842809366,
-      "current_revenue": 203320000,
-      "projected_revenue": 815409834.8,
-      "expected_revenue_change_pct": 3.0104752842809366,
-      "confidence": 1,
-      "current_orders": 680,
-      "avg_rating": 4,
-      "total_reviews": 34
-    },
-    {
-      "product_key": "lazada_2788817265",
-      "product_name": "Mxmid G310 4g Phone - Trong Phu Mobile Standard 4g Network",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 279000,
-      "recommended_price": 481710.47,
-      "predicted_price": 481710.47,
-      "price_diff": 202710.47,
-      "price_change_pct": 0.7265608243727599,
-      "current_revenue": 11160000,
-      "projected_revenue": 19268418.8,
-      "expected_revenue_change_pct": 0.7265608243727599,
-      "confidence": 0.9716638917979092,
-      "current_orders": 40,
-      "avg_rating": 3.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2788819780",
-      "product_name": "Good V8 4g Phone - Promotional Standard 4g Network",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 299000,
-      "recommended_price": 502409.56,
-      "predicted_price": 502409.56,
-      "price_diff": 203409.56,
-      "price_change_pct": 0.6802995317725753,
-      "current_revenue": 11960000,
-      "projected_revenue": 20096382.400000002,
-      "expected_revenue_change_pct": 0.6802995317725753,
-      "confidence": 0.9757880602431211,
-      "current_orders": 40,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_17919969",
-      "product_name": "Ốp lưng cho điện thoại Iphone 6 Plus CB 57 - Hàng chính hãng",
-      "platform": "tiki",
-      "category_name": "Mobile Phones",
-      "current_price": 28000,
-      "recommended_price": 44644.66,
-      "predicted_price": 44644.66,
-      "price_diff": 16644.66,
-      "price_change_pct": 0.5944521428571429,
-      "current_revenue": 560000,
-      "projected_revenue": 892893.2000000001,
-      "expected_revenue_change_pct": 0.5944521428571429,
-      "confidence": 0.9436187888988291,
-      "current_orders": 20,
-      "avg_rating": 3.8,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_2518541539",
-      "product_name": "Dây Cáp Loa 2 Đầu Giắc 3.5mm AUX-Đầu Mạ Vàng,Kết Nối Loa Với Điện Thoại,Laptop,Máy Tính,Tai Nghe,iPad,Tivi,Ô Tô",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 8000,
-      "recommended_price": 11633.17,
-      "predicted_price": 11633.17,
-      "price_diff": 3633.17,
-      "price_change_pct": 0.45414625,
-      "current_revenue": 800000,
-      "projected_revenue": 1163317,
-      "expected_revenue_change_pct": 0.45414625,
-      "confidence": 0.9584292157683589,
-      "current_orders": 100,
-      "avg_rating": 4.4,
-      "total_reviews": 5
-    },
-    {
-      "product_key": "lazada_3114412942",
-      "product_name": "[GIAO TẠI HCM] Google Tivi Xiaomi A 4K 65 inch L65MB-ASEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 12178800,
-      "recommended_price": 16792788.49,
-      "predicted_price": 16792788.49,
-      "price_diff": 4613988.49,
-      "price_change_pct": 0.3788541145268828,
-      "current_revenue": 243576000,
-      "projected_revenue": 335855769.8,
-      "expected_revenue_change_pct": 0.3788541145268828,
-      "confidence": 0.9988834492847233,
-      "current_orders": 20,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3114435755",
-      "product_name": "[GIAO TẠI HCM] Google Tivi Xiaomi A Pro QLED 4K 65 inch L65MB-APSEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 13624140,
-      "recommended_price": 18187526.78,
-      "predicted_price": 18187526.78,
-      "price_diff": 4563386.78,
-      "price_change_pct": 0.3349486118022862,
-      "current_revenue": 272482800,
-      "projected_revenue": 363750535.59999996,
-      "expected_revenue_change_pct": 0.3349486118022862,
-      "confidence": 0.9987030193667706,
-      "current_orders": 20,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3114450762",
-      "product_name": "[GIAO TẠI HCM] Google Tivi QLED Xiaomi A Pro 4K 55 inch L55MB-APSEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 10177560,
-      "recommended_price": 13195041.7,
-      "predicted_price": 13195041.7,
-      "price_diff": 3017481.7,
-      "price_change_pct": 0.2964838035835701,
-      "current_revenue": 203551200,
-      "projected_revenue": 263900834,
-      "expected_revenue_change_pct": 0.2964838035835701,
-      "confidence": 0.9980804509318072,
-      "current_orders": 20,
-      "avg_rating": 4.1,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3114597478",
-      "product_name": "[GIAO TẠI HCM] Google Tivi Xiaomi A 4K 43 inch L43MB-AUSEA",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 6730980,
-      "recommended_price": 8696402.14,
-      "predicted_price": 8696402.14,
-      "price_diff": 1965422.14,
-      "price_change_pct": 0.2919964314260331,
-      "current_revenue": 134619600,
-      "projected_revenue": 173928042.8,
-      "expected_revenue_change_pct": 0.2919964314260331,
-      "confidence": 0.9963875842567694,
-      "current_orders": 20,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "lazada_3097197552",
-      "product_name": "New 5G international mobile phone 2 SIM shock discount phone free warranty super smooth handphone low price tester for HS support 2 SIM new arrival 10 processor cheap PC touch screen phones",
-      "platform": "lazada",
-      "category_name": "Mobile Phones",
-      "current_price": 2138938,
-      "recommended_price": 2616613.32,
-      "predicted_price": 2616613.32,
-      "price_diff": 477675.32,
-      "price_change_pct": 0.2233235932972344,
-      "current_revenue": 42778760,
-      "projected_revenue": 52332266.4,
-      "expected_revenue_change_pct": 0.2233235932972344,
-      "confidence": 0.9887854274165355,
-      "current_orders": 20,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027267",
-      "product_name": "Bàn Phím dùng cho Laptop HP 6715b - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 203471,
-      "recommended_price": 248676.97,
-      "predicted_price": 248676.97,
-      "price_diff": 45205.97,
-      "price_change_pct": 0.2221740198848976,
-      "current_revenue": 4069420,
-      "projected_revenue": 4973539.4,
-      "expected_revenue_change_pct": 0.2221740198848976,
-      "confidence": 0.9892424296467823,
-      "current_orders": 20,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200026981",
-      "product_name": "Bàn phím dùng cho Laptop Dell Vostro 2420 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 177937,
-      "recommended_price": 217336.53,
-      "predicted_price": 217336.53,
-      "price_diff": 39399.53,
-      "price_change_pct": 0.2214240433411826,
-      "current_revenue": 3558740,
-      "projected_revenue": 4346730.600000001,
-      "expected_revenue_change_pct": 0.2214240433411826,
-      "confidence": 0.9580663683182942,
-      "current_orders": 20,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029414",
-      "product_name": "Bàn phím dùng cho Laptop HP 2000-2D11DX - Hàng Nhập Khẩu",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 188701,
-      "recommended_price": 228868.26,
-      "predicted_price": 228868.26,
-      "price_diff": 40167.26,
-      "price_change_pct": 0.2128619350188923,
-      "current_revenue": 3774020,
-      "projected_revenue": 4577365.2,
-      "expected_revenue_change_pct": 0.2128619350188923,
-      "confidence": 0.9822501818294944,
-      "current_orders": 20,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200026974",
-      "product_name": "Bàn Phím dùng cho Laptop AcerBàn Phím dùng cho Laptop Acer Aspire 4250 4252 4349 4350 4475Z 4552G 4752 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 164772,
-      "recommended_price": 199603.47,
-      "predicted_price": 199603.47,
-      "price_diff": 34831.47,
-      "price_change_pct": 0.2113919233850411,
-      "current_revenue": 3295440,
-      "projected_revenue": 3992069.4,
-      "expected_revenue_change_pct": 0.2113919233850411,
-      "confidence": 0.9760623900977272,
-      "current_orders": 20,
-      "avg_rating": 4.5,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027015",
-      "product_name": "Bàn phím laptop dùng cho Acer 4736 4738 4739 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 164772,
-      "recommended_price": 199603.47,
-      "predicted_price": 199603.47,
-      "price_diff": 34831.47,
-      "price_change_pct": 0.2113919233850411,
-      "current_revenue": 3295440,
-      "projected_revenue": 3992069.4,
-      "expected_revenue_change_pct": 0.2113919233850411,
-      "confidence": 0.9760623900977272,
-      "current_orders": 20,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027032",
-      "product_name": "Bàn phím dùng cho laptop Dell 1425 1427 1428 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 164772,
-      "recommended_price": 199603.47,
-      "predicted_price": 199603.47,
-      "price_diff": 34831.47,
-      "price_change_pct": 0.2113919233850411,
-      "current_revenue": 3295440,
-      "projected_revenue": 3992069.4,
-      "expected_revenue_change_pct": 0.2113919233850411,
-      "confidence": 0.9760623900977272,
-      "current_orders": 20,
-      "avg_rating": 3.6,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029756",
-      "product_name": "Bàn phím dùng cho laptop Dell Inspiron 15-5521 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 165558,
-      "recommended_price": 200108.32,
-      "predicted_price": 200108.32,
-      "price_diff": 34550.32,
-      "price_change_pct": 0.2086901267229611,
-      "current_revenue": 3311160,
-      "projected_revenue": 4002166.4,
-      "expected_revenue_change_pct": 0.2086901267229611,
-      "confidence": 0.9619867879556432,
-      "current_orders": 20,
-      "avg_rating": 4.3,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029660",
-      "product_name": "Bàn phím dùng cho Laptop Dell Inspiron 14 3451 - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 213873,
-      "recommended_price": 256491.05,
-      "predicted_price": 256491.05,
-      "price_diff": 42618.05,
-      "price_change_pct": 0.1992680235466842,
-      "current_revenue": 4277460,
-      "projected_revenue": 5129821,
-      "expected_revenue_change_pct": 0.1992680235466842,
-      "confidence": 0.9540523148858411,
-      "current_orders": 20,
-      "avg_rating": 4.2,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200027401",
-      "product_name": "Bàn phím dùng cho Laptop Asus F8 Series - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 216926,
-      "recommended_price": 259359.78,
-      "predicted_price": 259359.78,
-      "price_diff": 42433.78,
-      "price_change_pct": 0.1956140803776403,
-      "current_revenue": 4338520,
-      "projected_revenue": 5187195.6,
-      "expected_revenue_change_pct": 0.1956140803776403,
-      "confidence": 0.981723072096992,
-      "current_orders": 20,
-      "avg_rating": 3.9,
-      "total_reviews": 0
-    },
-    {
-      "product_key": "tiki_200029616",
-      "product_name": "Bàn phím dùng cho Laptop Asus P450 Series - Hàng Nhập Khẩu New Seal",
-      "platform": "tiki",
-      "category_name": "Computers",
-      "current_price": 210820,
-      "recommended_price": 251292.29,
-      "predicted_price": 251292.29,
-      "price_diff": 40472.29,
-      "price_change_pct": 0.1919755715776492,
-      "current_revenue": 4216400,
-      "projected_revenue": 5025845.8,
-      "expected_revenue_change_pct": 0.1919755715776492,
-      "confidence": 0.9624906120279297,
-      "current_orders": 20,
-      "avg_rating": 4.4,
-      "total_reviews": 0
-    }
-  ],
-  "ai_summary_insights": [
-    "Hệ thống đang phân tích khoảng 20 sản phẩm trong phạm vi lựa chọn.",
-    "Analyzed 20 products with 20 having price recommendations. Average model confidence: 97.7%",
-    "Expected revenue impact: ₫1,162,240,400 → ₫2,091,817,167 (+79.98% change, ₫+929,576,767 difference)",
-    "Top 1 by impact: '[ SALE -RẺ VÔ ĐỊCH ] Điện thoại 4G giá rẻ Samsung Galaxy A70 2sim ram 6G/128G, Cấu hình Cao Chiến mọi Game mượt, Chụp ảnh đẹp BMS' (lazada) - Current ₫299,000, Recommended ₫1,199,132 (+301.0%), Revenue impact: +301.0%",
-    "Top 2 by impact: '[GIAO TẠI HCM] Google Tivi Xiaomi A 4K 65 inch L65MB-ASEA' (lazada) - Current ₫12,178,800, Recommended ₫16,792,788 (+37.9%), Revenue impact: +37.9%",
-    "20 products have confidence ≥80%, making them low-risk candidates for immediate adjustment"
-  ],
-  "ai_recommended_actions": [
-    "[PRIORITY: HIGH] Adjust price for '[ SALE -RẺ VÔ ĐỊCH ] Điện thoại 4G giá rẻ Samsung Galaxy A70 2sim ram 6G/128G, Cấu hình Cao Chiến mọi Game mượt, Chụp ảnh đẹp BMS' (lazada) from ₫299,000 to ₫1,199,132 (+301.0%). Expected revenue change: +301.0%. Confidence: 100.0%, Current orders: 680",
-    "[PRIORITY: HIGH] Adjust price for '[GIAO TẠI HCM] Google Tivi Xiaomi A 4K 65 inch L65MB-ASEA' (lazada) from ₫12,178,800 to ₫16,792,788 (+37.9%). Expected revenue change: +37.9%. Confidence: 99.9%, Current orders: 20",
-    "[PRIORITY: HIGH] Adjust price for '[GIAO TẠI HCM] Google Tivi Xiaomi A Pro QLED 4K 65 inch L65MB-APSEA' (lazada) from ₫13,624,140 to ₫18,187,527 (+33.5%). Expected revenue change: +33.5%. Confidence: 99.9%, Current orders: 20",
-    "[CATEGORY: Computers] Apply +20.9% average price adjustment to 10 products, prioritizing 10 items with confidence ≥75%",
-    "[PLATFORM: tiki] Prioritize tiki with 11 recommendations (11 high-confidence). Average suggested change: +24.4%",
-    "[A/B TEST] Run 2-week price test for '[ SALE -RẺ VÔ ĐỊCH ] Điện thoại 4G giá rẻ Samsung Galaxy A70 2sim ram 6G/128G, Cấu hình Cao Chiến mọi Game mượt, Chụp ảnh đẹp BMS': 50% traffic at current ₫299,000, 50% at recommended ₫1,199,132. Track conversion rate, revenue per session, and customer feedback"
-  ],
-  "generated_at": "2025-12-06T00:23:23.598651",
-  "ai_model_used": "models/gemini-pro-latest",
-  "session_id": 109,
-  "ai_input_stats": {
-    "scenario": "price_prediction",
-    "kpi_keys": [
-      "num_products",
-      "num_with_recommendation",
-      "current_revenue",
-      "projected_revenue",
-      "expected_revenue_uplift_pct",
-      "avg_confidence"
-    ],
-    "table_rows_for_ai": 20
-  }
-}
+<mxGraphModel dx="3355" dy="2518" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-24" parent="1" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;whiteSpace=wrap;" value="" vertex="1">
+      <mxGeometry height="520" width="440" x="530" y="10" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-17" parent="1" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;whiteSpace=wrap;" value="" vertex="1">
+      <mxGeometry height="670" width="430" x="1110" y="-100" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-111" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1.005;exitY=0.325;exitDx=0;exitDy=0;exitPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-52">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1080" y="288" />
+          <mxPoint x="1080" y="212" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="4" vertex="1">
+      <mxGeometry height="30" width="60" x="-120" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-3" parent="1" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;whiteSpace=wrap;" value="" vertex="1">
+      <mxGeometry height="360" width="460" x="-50" y="80" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Controller" vertex="1">
+      <mxGeometry height="30" width="60" x="-50" y="100" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-6" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Alert Controller" vertex="1">
+      <mxGeometry height="70" width="250" x="55" y="140" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-8" parent="Vzf_UiizXqoFZ95OXf5v-6" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="250" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-9" parent="Vzf_UiizXqoFZ95OXf5v-6" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+getAlerts(filter: AlertFilter): List&amp;lt;AlertDTO&amp;gt;" vertex="1">
+      <mxGeometry height="36" width="250" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-10" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DataQuality Controller" vertex="1">
+      <mxGeometry height="80" width="440" x="-40" y="240" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-11" parent="Vzf_UiizXqoFZ95OXf5v-10" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="440" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-12" parent="Vzf_UiizXqoFZ95OXf5v-10" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;+getDqIssues(filter: DqIssueFilter): List&amp;lt;DataQualityIssueDTO&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;+getVolumeTrends(filter: VolumeFilter): List&amp;lt;DataVolumeSnapshotDTO&amp;gt;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="46" width="440" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-13" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ETLMontitor Controller" vertex="1">
+      <mxGeometry height="70" width="350" x="5" y="350" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-14" parent="Vzf_UiizXqoFZ95OXf5v-13" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="350" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-15" parent="Vzf_UiizXqoFZ95OXf5v-13" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+getLatestJobRuns(filter: JobRunFilter): List&amp;lt;EtlJobRunDTO&amp;gt;&lt;/div&gt;&lt;div&gt;+getTaskRuns(jobRunId: int): List&amp;lt;EtlTaskRunDTO&amp;gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="350" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-18" parent="1" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;whiteSpace=wrap;" value="" vertex="1">
+      <mxGeometry height="1010" width="540" x="1680" y="-290" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-19" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Service" vertex="1">
+      <mxGeometry height="30" width="60" x="530" y="30" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-31" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Alert Service" vertex="1">
+      <mxGeometry height="100" width="300" x="600" y="60" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-32" parent="Vzf_UiizXqoFZ95OXf5v-31" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;-alertRepo: AlertRepository&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="26" width="300" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-33" parent="Vzf_UiizXqoFZ95OXf5v-31" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="300" y="52" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-34" parent="Vzf_UiizXqoFZ95OXf5v-31" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+getAlerts(filter: AlertFilter): List&amp;lt;Alert&amp;gt;&lt;/div&gt;&lt;div&gt;+createAlert(alert: Alert): void&lt;/div&gt;" vertex="1">
+      <mxGeometry height="40" width="300" y="60" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-35" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DataQuality Service" vertex="1">
+      <mxGeometry height="140" width="410" x="545" y="190" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-36" parent="Vzf_UiizXqoFZ95OXf5v-35" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&lt;div&gt;-dqRepo: DataQualityIssueRepository&lt;/div&gt;&lt;div&gt;-volumeRepo: DataVolumeSnapshotRepository&lt;/div&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="44" width="410" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-37" parent="Vzf_UiizXqoFZ95OXf5v-35" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="410" y="70" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-38" parent="Vzf_UiizXqoFZ95OXf5v-35" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;+getIssues(filter: DqIssueFilter): List&amp;lt;DataQualityIssue&amp;gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp;+getVolumeSnapshots(filter: VolumeFilter): List&amp;lt;DataVolumeSnapshot&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;+createIssue(issue: DataQualityIssue): void&lt;/span&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="62" width="410" y="78" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-39" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ETLMontitor Service" vertex="1">
+      <mxGeometry height="150" width="410" x="545" y="360" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-40" parent="Vzf_UiizXqoFZ95OXf5v-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;-jobRepo: EtlJobRunRepository&lt;/div&gt;&lt;div&gt;-taskRepo: EtlTaskRunRepository&lt;/div&gt;&lt;div&gt;-pipelineRepo: PipelineStatusRepository&lt;/div&gt;" vertex="1">
+      <mxGeometry height="54" width="410" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-41" parent="Vzf_UiizXqoFZ95OXf5v-39" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="410" y="80" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-42" parent="Vzf_UiizXqoFZ95OXf5v-39" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+getLatestJobRuns(filter: JobRunFilter): List&amp;lt;EtlJobRun&amp;gt;&lt;/div&gt;&lt;div&gt;+getTaskRuns(jobRunId: int): List&amp;lt;EtlTaskRun&amp;gt;&lt;/div&gt;&lt;div&gt;+getPipelineStatus(): List&amp;lt;PipelineStatus&amp;gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="62" width="410" y="88" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-43" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Repository" vertex="1">
+      <mxGeometry height="30" width="60" x="1110" y="-80" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-115" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-64">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-44" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Alert Repository" vertex="1">
+      <mxGeometry height="70" width="250" x="1200" y="-40" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-45" parent="Vzf_UiizXqoFZ95OXf5v-44" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="250" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-46" parent="Vzf_UiizXqoFZ95OXf5v-44" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+find(filter: AlertFilter): List&amp;lt;Alert&amp;gt;&lt;/div&gt;&lt;div&gt;+save(alert: Alert): void&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="250" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-116" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-68">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1390" y="40" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-47" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DataVolumeSnapshot Repository" vertex="1">
+      <mxGeometry height="70" width="320" x="1165" y="60" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-48" parent="Vzf_UiizXqoFZ95OXf5v-47" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="320" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-49" parent="Vzf_UiizXqoFZ95OXf5v-47" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;+find(filter: VolumeFilter): List&amp;lt;DataVolumeSnapshot&amp;gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp;+save(snapshot: DataVolumeSnapshot): void&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="320" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-50" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DataQualityIsssue Repository" vertex="1">
+      <mxGeometry height="70" width="310" x="1170" y="160" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-51" parent="Vzf_UiizXqoFZ95OXf5v-50" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="310" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-52" parent="Vzf_UiizXqoFZ95OXf5v-50" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+find(filter: DqIssueFilter): List&amp;lt;DataQualityIssue&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;+save(issue: DataQualityIssue): void&lt;/span&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="310" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-53" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ETLJobRun repository" vertex="1">
+      <mxGeometry height="70" width="310" x="1170" y="260" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-54" parent="Vzf_UiizXqoFZ95OXf5v-53" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="310" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-55" parent="Vzf_UiizXqoFZ95OXf5v-53" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;+findLatest(filter: JobRunFilter): List&amp;lt;EtlJobRun&amp;gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp;+save(run: EtlJobRun): void&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="310" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-56" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="PipeLine Status Repository" vertex="1">
+      <mxGeometry height="70" width="250" x="1200" y="370" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-57" parent="Vzf_UiizXqoFZ95OXf5v-56" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="250" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-58" parent="Vzf_UiizXqoFZ95OXf5v-56" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+findAll(): List&amp;lt;PipelineStatus&amp;gt;&lt;/div&gt;&lt;div&gt;+save(status: PipelineStatus): void&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="250" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-59" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ETL TaskRun Repository" vertex="1">
+      <mxGeometry height="70" width="310" x="1170" y="480" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-60" parent="Vzf_UiizXqoFZ95OXf5v-59" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="310" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-61" parent="Vzf_UiizXqoFZ95OXf5v-59" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+findByJobRunId(jobRunId: int): List&amp;lt;EtlTaskRun&amp;gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp;+save(run: EtlTaskRun): void&lt;/div&gt;" vertex="1">
+      <mxGeometry height="36" width="310" y="34" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-62" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Domain" vertex="1">
+      <mxGeometry height="30" width="60" x="1680" y="-270" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-63" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Alert" vertex="1">
+      <mxGeometry height="128" width="160" x="1710" y="-220" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-64" parent="Vzf_UiizXqoFZ95OXf5v-63" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+id: int&lt;/div&gt;&lt;div&gt;+source: string&lt;/div&gt;&lt;div&gt;+severity: string&lt;/div&gt;&lt;div&gt;+title: string&lt;/div&gt;&lt;div&gt;+createdAt: datetime&lt;/div&gt;&lt;div&gt;+isResolved: bool&lt;/div&gt;" vertex="1">
+      <mxGeometry height="94" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-65" parent="Vzf_UiizXqoFZ95OXf5v-63" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="120" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-67" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DataVolume Snapshot" vertex="1">
+      <mxGeometry height="128" width="160" x="1710" y="-58" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-68" parent="Vzf_UiizXqoFZ95OXf5v-67" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;+id: int&lt;/div&gt;&lt;div&gt;&amp;nbsp;+snapshotDate: date&lt;/div&gt;&lt;div&gt;&amp;nbsp;+schemaName: string&lt;/div&gt;&lt;div&gt;&amp;nbsp;+tableName: string&lt;/div&gt;&lt;div&gt;&amp;nbsp;+totalRows: long&lt;/div&gt;&lt;div&gt;&amp;nbsp;+totalSizeGb: float&lt;/div&gt;" vertex="1">
+      <mxGeometry height="94" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-69" parent="Vzf_UiizXqoFZ95OXf5v-67" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="120" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-71" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DataQuality Issue" vertex="1">
+      <mxGeometry height="158" width="160" x="1710" y="96" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-72" parent="Vzf_UiizXqoFZ95OXf5v-71" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+id: int&lt;/div&gt;&lt;div&gt;+issueType: string&lt;/div&gt;&lt;div&gt;+schemaName: string&lt;/div&gt;&lt;div&gt;+tableName: string&lt;/div&gt;&lt;div&gt;+columnName: string&lt;/div&gt;&lt;div&gt;+severity: string&lt;/div&gt;&lt;div&gt;+status: string&lt;/div&gt;&lt;div&gt;+detectedAt: datetime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="124" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-73" parent="Vzf_UiizXqoFZ95OXf5v-71" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="150" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-75" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ETLjobRun" vertex="1">
+      <mxGeometry height="128" width="160" x="1710" y="300" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-76" parent="Vzf_UiizXqoFZ95OXf5v-75" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+id: int&lt;/div&gt;&lt;div&gt;+jobName: string&lt;/div&gt;&lt;div&gt;+dagId: string&lt;/div&gt;&lt;div&gt;+status: string&lt;/div&gt;&lt;div&gt;+startedAt: datetime&lt;/div&gt;&lt;div&gt;+finishedAt: datetime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="94" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-77" parent="Vzf_UiizXqoFZ95OXf5v-75" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="120" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-79" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Pipeline Status" vertex="1">
+      <mxGeometry height="98" width="160" x="1710" y="472" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-80" parent="Vzf_UiizXqoFZ95OXf5v-79" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+id: int&lt;/div&gt;&lt;div&gt;+pipelineName: string&lt;/div&gt;&lt;div&gt;+lastRunStatus: string&lt;/div&gt;&lt;div&gt;&amp;nbsp;+lastRunAt: datetime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="64" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-81" parent="Vzf_UiizXqoFZ95OXf5v-79" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="90" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-83" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ETL TaskRun" vertex="1">
+      <mxGeometry height="128" width="160" x="1950" y="400" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-84" parent="Vzf_UiizXqoFZ95OXf5v-83" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;+id: int&lt;/div&gt;&lt;div&gt;&amp;nbsp;+jobRunId: int&lt;/div&gt;&lt;div&gt;&amp;nbsp;+taskId: string&lt;/div&gt;&lt;div&gt;&amp;nbsp;+status: string&lt;/div&gt;&lt;div&gt;&amp;nbsp;+startedAt: datetime&lt;/div&gt;&lt;div&gt;&amp;nbsp;+finishedAt: datetime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="94" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-85" parent="Vzf_UiizXqoFZ95OXf5v-83" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="120" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-87" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="DqIssueFilter" vertex="1">
+      <mxGeometry height="34" width="160" x="1750" y="600" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-89" parent="Vzf_UiizXqoFZ95OXf5v-87" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-91" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Alert Filter" vertex="1">
+      <mxGeometry height="34" width="160" x="1930" y="600" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-93" parent="Vzf_UiizXqoFZ95OXf5v-91" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-95" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="jobRunFilter" vertex="1">
+      <mxGeometry height="34" width="160" x="1750" y="650" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-97" parent="Vzf_UiizXqoFZ95OXf5v-95" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-99" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Volume Filter" vertex="1">
+      <mxGeometry height="34" width="160" x="1930" y="650" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-101" parent="Vzf_UiizXqoFZ95OXf5v-99" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+      <mxGeometry height="8" width="160" y="26" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-104" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.004;entryY=0.925;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-32">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-105" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.009;entryY=0.55;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-24">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-107" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.004;entryY=0.073;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-39">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="380" y="370" />
+          <mxPoint x="510" y="370" />
+        </Array>
+        <mxPoint x="510" y="394" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-108" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.008;entryY=0.304;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-40">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-109" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-44">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1050" y="99" />
+          <mxPoint x="1050" y="13" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-110" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-49">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-112" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-55">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1063" y="400" />
+          <mxPoint x="1063" y="312" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-113" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-58">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1078" y="460" />
+          <mxPoint x="1078" y="422" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-114" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;dashPattern=8 8;exitX=0.988;exitY=0.516;exitDx=0;exitDy=0;exitPerimeter=0;" target="Vzf_UiizXqoFZ95OXf5v-61">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1063" y="480" />
+          <mxPoint x="1063" y="532" />
+        </Array>
+        <mxPoint x="960" y="480" as="sourcePoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-117" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.002;entryY=0.579;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-72">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-118" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.032;entryY=0.104;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-76">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-119" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-58" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.004;entryY=0.203;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-80">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-120" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-59" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.005;entryY=0.372;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=8 8;" target="Vzf_UiizXqoFZ95OXf5v-84">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1325" y="460" />
+          <mxPoint x="1951" y="460" />
+        </Array>
+        <mxPoint x="1900" y="456" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-124" edge="1" parent="1" source="Vzf_UiizXqoFZ95OXf5v-83" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;entryX=1.001;entryY=0.096;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.125;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;" target="Vzf_UiizXqoFZ95OXf5v-75" value="Relation">
+      <mxGeometry relative="1" x="0.1484" as="geometry">
+        <mxPoint as="offset" />
+        <Array as="points">
+          <mxPoint x="1970" y="312" />
+          <mxPoint x="1870" y="312" />
+        </Array>
+        <mxPoint x="1890" y="360" as="sourcePoint" />
+        <mxPoint x="2050" y="360" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-125" connectable="0" parent="Vzf_UiizXqoFZ95OXf5v-124" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" value="0..n" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint x="-10" y="-40" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-126" connectable="0" parent="Vzf_UiizXqoFZ95OXf5v-124" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" value="1" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint x="30" y="-12" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="Vzf_UiizXqoFZ95OXf5v-127" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Text" vertex="1">
+      <mxGeometry height="30" width="60" x="-850" y="-1080" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

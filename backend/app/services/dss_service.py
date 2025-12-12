@@ -125,6 +125,10 @@ class DSSService:
                 }
             else:
                 kpi_summary = dss_result_raw["kpi_summary"]
+            
+            # Get AI generation status from cache (with backward compatibility)
+            ai_generation_status = cached_result.get("ai_generation_status", "completed")
+            
             # Rehydrate data structure for response consistency
             table_items = dss_result_raw.get("table_data", [])
             date_info = dss_result_raw.get("date_adjustment_info", {})
@@ -152,6 +156,8 @@ class DSSService:
                     "to_date": str(request.get("to_date")),
                     "platforms": request.get("platforms", []),
                     "categories": request.get("categories", []),
+                    "scope_mode": request.get("scope_mode", "by_category"),
+                    "product_keys": request.get("product_keys", []),
                 },
                 "kpi_summary": kpi_summary,
                 "table_data": data["items"],
@@ -165,12 +171,10 @@ class DSSService:
                 },
             }
 
-            # 4. Generate AI insights
-            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:20]}
-            if ai_mode == "full" and self.ai_summarizer.available:
-                ai_result = self.ai_summarizer.summarize_with_ai("price_prediction", ai_payload)
-            else:
-                ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
+            # 4. Generate rule-based AI insights immediately (fast fallback)
+            # Reduced prompt size from 20 to 10 products for faster processing
+            ai_payload = {**dss_result_raw, "table_data": dss_result_raw["table_data"][:10]}
+            ai_result = self.ai_summarizer._get_fallback_response("price_prediction", ai_payload)
             
             ai_summary_insights = ai_result.get("summary_insights", [])
             ai_recommended_actions = ai_result.get("recommended_actions", [])
@@ -181,15 +185,20 @@ class DSSService:
                 "kpi_keys": list(kpi_summary.keys()),
                 "table_rows_for_ai": len(ai_payload.get("table_data", [])),
             }
+            
+            # Set initial AI status for async generation
+            ai_generation_status = "skipped" if ai_mode != "full" else "pending"
 
             # Cache the result (TTL 1 hour)
             cache_payload = {
                 "dss_result_raw": dss_result_raw,
                 "ai_summary_insights": ai_summary_insights,
                 "ai_recommended_actions": ai_recommended_actions,
-                "ai_input_stats": ai_input_stats
+                "ai_input_stats": ai_input_stats,
+                "ai_generation_status": ai_generation_status,
             }
             await cache.set(cache_key, cache_payload, ttl=3600)
+
 
         # 5. Create analysis session for decision linking
         session_id = None
@@ -200,8 +209,9 @@ class DSSService:
                     INSERT INTO dss.dss_analysis_session (
                         scenario_key, user_id, filters_json, kpi_summary_json,
                         ai_summary_insights, ai_recommended_actions, date_adjustment_info,
-                        generated_at, source_endpoint
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
+                        generated_at, source_endpoint,
+                        ai_generation_status, ai_model_used
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
                     RETURNING session_id
                     """,
                     "price_prediction",
@@ -211,10 +221,24 @@ class DSSService:
                     json.dumps(ai_summary_insights),
                     json.dumps(ai_recommended_actions),
                     json.dumps(dss_result_raw["date_adjustment_info"]),
-                    "/dss/price/run"
+                    "/dss/price/run",
+                    ai_generation_status,  # Initially 'pending' or 'skipped'
+                    "rule-based-fallback"  # Will be updated when AI completes
                 )
                 session_id = session_row["session_id"]
-                logger.info(f"Created analysis session {session_id} for price prediction")
+                logger.info(f"Created analysis session {session_id} for price prediction (AI status: {ai_generation_status})")
+                
+                # Start background AI generation if mode is 'full' and AI is available
+                if ai_mode == "full" and self.ai_summarizer.available and session_id:
+                    asyncio.create_task(
+                        self._generate_ai_summary_async(
+                            session_id=session_id,
+                            scenario="price_prediction",
+                            dss_result_raw=ai_payload,  # Use the smaller payload
+                        )
+                    )
+                    logger.info(f"🚀 Started async AI generation for session {session_id}")
+                    
             except Exception as e:
                 logger.warning(f"Failed to create analysis session: {e}")
                 # Continue without session_id - не critical
@@ -227,11 +251,10 @@ class DSSService:
             "ai_summary_insights": ai_summary_insights,
             "ai_recommended_actions": ai_recommended_actions,
             "generated_at": datetime.now().isoformat(),
-            "ai_model_used": self.ai_summarizer.model
-            if self.ai_summarizer.available
-            else "rule-based-fallback",
-            "session_id": session_id,  # NEW: Session ID for decision linking
-            "ai_input_stats": ai_input_stats,   # 👈 NEW
+            "ai_model_used": "rule-based-fallback",  # Initial fallback
+            "ai_generation_status": ai_generation_status,  # NEW: Track AI status
+            "session_id": session_id,
+            "ai_input_stats": ai_input_stats,
         }
 
     async def _query_price_predictions(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -356,16 +379,20 @@ class DSSService:
                     {to_date_param}::date   AS to_date
             ),
             product_metrics AS (
+                -- ESTIMATE orders/revenue from reviews (since actual order data not available from crawled sources)
+                -- Conversion factor: 1 review ≈ 15 orders (assuming ~6-7% of buyers leave reviews)
                 SELECT
                     f.product_sk,
                     f.platform_sk,
                     AVG(f.avg_price)       AS avg_price,
                     MIN(f.min_price)       AS min_price,
                     MAX(f.max_price)       AS max_price,
-                    SUM(f.total_review_count) AS total_reviews,
+                    SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
                     AVG(f.avg_rating)      AS avg_rating,
-                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
-                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                    -- Estimated orders = reviews × conversion_factor (15)
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 AS estimated_orders,
+                    -- Estimated revenue = estimated_orders × avg_price
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 * AVG(f.avg_price) AS estimated_revenue
                 FROM dwh.fact_product_daily f
                 JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
                 CROSS JOIN date_bounds db
@@ -425,13 +452,14 @@ class DSSService:
                         ELSE (pred.predicted_price / pm.avg_price - 1)
                     END AS price_change_pct,
                     
-                    -- Use REAL data from fact_product_daily aggregates
-                    pm.total_orders AS current_orders,
-                    pm.total_revenue AS current_revenue,
+                    -- Use ESTIMATED data (derived from reviews since actual order data unavailable)
+                    pm.estimated_orders AS current_orders,
+                    pm.estimated_revenue AS current_revenue,
+                    -- Projected revenue = estimated_orders × predicted_price
                     CASE 
-                      WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
-                      THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
-                      ELSE NULL
+                      WHEN pm.estimated_orders > 0 AND pred.predicted_price > 0
+                      THEN pm.estimated_orders * pred.predicted_price
+                      ELSE 0
                     END AS projected_revenue,
                     
                     CASE 
@@ -582,16 +610,20 @@ class DSSService:
                     $2::date   AS to_date
             ),
             product_metrics AS (
+                -- ESTIMATE orders/revenue from reviews (since actual order data not available from crawled sources)
+                -- Conversion factor: 1 review ≈ 15 orders (assuming ~6-7% of buyers leave reviews)
                 SELECT
                     f.product_sk,
                     f.platform_sk,
                     AVG(f.avg_price)       AS avg_price,
                     MIN(f.min_price)       AS min_price,
                     MAX(f.max_price)       AS max_price,
-                    SUM(f.total_review_count) AS total_reviews,
+                    SUM(COALESCE(f.total_review_count, 0)) AS total_reviews,
                     AVG(f.avg_rating)      AS avg_rating,
-                    SUM(COALESCE(f.total_orders, 0))    AS total_orders,
-                    SUM(COALESCE(f.total_revenue, 0))   AS total_revenue
+                    -- Estimated orders = reviews × conversion_factor (15)
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 AS estimated_orders,
+                    -- Estimated revenue = estimated_orders × avg_price
+                    SUM(COALESCE(f.total_review_count, 0)) * 15 * AVG(f.avg_price) AS estimated_revenue
                 FROM dwh.fact_product_daily f
                 JOIN dwh.dim_date dd ON dd.date_sk = f.date_sk
                 CROSS JOIN date_bounds db
@@ -647,13 +679,14 @@ class DSSService:
                     ELSE (pred.predicted_price / pm.avg_price - 1)
                 END AS price_change_pct,
                 
-                -- Use REAL data from fact_product_daily aggregates
-                pm.total_orders AS current_orders,
-                pm.total_revenue AS current_revenue,
+                -- Use ESTIMATED data (derived from reviews since actual order data unavailable)
+                pm.estimated_orders AS current_orders,
+                pm.estimated_revenue AS current_revenue,
+                -- Projected revenue = estimated_orders × predicted_price
                 CASE 
-                  WHEN pm.total_revenue IS NOT NULL AND pm.total_revenue > 0 AND pm.avg_price > 0
-                  THEN pm.total_revenue * (pred.predicted_price / pm.avg_price)
-                  ELSE NULL
+                  WHEN pm.estimated_orders > 0 AND pred.predicted_price > 0
+                  THEN pm.estimated_orders * pred.predicted_price
+                  ELSE 0
                 END AS projected_revenue,
                 
                 CASE 
@@ -684,9 +717,17 @@ class DSSService:
             ORDER BY dp.product_key, pred.confidence DESC
         """
         
-        params.extend([min_confidence, min_price_change_pct])
+        # params list already includes all needed arguments in correct order:
+        # 1. from_date
+        # 2. adjusted_to_date 
+        # 3. product_keys
+        # 4. min_confidence
+        # 5. min_price_change_pct
+        # 6. max_discount_pct
+
         
         try:
+            logger.info(f"[DEBUG_PRICE] keys={product_keys}, min_conf={min_confidence}, min_pct={min_price_change_pct}, max_disc={max_discount_pct}")
             rows = await self.db.fetch(sql, *params)
             
             items = []
@@ -747,6 +788,9 @@ class DSSService:
                 "projected_total_revenue": 0.0,
                 "expected_revenue_uplift_pct": 0.0,
                 "avg_confidence": 0.0,
+                "is_estimated": True,
+                "estimation_method": "review_based",
+                "estimation_note": "Revenue estimated from reviews (1 review ≈ 15 orders)",
             }
 
         num_products = len(items)
@@ -769,6 +813,10 @@ class DSSService:
             "projected_revenue": projected_revenue,
             "expected_revenue_uplift_pct": expected_uplift_pct,
             "avg_confidence": avg_confidence,
+            # Metadata: indicate revenue is estimated from reviews
+            "is_estimated": True,
+            "estimation_method": "review_based",
+            "estimation_note": "Revenue estimated from reviews (1 review ≈ 15 orders)",
         }
 
     # ============================================
@@ -835,27 +883,27 @@ class DSSService:
                     "platforms": request.get("platforms", []),
                     "categories": request.get("categories", []),
                     "scope_mode": request.get("scope_mode", "by_category"),
+                    "source_product_key": request.get("source_product_key"),
                 },
                 "kpi_summary": kpi_summary,
                 "table_data": recommendations,
             }
 
-            # 4. Generate AI insights (send a moderate sample for context)
+            # 4. Generate AI insights (async pattern like price DSS)
             ai_payload = {
                 **dss_result_raw,
-                "table_data": dss_result_raw["table_data"][:15],
+                "table_data": dss_result_raw["table_data"][:10],  # Reduced from 15 to 10 for faster AI
             }
-            if ai_mode == "full" and self.ai_summarizer.available:
-                ai_result = self.ai_summarizer.summarize_with_ai(
-                    "product_recommendation", ai_payload
-                )
-            else:
-                ai_result = self.ai_summarizer._get_fallback_response(
-                    "product_recommendation", ai_payload
-                )
             
+            # ASYNC PATTERN: Return rule-based immediately, generate full AI in background
+            ai_result = self.ai_summarizer._get_fallback_response(
+                "product_recommendation", ai_payload
+            )
             ai_summary_insights = ai_result.get("summary_insights", [])
             ai_recommended_actions = ai_result.get("recommended_actions", [])
+            
+            # Determine initial AI status
+            ai_generation_status = "pending" if (ai_mode == "full" and self.ai_summarizer.available) else "skipped"
 
             # NEW: summarize AI input
             ai_input_stats = {
@@ -864,12 +912,13 @@ class DSSService:
                 "table_rows_for_ai": len(ai_payload.get("table_data", [])),
             }
 
-            # Cache the result
+            # Cache the result (with AI status for backward compatibility)
             cache_payload = {
                 "dss_result_raw": dss_result_raw,
                 "ai_summary_insights": ai_summary_insights,
                 "ai_recommended_actions": ai_recommended_actions,
-                "ai_input_stats": ai_input_stats
+                "ai_input_stats": ai_input_stats,
+                "ai_generation_status": ai_generation_status  # Cached results are always completed
             }
             await cache.set(cache_key, cache_payload, ttl=3600)
 
@@ -962,7 +1011,16 @@ class DSSService:
         # Get min_co_purchase_rate from request
         min_co_purchase_rate = request.get("min_co_purchase_rate")
 
-        # OPTIMIZED: Use product_metrics_global instead of CTE for better performance
+        # Validate dates
+        from_date = request.get("from_date")
+        to_date = request.get("to_date")
+        if isinstance(from_date, str):
+            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        if isinstance(to_date, str):
+            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+
+        # OPTIMIZED: Use product_metrics_global instead of CTE
+        # ADDED: Date filtering logic
         sql = """
             SELECT
                 dp_src.product_key AS source_product_key,
@@ -982,22 +1040,26 @@ class DSSService:
             FROM ml.fact_product_recommendation rec
             JOIN dwh.dim_product dp_src ON rec.source_product_sk = dp_src.product_sk
             JOIN dwh.dim_product dp_rec ON rec.recommended_product_sk = dp_rec.product_sk
+            JOIN dwh.dim_date dd ON rec.date_sk = dd.date_sk
             LEFT JOIN dwh.dim_platform dpl_rec ON split_part(dp_rec.product_key, '_', 1) = dpl_rec.platform_code
             LEFT JOIN dwh.dim_category dc ON dp_rec.category_sk = dc.category_sk
             LEFT JOIN dwh.product_metrics_global pm_rec ON dp_rec.product_sk = pm_rec.product_sk
             WHERE dp_src.product_key = $1
+              AND dd.date_value BETWEEN $5 AND $6
               AND rec.similarity_score >= $2
               AND (
-                  $4 IS NULL
-                  OR COALESCE(rec.co_purchase_rate, 0) >= $4
+                  $4::float IS NULL
+                  OR rec.co_purchase_rate >= $4::float
+                  OR rec.co_purchase_rate IS NULL
               )
-            ORDER BY rec.similarity_score DESC, rec.rank ASC
+            ORDER BY rec.similarity_score DESC
             LIMIT $3
         """
 
         try:
-            # Pass min_co_purchase_rate as 4th parameter
-            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, min_co_purchase_rate)
+            logger.info(f"[DEBUG_RECO] key={source_product_key}, min_sim={min_similarity}, cpr={min_co_purchase_rate}, dates={from_date}-{to_date}")
+            # Pass min_co_purchase_rate as 4th parameter, dates as 5,6
+            rows = await self.db.fetch(sql, source_product_key, min_similarity, top_k, min_co_purchase_rate, from_date, to_date)
             result = self._dedupe_recommendations([dict(row) for row in rows])
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
             await cache.set(cache_key, result, ttl=3600)
@@ -1063,9 +1125,10 @@ class DSSService:
             return cached
 
         # Build min_co_purchase_rate filter clause
+        # Use OR NULL to include records where co_purchase_rate hasn't been calculated yet
         min_cpr_filter = ""
         if min_cpr_param:
-            min_cpr_filter = f"AND COALESCE(rec.co_purchase_rate, 0) >= {min_cpr_param}"
+            min_cpr_filter = f"AND (rec.co_purchase_rate >= {min_cpr_param} OR rec.co_purchase_rate IS NULL)"
 
         # OPTIMIZED: Pre-filter source products by category to avoid full table scan
         # Fix platform filter for CTE - extract replacements outside f-string to avoid backslash syntax error
@@ -1118,13 +1181,22 @@ class DSSService:
         """
 
         try:
+            logger.info(f"🔍 Reco by category - params: {params}")
+            logger.info(f"📝 Reco by category - SQL first 500 chars: {sql[:500]}")
+            
             rows = await self.db.fetch(sql, *params)
+            logger.info(f"✅ Reco query returned {len(rows)} raw rows")
+            
             result = self._dedupe_recommendations([dict(row) for row in rows])
+            logger.info(f"📦 After deduplication: {len(result)} unique recommendations")
+            
             # Increased cache TTL from 1800 (30min) to 3600 (1hr) for better performance
             await cache.set(cache_key, result, ttl=3600)
             return result
         except Exception as e:
-            logger.exception(f"Error querying recommendations by category: {e}")
+            logger.exception(f"❌ Error querying recommendations by category: {e}")
+            logger.error(f"Failed params: {params}")
+            logger.error(f"Failed SQL (first 1000 chars): {sql[:1000]}")
             return []
 
     def _calculate_reco_kpis(
@@ -1233,6 +1305,15 @@ class DSSService:
             ai_summary_insights = cached_result["ai_summary_insights"]
             ai_recommended_actions = cached_result["ai_recommended_actions"]
             kpi_summary = dss_result_raw["kpi_summary"]
+            # Handle backward compatibility for cached results without ai_input_stats
+            ai_input_stats = cached_result.get("ai_input_stats")
+            if ai_input_stats is None:
+                ai_input_stats = {
+                    "scenario": "review_sentiment",
+                    "kpi_keys": list(kpi_summary.keys()),
+                    "table_rows_for_ai": len(dss_result_raw.get("table_data", [])),
+                }
+
         else:
             logger.info(f"Cache MISS for Sentiment DSS: {cache_key}")
             
@@ -1250,6 +1331,8 @@ class DSSService:
                     "to_date": str(request.get("to_date")),
                     "platforms": request.get("platforms", []),
                     "categories": request.get("categories", []),
+                    "scope_mode": request.get("scope_mode", "by_category"),
+                    "product_keys": request.get("product_keys", []),
                 },
                 "kpi_summary": kpi_summary,
                 "table_data": sentiment_data,
@@ -1268,15 +1351,23 @@ class DSSService:
             
             ai_summary_insights = ai_result.get("summary_insights", [])
             ai_recommended_actions = ai_result.get("recommended_actions", [])
+
+            # NEW: summarize AI input
+            ai_input_stats = {
+                "scenario": "review_sentiment",
+                "kpi_keys": list(kpi_summary.keys()),
+                "table_rows_for_ai": len(ai_payload.get("table_data", [])),
+            }
             
             # Cache the result
             cache_payload = {
                 "dss_result_raw": dss_result_raw,
                 "ai_summary_insights": ai_summary_insights,
-                "ai_recommended_actions": ai_recommended_actions
+                "ai_recommended_actions": ai_recommended_actions,
+                "ai_input_stats": ai_input_stats
             }
             await cache.set(cache_key, cache_payload, ttl=3600)
-
+            
         # 5. Create analysis session for decision linking
         session_id = None
         if user_id:
@@ -1312,7 +1403,8 @@ class DSSService:
             "ai_model_used": self.ai_summarizer.model
             if self.ai_summarizer.available
             else "rule-based-fallback",
-            "session_id": session_id,  # NEW: Session ID for decision linking
+            "session_id": session_id,
+            "ai_input_stats": ai_input_stats,
         }
 
     async def _query_review_sentiment(
@@ -1327,10 +1419,21 @@ class DSSService:
         min_reviews = request.get("min_reviews_per_product", 10)
         negative_threshold = request.get("negative_threshold", 0.25)
 
+        product_keys = request.get("product_keys")
+        
         conditions: List[str] = []
         params: List[Any] = []
         param_idx = 1
 
+        # If product_keys provided, filter by them (usually overrides platform/category, or intersects)
+        if product_keys:
+             conditions.append(f"dp.product_key = ANY(${param_idx})")
+             params.append(product_keys)
+             param_idx += 1
+        
+        # Only apply platform/category filters if NOT strictly exclusively by_product or if you want intersection
+        # Usually if user selects specific products, we just return those. 
+        # But keeping existing filters as optional intersection is safe.
         if platforms:
             conditions.append(f"dpl.platform_code = ANY(${param_idx})")
             params.append(platforms)
@@ -2111,3 +2214,303 @@ class DSSService:
             logger.exception(f"Error getting decision detail: {e}")
             raise
 
+    # ============================================
+    # ASYNC AI GENERATION (Background Task)
+    # ============================================
+    
+    async def get_ai_generation_status(self, session_id: int) -> Dict[str, Any]:
+        """
+        Get AI generation status for a session.
+        Used by polling endpoint to check if AI generation completed.
+        
+        Args:
+            session_id: Session ID to check
+            
+        Returns:
+            AI generation status info
+            
+        Raises:
+            ValueError: If session not found
+        """
+        result = await self.db.fetchrow(
+            """
+            SELECT 
+                session_id,
+                ai_generation_status,
+                ai_summary_insights,
+                ai_recommended_actions,
+                ai_model_used,
+                ai_generation_error,
+                ai_generation_started_at,
+                ai_generation_completed_at,
+                EXTRACT(EPOCH FROM (ai_generation_completed_at - ai_generation_started_at)) AS duration_seconds
+            FROM dss.dss_analysis_session
+            WHERE session_id = $1
+            """,
+            session_id
+        )
+        
+        if not result:
+            raise ValueError(f"Session {session_id} not found")
+        
+        return {
+            "session_id": result["session_id"],
+            "ai_generation_status": result["ai_generation_status"],
+            "ai_summary_insights": json.loads(result["ai_summary_insights"]) if result["ai_summary_insights"] else [],
+            "ai_recommended_actions": json.loads(result["ai_recommended_actions"]) if result["ai_recommended_actions"] else [],
+            "ai_model_used": result["ai_model_used"],
+            "ai_generation_error": result["ai_generation_error"],
+            "generation_duration_seconds": float(result["duration_seconds"]) if result["duration_seconds"] else None,
+        }
+    
+    async def _generate_ai_summary_async(
+        self, 
+        session_id: int, 
+        scenario: str, 
+        dss_result_raw: Dict[str, Any]
+    ):
+        """
+        Background task to generate AI summary and update session.
+        Runs asynchronously without blocking the main response.
+        
+        Args:
+            session_id: Session ID to update
+            scenario: DSS scenario type (price_prediction, product_recommendation, review_sentiment)
+            dss_result_raw: DSS result data for AI input
+        """
+        from app.db_pool import get_pool
+        
+        logger.info(f"[AI_ASYNC] Starting AI generation for session {session_id}")
+        
+        try:
+            # Update status to 'generating'
+            pool = await get_pool()
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE dss.dss_analysis_session
+                    SET ai_generation_status = 'generating',
+                        ai_generation_started_at = NOW()
+                    WHERE session_id = $1
+                    """,
+                    session_id
+                )
+            
+            # Generate AI summary (this is the slow part - 10-30s)
+            start_time = time.perf_counter()
+            ai_result = self.ai_summarizer.summarize_with_ai(scenario, dss_result_raw)
+            duration = time.perf_counter() - start_time
+            
+            ai_summary_insights = ai_result.get("summary_insights", [])
+            ai_recommended_actions = ai_result.get("recommended_actions", [])
+            ai_model_used = self.ai_summarizer.model if self.ai_summarizer.available else "rule-based-fallback"
+            
+            logger.info(f"[AI_ASYNC] ✅ AI generation completed in {duration:.2f}s using {ai_model_used}")
+            
+            # Update session with AI results
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE dss.dss_analysis_session
+                    SET ai_summary_insights = $1,
+                        ai_recommended_actions = $2,
+                        ai_model_used = $3,
+                        ai_generation_status = 'completed',
+                        ai_generation_completed_at = NOW()
+                    WHERE session_id = $4
+                    """,
+                    json.dumps(ai_summary_insights),
+                    json.dumps(ai_recommended_actions),
+                    ai_model_used,
+                    session_id
+                )
+            
+            logger.info(f"[AI_ASYNC] Session {session_id} updated with AI results")
+            
+        except Exception as e:
+            logger.error(f"[AI_ASYNC] ❌ AI generation failed for session {session_id}: {e}")
+            
+            # Update session with error
+            try:
+                pool = await get_pool()
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """
+                        UPDATE dss.dss_analysis_session
+                        SET ai_generation_status = 'failed',
+                            ai_generation_error = $1,
+                            ai_generation_completed_at = NOW()
+                        WHERE session_id = $2
+                        """,
+                        str(e)[:500],  # Truncate error message
+                        session_id
+                    )
+            except Exception as update_error:
+                logger.error(f"[AI_ASYNC] Failed to update error status: {update_error}")
+
+    # ============================================
+    # ANALYSIS SESSION HISTORY
+    # ============================================
+
+    async def list_analysis_sessions(
+        self,
+        user_id: Optional[int] = None,
+        scenario_key: Optional[str] = None,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20
+    ) -> Dict[str, Any]:
+        """List DSS analysis sessions with optional filters."""
+        
+        conditions = []
+        params = []
+        param_idx = 1
+        
+        if user_id:
+            conditions.append(f"s.user_id = ${param_idx}")
+            params.append(user_id)
+            param_idx += 1
+        
+        if scenario_key:
+            conditions.append(f"s.scenario_key = ${param_idx}")
+            params.append(scenario_key)
+            param_idx += 1
+        
+        if from_date:
+            conditions.append(f"s.generated_at >= ${param_idx}::timestamp")
+            params.append(from_date)
+            param_idx += 1
+        
+        if to_date:
+            conditions.append(f"s.generated_at <= ${param_idx}::timestamp")
+            params.append(to_date)
+            param_idx += 1
+        
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
+        
+        # Pagination params
+        limit_param = f"${param_idx}"
+        params.append(page_size)
+        param_idx += 1
+        
+        offset_param = f"${param_idx}"
+        params.append((page - 1) * page_size)
+        
+        # Scenario name mapping
+        scenario_names = {
+            'price_prediction': 'Price Prediction',
+            'product_recommendation': 'Product Recommendation',
+            'review_sentiment': 'Review Sentiment'
+        }
+        
+        try:
+            sql = f"""
+                SELECT 
+                    s.session_id,
+                    s.scenario_key,
+                    s.filters_json,
+                    s.kpi_summary_json,
+                    s.ai_generation_status,
+                    s.ai_model_used,
+                    s.generated_at,
+                    s.source_endpoint,
+                    u.email AS user_email,
+                    CASE WHEN d.decision_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_decision,
+                    d.decision_id,
+                    COUNT(*) OVER() AS total_count
+                FROM dss.dss_analysis_session s
+                LEFT JOIN iam.iam_user u ON s.user_id = u.user_id
+                LEFT JOIN dss.dss_decision d ON s.session_id = d.session_id
+                WHERE {where_clause}
+                ORDER BY s.generated_at DESC
+                LIMIT {limit_param} OFFSET {offset_param}
+            """
+            
+            rows = await self.db.fetch(sql, *params)
+            
+            total_count = rows[0]["total_count"] if rows else 0
+            
+            items = []
+            for row in rows:
+                items.append({
+                    "session_id": row["session_id"],
+                    "scenario_key": row["scenario_key"],
+                    "scenario_name": scenario_names.get(row["scenario_key"], row["scenario_key"]),
+                    "filters": json.loads(row["filters_json"]) if row["filters_json"] else {},
+                    "kpi_summary": json.loads(row["kpi_summary_json"]) if row["kpi_summary_json"] else {},
+                    "ai_generation_status": row["ai_generation_status"],
+                    "ai_model_used": row["ai_model_used"],
+                    "generated_at": row["generated_at"].isoformat() if row["generated_at"] else None,
+                    "source_endpoint": row["source_endpoint"],
+                    "user_email": row["user_email"],
+                    "has_decision": row["has_decision"],
+                    "decision_id": row["decision_id"]
+                })
+            
+            return {
+                "total": total_count,
+                "page": page,
+                "page_size": page_size,
+                "items": items
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error listing analysis sessions: {e}")
+            raise
+
+    async def get_session_detail(self, session_id: int) -> Dict[str, Any]:
+        """Get full details of a DSS analysis session."""
+        
+        scenario_names = {
+            'price_prediction': 'Price Prediction',
+            'product_recommendation': 'Product Recommendation',
+            'review_sentiment': 'Review Sentiment'
+        }
+        
+        try:
+            row = await self.db.fetchrow(
+                """
+                SELECT 
+                    s.*,
+                    u.email AS user_email,
+                    d.decision_id,
+                    d.title AS decision_title,
+                    d.status AS decision_status
+                FROM dss.dss_analysis_session s
+                LEFT JOIN iam.iam_user u ON s.user_id = u.user_id
+                LEFT JOIN dss.dss_decision d ON s.session_id = d.session_id
+                WHERE s.session_id = $1
+                """,
+                session_id
+            )
+            
+            if not row:
+                raise ValueError(f"Session {session_id} not found")
+            
+            return {
+                "session_id": row["session_id"],
+                "scenario_key": row["scenario_key"],
+                "scenario_name": scenario_names.get(row["scenario_key"], row["scenario_key"]),
+                "filters": json.loads(row["filters_json"]) if row["filters_json"] else {},
+                "kpi_summary": json.loads(row["kpi_summary_json"]) if row["kpi_summary_json"] else {},
+                "ai_summary_insights": json.loads(row["ai_summary_insights"]) if row["ai_summary_insights"] else [],
+                "ai_recommended_actions": json.loads(row["ai_recommended_actions"]) if row["ai_recommended_actions"] else [],
+                "date_adjustment_info": json.loads(row["date_adjustment_info"]) if row["date_adjustment_info"] else {},
+                "ai_generation_status": row["ai_generation_status"],
+                "ai_model_used": row["ai_model_used"],
+                "generated_at": row["generated_at"].isoformat() if row["generated_at"] else None,
+                "source_endpoint": row["source_endpoint"],
+                "user_email": row["user_email"],
+                "decision": {
+                    "decision_id": row["decision_id"],
+                    "title": row["decision_title"],
+                    "status": row["decision_status"]
+                } if row["decision_id"] else None
+            }
+            
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.exception(f"Error getting session detail: {e}")
+            raise

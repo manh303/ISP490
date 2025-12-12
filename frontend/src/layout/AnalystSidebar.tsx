@@ -40,44 +40,38 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "DSS Scenarios",
     subItems: [
-      { name: "DSS Scenarios", path: "/analyst/dss-scenarios", pro: false },
-      { name: "DSS Decisions", path: "/analyst/dss-decisions", pro: false },
+      { name: "Scenario List", path: "/analyst/dss-scenarios" },
+      { name: "Run Scenario", path: "/analyst/dss-input" },
+      { name: "DSS Decisions", path: "/analyst/dss-decisions" },
+      { name: "DSS Sessions", path: "/analyst/dss-sessions" },
     ],
   },
   {
     icon: <PieChartIcon />,
     name: "Data Analysis",
     subItems: [
-      { name: "Analytics Dashboard", path: "/analyst/analytics-dashboard", pro: false },
-      { name: "Product Analytics", path: "/analyst/product-analytics", pro: false },
-      { name: "Review Analytics", path: "/analyst/review-analytics", pro: false },
-      { name: "Platform Analytics", path: "/analyst/platform-analytics", pro: false },
-      { name: "Category Analytics", path: "/analyst/category-analytics", pro: false },
-      { name: "Pricing Analytics", path: "/analyst/pricing-analytics", pro: false },
-      { name: "Product Detail Analytics", path: "/analyst/product-detail-analytics", pro: false },
-      { name: "Sales Analytics", path: "/analyst/sales", pro: false },
-      { name: "Market Trends", path: "/analyst/trends", pro: false },
-      { name: "Customer Information", path: "/analyst/customers", pro: false },
-      { name: "Product Performance", path: "/analyst/products", pro: false },
+      { name: "Product Analytics", path: "/analyst/product-analytics" },
+      { name: "Review Analytics", path: "/analyst/review-analytics" },
+      { name: "Pricing Analytics", path: "/analyst/pricing-analytics" },
+      { name: "Platform Analytics", path: "/analyst/platform-analytics" },
+      { name: "Category Analytics", path: "/analyst/category-analytics" },
+      { name: "Product Detail Analytics", path: "/analyst/product-detail-analytics" },
     ],
   },
   {
     icon: <TableIcon />,
     name: "Reports",
     subItems: [
-      { name: "Weekly Reports", path: "/analyst/reports/weekly", pro: false },
-      { name: "Monthly Reports", path: "/analyst/reports/monthly", pro: false },
-      { name: "Custom Reports", path: "/analyst/reports/custom", pro: false },
-      { name: "Export Reports", path: "/analyst/reports", pro: false },
+      { name: "Daily/Weekly Summary", path: "/analyst/reports" },
+      { name: "Custom Reports", path: "/analyst/reports/custom" },
     ],
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <PageIcon />,
     name: "Data Visualization",
     subItems: [
-      { name: "Charts and Graphs", path: "/analyst/charts", pro: false },
-      { name: "Interactive Dashboard", path: "/analyst/interactive", pro: false },
-      { name: "Data Exploration", path: "/analyst/explorer", pro: false },
+      { name: "Interactive Charts", path: "/analyst/charts" },
+      { name: "Saved Views", path: "/analyst/saved-views" },
     ],
   },
 ];
@@ -87,18 +81,17 @@ const toolsItems: NavItem[] = [
     icon: <PlugInIcon />,
     name: "Analysis Tools",
     subItems: [
-      { name: "Query Builder", path: "/analyst/query-builder", pro: false },
-      { name: "Data Mining", path: "/analyst/data-mining", pro: false },
-      { name: "Predictive Models", path: "/analyst/models", pro: false },
+      { name: "AI Summarizer", path: "/analyst/ai-summarizer" },
+      { name: "What-if Simulator", path: "/analyst/what-if" },
+      { name: "Cohort/Segmentation", path: "/analyst/segmentation" },
     ],
   },
   {
     icon: <CalenderIcon />,
     name: "Scheduled Tasks",
     subItems: [
-      { name: "Report Schedule", path: "/analyst/schedule", pro: false },
-      { name: "Data Refresh", path: "/analyst/refresh", pro: false },
-      { name: "Alerts and Notifications", path: "/analyst/alerts", pro: false },
+      { name: "My Scheduled Reports", path: "/analyst/schedule" },
+      { name: "DSS Auto-runs", path: "/analyst/dss-auto-runs" },
     ],
   },
 ];
@@ -177,22 +170,19 @@ const AnalystSidebar: React.FC = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
+              className={`menu-item group ${openSubmenu?.type === menuType && openSubmenu?.index === index
+                ? "menu-item-active"
+                : "menu-item-inactive"
+                } cursor-pointer ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "lg:justify-start"
-              }`}
+                }`}
             >
               <span
-                className={`menu-item-icon-size  ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                }`}
+                className={`menu-item-icon-size  ${openSubmenu?.type === menuType && openSubmenu?.index === index
+                  ? "menu-item-icon-active"
+                  : "menu-item-icon-inactive"
+                  }`}
               >
                 {nav.icon}
               </span>
@@ -201,12 +191,11 @@ const AnalystSidebar: React.FC = () => {
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
+                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                  }`}
+                    ? "rotate-180 text-brand-500"
+                    : ""
+                    }`}
                 />
               )}
             </button>
@@ -214,16 +203,14 @@ const AnalystSidebar: React.FC = () => {
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
+                className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  }`}
               >
                 <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
-                  }`}
+                  className={`menu-item-icon-size ${isActive(nav.path)
+                    ? "menu-item-icon-active"
+                    : "menu-item-icon-inactive"
+                    }`}
                 >
                   {nav.icon}
                 </span>
@@ -251,32 +238,29 @@ const AnalystSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
+                      className={`menu-dropdown-item ${isActive(subItem.path)
+                        ? "menu-dropdown-item-active"
+                        : "menu-dropdown-item-inactive"
+                        }`}
                     >
                       {subItem.name}
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
+                            className={`ml-auto ${isActive(subItem.path)
+                              ? "menu-dropdown-badge-active"
+                              : "menu-dropdown-badge-inactive"
+                              } menu-dropdown-badge`}
                           >
                             new
                           </span>
                         )}
                         {subItem.pro && (
                           <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
+                            className={`ml-auto ${isActive(subItem.path)
+                              ? "menu-dropdown-badge-active"
+                              : "menu-dropdown-badge-inactive"
+                              } menu-dropdown-badge`}
                           >
                             pro
                           </span>
@@ -296,10 +280,9 @@ const AnalystSidebar: React.FC = () => {
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
+        ${isExpanded || isMobileOpen
+          ? "w-[290px]"
+          : isHovered
             ? "w-[290px]"
             : "w-[90px]"
         }
@@ -309,16 +292,15 @@ const AnalystSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
       >
         <Link to="/analyst/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/logodss.png"
                 alt="Analytics Panel"
                 width={150}
                 height={40}
@@ -346,11 +328,10 @@ const AnalystSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
+                  ? "lg:justify-center"
+                  : "justify-start"
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Analysis"
@@ -362,11 +343,10 @@ const AnalystSidebar: React.FC = () => {
             </div>
             <div className="">
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
+                  ? "lg:justify-center"
+                  : "justify-start"
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Tools"

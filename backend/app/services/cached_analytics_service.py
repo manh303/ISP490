@@ -46,7 +46,9 @@ class CachedAnalyticsService(AnalyticsService):
         platform_code: Optional[str] = None,
         category_key: Optional[str] = None,
     ):
-        """Get overview KPIs"""
+        """Get overview KPIs - CACHING DISABLED (serialization issue)"""
+        # TODO: Fix Pydantic model serialization in cache before re-enabling
+        # Cache was causing validation errors when returning string instead of model
         return await super().get_overview_kpis(from_date, to_date, platform_code, category_key)
     
     async def get_overview_trends(
@@ -86,7 +88,9 @@ class CachedAnalyticsService(AnalyticsService):
         category_key: Optional[str] = None,
         limit: int = 20,
     ):
-        """Get top products"""
+        """Get top products - CACHING DISABLED (serialization issue)"""
+        # TODO: Fix Pydantic model serialization in cache before re-enabling
+        # Cache was causing validation errors when returning string instead of model
         return await super().get_top_products(
             from_date, to_date, metric, platform_code, category_key, limit
         )

@@ -19,10 +19,11 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    allowedHosts: true,
     open: true,
     proxy: {
       '/api': {
-        target: 'https://isp490.onrender.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: true,
       },

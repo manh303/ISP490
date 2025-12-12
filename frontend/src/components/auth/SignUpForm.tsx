@@ -32,7 +32,7 @@ export default function SignUpForm() {
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
     if (!password) return { strength: 0, label: "" };
-    
+
     let score = 0;
     const checks = {
       length: password.length >= 8,
@@ -41,11 +41,11 @@ export default function SignUpForm() {
       number: /\d/.test(password),
       special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
     };
-    
+
     Object.values(checks).forEach(check => {
       if (check) score++;
     });
-    
+
     if (score <= 2) return { strength: 1, label: "Fair" };
     if (score <= 3) return { strength: 2, label: "Good" };
     if (score <= 4) return { strength: 3, label: "Strong" };
@@ -55,13 +55,13 @@ export default function SignUpForm() {
   const passwordStrength = getPasswordStrength(formData.password);
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
-        <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
+      <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Quay lại trang chủ
+          Back to Home
         </Link>
       </div>
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -70,14 +70,14 @@ export default function SignUpForm() {
         <div>
           <div className="mb-5 sm:mb-8 text-center">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Tạo tài khoản
+              Create Account
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Đăng ký ngay hôm nay – khởi đầu hành trình của bạn!
+              Sign up today to start your journey!
             </p>
           </div>
           <div>
-           
+
             <form onSubmit={async (e) => {
               e.preventDefault();
               setErrors({ name: "", email: "", password: "", confirmPassword: "", general: "" });
@@ -182,7 +182,7 @@ export default function SignUpForm() {
                   </Label> */}
                   <Input
                     type="text"
-                    placeholder="Tên đầy đủ"
+                    placeholder="Full Name"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className={errors.name ? "border-red-500" : ""}
@@ -193,7 +193,7 @@ export default function SignUpForm() {
                     </p>
                   )}
                 </div>
-                
+
                 {/* <!-- Email --> */}
                 <div>
                   {/* <Label>
@@ -212,7 +212,7 @@ export default function SignUpForm() {
                     </p>
                   )}
                 </div>
-                
+
                 {/* <!-- Password --> */}
                 <div>
                   {/* <Label>
@@ -220,7 +220,7 @@ export default function SignUpForm() {
                   </Label> */}
                   <div className="relative">
                     <Input
-                      placeholder="Mật khẩu"
+                      placeholder="Password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
@@ -241,23 +241,21 @@ export default function SignUpForm() {
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-gray-600 dark:text-gray-400">Độ mạnh:</span>
-                        <span className={`text-xs font-medium ${
-                          passwordStrength.strength === 1 ? 'text-orange-500' :
-                          passwordStrength.strength === 2 ? 'text-yellow-500' :
-                          passwordStrength.strength === 3 ? 'text-blue-500' :
-                          'text-green-500'
-                        }`}>
+                        <span className={`text-xs font-medium ${passwordStrength.strength === 1 ? 'text-orange-500' :
+                            passwordStrength.strength === 2 ? 'text-yellow-500' :
+                              passwordStrength.strength === 3 ? 'text-blue-500' :
+                                'text-green-500'
+                          }`}>
                           {passwordStrength.label}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
-                        <div 
-                          className={`h-1.5 rounded-full transition-all duration-300 ${
-                            passwordStrength.strength === 1 ? 'bg-orange-500 w-1/4' :
-                            passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
-                            passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
-                            'bg-green-500 w-full'
-                          }`}
+                        <div
+                          className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.strength === 1 ? 'bg-orange-500 w-1/4' :
+                              passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
+                                passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
+                                  'bg-green-500 w-full'
+                            }`}
                         />
                       </div>
                     </div>
@@ -268,7 +266,7 @@ export default function SignUpForm() {
                     </p>
                   )}
                 </div>
-                
+
                 {/* <!-- Confirm Password --> */}
                 <div>
                   {/* <Label>
@@ -276,7 +274,7 @@ export default function SignUpForm() {
                   </Label> */}
                   <div className="relative">
                     <Input
-                      placeholder="Nhập lại mật khẩu"
+                      placeholder="Confirm Password"
                       type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
@@ -309,16 +307,16 @@ export default function SignUpForm() {
                     className="w-4 h-4 mt-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <label htmlFor="terms" className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    Bằng việc tạo tài khoản, bạn đồng ý với{" "}
+                    By creating an account, you agree to the {" "}
                     <span className="text-gray-800 dark:text-white/90 font-medium">
-                      Điều khoản & Điều kiện
+                      Terms & Conditions
                     </span>{" "}
                     <span className="text-gray-800 dark:text-white/90 font-medium">
-                      Chính sách bảo mật của chúng tôi
+                      Privacy Policy
                     </span>
                   </label>
                 </div>
-                
+
                 {/* Error Message */}
                 {errors.general && (
                   <div className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
@@ -328,10 +326,10 @@ export default function SignUpForm() {
                     {errors.general}
                   </div>
                 )}
-                
+
                 {/* <!-- Button --> */}
                 <div>
-                  <Button 
+                  <Button
                     className="w-full"
                     size="sm"
                     disabled={isLoading}
@@ -356,7 +354,7 @@ export default function SignUpForm() {
                         Đang tạo tài khoản  ...
                       </>
                     ) : (
-                      "Tạo tài khoản"
+                      "Sign up"
                     )}
                   </Button>
                 </div>
@@ -365,12 +363,12 @@ export default function SignUpForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400">
-                Bạn đã có sẵn tài khoản ? {""}
+                Already have an account? {""}
                 <Link
                   to="/signin"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
-                  Đăng nhập
+                  Sign in
                 </Link>
               </p>
             </div>

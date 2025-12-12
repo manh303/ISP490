@@ -23,7 +23,7 @@ import asyncpg
 # ==========================
 
 # Ưu tiên lấy từ env DATABASE_URL cho giống backend
-DB_DSN = os.getenv("DATABASE_URL", "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1").strip()
+DB_DSN = os.getenv("DATABASE_URL", "postgresql://dss_user:dss_password_123@localhost/ecommerce_dss").strip()
 
 # Nếu không dùng env thì anh có thể gán cứng DSN ở đây:
 # DB_DSN = "postgresql://dss_user:password@host:5432/ecommerce_dss"

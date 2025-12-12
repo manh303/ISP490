@@ -55,13 +55,13 @@ class ConfigManager:
                 'postgres': {
                     'host': 'postgres',
                     'port': 5432,
-                    'database': 'ecommerce_dss_1',
+                    'database': 'ecommerce_dss',
                     'user': 'dss_user',
                     'password': 'dss_password_123'
                 },
                 'mongodb': {
                     'uri': 'mongodb://admin:admin_password@mongodb:27017/',
-                    'database': 'ecommerce_dss_1'
+                    'database': 'ecommerce_dss'
                 },
                 'redis': {
                     'url': 'redis://redis:6379/0'

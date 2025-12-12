@@ -296,6 +296,37 @@ export interface GetProductReportParams {
   to_date: string;
 }
 
+// Quality & Sentiment
+export interface RatingDistributionData {
+  rating_bucket: number; // 0-5 (0 = no rating)
+  product_count: number;
+}
+
+export interface GetRatingDistributionParams {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
+}
+
+export interface CriticalProduct {
+  product_key: string;
+  product_name: string;
+  platform_code: string;
+  category_name: string | null;
+  avg_rating: number;
+  total_reviews: number;
+  negative_pct: number;
+}
+
+export interface GetCriticalProductsParams {
+  from_date: string;
+  to_date: string;
+  platform_code?: string;
+  category_key?: string;
+  limit?: number;
+}
+
 /* ------------------------- API Functions ------------------------- */
 
 /**
@@ -466,6 +497,30 @@ export const getProductReport = async (
   params: GetProductReportParams
 ): Promise<ProductReport> => {
   const response = await api.get('/v1/analytics/report/product', { params });
+  return response.data;
+};
+
+/**
+ * Get Rating Distribution
+ * Get rating distribution by rating buckets (1-5 stars)
+ * @param params - Query parameters
+ */
+export const getRatingDistribution = async (
+  params: GetRatingDistributionParams
+): Promise<RatingDistributionData[]> => {
+  const response = await api.get('/v1/analytics/quality/rating-distribution', { params });
+  return response.data;
+};
+
+/**
+ * Get Critical Products
+ * Get products with critical issues (low rating or high negative sentiment)
+ * @param params - Query parameters
+ */
+export const getCriticalProducts = async (
+  params: GetCriticalProductsParams
+): Promise<CriticalProduct[]> => {
+  const response = await api.get('/v1/analytics/quality/critical-products', { params });
   return response.data;
 };
 

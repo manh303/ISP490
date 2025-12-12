@@ -6,7 +6,7 @@ import { authAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function ResetPasswordForm() {
-  // Kiểm tra email và otp trong sessionStorage
+  // Check email and otp in sessionStorage
   const email = sessionStorage.getItem('reset_email') || '';
   const otp = sessionStorage.getItem('reset_otp') || '';
 
@@ -17,27 +17,27 @@ export default function ResetPasswordForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
-  const [passwordStrength, setPasswordStrength] = useState<{strength: number; label: string}>({ strength: 0, label: '' });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [passwordStrength, setPasswordStrength] = useState<{ strength: number; label: string }>({ strength: 0, label: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [tokenError, setTokenError] = useState("");
-  
+
   const navigate = useNavigate();
   const { showToast } = useToast();
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!formData.password) {
-      newErrors.password = "Vui lòng nhập mật khẩu.";
+      newErrors.password = "Please enter a password.";
     } else if (formData.password.length < 8) {
-      newErrors.password = "Mật khẩu phải có ít nhất 8 ký tự.";
+      newErrors.password = "Password must be at least 8 characters.";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
+      newErrors.confirmPassword = "Please confirm your password.";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu không khớp.";
+      newErrors.confirmPassword = "Passwords do not match.";
     }
 
     setErrors(newErrors);
@@ -46,14 +46,14 @@ export default function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
     setTokenError("");
 
     try {
-      // Lấy email và otp từ sessionStorage
+      // Get email and otp from sessionStorage
       const email = sessionStorage.getItem('reset_email') || '';
       const otp = sessionStorage.getItem('reset_otp') || '';
 
@@ -81,7 +81,7 @@ export default function ResetPasswordForm() {
           navigate("/password-reset-success");
         }, 3000);
       } else {
-        setTokenError(response.message || "Đặt lại mật khẩu thất bại. Vui lòng thử lại.");
+        setTokenError(response.message || "Password reset failed. Please try again.");
         showToast("❌ Password reset failed", "error");
       }
 
@@ -90,9 +90,9 @@ export default function ResetPasswordForm() {
 
       let errorMessage = 'Password reset failed. Please try again.';
       if (error?.message) {
-              // Xóa email và otp khỏi sessionStorage sau khi reset thành công
-              sessionStorage.removeItem('reset_email');
-              sessionStorage.removeItem('reset_otp');
+        // Clear email and otp from sessionStorage after successful reset
+        sessionStorage.removeItem('reset_email');
+        sessionStorage.removeItem('reset_otp');
         errorMessage = error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
@@ -100,11 +100,11 @@ export default function ResetPasswordForm() {
 
       // Show specific error for common issues
       if (errorMessage.toLowerCase().includes('token') && errorMessage.toLowerCase().includes('expired')) {
-        errorMessage = 'Mã khôi phục mật khẩu đã hết hạn. Xin vui lòng yêu cầu đặt lại mật khẩu mới.';
+        errorMessage = 'Password recovery code has expired. Please request a new password reset.';
       } else if (errorMessage.toLowerCase().includes('token') && errorMessage.toLowerCase().includes('invalid')) {
-        errorMessage = 'Mã khôi phục mật khẩu không hợp lệ. Xin vui lòng kiểm tra mã hoặc yêu cầu đặt lại mật khẩu mới.';
+        errorMessage = 'Invalid password recovery code. Please check the code or request a new password reset.';
       } else if (errorMessage.toLowerCase().includes('password')) {
-        errorMessage = 'Mật khẩu chưa đúng yêu cầu. Vui lòng kiểm tra lại.';
+        errorMessage = 'Password does not meet requirements. Please check again.';
       }
 
       setTokenError(errorMessage);
@@ -153,7 +153,7 @@ export default function ResetPasswordForm() {
             className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
           >
             <ChevronLeftIcon className="size-5" />
-            Quay lại trang chủ
+            Back to Home
           </Link>
         </div>
         <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto text-center">
@@ -176,10 +176,10 @@ export default function ResetPasswordForm() {
               </div>
             </div>
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Thiếu thông tin xác thực
+              Missing Verification Information
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Email hoặc mã OTP chưa được cung cấp. Xin vui lòng quay lại và xác minh email của bạn.
+              Email or OTP code was not provided. Please go back and verify your email.
             </p>
           </div>
           <div className="space-y-4">
@@ -187,13 +187,13 @@ export default function ResetPasswordForm() {
               to="/forgot-password"
               className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
             >
-              Đi tới Quên Mật Khẩu
+              Go to Forgot Password
             </Link>
             <Link
               to="/signin"
               className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
             >
-              Quay lại đăng nhập
+              Back to Sign In
             </Link>
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function ResetPasswordForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
-          Quay lại trang chủ
+          Back to Home
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -217,10 +217,10 @@ export default function ResetPasswordForm() {
           <div>
             <div className="mb-5 sm:mb-8 text-center">
               <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                Đặt lại mật khẩu
+                Reset Password
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                 Xin hãy nhập mật khẩu mới vào ô bên dưới.
+                Please enter your new password below.
               </p>
             </div>
 
@@ -237,7 +237,7 @@ export default function ResetPasswordForm() {
                   <div>
                     <div className="relative">
                       <Input
-                        placeholder="Mật khẩu"
+                        placeholder="Password"
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
@@ -257,23 +257,21 @@ export default function ResetPasswordForm() {
                     {formData.password && (
                       <div className="mt-2">
                         <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mb-2">
-                          <div 
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                              passwordStrength.strength === 1 ? 'bg-orange-500 w-1/4' :
-                              passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
-                              passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
-                              'bg-green-500 w-full'
-                            }`} 
+                          <div
+                            className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.strength === 1 ? 'bg-orange-500 w-1/4' :
+                                passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
+                                  passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
+                                    'bg-green-500 w-full'
+                              }`}
                           />
                         </div>
                         <div className="text-left">
-                          <span className={`text-sm font-medium ${
-                            passwordStrength.strength === 1 ? 'text-orange-500' :
-                            passwordStrength.strength === 2 ? 'text-yellow-500' :
-                            passwordStrength.strength === 3 ? 'text-blue-500' :
-                            'text-green-500'
-                          }`}>
-                            Độ mạnh: {passwordStrength.label}
+                          <span className={`text-sm font-medium ${passwordStrength.strength === 1 ? 'text-orange-500' :
+                              passwordStrength.strength === 2 ? 'text-yellow-500' :
+                                passwordStrength.strength === 3 ? 'text-blue-500' :
+                                  'text-green-500'
+                            }`}>
+                            Strength: {passwordStrength.label}
                           </span>
                         </div>
                       </div>
@@ -293,7 +291,7 @@ export default function ResetPasswordForm() {
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Nhập lại mật khẩu mới"
+                        placeholder="Confirm new password"
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                         error={!!errors.confirmPassword}
@@ -336,10 +334,10 @@ export default function ResetPasswordForm() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          Đang cập nhật mật khẩu mới ...
+                          Updating password...
                         </>
                       ) : (
-                        "Cập nhật mật khẩu mới"
+                        "Update Password"
                       )}
                     </button>
                   </div>
@@ -348,12 +346,12 @@ export default function ResetPasswordForm() {
 
               <div className="mt-5">
                 <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                  Bạn có nhớ mật khẩu của mình không ? {""}
+                  Remember your password? {""}
                   <Link
                     to="/signin"
                     className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
-                    Đăng nhập
+                    Sign In
                   </Link>
                 </p>
               </div>
@@ -380,10 +378,10 @@ export default function ResetPasswordForm() {
                 </div>
               </div>
               <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                Cập nhật mật khẩu thành công!
+                Password Updated Successfully!
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Mật khẩu của bạn đã được cập nhật thành công. Trang đăng nhập sẽ được chuyển hướng đến bạn trong vài giây.
+                Your password has been updated successfully. You will be redirected to the sign-in page shortly.
               </p>
             </div>
             <div className="space-y-4">
@@ -391,7 +389,7 @@ export default function ResetPasswordForm() {
                 to="/signin"
                 className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
               >
-                Tiếp tục tới trang đăng nhập
+                Continue to Sign In
               </Link>
             </div>
           </div>

@@ -9,7 +9,7 @@ import os
 async def check_schema():
     """Check if required columns exist in tables"""
     
-    database_url = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
+    database_url = "postgresql://dss_user:dss_password_123@localhost/ecommerce_dss"
     
     conn = await asyncpg.connect(database_url)
     

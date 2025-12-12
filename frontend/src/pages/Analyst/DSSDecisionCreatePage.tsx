@@ -1,11 +1,41 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { saveDSSDecision, SaveDSSDecisionRequest, DSSActionItem } from '../../services/DSSApi';
+
+// Interface for product data from DSS Results
+interface ProductData {
+  product_key: string;
+  product_name: string;
+  platform?: string;
+  category_name?: string;
+  current_price?: number;
+  recommended_price?: number;
+  predicted_price?: number;
+  price_change_pct?: number;
+  confidence?: number;
+}
+
+// Interface for prefill state from DSS Results
+interface PrefillState {
+  scenario_key?: string;
+  kpi_summary?: Record<string, any>;
+  filters?: Record<string, any>;
+  ai_summary_insights?: string[];
+  ai_recommended_actions?: string[];
+  title?: string;
+  description?: string;
+  table_data?: ProductData[];
+}
 
 const DSSDecisionCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefillState = location.state as PrefillState | undefined;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productSearch, setProductSearch] = useState('');
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<SaveDSSDecisionRequest>({
@@ -22,12 +52,62 @@ const DSSDecisionCreatePage: React.FC = () => {
     status: 'PLANNED'
   });
 
+  // Prefill form from DSS Results state
+  useEffect(() => {
+    if (prefillState) {
+      setFormData(prev => ({
+        ...prev,
+        scenario_key: prefillState.scenario_key || prev.scenario_key,
+        title: prefillState.title || prev.title,
+        description: '', // Let user enter description manually
+        kpi_summary: prefillState.kpi_summary,
+        filters: prefillState.filters,
+        ai_summary_insights: prefillState.ai_summary_insights,
+        ai_recommended_actions: prefillState.ai_recommended_actions
+      }));
+    }
+  }, [prefillState]);
+
   const handleInputChange = (field: keyof SaveDSSDecisionRequest, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleActionChange = (field: keyof DSSActionItem, value: any) => {
     setCurrentAction(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle product selection - auto-fill current and recommended values
+  const handleProductSelect = (product: ProductData) => {
+    setCurrentAction(prev => ({
+      ...prev,
+      product_key: product.product_key,
+      current_value: product.current_price,
+      recommended_value: product.recommended_price || product.predicted_price,
+      unit: 'VND'
+    }));
+    setProductSearch(product.product_name);
+    setShowProductDropdown(false);
+  };
+
+  // Get products from prefill state
+  const products = prefillState?.table_data || [];
+
+  // Filter products based on search
+  const filteredProducts = products.filter(p =>
+    p.product_name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.product_key.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  // Date preset helpers
+  const setDatePreset = (days: number) => {
+    const today = new Date();
+    const startDate = today.toISOString().split('T')[0];
+    const endDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setCurrentAction(prev => ({
+      ...prev,
+      planned_start_date: startDate,
+      planned_end_date: endDate
+    }));
   };
 
   const addAction = () => {
@@ -64,6 +144,7 @@ const DSSDecisionCreatePage: React.FC = () => {
       target_level: 'product',
       status: 'PLANNED'
     });
+    setProductSearch('');
   };
 
   const removeAction = (index: number) => {
@@ -100,6 +181,10 @@ const DSSDecisionCreatePage: React.FC = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN').format(amount);
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
@@ -110,7 +195,61 @@ const DSSDecisionCreatePage: React.FC = () => {
           ← Back to Decisions
         </button>
         <h1 className="text-3xl font-bold text-gray-900">Create New DSS Decision</h1>
+        {prefillState && (
+          <p className="text-sm text-gray-500 mt-1">Pre-filled with data from DSS analysis</p>
+        )}
       </div>
+
+      {/* Prefilled Data Summary */}
+      {prefillState && (prefillState.kpi_summary || prefillState.ai_summary_insights) && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4 mb-6">
+          <h3 className="font-semibold text-blue-900 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Analysis Summary (Read-only)
+          </h3>
+
+          {/* KPI Summary */}
+          {prefillState.kpi_summary && (
+            <div>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">KPI Summary</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Object.entries(prefillState.kpi_summary).map(([key, value]) => (
+                  <div key={key} className="bg-white rounded p-2 text-center">
+                    <p className="text-xs text-gray-500 capitalize">{key.replace(/_/g, ' ')}</p>
+                    <p className="font-semibold text-gray-900">
+                      {typeof value === 'number' ? value.toLocaleString('vi-VN') : String(value)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Insights */}
+          {prefillState.ai_summary_insights && prefillState.ai_summary_insights.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">AI Insights</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                {prefillState.ai_summary_insights.slice(0, 3).map((insight, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    {insight}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Products available */}
+          {products.length > 0 && (
+            <p className="text-xs text-blue-600">
+              {products.length} products available from analysis for action selection
+            </p>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
@@ -144,10 +283,9 @@ const DSSDecisionCreatePage: React.FC = () => {
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="DRAFT">Draft</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="IMPLEMENTED">Implemented</option>
+                <option value="IMPLEMENTED">Submit for Implementation</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">Admin will review and approve/reject your decision</p>
             </div>
           </div>
 
@@ -174,7 +312,7 @@ const DSSDecisionCreatePage: React.FC = () => {
               onChange={(e) => handleInputChange('description', e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
               rows={3}
-              placeholder="Enter decision description"
+              placeholder="Describe the purpose and expected outcomes of this decision"
             />
           </div>
         </div>
@@ -220,17 +358,76 @@ const DSSDecisionCreatePage: React.FC = () => {
                 </select>
               </div>
 
-              <div>
+              {/* Improved Product Selection */}
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Key
+                  Product {products.length > 0 ? `(${products.length} available)` : ''}
                 </label>
-                <input
-                  type="text"
-                  value={currentAction.product_key || ''}
-                  onChange={(e) => handleActionChange('product_key', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="e.g., tiki_123456"
-                />
+                {products.length > 0 ? (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={(e) => {
+                        setProductSearch(e.target.value);
+                        setShowProductDropdown(true);
+                      }}
+                      onFocus={() => setShowProductDropdown(true)}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="Search product..."
+                    />
+                    {showProductDropdown && filteredProducts.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {filteredProducts.slice(0, 10).map((product) => (
+                          <div
+                            key={product.product_key}
+                            onClick={() => handleProductSelect(product)}
+                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-sm text-gray-900 truncate">
+                              {product.product_name}
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                              <span>{product.product_key}</span>
+                              <span className="text-green-600 font-medium">
+                                {product.current_price ? `${formatCurrency(product.current_price)} VND` : 'N/A'}
+                              </span>
+                            </div>
+                            {product.recommended_price && (
+                              <div className="text-xs text-blue-600 mt-0.5">
+                                Recommended: {formatCurrency(product.recommended_price)} VND
+                                <span className={`ml-2 ${(product.price_change_pct || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  ({(product.price_change_pct || 0) >= 0 ? '+' : ''}{(product.price_change_pct || 0).toFixed(1)}%)
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {filteredProducts.length > 10 && (
+                          <div className="px-3 py-2 text-xs text-gray-500 text-center bg-gray-50">
+                            +{filteredProducts.length - 10} more products
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {showProductDropdown && (
+                      <button
+                        type="button"
+                        onClick={() => setShowProductDropdown(false)}
+                        className="fixed inset-0 z-0"
+                        tabIndex={-1}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={currentAction.product_key || ''}
+                    onChange={(e) => handleActionChange('product_key', e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    placeholder="e.g., tiki_123456"
+                  />
+                )}
               </div>
 
               <div>
@@ -276,37 +473,73 @@ const DSSDecisionCreatePage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Unit
                 </label>
-                <input
-                  type="text"
-                  value={currentAction.unit || ''}
+                <select
+                  value={currentAction.unit || 'VND'}
                   onChange={(e) => handleActionChange('unit', e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="VND, %, score"
-                />
+                >
+                  <option value="VND">VND</option>
+                  <option value="%">%</option>
+                  <option value="score">Score</option>
+                  <option value="count">Count</option>
+                </select>
               </div>
 
-              <div>
+              {/* Date Range with Presets */}
+              <div className="lg:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
+                  Date Range
                 </label>
-                <input
-                  type="date"
-                  value={currentAction.planned_start_date || ''}
-                  onChange={(e) => handleActionChange('planned_start_date', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={currentAction.planned_end_date || ''}
-                  onChange={(e) => handleActionChange('planned_end_date', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(7)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next 7 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(14)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next 2 weeks
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(30)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next 30 days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset(90)}
+                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    Next quarter
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      value={currentAction.planned_start_date || ''}
+                      onChange={(e) => handleActionChange('planned_start_date', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={currentAction.planned_end_date || ''}
+                      onChange={(e) => handleActionChange('planned_end_date', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -346,6 +579,11 @@ const DSSDecisionCreatePage: React.FC = () => {
                   {action.chosen_value && (
                     <span className="text-gray-600 ml-2">
                       Value: {action.chosen_value} {action.unit}
+                    </span>
+                  )}
+                  {action.planned_start_date && action.planned_end_date && (
+                    <span className="text-gray-500 ml-2 text-sm">
+                      ({action.planned_start_date} → {action.planned_end_date})
                     </span>
                   )}
                 </div>

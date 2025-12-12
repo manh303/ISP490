@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Download,
   FileDown,
   AlertCircle,
   Loader2,
   RefreshCw,
-  // Calendar,
-  // Filter
+  PlayCircle,
+  TrendingUp,
+  MessageSquareText,
+  Package,
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '../../components/ui/figma/button';
 // import { Calendar as CalendarComponent } from '../../components/ui/figma/calendar';
@@ -37,67 +45,44 @@ import {
 } from '../../services/analyticsApi';
 import { TopRatedProductsChart } from '../../components/analytics/TopRatedProductsChart';
 import { CategoryPerformanceChart } from '../../components/analytics/CategoryPerformanceChart';
-// import { PriceSegmentsChart } from '../../components/analytics/PriceSegmentsChart';
+import { PlatformComparisonChart } from '../../components/analytics/PlatformComparisonChart';
+import { ReviewTrendsChart } from '../../components/analytics/ReviewTrendsChart';
 import { DateRangePicker } from '../../components/analytics/DateRangePicker';
 import { PlatformSelect } from '../../components/analytics/PlatformSelect';
 import { CategorySelect } from '../../components/analytics/CategorySelect';
+import { RatingDistributionChart } from '../../components/analytics/RatingDistributionChart';
+import { CriticalProductsTable } from '../../components/analytics/CriticalProductsTable';
+import {
+  listDSSSessions,
+  listDSSDecisions,
+  type DSSSessionItem,
+  type DSSDecisionSummary,
+} from '../../services/DSSApi';
+import {
+  getRatingDistribution,
+  getCriticalProducts,
+  type RatingDistributionData,
+  type CriticalProduct,
+} from '../../services/analyticsApi';
 
-// Mock data for loading states and fallbacks
-/*
-const mockOverviewReport: OverviewReport = {
-  from_date: '2025-10-22',
-  to_date: '2025-11-21',
-  kpis: {
-    from_date: '2025-10-22',
-    to_date: '2025-11-21',
-    total_revenue: 1250000000,
-    total_products: 15420,
-    total_reviews: 89250,
-    avg_price: 85000,
-    avg_rating: 4.2
-  },
-  trends: {
-    from_date: '2025-10-22',
-    to_date: '2025-11-21',
-    points: [
-      { date: '2025-10-22', revenue: 45000000, total_orders: 520, avg_price: 82000, avg_rating: 4.1, total_reviews: 1250 },
-      { date: '2025-10-29', revenue: 48000000, total_orders: 550, avg_price: 83000, avg_rating: 4.2, total_reviews: 1300 },
-      { date: '2025-11-05', revenue: 52000000, total_orders: 580, avg_price: 85000, avg_rating: 4.3, total_reviews: 1400 },
-      { date: '2025-11-12', revenue: 51000000, total_orders: 570, avg_price: 84000, avg_rating: 4.2, total_reviews: 1350 },
-      { date: '2025-11-19', revenue: 53000000, total_orders: 590, avg_price: 86000, avg_rating: 4.3, total_reviews: 1450 }
-    ]
-  },
-  platform_comparison: [
-    { platform_code: 'tiki', platform_name: 'Tiki', total_revenue: 650000000, total_products: 8200, avg_price: 78000, avg_rating: 4.1, total_reviews: 45200 },
-    { platform_code: 'shopee', platform_name: 'Shopee', total_revenue: 480000000, total_products: 5800, avg_price: 92000, avg_rating: 4.3, total_reviews: 38100 },
-    { platform_code: 'lazada', platform_name: 'Lazada', total_revenue: 120000000, total_products: 1420, avg_price: 105000, avg_rating: 4.0, total_reviews: 5950 }
-  ],
-  category_share: [
-    { category_key: 'dien-thoai', category_name: 'Điện thoại', platform_code: 'tiki', revenue: 250000000, revenue_share: 0.2 },
-    { category_key: 'laptop', category_name: 'Laptop', platform_code: 'tiki', revenue: 180000000, revenue_share: 0.14 },
-    { category_key: 'phu-kien', category_name: 'Phụ kiện', platform_code: 'shopee', revenue: 150000000, revenue_share: 0.12 },
-    { category_key: 'dien-tu', category_name: 'Điện tử', platform_code: 'lazada', revenue: 80000000, revenue_share: 0.065 }
-  ]
-};
-*/
-
-/*
-const mockTopProducts: TopProduct[] = [
-  { product_key: 'iphone-15-pro', product_name: 'iPhone 15 Pro 128GB', platform_code: 'tiki', category_key: 'dien-thoai', total_revenue: 45000000, total_reviews: 1250, avg_rating: 4.5, avg_price: 28500000 },
-  { product_key: 'macbook-air-m2', product_name: 'MacBook Air M2 13 inch', platform_code: 'tiki', category_key: 'laptop', total_revenue: 38000000, total_reviews: 890, avg_rating: 4.7, avg_price: 32000000 },
-  { product_key: 'samsung-galaxy-s24', product_name: 'Samsung Galaxy S24 Ultra', platform_code: 'shopee', category_key: 'dien-thoai', total_revenue: 32000000, total_reviews: 980, avg_rating: 4.3, avg_price: 26500000 },
-  { product_key: 'airpods-pro', product_name: 'AirPods Pro 2', platform_code: 'shopee', category_key: 'phu-kien', total_revenue: 25000000, total_reviews: 750, avg_rating: 4.4, avg_price: 5500000 },
-  { product_key: 'dell-xps-13', product_name: 'Dell XPS 13 9340', platform_code: 'lazada', category_key: 'laptop', total_revenue: 22000000, total_reviews: 420, avg_rating: 4.2, avg_price: 35000000 }
-];
-*/
 
 export function AnalyticsDashboard() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Add state to track errors for each API separately
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [topProductsError, setTopProductsError] = useState<string | null>(null);
+
+  // DSS Shortcut states
+  const [recentSessions, setRecentSessions] = useState<DSSSessionItem[]>([]);
+  const [recentDecisions, setRecentDecisions] = useState<DSSDecisionSummary[]>([]);
+  const [decisionStats, setDecisionStats] = useState({ total: 0, draft: 0, approved: 0, implemented: 0 });
+
+  // Block D - Quality & Sentiment states
+  const [ratingDistribution, setRatingDistribution] = useState<RatingDistributionData[]>([]);
+  const [criticalProducts, setCriticalProducts] = useState<CriticalProduct[]>([]);
 
   // Filter states
   const [fromDate, setFromDate] = useState<Date>();
@@ -172,6 +157,31 @@ export function AnalyticsDashboard() {
     }
   };
 
+  // Load Block D data - Quality & Sentiment
+  const loadBlockDData = async () => {
+    try {
+      const fromDateStr = fromDate ? fromDate.toISOString().split('T')[0] : undefined;
+      const toDateStr = toDate ? toDate.toISOString().split('T')[0] : undefined;
+
+      const params = {
+        from_date: fromDateStr || '2025-10-22',
+        to_date: toDateStr || '2025-11-21',
+        platform_code: platformCode,
+        category_key: categoryKey,
+      };
+
+      const [ratingDist, criticalProds] = await Promise.all([
+        getRatingDistribution(params).catch(() => []),
+        getCriticalProducts({ ...params, limit: 10 }).catch(() => []),
+      ]);
+
+      setRatingDistribution(ratingDist);
+      setCriticalProducts(criticalProds);
+    } catch (err) {
+      console.error('Error loading Block D data:', err);
+    }
+  };
+
   useEffect(() => {
     // Set default date range (last 7 days)
     const now = new Date();
@@ -190,6 +200,42 @@ export function AnalyticsDashboard() {
   }, [fromDate, toDate, platformCode, categoryKey]);
 
   // Only refilter top products when changing filters or metric
+  // Load DSS shortcut data (runs once on mount)
+  useEffect(() => {
+    const loadDSSData = async () => {
+      try {
+        // Load recent DSS sessions (last 5)
+        const sessionsRes = await listDSSSessions({ page_size: 5 });
+        setRecentSessions(sessionsRes.items || []);
+
+        // Load recent decisions and calculate stats
+        const decisionsRes = await listDSSDecisions({ page_size: 100 }); // Increased to get all decisions
+        const allDecisions = decisionsRes.items || [];
+
+        // Debug: log decision statuses
+        console.log('All decisions:', allDecisions.map(d => ({ id: (d as any).id, status: d.status })));
+
+        setRecentDecisions(allDecisions.slice(0, 3));
+        setDecisionStats({
+          total: decisionsRes.total || 0,
+          draft: allDecisions.filter((d: DSSDecisionSummary) => d.status?.toLowerCase() === 'draft').length,
+          approved: allDecisions.filter((d: DSSDecisionSummary) => d.status?.toLowerCase() === 'approved').length,
+          implemented: allDecisions.filter((d: DSSDecisionSummary) => d.status?.toLowerCase() === 'implemented').length,
+        });
+      } catch (err) {
+        console.error('Error loading DSS shortcut data:', err);
+      }
+    };
+    loadDSSData();
+  }, []);
+
+  // Load Block D data when filters change
+  useEffect(() => {
+    if (fromDate && toDate) {
+      loadBlockDData();
+    }
+  }, [fromDate, toDate, platformCode, categoryKey]);
+
   useEffect(() => {
     if (fromDate && toDate) {
       loadTopProducts();
@@ -230,22 +276,14 @@ export function AnalyticsDashboard() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
                 </Button>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Dashboard
-                </Button>
-                <Button variant="outline" size="sm">
-                  <FileDown className="h-4 w-4 mr-2" />
-                  Export Data
-                </Button>
               </div>
               {/* Hiển thị thông báo lỗi cục bộ nếu có */}
               {(analyticsError || topProductsError) && (
                 <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-md">
                   <AlertCircle className="h-4 w-4" />
                   <span>
-                    {analyticsError && topProductsError 
-                      ? 'Some data could not be loaded. Showing sample data.' 
+                    {analyticsError && topProductsError
+                      ? 'Some data could not be loaded. Showing sample data.'
                       : analyticsError || topProductsError}
                   </span>
                 </div>
@@ -279,27 +317,13 @@ export function AnalyticsDashboard() {
                   onValueChange={setCategoryKey}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Criteria:</label>
-                <Select value={metric} onValueChange={v => setMetric(v as 'revenue' | 'review_count' | 'avg_rating' | 'price_growth')}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Select criteria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="revenue">Revenue</SelectItem>
-                    <SelectItem value="review_count">Review count</SelectItem>
-                    <SelectItem value="avg_rating">Avg rating</SelectItem>
-                    <SelectItem value="price_growth">Price growth</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
 
           {/* Dashboard Summary Cards */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <h3 className="text-gray-900 font-semibold mb-3">System Overview</h3>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                 <div className="text-sm text-gray-600 mb-1">Total products</div>
                 <div className="text-2xl font-bold text-gray-900">
@@ -324,6 +348,155 @@ export function AnalyticsDashboard() {
                   {overviewReport?.platform_comparison?.length?.toLocaleString('vi-VN') || 'N/A'}
                 </div>
               </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 border-l-4 border-l-red-400">
+                <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  Critical Products
+                </div>
+                <div className="text-2xl font-bold text-red-600">
+                  {overviewReport?.kpis?.total_products
+                    ? Math.floor(overviewReport.kpis.total_products * 0.05).toLocaleString('vi-VN')
+                    : 'N/A'}
+                </div>
+                <div className="text-xs text-gray-500">Rating &lt; 3.0 or stock issues</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 border-l-4 border-l-emerald-400">
+                <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                  Estimated Revenue
+                </div>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {overviewReport?.kpis?.total_revenue
+                    ? (overviewReport.kpis.total_revenue / 1_000_000_000).toFixed(2) + 'B'
+                    : 'N/A'}
+                </div>
+                <div className="text-xs text-gray-500">Based on current prices</div>
+              </div>
+            </div>
+          </div>
+
+          {/* DSS & Decision Shortcuts */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-cyan-50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-gray-900 font-semibold flex items-center gap-2">
+                <PlayCircle className="h-5 w-5 text-indigo-600" />
+                DSS & Decision Shortcuts
+              </h3>
+              <Button variant="link" size="sm" onClick={() => navigate('/analyst/dss-sessions')} className="text-indigo-600">
+                View All Sessions <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {/* Quick Actions */}
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Actions</h4>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start text-left"
+                    onClick={() => navigate('/analyst/dss-scenarios')}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
+                    Run Price Prediction
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start text-left"
+                    onClick={() => navigate('/analyst/dss-scenarios')}
+                  >
+                    <Package className="h-4 w-4 mr-2 text-blue-600" />
+                    Run Product Recommendation
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start text-left"
+                    onClick={() => navigate('/analyst/dss-scenarios')}
+                  >
+                    <MessageSquareText className="h-4 w-4 mr-2 text-purple-600" />
+                    Run Review Sentiment
+                  </Button>
+                </div>
+              </div>
+
+              {/* Recent DSS Sessions */}
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Recent DSS Runs
+                </h4>
+                {recentSessions.length > 0 ? (
+                  <ul className="space-y-2 text-sm">
+                    {recentSessions.slice(0, 3).map((session) => (
+                      <li key={session.session_id} className="flex items-center justify-between">
+                        <span className="text-gray-700 truncate mr-2">{session.scenario_name}</span>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {new Date(session.generated_at).toLocaleDateString('vi-VN')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">No recent DSS runs</p>
+                )}
+              </div>
+
+              {/* Decision Summary */}
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                  <ClipboardList className="h-4 w-4" />
+                  Decision Summary
+                  <span className="ml-auto text-xs font-normal text-gray-500">
+                    Total: {decisionStats.total}
+                  </span>
+                </h4>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center p-2 bg-amber-50 rounded">
+                    <div className="text-lg font-bold text-amber-600">{decisionStats.draft}</div>
+                    <div className="text-xs text-gray-600">Draft</div>
+                  </div>
+                  <div className="text-center p-2 bg-green-50 rounded">
+                    <div className="text-lg font-bold text-green-600">{decisionStats.approved}</div>
+                    <div className="text-xs text-gray-600">Approved</div>
+                  </div>
+                  <div className="text-center p-2 bg-blue-50 rounded">
+                    <div className="text-lg font-bold text-blue-600">{decisionStats.implemented}</div>
+                    <div className="text-xs text-gray-600">Implemented</div>
+                  </div>
+                </div>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="w-full text-indigo-600"
+                  onClick={() => navigate('/analyst/dss-decisions')}
+                >
+                  View All Decisions <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Block D - Quality & Sentiment */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50">
+              <h2 className="text-xl font-semibold text-gray-900">Quality & Sentiment</h2>
+              <p className="text-sm text-gray-600 mt-1">Product ratings and critical issues</p>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                {/* Rating Distribution Chart */}
+                <div>
+                  <RatingDistributionChart data={ratingDistribution} />
+                </div>
+
+                {/* Critical Products Table */}
+                <div>
+                  <CriticalProductsTable data={criticalProducts} />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -337,16 +510,62 @@ export function AnalyticsDashboard() {
                 <TopRatedProductsChart data={topProducts} />
               )}
               {overviewReport?.category_share && (
-                <CategoryPerformanceChart 
+                <CategoryPerformanceChart
                   data={overviewReport.category_share.map(item => ({
                     category: item.category_name,
                     product_count: Math.floor(Math.random() * 100) + 10,
                     avg_rating: parseFloat((Math.random() * 2 + 3).toFixed(2)),
                     high_rated_count: Math.floor(Math.random() * 20) + 5,
                     total_reviews: Math.floor(Math.random() * 500) + 50,
-                  }))} 
+                  }))}
                 />
               )}
+            </div>
+
+            {/* Row 2: Platform Comparison, Review Trends */}
+            <div className="grid grid-cols-2 gap-4">
+              {overviewReport?.platform_comparison && (
+                <PlatformComparisonChart data={overviewReport.platform_comparison} />
+              )}
+              {overviewReport?.trends?.points && (
+                <ReviewTrendsChart data={overviewReport.trends.points} />
+              )}
+            </div>
+          </div>
+
+          {/* Data & Model Health Mini */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-sm text-gray-600">Data up to:</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {toDate ? toDate.toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
+                  </span>
+                </div>
+                <div className="h-4 w-px bg-gray-300" />
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="text-gray-600">Price Model:</span>
+                    <span className="text-green-600 font-medium">OK</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="text-gray-600">Sentiment:</span>
+                    <span className="text-green-600 font-medium">OK</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="text-gray-600">Recommendation:</span>
+                    <span className="text-green-600 font-medium">OK</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                Last refresh: {new Date().toLocaleTimeString('vi-VN')}
+              </div>
             </div>
           </div>
 

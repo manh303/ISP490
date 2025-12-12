@@ -35,31 +35,31 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: "User Management",
     subItems: [
-      { name: "Active Users", path: "/admin/users", pro: false },
-      // { name: "User Details", path: "/admin/users/details", pro: false },
-      { name: "Disabled Users", path: "/admin/deleted-users", pro: false },
+      { name: "User List", path: "/admin/users" },
+      { name: "Disabled Users", path: "/admin/deleted-users" },
     ],
   },
   {
     icon: <BoxCubeIcon />,
     name: "Role Management",
-    path: "/admin/roles",
+    subItems: [
+      { name: "Roles & Permissions", path: "/admin/roles" },
+    ],
   },
   {
     icon: <PieChartIcon />,
     name: "System Analytics",
     subItems: [
-      { name: "System Analytics", path: "/admin/analytics", pro: false },
-      { name: "DSS Decisions", path: "/analyst/dss-decisions", pro: false },
+      { name: "Usage Analytics", path: "/admin/analytics" },
+      { name: "DSS Decisions", path: "/admin/dss-scenarios" },
     ],
   },
   {
     icon: <TableIcon />,
     name: "Data Management",
     subItems: [
-      { name: "Database Tables", path: "/admin/tables", pro: false },
-      { name: "Data Export", path: "/admin/export", pro: false },
-      { name: "Data Import", path: "/admin/import", pro: false },
+      { name: "Data Catalog", path: "/admin/catalog" },
+      { name: "Pipelines Overview", path: "/admin/pipelines" },
     ],
   },
 ];
@@ -69,20 +69,18 @@ const settingsItems: NavItem[] = [
     icon: <PlugInIcon />,
     name: "System Settings",
     subItems: [
-      { name: "General Settings", path: "/admin/settings/general", pro: false },
-      { name: "Security", path: "/admin/settings/security", pro: false },
-      { name: "Permissions", path: "/admin/settings/permissions", pro: false },
+      { name: "General Settings", path: "/admin/settings/general" },
+      { name: "Security & IAM", path: "/admin/settings/security" },
+      { name: "Notifications", path: "/admin/notifications" },
     ],
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <ListIcon />,
     name: "Logs & Monitoring",
     subItems: [
-      { name: "System Logs", path: "/admin/logs", pro: false },
-      { name: "Activity Logs", path: "/admin/activity-logs", pro: false },
-      { name: "Activity Stats", path: "/admin/activity-stats", pro: false },
-      { name: "Performance", path: "/admin/performance", pro: false },
-      { name: "Error Reports", path: "/admin/errors", pro: false },
+      { name: "Activity Log", path: "/admin/activity-logs" },
+      { name: "System Logs", path: "/admin/logs" },
+      { name: "Health Dashboard", path: "/admin/activity-stats" },
     ],
   },
 ];
@@ -161,22 +159,19 @@ const AdminSidebar: React.FC = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
+              className={`menu-item group ${openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
+                } cursor-pointer ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "lg:justify-start"
-              }`}
+                }`}
             >
               <span
-                className={`menu-item-icon-size  ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
+                className={`menu-item-icon-size  ${openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
-                }`}
+                  }`}
               >
                 {nav.icon}
               </span>
@@ -185,12 +180,11 @@ const AdminSidebar: React.FC = () => {
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
+                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.type === menuType &&
+                      openSubmenu?.index === index
                       ? "rotate-180 text-brand-500"
                       : ""
-                  }`}
+                    }`}
                 />
               )}
             </button>
@@ -198,16 +192,14 @@ const AdminSidebar: React.FC = () => {
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
+                className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  }`}
               >
                 <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
+                  className={`menu-item-icon-size ${isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
-                  }`}
+                    }`}
                 >
                   {nav.icon}
                 </span>
@@ -235,32 +227,29 @@ const AdminSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
+                      className={`menu-dropdown-item ${isActive(subItem.path)
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
-                      }`}
+                        }`}
                     >
                       {subItem.name}
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
+                            className={`ml-auto ${isActive(subItem.path)
                                 ? "menu-dropdown-badge-active"
                                 : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
+                              } menu-dropdown-badge`}
                           >
                             new
                           </span>
                         )}
                         {subItem.pro && (
                           <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
+                            className={`ml-auto ${isActive(subItem.path)
                                 ? "menu-dropdown-badge-active"
                                 : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
+                              } menu-dropdown-badge`}
                           >
                             pro
                           </span>
@@ -280,10 +269,9 @@ const AdminSidebar: React.FC = () => {
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
+        ${isExpanded || isMobileOpen
+          ? "w-[290px]"
+          : isHovered
             ? "w-[290px]"
             : "w-[90px]"
         }
@@ -293,9 +281,8 @@ const AdminSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
       >
         <Link to="/admin/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
@@ -330,11 +317,10 @@ const AdminSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
-                }`}
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Admin Menu"
@@ -346,11 +332,10 @@ const AdminSidebar: React.FC = () => {
             </div>
             <div className="">
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
-                }`}
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "System"

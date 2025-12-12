@@ -100,14 +100,58 @@ const DSSDecisionDetailPage: React.FC = () => {
       {/* Description */}
       {decision.description && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Description</h2>
-          <p className="text-gray-700">{decision.description}</p>
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            Description
+          </h2>
+          <p className="text-gray-700 whitespace-pre-line">{decision.description}</p>
+        </div>
+      )}
+
+      {/* Analysis Filters Used */}
+      {decision.filters && Object.keys(decision.filters).length > 0 && (
+        <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Analysis Filters Used
+          </h3>
+          <div className="flex flex-wrap gap-3 text-sm">
+            {decision.filters.from_date && (
+              <span className="px-2 py-1 bg-white rounded border">
+                📅 {decision.filters.from_date} → {decision.filters.to_date}
+              </span>
+            )}
+            {decision.filters.platforms && decision.filters.platforms.length > 0 && (
+              <span className="px-2 py-1 bg-white rounded border">
+                🏪 {decision.filters.platforms.join(', ')}
+              </span>
+            )}
+            {decision.filters.categories && decision.filters.categories.length > 0 && (
+              <span className="px-2 py-1 bg-white rounded border">
+                📁 {decision.filters.categories.join(', ')}
+              </span>
+            )}
+            {decision.filters.scope_mode && (
+              <span className="px-2 py-1 bg-white rounded border capitalize">
+                🎯 {decision.filters.scope_mode.replace('_', ' ')}
+              </span>
+            )}
+          </div>
         </div>
       )}
 
       {/* KPI Summary */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">KPI Summary</h2>
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          KPI Summary
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Object.entries(decision.kpi_summary).map(([key, value]) => (
             <div key={key} className="bg-gray-50 p-4 rounded">
@@ -122,9 +166,13 @@ const DSSDecisionDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Insights */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">AI Insights</h2>
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          AI Insights
+        </h2>
         <div className="space-y-3">
           {decision.ai_summary_insights.map((insight, index) => (
             <div key={index} className="flex items-start">

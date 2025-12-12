@@ -1,112 +1,119 @@
 import React, { useState, useEffect } from 'react';
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
-import { getPlatforms, getCategories, getOverviewReport, type Platform as ApiPlatform, type Category as ApiCategory, type OverviewReport as ApiOverviewReport } from '../../../services/analyticsApi';
-import { getDSSHealth, getDataStatus, listDSSDecisions, getDSSDecisionDetail, type DSSHealthResponse, type DataStatusResponse, type DSSDecisionSummary, type DSSDecisionDetailResponse } from '../../../services/DSSApi';
-import { getActivityLogs } from '../../../services/adminApi';
-import AdminDashboardFilters from './components/AdminDashboardFilters';
-import AdminDashboardOverviewCards from './components/AdminDashboardOverviewCards';
-import AdminDashboardCharts from './components/AdminDashboardCharts';
-import AdminDashboardDSSDecisions from './components/AdminDashboardDSSDecisions';
-import AdminDashboardUserActivity from './components/AdminDashboardUserActivity';
+import { getPlatforms, getCategories, type Platform as ApiPlatform, type Category as ApiCategory } from '../../../services/analyticsApi';
+import { getDSSDecisionDetail, type DSSDecisionDetailResponse } from '../../../services/DSSApi';
+import { exportAuditLogsCSV } from '../../../services/adminDashboardApi';
+import {
+  fetchSystemGovernanceData,
+  fetchUserRoleData,
+  fetchDataCatalogData,
+  fetchPipelinesHealthData,
+  fetchDSSUsageData,
+  fetchAuditLogData,
+  fetchNotificationsData,
+  type SystemGovernanceData,
+  type UserRoleData,
+  type DataCatalogData,
+  type PipelinesHealthData,
+  type DSSUsageData,
+  type AuditLogData,
+  type AdminNotification,
+} from '../../../services/adminDashboardApi';
+
+// Import new components
+import SystemGovernanceOverview from '../../../pages/Admin/components/SystemGovernanceOverview';
+import UserRoleSnapshot from '../../../pages/Admin/components/UserRoleSnapshot';
+import DataCatalogHealth from '../../../pages/Admin/components/DataCatalogHealth';
+import PipelinesSystemHealth from '../../../pages/Admin/components/PipelinesSystemHealth';
+import DSSAnalyticsUsage from '../../../pages/Admin/components/DSSAnalyticsUsage';
+import SecurityAuditLog from '../../../pages/Admin/components/SecurityAuditLog';
+import NotificationsPendingTasks from '../../../pages/Admin/components/NotificationsPendingTasks';
 import DSSDecisionModal from './components/DSSDecisionModal';
 
-// Types for our data
-interface Platform extends ApiPlatform {}
-interface Category extends ApiCategory {}
-interface OverviewReport extends ApiOverviewReport {}
+// Types
+interface Platform extends ApiPlatform { }
+interface Category extends ApiCategory { }
 
 export default function AdminDashboard() {
-  // Filter states
-  const [fromDate, setFromDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 7);
-    return date.toISOString().split('T')[0];
-  });
-  const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('all-platforms');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all-categories');
-  
-  // Data states
+  // ===================== Filter States =====================
+  const [timeRange, setTimeRange] = useState('7d');
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [overviewReport, setOverviewReport] = useState<OverviewReport | null>(null);
-  const [dssHealth, setDssHealth] = useState<DSSHealthResponse | null>(null);
-  const [dataStatus, setDataStatus] = useState<DataStatusResponse | null>(null);
-  const [dssDecisions, setDssDecisions] = useState<DSSDecisionSummary[]>([]);
-  const [decisionDetail, setDecisionDetail] = useState<DSSDecisionDetailResponse | null>(null);
-  const [activityLogs, setActivityLogs] = useState<any[]>([]);
-  
-  // UI states
-  const [loading, setLoading] = useState(true);
-  const [isFiltersLoaded, setIsFiltersLoaded] = useState(false);
-  const [showDecisionModal, setShowDecisionModal] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<'revenue' | 'reviews' | 'price' | 'rating'>('revenue');
-  const [decisionPage, setDecisionPage] = useState(1);
-  const [decisionScenario, setDecisionScenario] = useState('all-scenarios');
-  const [decisionStatus, setDecisionStatus] = useState('all-status');
 
-  // Load initial data
+  // ===================== Section Data States =====================
+  const [governanceData, setGovernanceData] = useState<SystemGovernanceData | null>(null);
+  const [userRoleData, setUserRoleData] = useState<UserRoleData | null>(null);
+  const [catalogData, setCatalogData] = useState<DataCatalogData | null>(null);
+  const [pipelinesData, setPipelinesData] = useState<PipelinesHealthData | null>(null);
+  const [dssUsageData, setDssUsageData] = useState<DSSUsageData | null>(null);
+  const [auditLogData, setAuditLogData] = useState<AuditLogData | null>(null);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+
+  // ===================== UI States =====================
+  const [loading, setLoading] = useState(true);
+  const [sectionLoading, setSectionLoading] = useState<Record<string, boolean>>({});
+  const [showDecisionModal, setShowDecisionModal] = useState(false);
+  const [decisionDetail, setDecisionDetail] = useState<DSSDecisionDetailResponse | null>(null);
+
+  // Audit log filters
+  const [auditTimeRange, setAuditTimeRange] = useState('24h');
+  const [auditUser, setAuditUser] = useState('all');
+  const [auditAction, setAuditAction] = useState('all');
+  const [auditStatus, setAuditStatus] = useState('all');
+
+  // DSS filters
+  const [dssStatusFilter, setDssStatusFilter] = useState('all');
+
+  // User role filter
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+
+  // ===================== Load Initial Data =====================
   useEffect(() => {
-    loadFilters();
+    loadAllData();
   }, []);
 
-  // Load dashboard data when filters change
+  // ===================== Reload Audit Logs on Filter Change =====================
   useEffect(() => {
-    if (isFiltersLoaded) {
-      loadDashboardData();
-    }
-  }, [fromDate, toDate, selectedPlatform, selectedCategory, isFiltersLoaded]);
+    loadAuditLogs();
+  }, [auditTimeRange, auditUser, auditAction, auditStatus]);
 
-  // Load DSS decisions
-  useEffect(() => {
-    loadDSSDecisions();
-  }, [decisionPage, decisionScenario, decisionStatus, fromDate, toDate]);
-
-  const loadFilters = async () => {
-    try {
-      const [platformsRes, categoriesRes] = await Promise.all([
-        getPlatforms(),
-        getCategories()
-      ]);
-      setPlatforms(platformsRes);
-      setCategories(categoriesRes);
-    } catch (error) {
-      console.error('Failed to load filters:', error);
-      // Set empty arrays to allow dashboard to load even if filters fail
-      setPlatforms([]);
-      setCategories([]);
-    } finally {
-      setIsFiltersLoaded(true);
-    }
-  };
-
-  const loadDashboardData = async () => {
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      const params = {
-        from_date: fromDate,
-        to_date: toDate,
-        platform_code: selectedPlatform === 'all-platforms' ? undefined : selectedPlatform,
-        category_key: selectedCategory === 'all-categories' ? undefined : selectedCategory,
-      };
-
+      // Load all sections in parallel
       const [
-        overviewRes,
-        healthRes,
-        dataStatusRes,
-        activityRes
+        governanceRes,
+        userRoleRes,
+        catalogRes,
+        pipelinesRes,
+        dssUsageRes,
+        auditRes,
+        notificationsRes,
+        platformsRes,
+        categoriesRes,
       ] = await Promise.all([
-        getOverviewReport(params),
-        getDSSHealth(),
-        getDataStatus(),
-        getActivityLogs({ limit: 10, sort: '-created_at' })
+        fetchSystemGovernanceData().catch(err => { console.error('Governance error:', err); return null; }),
+        fetchUserRoleData().catch(err => { console.error('UserRole error:', err); return null; }),
+        fetchDataCatalogData().catch(err => { console.error('Catalog error:', err); return null; }),
+        fetchPipelinesHealthData().catch(err => { console.error('Pipelines error:', err); return null; }),
+        fetchDSSUsageData().catch(err => { console.error('DSS usage error:', err); return null; }),
+        fetchAuditLogData({ limit: 30 }).catch(err => { console.error('Audit error:', err); return null; }),
+        fetchNotificationsData().catch(err => { console.error('Notifications error:', err); return []; }),
+        getPlatforms().catch(() => []),
+        getCategories().catch(() => []),
       ]);
 
-      setOverviewReport(overviewRes);
-      setDssHealth(healthRes);
-      setDataStatus(dataStatusRes);
-      setActivityLogs(activityRes.data || []);
+      setGovernanceData(governanceRes);
+      setUserRoleData(userRoleRes);
+      setCatalogData(catalogRes);
+      setPipelinesData(pipelinesRes);
+      setDssUsageData(dssUsageRes);
+      setAuditLogData(auditRes);
+      setNotifications(notificationsRes);
+      setPlatforms(platformsRes);
+      setCategories(categoriesRes);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -114,57 +121,115 @@ export default function AdminDashboard() {
     }
   };
 
-  const loadDSSDecisions = async () => {
+  const loadAuditLogs = async () => {
+    setSectionLoading(prev => ({ ...prev, audit: true }));
     try {
-      const params: any = {
-        from_date: fromDate,
-        to_date: toDate,
-        page: decisionPage,
-        page_size: 10,
-      };
-      if (decisionScenario !== 'all-scenarios') params.scenario_key = decisionScenario;
-      if (decisionStatus !== 'all-status') params.status = decisionStatus;
+      const params: any = { limit: 30 };
 
-      const response = await listDSSDecisions(params);
-      setDssDecisions(response.items);
+      // Calculate date range based on timeRange filter
+      const now = new Date();
+      if (auditTimeRange === '1h') {
+        params.start_date = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      } else if (auditTimeRange === '24h') {
+        params.start_date = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      } else if (auditTimeRange === '7d') {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        params.start_date = d.toISOString().split('T')[0];
+      } else if (auditTimeRange === '30d') {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        params.start_date = d.toISOString().split('T')[0];
+      }
+
+      if (auditUser !== 'all') params.user_email = auditUser;
+      if (auditAction !== 'all') params.action = auditAction;
+      if (auditStatus !== 'all') params.status = auditStatus;
+
+      const result = await fetchAuditLogData(params);
+      setAuditLogData(result);
     } catch (error) {
-      console.error('Failed to load DSS decisions:', error);
+      console.error('Failed to reload audit logs:', error);
+    } finally {
+      setSectionLoading(prev => ({ ...prev, audit: false }));
     }
   };
 
-  const loadDecisionDetail = async (decisionId: number) => {
+  // ===================== Action Handlers =====================
+  const handleViewDecision = async (decisionId: number) => {
     try {
-      const response = await getDSSDecisionDetail(decisionId);
-      setDecisionDetail(response);
+      const detail = await getDSSDecisionDetail(decisionId);
+      setDecisionDetail(detail);
       setShowDecisionModal(true);
     } catch (error) {
       console.error('Failed to load decision detail:', error);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
+  const handleExportAuditCSV = async () => {
+    try {
+      const params: any = {};
+      if (auditUser !== 'all') params.user_email = auditUser;
+      if (auditAction !== 'all') params.action = auditAction;
+      if (auditStatus !== 'all') params.status = auditStatus;
+
+      const blob = await exportAuditLogsCSV(params);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export audit logs:', error);
+    }
   };
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('vi-VN').format(num);
+  const handleViewLogDetail = (logId: number) => {
+    // Could open a modal with detailed log info
+    console.log('View log detail:', logId);
   };
 
+  const handleViewNotificationDetail = (notification: AdminNotification) => {
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    }
+  };
+
+  const handleApproveNotification = (notificationId: number, relatedId: number) => {
+    // Implement approval logic
+    console.log('Approve:', notificationId, relatedId);
+    // Remove from list after approval
+    setNotifications(prev => prev.filter(n => n.notification_id !== notificationId));
+  };
+
+  const handleRejectNotification = (notificationId: number, relatedId: number) => {
+    // Implement rejection logic
+    console.log('Reject:', notificationId, relatedId);
+    setNotifications(prev => prev.filter(n => n.notification_id !== notificationId));
+  };
+
+  const handleMarkNotificationRead = (notificationId: number) => {
+    setNotifications(prev =>
+      prev.map(n => n.notification_id === notificationId ? { ...n, is_read: true } : n)
+    );
+  };
+
+  // ===================== Render =====================
   if (loading) {
     return (
       <div>
         <PageMeta
-          title="Bảng điều khiển Quản trị"
-          description="Bảng điều khiển Quản trị Thương mại điện tử Điện tử Việt Nam"
+          title="Administration Dashboard"
+          description="Administration Dashboard Hệ thống DSS"
         />
-        <PageBreadcrumb pageTitle="Bảng điều khiển Quản trị" />
+        <PageBreadcrumb pageTitle="Administration Dashboard" />
         <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Đang tải dữ liệu bảng điều khiển...</span>
+            <span className="ml-3 text-gray-600 dark:text-gray-400">Đang tải dữ liệu bảng điều khiển...</span>
           </div>
         </div>
       </div>
@@ -174,63 +239,117 @@ export default function AdminDashboard() {
   return (
     <div>
       <PageMeta
-        title="Bảng điều khiển Quản trị"
-        description="Bảng điều khiển Quản trị Thương mại điện tử Điện tử Việt Nam"
+        title="Administration Dashboard"
+        description="Administration Dashboard Hệ thống DSS"
       />
-      <PageBreadcrumb pageTitle="Bảng điều khiển Quản trị" />
+      <PageBreadcrumb pageTitle="Administration Dashboard" />
 
-      <div className="rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12 space-y-8">
+      <div className="rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12 space-y-10">
 
-        {/* Hàng 0: Filters Bar */}
-        <AdminDashboardFilters
-          fromDate={fromDate}
-          toDate={toDate}
-          selectedPlatform={selectedPlatform}
-          selectedCategory={selectedCategory}
-          platforms={platforms}
-          categories={categories}
-          onFromDateChange={setFromDate}
-          onToDateChange={setToDate}
-          onPlatformChange={setSelectedPlatform}
-          onCategoryChange={setSelectedCategory}
-          onApplyFilters={() => loadDashboardData()}
+        {/* ==================== Section 1: System & Governance Overview ==================== */}
+        <SystemGovernanceOverview
+          totalUsers={governanceData?.totalUsers || 0}
+          activeUsersLast30Days={governanceData?.activeUsersLast30Days || 0}
+          totalRoles={governanceData?.totalRoles || 0}
+          totalPermissions={governanceData?.totalPermissions || 0}
+          avgPermissionsPerRole={governanceData?.avgPermissionsPerRole || 0}
+          totalDatasets={governanceData?.totalDatasets || 0}
+          datasetsWithOwner={governanceData?.datasetsWithOwner || 0}
+          datasetsWithoutOwner={governanceData?.datasetsWithoutOwner || 0}
+          totalDSSScenarios={governanceData?.totalDSSScenarios || 0}
+          activeMLModels={governanceData?.activeMLModels || 0}
+          lastRetrainDate={governanceData?.lastRetrainDate || null}
+          isLoading={loading}
         />
 
-        {/* Hàng 1: Cards Overview */}
-        <AdminDashboardOverviewCards
-          overviewReport={overviewReport}
-          dssHealth={dssHealth}
-          dataStatus={dataStatus}
-          formatCurrency={formatCurrency}
-          formatNumber={formatNumber}
+        <hr className="border-gray-200 dark:border-gray-700" />
+
+        {/* ==================== Section 2: User & Role Management ==================== */}
+        <UserRoleSnapshot
+          roleDistribution={userRoleData?.roleDistribution || []}
+          recentUsers={userRoleData?.recentUsers || []}
+          selectedRoleFilter={userRoleFilter}
+          onRoleFilterChange={setUserRoleFilter}
+          isLoading={loading}
         />
 
-        {/* Hàng 2: Charts */}
-        <AdminDashboardCharts
-          overviewReport={overviewReport}
-          selectedMetric={selectedMetric}
-          selectedPlatform={selectedPlatform}
-          formatCurrency={formatCurrency}
-          formatNumber={formatNumber}
-          onMetricChange={setSelectedMetric}
+        <hr className="border-gray-200 dark:border-gray-700" />
+
+        {/* ==================== Section 3: Data Catalog & Dataset Health ==================== */}
+        <DataCatalogHealth
+          totalDatasets={catalogData?.totalDatasets || 0}
+          datasetsWithOwner={catalogData?.datasetsWithOwner || 0}
+          datasetsWithoutDescription={catalogData?.datasetsWithoutDescription || 0}
+          datasetsNotUpdated={catalogData?.datasetsNotUpdated || 0}
+          notUpdatedDays={7}
+          datasetsBySchema={catalogData?.datasetsBySchema || []}
+          atRiskDatasets={catalogData?.atRiskDatasets || []}
+          isLoading={loading}
         />
 
-        {/* Hàng 3: DSS Decisions */}
-        <AdminDashboardDSSDecisions
-          dssDecisions={dssDecisions}
-          decisionScenario={decisionScenario}
-          decisionStatus={decisionStatus}
-          onScenarioChange={setDecisionScenario}
-          onStatusChange={setDecisionStatus}
-          onViewDecision={loadDecisionDetail}
+        <hr className="border-gray-200 dark:border-gray-700" />
+
+        {/* ==================== Section 4: Pipelines & System Health ==================== */}
+        <PipelinesSystemHealth
+          etlRunsLast24h={pipelinesData?.etlRunsLast24h || 0}
+          etlFailuresLast24h={pipelinesData?.etlFailuresLast24h || 0}
+          mlTrainsLast7d={pipelinesData?.mlTrainsLast7d || 0}
+          mlFailuresLast7d={pipelinesData?.mlFailuresLast7d || 0}
+          pipelineRunsOverTime={pipelinesData?.pipelineRunsOverTime || []}
+          recentPipelineRuns={pipelinesData?.recentPipelineRuns || []}
+          isLoading={loading}
         />
 
-        {/* Hàng 4: User & Activity Log (Optional) */}
-        <AdminDashboardUserActivity
-          activityLogs={activityLogs}
+        <hr className="border-gray-200 dark:border-gray-700" />
+
+        {/* ==================== Section 5: DSS & Analytics Usage ==================== */}
+        <DSSAnalyticsUsage
+          dssRunsLast7d={dssUsageData?.dssRunsLast7d || 0}
+          decisionsCreatedLast30d={dssUsageData?.decisionsCreatedLast30d || 0}
+          decisionsImplemented={dssUsageData?.decisionsImplemented || 0}
+          uniqueAnalystUsers={dssUsageData?.uniqueAnalystUsers || 0}
+          runsByScenario={dssUsageData?.runsByScenario || []}
+          recentDecisions={dssUsageData?.recentDecisions || []}
+          selectedStatusFilter={dssStatusFilter}
+          onStatusFilterChange={setDssStatusFilter}
+          onViewDecision={handleViewDecision}
+          isLoading={loading}
         />
 
-        {/* Decision Detail Modal */}
+        <hr className="border-gray-200 dark:border-gray-700" />
+
+        {/* ==================== Section 6: Security & Audit Log ==================== */}
+        <SecurityAuditLog
+          activityLogs={auditLogData?.activityLogs || []}
+          totalLogs={auditLogData?.totalLogs || 0}
+          selectedTimeRange={auditTimeRange}
+          selectedUser={auditUser}
+          selectedAction={auditAction}
+          selectedStatus={auditStatus}
+          onTimeRangeChange={setAuditTimeRange}
+          onUserChange={setAuditUser}
+          onActionChange={setAuditAction}
+          onStatusChange={setAuditStatus}
+          onViewDetail={handleViewLogDetail}
+          onExportCSV={handleExportAuditCSV}
+          availableUsers={auditLogData?.availableUsers || []}
+          availableActions={auditLogData?.availableActions || []}
+          isLoading={sectionLoading.audit || loading}
+        />
+
+        <hr className="border-gray-200 dark:border-gray-700" />
+
+        {/* ==================== Section 7: Notifications & Pending Tasks ==================== */}
+        <NotificationsPendingTasks
+          notifications={notifications}
+          onViewDetail={handleViewNotificationDetail}
+          onApprove={handleApproveNotification}
+          onReject={handleRejectNotification}
+          onMarkAsRead={handleMarkNotificationRead}
+          isLoading={false}
+        />
+
+        {/* ==================== DSS Decision Modal ==================== */}
         <DSSDecisionModal
           showModal={showDecisionModal}
           decisionDetail={decisionDetail}
