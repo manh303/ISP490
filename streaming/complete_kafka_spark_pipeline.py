@@ -21,7 +21,7 @@ class CompleteKafkaSparkPipeline:
         self.postgres_config = {
             'host': 'localhost',
             'port': 5432,
-            'database': 'ecommerce_dss_1',
+            'database': 'ecommerce_dss',
             'user': 'dss_user',
             'password': 'dss_password_123'
         }

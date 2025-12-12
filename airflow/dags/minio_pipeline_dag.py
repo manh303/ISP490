@@ -26,7 +26,7 @@ default_args = {
 }
 
 # ============================================================
-#      PHẦN A – ETL META LOGGING (schema meta.*)
+#      PHẦN A – ETL META LOGGING (schema metadata.*)
 # ============================================================
 
 PIPELINE_JOB_CODE = "MINIO_ECOMMERCE_DWH_PIPELINE"
@@ -59,14 +59,14 @@ def _get_pg_conn():
 
 def _ensure_etl_job(conn):
     """
-    Đảm bảo meta.etl_job có dòng cho PIPELINE_JOB_CODE.
+    Đảm bảo metadata.etl_job có dòng cho PIPELINE_JOB_CODE.
     Trả về job_id hoặc None.
     """
     try:
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO meta.etl_job (job_code, job_name, description)
+            INSERT INTO metadata.etl_job (job_code, job_name, description)
             VALUES (%s, %s, %s)
             ON CONFLICT (job_code) DO NOTHING;
         """,
@@ -79,7 +79,7 @@ def _ensure_etl_job(conn):
         conn.commit()
 
         cur.execute(
-            "SELECT job_id FROM meta.etl_job WHERE job_code = %s;",
+            "SELECT job_id FROM metadata.etl_job WHERE job_code = %s;",
             (PIPELINE_JOB_CODE,),
         )
         row = cur.fetchone()
@@ -95,7 +95,7 @@ def _ensure_etl_job(conn):
 
 def start_etl_run(job_code, run_date, airflow_run_id=None):
     """
-    Tạo 1 dòng meta.etl_run với status=RUNNING.
+    Tạo 1 dòng metadata.etl_run với status=RUNNING.
     Trả về run_id hoặc None.
     """
     conn = _get_pg_conn()
@@ -111,7 +111,7 @@ def start_etl_run(job_code, run_date, airflow_run_id=None):
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO meta.etl_run (
+            INSERT INTO metadata.etl_run (
                 job_id, run_date, started_at, status, airflow_run_id
             )
             VALUES (%s, %s, %s, %s, %s)
@@ -136,7 +136,7 @@ def start_etl_run(job_code, run_date, airflow_run_id=None):
 
 def finish_etl_run(run_id, status, rows_read=None, rows_written=None, error_message=None):
     """
-    Update meta.etl_run khi DAG kết thúc.
+    Update metadata.etl_run khi DAG kết thúc.
     """
     if run_id is None:
         print("[META] finish_etl_run called with run_id=None, skip.")
@@ -150,7 +150,7 @@ def finish_etl_run(run_id, status, rows_read=None, rows_written=None, error_mess
         cur = conn.cursor()
         cur.execute(
             """
-            UPDATE meta.etl_run
+            UPDATE metadata.etl_run
             SET finished_at = %s,
                 status = %s,
                 rows_read = COALESCE(%s, rows_read),
@@ -474,23 +474,142 @@ python -u "$SCRIPT"
 docker exec spark-master spark-submit \
   --master spark://spark-master:7077 \
   --deploy-mode client \
-  --num-executors 2 \
   --executor-cores 1 \
-  --executor-memory 1536m \
-  --driver-memory 3g \
+  --executor-memory 1g \
+  --driver-memory 2g \
   --conf spark.sql.session.timeZone=UTC \
-  --conf spark.sql.shuffle.partitions=100 \
-  --conf spark.dynamicAllocation.enabled=false \
-  --conf spark.driver.maxResultSize=1g \
-  --conf spark.memory.fraction=0.8 \
+  --conf spark.sql.shuffle.partitions=200 \
+  --conf spark.default.parallelism=200 \
+  --conf spark.dynamicAllocation.enabled=true \
+  --conf spark.dynamicAllocation.minExecutors=1 \
+  --conf spark.dynamicAllocation.maxExecutors=2 \
+  --conf spark.dynamicAllocation.initialExecutors=1 \
+  --conf spark.driver.maxResultSize=512m \
+  --conf spark.memory.fraction=0.6 \
   --conf spark.memory.storageFraction=0.3 \
-  --conf spark.executor.memoryOverhead=512m \
-  --conf spark.driver.memoryOverhead=512m \
+  --conf spark.executor.memoryOverhead=768m \
+  --conf spark.driver.memoryOverhead=768m \
+  --conf spark.sql.autoBroadcastJoinThreshold=10485760 \
+  --conf spark.sql.adaptive.enabled=true \
+  --conf spark.sql.adaptive.coalescePartitions.enabled=true \
+  --conf spark.sql.files.maxPartitionBytes=67108864 \
+  --conf spark.shuffle.compress=true \
+  --conf spark.shuffle.spill.compress=true \
+  --conf spark.rdd.compress=true \
+  --conf spark.io.compression.codec=snappy \
+  --conf spark.shuffle.file.buffer=64k \
+  --conf spark.reducer.maxSizeInFlight=48m \
+  --conf spark.executor.extraJavaOptions='-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThreads=2' \
+  --conf spark.driver.extraJavaOptions='-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35' \
+  --conf spark.executorEnv.DB_HOST=postgres \
+  --conf spark.executorEnv.DB_PORT=5432 \
+  --conf spark.executorEnv.DB_NAME=ecommerce_dss \
+  --conf spark.executorEnv.DB_USER=dss_user \
+  --conf spark.executorEnv.DB_PASSWORD=dss_password_123 \
+  --conf spark.yarn.appMasterEnv.DB_HOST=postgres \
+  --conf spark.yarn.appMasterEnv.DB_PORT=5432 \
+  --conf spark.yarn.appMasterEnv.DB_NAME=ecommerce_dss \
+  --conf spark.yarn.appMasterEnv.DB_USER=dss_user \
+  --conf spark.yarn.appMasterEnv.DB_PASSWORD=dss_password_123 \
   --jars /opt/spark/jars/postgresql-42.7.1.jar \
   /app/src/spark_jobs/load_cleaned_from_minio.py
 """,
         execution_timeout=timedelta(hours=2),  # Tăng timeout cho Spark job
         pool="spark_jobs",  # Sử dụng pool riêng để kiểm soát concurrency
+    )
+
+    # ========================================================================
+    # NEW: MEMORY-OPTIMIZED SPLIT SPARK PIPELINE (Products + Reviews separate)
+    # ========================================================================
+    
+    spark_build_products_v2 = BashOperator(
+        task_id="spark_build_products_v2",
+        bash_command="""
+docker exec spark-master spark-submit \\
+  --master spark://spark-master:7077 \\
+  --deploy-mode client \\
+  --executor-cores 1 \\
+  --executor-memory 768m \\
+  --driver-memory 1536m \\
+  --conf spark.sql.session.timeZone=UTC \\
+  --conf spark.sql.shuffle.partitions=200 \\
+  --conf spark.default.parallelism=200 \\
+  --conf spark.dynamicAllocation.enabled=true \\
+  --conf spark.dynamicAllocation.minExecutors=1 \\
+  --conf spark.dynamicAllocation.maxExecutors=2 \\
+  --conf spark.dynamicAllocation.initialExecutors=1 \\
+  --conf spark.driver.maxResultSize=512m \\
+  --conf spark.memory.fraction=0.6 \\
+  --conf spark.memory.storageFraction=0.3 \\
+  --conf spark.executor.memoryOverhead=512m \\
+  --conf spark.driver.memoryOverhead=512m \\
+  --conf spark.sql.autoBroadcastJoinThreshold=10485760 \\
+  --conf spark.sql.adaptive.enabled=true \\
+  --conf spark.sql.adaptive.coalescePartitions.enabled=true \\
+  --conf spark.sql.files.maxPartitionBytes=67108864 \\
+  --conf spark.shuffle.compress=true \\
+  --conf spark.shuffle.spill.compress=true \\
+  --conf spark.rdd.compress=true \\
+  --conf spark.io.compression.codec=snappy \\
+  --conf spark.shuffle.file.buffer=64k \\
+  --conf spark.reducer.maxSizeInFlight=48m \\
+  --conf spark.executor.extraJavaOptions='-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThreads=2' \\
+  --conf spark.driver.extraJavaOptions='-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35' \\
+  --conf spark.executorEnv.DB_HOST=postgres \\
+  --conf spark.executorEnv.DB_PORT=5432 \\
+  --conf spark.executorEnv.DB_NAME=ecommerce_dss \\
+  --conf spark.executorEnv.DB_USER=dss_user \\
+  --conf spark.executorEnv.DB_PASSWORD=dss_password_123 \\
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \\
+  /app/src/spark_jobs/product_pipeline.py
+""",
+        execution_timeout=timedelta(hours=1),
+        pool="spark_jobs",
+    )
+
+    spark_build_reviews_v2 = BashOperator(
+        task_id="spark_build_reviews_v2",
+        bash_command="""
+docker exec spark-master spark-submit \\
+  --master spark://spark-master:7077 \\
+  --deploy-mode client \\
+  --executor-cores 1 \\
+  --executor-memory 768m \\
+  --driver-memory 1g \\
+  --conf spark.sql.session.timeZone=UTC \\
+  --conf spark.sql.shuffle.partitions=200 \\
+  --conf spark.default.parallelism=200 \\
+  --conf spark.dynamicAllocation.enabled=true \\
+  --conf spark.dynamicAllocation.minExecutors=1 \\
+  --conf spark.dynamicAllocation.maxExecutors=2 \\
+  --conf spark.dynamicAllocation.initialExecutors=1 \\
+  --conf spark.driver.maxResultSize=512m \\
+  --conf spark.memory.fraction=0.6 \\
+  --conf spark.memory.storageFraction=0.3 \\
+  --conf spark.executor.memoryOverhead=512m \\
+  --conf spark.driver.memoryOverhead=512m \\
+  --conf spark.sql.autoBroadcastJoinThreshold=10485760 \\
+  --conf spark.sql.adaptive.enabled=true \\
+  --conf spark.sql.adaptive.coalescePartitions.enabled=true \\
+  --conf spark.sql.files.maxPartitionBytes=67108864 \\
+  --conf spark.shuffle.compress=true \\
+  --conf spark.shuffle.spill.compress=true \\
+  --conf spark.rdd.compress=true \\
+  --conf spark.io.compression.codec=snappy \\
+  --conf spark.shuffle.file.buffer=64k \\
+  --conf spark.reducer.maxSizeInFlight=48m \\
+  --conf spark.executor.extraJavaOptions='-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThreads=2' \\
+  --conf spark.driver.extraJavaOptions='-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35' \\
+  --conf spark.executorEnv.DB_HOST=postgres \\
+  --conf spark.executorEnv.DB_PORT=5432 \\
+  --conf spark.executorEnv.DB_NAME=ecommerce_dss \\
+  --conf spark.executorEnv.DB_USER=dss_user \\
+  --conf spark.executorEnv.DB_PASSWORD=dss_password_123 \\
+  --jars /opt/spark/jars/postgresql-42.7.1.jar \\
+  /app/src/spark_jobs/review_pipeline.py
+""",
+        execution_timeout=timedelta(hours=1),
+        pool="spark_jobs",
     )
 
     # --------------------------------------------------------
@@ -543,11 +662,17 @@ docker exec spark-master spark-submit \
     # Khi đủ data → upload MinIO (raw zone)
     [wait_raw_ready, wait_reviews_ready] >> upload_minio
 
-    # Sau đó Spark job build full star DWH (products + reviews)
-    upload_minio >> spark_build_star_dwh
+    # # Sau đó Spark job build full star DWH (products + reviews)
+    # upload_minio >> spark_build_star_dwh
 
-    # Thu thập metadata statistics sau khi DWH hoàn thành
-    spark_build_star_dwh >> collect_metadata
+    # # Thu thập metadata statistics sau khi DWH hoàn thành
+    # spark_build_star_dwh >> collect_metadata
+
+    # ========================================================================
+    # NEW: Split pipeline workflow (Products → Reviews → Metadata)
+    # To use: Disable spark_build_star_dwh line above and enable this
+    # ========================================================================
+    upload_minio >> spark_build_products_v2 >> spark_build_reviews_v2 >> collect_metadata
 
     # Khi metadata collection xong → ghi log FINISH → end
     collect_metadata >> etl_run_finish_task >> end

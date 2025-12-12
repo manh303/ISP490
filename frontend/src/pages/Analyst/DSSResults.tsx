@@ -1,15 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, MessageSquare, Lightbulb, Target, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Users, MessageSquare, Lightbulb, Target, AlertTriangle, Save, Calendar, Info } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-interface DSSResultsProps {}
+interface DSSResultsProps { }
 
 const DSSResults: React.FC<DSSResultsProps> = () => {
   const { modelId } = useParams<{ modelId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { inputData, dssResults } = location.state || {};
+
+  // Get results from location.state or sessionStorage
+  const getInitialResults = () => {
+    if (location.state?.dssResults) {
+      return location.state;
+    }
+    // Try to restore from sessionStorage
+    const cached = sessionStorage.getItem(`dss_results_${modelId}`);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.error('Failed to parse cached DSS results:', e);
+      }
+    }
+    return {};
+  };
+
+  const [cachedState] = useState(getInitialResults);
+  const { inputData, dssResults } = cachedState;
+
+  // Save results to sessionStorage when they are available
+  useEffect(() => {
+    if (location.state?.dssResults) {
+      sessionStorage.setItem(`dss_results_${modelId}`, JSON.stringify(location.state));
+    }
+  }, [location.state, modelId]);
 
   const models = {
     price_prediction: {
@@ -249,6 +275,38 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
     }
   };
 
+  // Convert scenario_key to human-readable name
+  const scenarioKeyToName = (key: string) => {
+    const names: Record<string, string> = {
+      'price_prediction': 'Price Prediction',
+      'product_recommendation': 'Product Recommendation',
+      'review_sentiment': 'Review Sentiment'
+    };
+    return names[key] || key;
+  };
+
+  // Handle save as DSS decision
+  const handleSaveDecision = () => {
+    const decisionTitle = `${currentModel.name} - ${new Date().toLocaleDateString('vi-VN')}`;
+    const description = insights.length > 0
+      ? `AI Insights:\n${insights.join('\n')}\n\nRecommended Actions:\n${(dssResults?.ai_recommended_actions || []).join('\n')}`
+      : `${currentModel.name} analysis results`;
+
+    navigate('/analyst/dss-decisions/create', {
+      state: {
+        scenario_key: modelId,
+        kpi_summary: dssResults?.kpi_summary,
+        filters: dssResults?.filters,
+        ai_summary_insights: insights,
+        ai_recommended_actions: dssResults?.ai_recommended_actions || [],
+        title: decisionTitle,
+        description: description,
+        // Pass table_data for product selection in Action Plan
+        table_data: dssResults?.table_data || []
+      }
+    });
+  };
+
   const renderMLResults = () => {
     switch (modelId) {
       case 'price_prediction':
@@ -301,7 +359,7 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                           {formatCurrency(item.current_price)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatCurrency(item.predicted_price)}
+                          {formatCurrency(item.recommended_price || item.predicted_price)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className={`px-2 py-1 text-xs rounded-full ${item.price_change_pct >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -456,20 +514,91 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to DSS Input
         </button>
-        <div className="flex items-center mb-4">
-          <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg mr-4">
-            {currentModel.icon}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg mr-4">
+              {currentModel.icon}
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {currentModel.name} - DSS Results
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                AI-powered business intelligence and strategic insights
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {currentModel.name} - DSS Results
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              AI-powered business intelligence and strategic insights
-            </p>
-          </div>
+          {/* Save as DSS Decision Button */}
+          <button
+            onClick={handleSaveDecision}
+            className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save as DSS Decision
+          </button>
         </div>
       </div>
+
+      {/* Metadata Display Block */}
+      {dssResults && (
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <Info className="w-5 h-5 text-gray-500 mr-2" />
+              <h3 className="font-semibold text-gray-700 dark:text-gray-200">Analysis Metadata</h3>
+            </div>
+            {/* AI Status Badge */}
+            {dssResults.ai_generation_status && (
+              <span className={`px-2 py-1 text-xs rounded-full ${dssResults.ai_generation_status === 'completed' ? 'bg-green-100 text-green-800' :
+                  dssResults.ai_generation_status === 'pending' || dssResults.ai_generation_status === 'generating' ? 'bg-yellow-100 text-yellow-800' :
+                    dssResults.ai_generation_status === 'failed' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                }`}>
+                AI: {dssResults.ai_generation_status}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Scenario:</span>
+              <p className="font-medium text-gray-900 dark:text-white">{scenarioKeyToName(dssResults.scenario || modelId || '')}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Time Range:</span>
+              <p className="font-medium text-gray-900 dark:text-white">
+                <Calendar className="w-3 h-3 inline mr-1" />
+                {dssResults.filters?.from_date || 'N/A'} → {dssResults.filters?.to_date || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <span className="text-gray-500">Platforms:</span>
+              <p className="font-medium text-gray-900 dark:text-white">{dssResults.filters?.platforms?.join(', ') || 'All'}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Scope Mode:</span>
+              <p className="font-medium text-gray-900 dark:text-white capitalize">{dssResults.filters?.scope_mode?.replace('_', ' ') || 'N/A'}</p>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Categories:</span>
+              <p className="font-medium text-gray-900 dark:text-white">{dssResults.filters?.categories?.join(', ') || 'All'}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Generated At:</span>
+              <p className="font-medium text-gray-900 dark:text-white">{dssResults.generated_at ? new Date(dssResults.generated_at).toLocaleString('vi-VN') : 'N/A'}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">AI Model:</span>
+              <p className="font-medium text-gray-900 dark:text-white">{dssResults.ai_model_used || 'N/A'}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Session ID:</span>
+              <p className="font-medium text-gray-900 dark:text-white">{dssResults.session_id || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ML Results Section */}
       <div className="mb-8">
@@ -498,25 +627,29 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
                 ))}
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
-                <AlertTriangle className="w-4 h-4 mr-1" />
-                Detected Anomalies
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-orange-800 dark:text-orange-200">
-                {anomalies.map((anomaly: string, index: number) => (
-                  <li key={index}>{anomaly}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Risk Assessment</h3>
-              <ul className="list-disc list-inside space-y-1 text-red-800 dark:text-red-200">
-                {risks.map((risk: string, index: number) => (
-                  <li key={index}>{risk}</li>
-                ))}
-              </ul>
-            </div>
+            {anomalies.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
+                  <AlertTriangle className="w-4 h-4 mr-1" />
+                  Detected Anomalies
+                </h3>
+                <ul className="list-disc list-inside space-y-1 text-orange-800 dark:text-orange-200">
+                  {anomalies.map((anomaly: string, index: number) => (
+                    <li key={index}>{anomaly}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {risks.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">Risk Assessment</h3>
+                <ul className="list-disc list-inside space-y-1 text-red-800 dark:text-red-200">
+                  {risks.map((risk: string, index: number) => (
+                    <li key={index}>{risk}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -528,28 +661,48 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           AI Action Recommendations
         </h2>
         <div className="space-y-4">
-          {recommendations.map((action: { title: string; description: string; impact: string; effort: string; priority: string }, index: number) => (
-            <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold text-gray-900 dark:text-white">{action.title}</h3>
-                <div className="flex gap-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(action.priority)}`}>
-                    {action.priority}
-                  </span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${action.impact === 'High' ? 'bg-green-100 text-green-800' : action.impact === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
-                    Impact: {action.impact}
-                  </span>
+          {recommendations.map((action: { title: string; description: string; impact: string; effort: string; priority: string }, index: number) => {
+            // Function to highlight text in parentheses
+            const highlightParentheses = (text: string) => {
+              const parts = text.split(/(\([^)]+\))/g);
+              return parts.map((part, i) => {
+                if (part.startsWith('(') && part.endsWith(')')) {
+                  return (
+                    <span key={i} className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-1 rounded">
+                      {part}
+                    </span>
+                  );
+                }
+                return <span key={i}>{part}</span>;
+              });
+            };
+
+            return (
+              <div key={index} className="bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white leading-relaxed">
+                      {highlightParentheses(action.title)}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(action.priority)}`}>
+                      {action.priority}
+                    </span>
+                    <span className={`px-2 py-1 text-xs rounded-full ${action.impact === 'High' ? 'bg-green-100 text-green-800' : action.impact === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                      Impact: {action.impact}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <span className="text-sm text-gray-500">Effort: {action.effort}</span>
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                    Execute Action
+                  </button>
                 </div>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 mb-3">{action.description}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Effort: {action.effort}</span>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                  Execute Action
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

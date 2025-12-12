@@ -96,6 +96,7 @@ import ReportsPage from "./pages/Analyst/ReportsPage";
 import DSSDecisionsPage from "./pages/Analyst/DSSDecisionsPage";
 import DSSDecisionDetailPage from "./pages/Analyst/DSSDecisionDetailPage";
 import DSSDecisionCreatePage from "./pages/Analyst/DSSDecisionCreatePage";
+import DSSSessionsPage from "./pages/Analyst/DSSSessionsPage";
 
 // Business Metadata Pages
 import SourcesPage from "./pages/DataEngineer/SourcesPage";
@@ -236,6 +237,7 @@ export default function App() {
             <Route path="/analyst/dss-scenarios" element={<DSSScenarios />} />
             <Route path="/analyst/product-review/:productKey" element={<ProductReviewDetails />} />
             <Route path="/analyst/dss-decisions" element={<DSSDecisionsPage />} />
+            <Route path="/analyst/dss-sessions" element={<DSSSessionsPage />} />
             <Route path="/analyst/dss-decisions/create" element={<DSSDecisionCreatePage />} />
             <Route path="/analyst/dss-decisions/:decisionId" element={<DSSDecisionDetailPage />} />
             <Route path="/analyst/analytics-dashboard" element={<AnalyticsDashboard />} />

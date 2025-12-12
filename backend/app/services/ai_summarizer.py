@@ -48,100 +48,107 @@ class AIProvider(ABC):
         return False
 
 
-class OpenAIProvider(AIProvider):
-    """OpenAI GPT provider"""
+# class OpenAIProvider(AIProvider):
+#     """OpenAI GPT provider"""
     
-    def __init__(self):
-        super().__init__("OpenAI")
-        self.api_key = os.getenv("OPENAI_API_KEY")
+#     def __init__(self):
+#         super().__init__("OpenAI")
+#         self.api_key = os.getenv("OPENAI_API_KEY")
         
-        # Primary model from env, default gpt-4o-mini
-        primary_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+#         # Log API key detection (masked for security)
+#         if self.api_key:
+#             masked_key = f"{self.api_key[:4]}...{self.api_key[-4:]}" if len(self.api_key) > 8 else "***"
+#             logger.info(f"🔑 OpenAI API key detected: {masked_key} (length: {len(self.api_key)})")
+#         else:
+#             logger.warning("⚠️  OpenAI API key NOT found in environment variables")
         
-        # Optional fallback models from env, comma-separated
-        fallback_models = [
-            m.strip()
-            for m in os.getenv("OPENAI_MODEL_FALLBACKS", "").split(",")
-            if m.strip()
-        ]
+#         # Primary model from env, default gpt-4o-mini
+#         primary_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         
-        # Models to try in order
-        self.models: List[str] = [primary_model] + [
-            m for m in fallback_models if m != primary_model
-        ]
-        self.model = primary_model  # Keep for logging / backward compat
+#         # Optional fallback models from env, comma-separated
+#         fallback_models = [
+#             m.strip()
+#             for m in os.getenv("OPENAI_MODEL_FALLBACKS", "").split(",")
+#             if m.strip()
+#         ]
         
-        if OPENAI_AVAILABLE and self.api_key:
-            try:
-                self.client = OpenAI(
-                    api_key=self.api_key,
-                    # Disable client-side automatic retries to avoid long backoffs
-                    max_retries=int(os.getenv("OPENAI_MAX_RETRIES", "0")),
-                    timeout=float(os.getenv("OPENAI_TIMEOUT", "15")),
-                )
-                self.available = True
-                logger.info(
-                    "OpenAI provider initialized with model: %s, fallbacks=%s",
-                    self.model,
-                    self.models[1:],
-                )
-            except Exception as e:
-                logger.warning(f"Failed to initialize OpenAI: {e}")
-        else:
-            logger.warning("OpenAI provider not available")
+#         # Models to try in order
+#         self.models: List[str] = [primary_model] + [
+#             m for m in fallback_models if m != primary_model
+#         ]
+#         self.model = primary_model  # Keep for logging / backward compat
+        
+#         if OPENAI_AVAILABLE and self.api_key:
+#             try:
+#                 self.client = OpenAI(
+#                     api_key=self.api_key,
+#                     # Disable client-side automatic retries to avoid long backoffs
+#                     max_retries=int(os.getenv("OPENAI_MAX_RETRIES", "0")),
+#                     timeout=float(os.getenv("OPENAI_TIMEOUT", "15")),
+#                 )
+#                 self.available = True
+#                 logger.info(
+#                     "✅ OpenAI provider initialized with model: %s, fallbacks=%s",
+#                     self.model,
+#                     self.models[1:],
+#                 )
+#             except Exception as e:
+#                 logger.warning(f"❌ Failed to initialize OpenAI: {e}")
+#         else:
+#             logger.warning("❌ OpenAI provider not available")
     
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
-        """Generate response using OpenAI (supports multiple models)."""
-        if not self.available:
-            raise RuntimeError("OpenAI provider not available")
+#     def generate(self, system_prompt: str, user_prompt: str) -> str:
+#         """Generate response using OpenAI (supports multiple models)."""
+#         if not self.available:
+#             raise RuntimeError("OpenAI provider not available")
         
-        messages: List[Dict[str, str]] = []
-        if system_prompt and system_prompt.strip():
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": user_prompt})
+#         messages: List[Dict[str, str]] = []
+#         if system_prompt and system_prompt.strip():
+#             messages.append({"role": "system", "content": system_prompt})
+#         messages.append({"role": "user", "content": user_prompt})
         
-        last_error: Optional[Exception] = None
+#         last_error: Optional[Exception] = None
         
-        # Try configured models in order
-        for model_name in self.models:
-            try:
-                logger.info("OpenAI generate with model=%s", model_name)
-                response = self.client.chat.completions.create(
-                    model=model_name,
-                    messages=messages,
-                    temperature=0.3,  # Lower for more deterministic outputs
-                    max_tokens=2000,  # Increased for detailed product-level actions
-                    response_format={"type": "json_object"},
-                )
-                # If successful, remember the working model
-                self.model = model_name
-                return response.choices[0].message.content
+#         # Try configured models in order
+#         for model_name in self.models:
+#             try:
+#                 logger.info("OpenAI generate with model=%s", model_name)
+#                 response = self.client.chat.completions.create(
+#                     model=model_name,
+#                     messages=messages,
+#                     temperature=0.3,  # Lower for more deterministic outputs
+#                     max_tokens=2000,  # Increased for detailed product-level actions
+#                     response_format={"type": "json_object"},
+#                 )
+#                 # If successful, remember the working model
+#                 self.model = model_name
+#                 return response.choices[0].message.content
             
-            except OpenAIRateLimitError as e:
-                # Rate limit is usually per-organization → let caller switch provider
-                logger.warning(
-                    "OpenAI rate limit on model=%s: %s", model_name, str(e)[:200]
-                )
-                last_error = e
-                # Để AISummarizer fallback sang Gemini thay vì retry lâu
-                break
+#             except OpenAIRateLimitError as e:
+#                 # Rate limit is usually per-organization → let caller switch provider
+#                 logger.warning(
+#                     "OpenAI rate limit on model=%s: %s", model_name, str(e)[:200]
+#                 )
+#                 last_error = e
+#                 # Để AISummarizer fallback sang Gemini thay vì retry lâu
+#                 break
             
-            except Exception as e:
-                # Other errors (5xx, network, invalid model...) → try next model if any
-                logger.warning(
-                    "OpenAI error with model=%s: %s", model_name, str(e)[:200]
-                )
-                last_error = e
-                continue
+#             except Exception as e:
+#                 # Other errors (5xx, network, invalid model...) → try next model if any
+#                 logger.warning(
+#                     "OpenAI error with model=%s: %s", model_name, str(e)[:200]
+#                 )
+#                 last_error = e
+#                 continue
         
-        if last_error:
-            raise last_error
+#         if last_error:
+#             raise last_error
         
-        raise RuntimeError("OpenAI generation failed for all models")
+#         raise RuntimeError("OpenAI generation failed for all models")
     
-    def is_rate_limit_error(self, error: Exception) -> bool:
-        """Check if error is OpenAI rate limit"""
-        return isinstance(error, OpenAIRateLimitError) or "429" in str(error)
+#     def is_rate_limit_error(self, error: Exception) -> bool:
+#         """Check if error is OpenAI rate limit"""
+#         return isinstance(error, OpenAIRateLimitError) or "429" in str(error)
 
 
 class GeminiProvider(AIProvider):
@@ -151,9 +158,16 @@ class GeminiProvider(AIProvider):
         super().__init__("Google Gemini")
         self.api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
 
+        # Log API key detection (masked for security)
+        if self.api_key:
+            masked_key = f"{self.api_key[:4]}...{self.api_key[-4:]}" if len(self.api_key) > 8 else "***"
+            logger.info(f"🔑 Google Gemini API key detected: {masked_key} (length: {len(self.api_key)})")
+        else:
+            logger.warning("⚠️  Google Gemini API key NOT found in environment variables")
+
         # Try multiple model names in order of preference (without 'models/' prefix)
         model_options = [
-            os.getenv("GEMINI_MODEL", "gemini-2.0-flash").replace("models/", ""),
+            os.getenv("GEMINI_MODEL", "gemini-2.5-pro").replace("models/", ""),
             "gemini-2.0-flash",
             "gemini-2.0-flash-exp",
             "gemini-1.5-flash",
@@ -187,16 +201,16 @@ class GeminiProvider(AIProvider):
                 
                 if selected_model is None:
                     # Fallback to a default if nothing matched
-                    selected_model = "models/gemini-2.0-flash"
+                    selected_model = "models/gemini-2.5-pro"
                 
                 self.model = selected_model
                 self.client = genai.GenerativeModel(self.model)
                 self.available = True
                 logger.info(f"✅ Gemini provider initialized with model: {self.model}")
             except Exception as e:
-                logger.warning(f"Failed to initialize Google Gemini: {e}")
+                logger.warning(f"❌ Failed to initialize Google Gemini: {e}")
         else:
-            logger.warning("Google Gemini provider not available")
+            logger.warning("❌ Google Gemini provider not available")
     
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         """Generate response using Google Gemini"""
@@ -212,35 +226,66 @@ class GeminiProvider(AIProvider):
             "response_mime_type": "application/json",
         }
         
-        response = self.client.generate_content(
-            [{"text": prompt}],
-            generation_config=generation_config,
-        )
-        
-        # Prefer candidates; avoid response.text quick accessor (can throw when empty)
-        if getattr(response, "candidates", None):
-            for candidate in response.candidates:
-                finish = getattr(candidate, "finish_reason", None)
-                finish_str = str(finish).upper() if finish else ""
-                if finish_str in {"MAX_TOKENS", "SAFETY", "RECITATION", "BLOCKED", "BLOCKED_PROACTIVE"}:
-                    # Return minimal JSON to allow downstream parsing/backfill instead of hard fail
-                    return json.dumps({
-                        "summary_insights": [f"Gemini finish_reason={finish_str.lower()} - output truncated/blocked."],
-                        "recommended_actions": []
-                    })
-                if hasattr(candidate, "content") and getattr(candidate.content, "parts", None):
-                    texts = [
-                        part.text for part in candidate.content.parts
-                        if hasattr(part, "text") and part.text
-                    ]
-                    if texts:
-                        return "\n".join(texts)
-        
-        # No usable text: return minimal JSON to avoid hard failure
-        return json.dumps({
-            "summary_insights": ["Gemini response contained no text candidates."],
-            "recommended_actions": []
-        })
+        try:
+            # 🔍 Debug: Log request details
+            logger.info(f"🚀 Gemini API request to model: {self.model}")
+            logger.info(f"📊 Prompt length: {len(prompt)} chars, Config: {generation_config}")
+            
+            response = self.client.generate_content(
+                [{"text": prompt}],
+                generation_config=generation_config,
+            )
+            
+            # 🔍 Debug: Log response metadata
+            if hasattr(response, "usage_metadata"):
+                usage = response.usage_metadata
+                logger.info(
+                    f"✅ Gemini response received - "
+                    f"prompt_tokens={getattr(usage, 'prompt_token_count', 'N/A')}, "
+                    f"completion_tokens={getattr(usage, 'candidates_token_count', 'N/A')}"
+                )
+            
+            # Prefer candidates; avoid response.text quick accessor (can throw when empty)
+            if getattr(response, "candidates", None):
+                for candidate in response.candidates:
+                    finish = getattr(candidate, "finish_reason", None)
+                    finish_str = str(finish).upper() if finish else ""
+                    if finish_str in {"MAX_TOKENS", "SAFETY", "RECITATION", "BLOCKED", "BLOCKED_PROACTIVE"}:
+                        logger.warning(f"⚠️ Gemini blocked with finish_reason={finish_str}")
+                        # Return minimal JSON to allow downstream parsing/backfill instead of hard fail
+                        return json.dumps({
+                            "summary_insights": [f"Gemini finish_reason={finish_str.lower()} - output truncated/blocked."],
+                            "recommended_actions": []
+                        })
+                    if hasattr(candidate, "content") and getattr(candidate.content, "parts", None):
+                        texts = [
+                            part.text for part in candidate.content.parts
+                            if hasattr(part, "text") and part.text
+                        ]
+                        if texts:
+                            return "\n".join(texts)
+            
+            # No usable text: return minimal JSON to avoid hard failure
+            logger.warning("⚠️ Gemini response contained no text candidates")
+            return json.dumps({
+                "summary_insights": ["Gemini response contained no text candidates."],
+                "recommended_actions": []
+            })
+            
+        except Exception as e:
+            # 🔍 Debug: Log full error details
+            error_str = str(e)
+            error_type = type(e).__name__
+            logger.error(f"❌ Gemini API Error [{error_type}]: {error_str}")
+            
+            # Check for specific error attributes
+            if hasattr(e, "message"):
+                logger.error(f"📝 Error message: {e.message}")
+            if hasattr(e, "status_code"):
+                logger.error(f"🔢 Status code: {e.status_code}")
+            
+            # Re-raise to let caller handle fallback logic
+            raise
     
     def is_rate_limit_error(self, error: Exception) -> bool:
         """Check if error is a Gemini rate limit error"""
@@ -271,10 +316,10 @@ class AISummarizer:
             if gemini_provider.available:
                 self.providers.append(gemini_provider)
         
-        if OPENAI_AVAILABLE and os.getenv("OPENAI_API_KEY"):
-            openai_provider = OpenAIProvider()
-            if openai_provider.available:
-                self.providers.append(openai_provider)
+        # if OPENAI_AVAILABLE and os.getenv("OPENAI_API_KEY"):
+        #     openai_provider = OpenAIProvider()
+        #     if openai_provider.available:
+        #         self.providers.append(openai_provider)
         
         # If no AI providers are available, we will use rule-based fallback only
         if not self.providers:
@@ -656,6 +701,8 @@ III. PRICE OPTIMIZATION ANALYSIS - STRICT REQUIREMENTS
 
 III. PRODUCT RECOMMENDATION ANALYSIS REQUIREMENTS:
 
+**IMPORTANT: Output must be 100% in ENGLISH. DO NOT use Vietnamese or any other language.**
+
 DATA PROVIDED:
 - Overall KPIs: number of source products, number of recommendations, average similarity, average orders.
 - Detailed recommendation list with: source product, recommended product, platform, category, average price, total orders, similarity score.
@@ -685,6 +732,7 @@ ANALYZE THE SPECIFIC DATA PROVIDED TO DELIVER:
 CRITICAL REQUIREMENTS:
 - ✅ MUST be based on the provided JSON data, DO NOT use generic information.
 - ✅ Return exactly 4-6 "summary_insights" and 4-6 "recommended_actions".
+- ✅ **ALL TEXT MUST BE IN ENGLISH - NO VIETNAMESE WORDS**
 - ✅ EACH insight/action MUST contain at least 1 of the following:
   • Specific product name from table_data
   • KPI numbers (%, quantity, values)
@@ -692,7 +740,7 @@ CRITICAL REQUIREMENTS:
   • Specific category name
   • Similarity score
   
-📌 GOOD OUTPUT EXAMPLE (SPECIFIC):
+📌 GOOD OUTPUT EXAMPLE (SPECIFIC, IN ENGLISH):
 {
   "summary_insights": [
     "15 recommendations for 3 source products, avg similarity 85%",
@@ -717,6 +765,8 @@ CRITICAL REQUIREMENTS:
     "Improve recommendation display"  ← No details how
   ]
 }
+
+**REMINDER: Use ENGLISH language only in your response. No Vietnamese text allowed.**
 
 If data is limited (<5 recommendations), still state the exact number and provide specific improvement suggestions.
 """
@@ -1008,22 +1058,22 @@ Write concisely, clearly, using language accessible to non-technical business st
             if source_counts:
                 avg_reco_per_src = sum(source_counts.values()) / max(len(source_counts), 1)
                 summary_insights.append(
-                    f"Hệ thống đang gợi ý trung bình khoảng {avg_reco_per_src:.1f} sản phẩm liên quan cho mỗi sản phẩm gốc."
+                    f"System recommends an average of {avg_reco_per_src:.1f} related products for each source product."
                 )
 
             if num_reco == 0:
                 summary_insights.append(
-                    "Không tìm thấy gợi ý sản phẩm nào với bộ lọc hiện tại (platform, category, min_similarity...)."
+                    "No product recommendations found with current filters (platform, category, min_similarity...)."
                 )
                 summary_insights.append(
-                    "Điều này thường xảy ra khi ngưỡng độ tương đồng đặt quá cao hoặc dữ liệu gợi ý trong khoảng thời gian này chưa đủ."
+                    "This typically occurs when similarity threshold is set too high or recommendation data is insufficient for this period."
                 )
             else:
                 summary_insights.append(
-                    f"Tổng cộng có {num_reco} gợi ý cho {num_src} sản phẩm nguồn, với độ tương đồng trung bình khoảng {avg_sim:.1f}%."
+                    f"Total of {num_reco} recommendations for {num_src} source products, with average similarity around {avg_sim:.1f}%."
                 )
                 summary_insights.append(
-                    f"Các sản phẩm được gợi ý có trung bình ~{avg_orders:.0f} đơn hàng, phù hợp để làm ứng viên cross-sell/upsell."
+                    f"Recommended products have an average of ~{avg_orders:.0f} orders, suitable as cross-sell/upsell candidates."
                 )
 
             # Phân tích chi tiết từ table_data để tạo gợi ý cụ thể
@@ -1053,21 +1103,27 @@ Write concisely, clearly, using language accessible to non-technical business st
                 
                 # Tìm recommendations có similarity rất cao
                 sim_score = row.get("similarity_score", 0)
-                if sim_score >= 0.8:
+                # Convert to float for comparison (can be string from DB)
+                try:
+                    sim_score_float = float(sim_score) if sim_score else 0.0
+                except (ValueError, TypeError):
+                    sim_score_float = 0.0
+                    
+                if sim_score_float >= 0.8:
                     high_similarity_products.append({
                         "name": rec_product[:40],
-                        "score": sim_score
+                        "score": sim_score_float
                     })
 
             # ACTION 1: Combo/Bundle với tên sản phẩm thực
             if top_recommended:
                 top_product_names = ", ".join(list(top_recommended.keys())[:3])
                 recommended_actions.append(
-                    f"Tạo combo/bundle cho những sản phẩm thường được gợi ý cùng nhau như: {top_product_names}"
+                    f"Create combo/bundle for frequently recommended products together such as: {top_product_names}"
                 )
             else:
                 recommended_actions.append(
-                    "Tạo combo/bundle cho những cặp sản phẩm thường xuyên được gợi ý cùng nhau."
+                    "Create combo/bundle for product pairs that are frequently recommended together."
                 )
             
             # ACTION 2: Phân tích platform/category để ưu tiên hiển thị
@@ -1077,35 +1133,35 @@ Write concisely, clearly, using language accessible to non-technical business st
                 
                 if len(high_similarity_products) > 0:
                     recommended_actions.append(
-                        f"Ưu tiên hiển thị {len(high_similarity_products)} gợi ý có độ tương đồng cao (≥0.8) "
-                        f"trên trang chi tiết sản phẩm {top_platform} ({platform_pct:.0f}% gợi ý) để tối ưu cross-sell."
+                        f"Prioritize displaying {len(high_similarity_products)} high similarity recommendations (≥0.8) "
+                        f"on {top_platform} product detail pages ({platform_pct:.0f}% of recommendations) to optimize cross-sell."
                     )
                 elif category_counts:
                     top_category = max(category_counts, key=category_counts.get)
                     recommended_actions.append(
-                        f"Tập trung hiển thị gợi ý cho category '{top_category}' trên platform {top_platform} "
-                        f"vì đây là nhóm có nhiều recommendations nhất."
+                        f"Focus recommendation display for category '{top_category}' on platform {top_platform} "
+                        f"as this group has the most recommendations."
                     )
                 else:
                     recommended_actions.append(
-                        f"Ưu tiên hiển thị 3–5 gợi ý có similarity cao nhất trên {top_platform} "
-                        f"để tăng tỉ lệ cross-sell."
+                        f"Prioritize displaying 3-5 recommendations with highest similarity on {top_platform} "
+                        f"to increase cross-sell rate."
                     )
             else:
                 recommended_actions.append(
-                    "Ưu tiên hiển thị 3–5 gợi ý có similarity cao nhất ngay dưới trang chi tiết sản phẩm."
+                    "Prioritize displaying 3-5 recommendations with highest similarity right below product detail page."
                 )
             
             # ACTION 3: A/B testing với metrics cụ thể
             if avg_sim >= 70:  # Similarity trung bình cao
                 recommended_actions.append(
-                    f"Chất lượng gợi ý tốt (similarity TB: {avg_sim:.0f}%). "
-                    f"Theo dõi conversion rate và AOV của {num_reco} gợi ý này để đánh giá hiệu quả."
+                    f"Good recommendation quality (avg similarity: {avg_sim:.0f}%). "
+                    f"Track conversion rate and AOV of these {num_reco} recommendations to evaluate effectiveness."
                 )
             else:
                 recommended_actions.append(
-                    f"Similarity trung bình ở mức {avg_sim:.0f}%. "
-                    f"Thử nghiệm tăng ngưỡng min_similarity lên 0.7 và theo dõi tỉ lệ click/add-to-cart."
+                    f"Average similarity at {avg_sim:.0f}%. "
+                    f"Test increasing min_similarity threshold to 0.7 and monitor click/add-to-cart rate."
                 )
                              
         elif scenario == "review_sentiment":

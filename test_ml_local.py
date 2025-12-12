@@ -2,11 +2,11 @@
 import sys, io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-PG_HOST = "dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com"
+PG_HOST = "localhost"
 PG_PORT = "5432"
-PG_DB = "ecommerce_dss_1"
+PG_DB = "ecommerce_dss"
 PG_USER = "dss_user"
-PG_PASS = "6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G"
+PG_PASS = "dss_password_123"
 PG_URL = f"jdbc:postgresql://{PG_HOST}:{PG_PORT}/{PG_DB}"
 
 def test_price_optimization():

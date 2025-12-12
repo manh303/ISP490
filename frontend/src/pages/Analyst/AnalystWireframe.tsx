@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { 
-  Download, 
-  FileDown, 
+import {
+  Download,
+  FileDown,
   Lightbulb,
   AlertCircle,
   CheckCircle,
@@ -38,12 +38,6 @@ export function AnalystWireframe() {
 
   const tabs = [
     { id: 'dashboard', label: 'Analytics Dashboard', component: AnalyticsDashboard },
-    { id: 'product', label: 'Product Analytics', component: ProductAnalytics },
-    { id: 'review', label: 'Review Analytics', component: ReviewAnalytics },
-    { id: 'platform', label: 'Platform Analytics', component: PlatformAnalytics },
-    { id: 'pricing', label: 'Pricing Analytics', component: PricingAnalytics },
-    { id: 'category', label: 'Category Analytics', component: CategoryAnalytics },
-    { id: 'product_detail', label: 'Product Detail Analytics', component: ProductDetailAnalytics },
   ];
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || AnalyticsDashboard;

@@ -7,11 +7,11 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 async def check_tiki_data():
     conn = await asyncpg.connect(
-        host="dpg-d4b1rger433s738l401g-a.singapore-postgres.render.com",
-        port=5432,
-        database="ecommerce_dss_bh5f",
+        host="localhost",
+        port=5433,
+        database="ecommerce_dss",
         user="dss_user",
-        password="0ZskEPwcL5kSjLPNfclbB3cCSbLZWFDY"
+        password="dss_password_123"
     )
     
     print("=" * 60)

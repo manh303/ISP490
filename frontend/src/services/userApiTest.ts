@@ -81,7 +81,7 @@ export const userApi = {
     const res = await api.delete(`/v1/test-admin/users/${userId}/permanent`, { params: { confirm: true } });
     return res.data;
   },
-    updateUserPassword: async (userId: number, newPassword: string) => {
+  updateUserPassword: async (userId: number, newPassword: string) => {
     const res = await api.put(`/v1/admin/users/${userId}/password`, { new_password: newPassword });
     return res.data;
   },

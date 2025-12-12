@@ -22,42 +22,60 @@ const DSSScenarios: React.FC = () => {
       setScenarios([
         {
           key: 'price_prediction',
-          name: 'Price Prediction & Optimization',
-          description: 'Predict optimal pricing strategies based on market data, competitor analysis, and demand patterns',
+          name: 'Price Optimization & Revenue Impact',
+          description: 'Optimize product prices and simulate revenue impact based on ML predictions',
           endpoint: '/api/v1/dss/price/run',
           use_cases: [
-            'Dynamic pricing for e-commerce products',
-            'Competitor price monitoring and adjustment',
-            'Revenue optimization strategies',
-            'Promotional pricing recommendations'
+            'Identify products with sub-optimal prices',
+            'Simulate revenue impact of price changes',
+            'Price Optimization for campaign 11.11, Black Friday',
+            'Prioritize high-confidence recommendations'
           ],
-          required_inputs: ['product_key', 'platform_code', 'time_range'],
-          optional_inputs: ['category', 'min_confidence', 'max_discount_pct']
+          kpi_outputs: [
+            'Expected revenue uplift %',
+            'Products with recommendation',
+            'Current vs Projected revenue',
+            'Average model confidence'
+          ],
+          required_inputs: ['from_date', 'to_date'],
+          optional_inputs: ['platforms', 'categories', 'scope_mode', 'min_confidence']
         },
         {
           key: 'product_recommendation',
-          name: 'Product Recommendation Engine',
-          description: 'Generate personalized product recommendations using collaborative filtering and content-based algorithms',
+          name: 'Cross-sell / Upsell Recommendations',
+          description: 'Suggest related products for cross-sell and upsell using collaborative filtering',
           endpoint: '/api/v1/dss/reco/run',
           use_cases: [
-            'Cross-selling recommendations',
-            'Up-selling opportunities',
+            'Recommend related products on PDP',
+            'Find cross-sell bundles',
             'Customer retention through personalization',
-            'Basket analysis and complementary products'
+            'Identify high-value complementary products'
           ],
-          required_inputs: ['source_product_key', 'scope_mode'],
-          optional_inputs: ['platforms', 'categories', 'top_k', 'min_similarity']
+          kpi_outputs: [
+            'Average similarity score',
+            'Total recommendation pairs',
+            'Co-purchase rate',
+            'Estimated bundle revenue'
+          ],
+          required_inputs: ['scope_mode'],
+          optional_inputs: ['source_product_key', 'platforms', 'categories', 'top_k', 'min_similarity']
         },
         {
           key: 'review_sentiment',
           name: 'Review Sentiment Analysis',
-          description: 'Analyze customer reviews and feedback to understand sentiment patterns and identify improvement opportunities',
+          description: 'Analyze customer sentiment and identify products with quality issues',
           endpoint: '/api/v1/dss/review/run',
           use_cases: [
-            'Customer satisfaction monitoring',
-            'Product quality assessment',
-            'Brand reputation management',
-            'Competitive intelligence from reviews'
+            'Identify products with negative sentiment',
+            'Understand customer complaints',
+            'Monitor brand reputation',
+            'Get recommendations for quality improvement'
+          ],
+          kpi_outputs: [
+            'Average positive/negative %',
+            'Critical products count',
+            'Total reviews analyzed',
+            'Average rating'
           ],
           required_inputs: ['from_date', 'to_date'],
           optional_inputs: ['platforms', 'categories', 'sentiment_focus', 'min_reviews_per_product']
@@ -123,11 +141,10 @@ const DSSScenarios: React.FC = () => {
           {scenarios.map((scenario) => (
             <div
               key={scenario.key}
-              className={`border rounded-lg p-6 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedScenario?.key === scenario.key
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
-              }`}
+              className={`border rounded-lg p-6 cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedScenario?.key === scenario.key
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                }`}
               onClick={() => setSelectedScenario(scenario)}
             >
               <div className="flex items-start gap-4">
@@ -189,6 +206,26 @@ const DSSScenarios: React.FC = () => {
                   </ul>
                 </div>
 
+                {/* KPI Outputs */}
+                {selectedScenario.kpi_outputs && selectedScenario.kpi_outputs.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                      <Settings className="w-4 h-4 mr-2" />
+                      KPI Output
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedScenario.kpi_outputs.map((kpi, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                        >
+                          {kpi}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Required Inputs */}
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
@@ -239,7 +276,7 @@ const DSSScenarios: React.FC = () => {
                   onClick={() => window.open(`/analyst/dss/${selectedScenario.key}`, '_self')}
                 >
                   <Play className="w-4 h-4" />
-                  Run This Scenario
+                  Configure & Run
                 </button>
               </div>
             </div>

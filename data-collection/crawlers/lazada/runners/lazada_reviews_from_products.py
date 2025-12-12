@@ -32,7 +32,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 # ============================================================
-#  ETL METADATA LOGGING (schema meta.*)
+#  ETL METADATA LOGGING (schema METADATA.*)
 # ============================================================
 
 def _get_pg_conn():
@@ -61,7 +61,7 @@ def _get_pg_conn():
 
 def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
     """
-    Ghi log bắt đầu crawler vào meta.etl_run.
+    Ghi log bắt đầu crawler vào METADATA.etl_run.
     Trả về run_id hoặc None.
     """
     conn = _get_pg_conn()
@@ -74,7 +74,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
         # Ensure job exists
         cur.execute(
             """
-            INSERT INTO meta.etl_job (job_code, job_name, description)
+            INSERT INTO METADATA.etl_job (job_code, job_name, description)
             VALUES (%s, %s, %s)
             ON CONFLICT (job_code) DO NOTHING
             """,
@@ -82,7 +82,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
         )
         
         # Get job_id
-        cur.execute("SELECT job_id FROM meta.etl_job WHERE job_code = %s", (job_code,))
+        cur.execute("SELECT job_id FROM METADATA.etl_job WHERE job_code = %s", (job_code,))
         row = cur.fetchone()
         if not row:
             print(f"{LOG_PREFIX} [META] Cannot find etl_job for {job_code}")
@@ -94,7 +94,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
         # Create run
         cur.execute(
             """
-            INSERT INTO meta.etl_run (job_id, run_date, started_at, status)
+            INSERT INTO METADATA.etl_run (job_id, run_date, started_at, status)
             VALUES (%s, %s, %s, %s)
             RETURNING run_id
             """,
@@ -118,7 +118,7 @@ def log_etl_start(job_code: str, run_date: str) -> Optional[int]:
 
 def log_etl_finish(run_id: Optional[int], status: str, rows_read: int = 0, rows_written: int = 0, error_message: str = None):
     """
-    Ghi log kết thúc crawler vào meta.etl_run.
+    Ghi log kết thúc crawler vào METADATA.etl_run.
     """
     if run_id is None:
         return
@@ -131,7 +131,7 @@ def log_etl_finish(run_id: Optional[int], status: str, rows_read: int = 0, rows_
         cur = conn.cursor()
         cur.execute(
             """
-            UPDATE meta.etl_run
+            UPDATE METADATA.etl_run
             SET finished_at = %s,
                 status = %s,
                 rows_read = %s,
@@ -429,6 +429,14 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
      antibot_count = 0
      ANTIBOT_THRESHOLD = 3  # Skip after 3 consecutive anti-bot hits
      
+     # Fix: Reset checkpoint if it's outdated (e.g., new day with fewer products)
+     if start_idx >= max_idx:
+         print(f"{LOG_PREFIX} ⚠️  Checkpoint outdated: last_product_idx={start_idx} >= total_products={max_idx}")
+         print(f"{LOG_PREFIX} ℹ️  Resetting checkpoint to start from beginning")
+         start_idx = 0
+         total_reviews_saved = 0
+         save_checkpoint(0, 0)
+     
      print(f"{LOG_PREFIX} Resuming from product {start_idx}/{max_idx}")
      print(f"{LOG_PREFIX} Batch saving every {BATCH_SIZE} reviews")
      
@@ -444,16 +452,45 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
              ua = random.choice(USER_AGENTS)
              
              # Browser args optimized for Docker/headless environment
+             # Reference: https://peter.sh/experiments/chromium-command-line-switches/
              browser_args = [
                  '--no-sandbox',
+                 '--disable-setuid-sandbox',
                  '--disable-dev-shm-usage',
                  '--disable-gpu',
                  '--disable-software-rasterizer',
                  '--disable-gl-drawing-for-tests',
                  '--disable-accelerated-2d-canvas',
                  '--disable-features=VizDisplayCompositor',
-                 '--single-process',  # Avoid GPU process initialization
+                 '--disable-features=IsolateOrigins,site-per-process',
+                 '--disable-blink-features=AutomationControlled',
+                 '--disable-infobars',
+                 '--disable-background-networking',
+                 '--disable-background-timer-throttling',
+                 '--disable-backgrounding-occluded-windows',
+                 '--disable-breakpad',
+                 '--disable-component-extensions-with-background-pages',
+                 '--disable-component-update',
+                 '--disable-default-apps',
+                 '--disable-extensions',
+                 '--disable-hang-monitor',
+                 '--disable-ipc-flooding-protection',
+                 '--disable-popup-blocking',
+                 '--disable-prompt-on-repost',
+                 '--disable-renderer-backgrounding',
+                 '--disable-sync',
+                 '--disable-translate',
+                 '--metrics-recording-only',
+                 '--no-first-run',
+                 '--password-store=basic',
+                 '--use-mock-keychain',
+                 '--single-process',  # Avoid GPU process initialization in Docker
+                 '--ignore-certificate-errors',
+                 '--window-size=1920,1080',
              ]
+             
+             # Increase browser launch timeout for slow Docker environments
+             BROWSER_LAUNCH_TIMEOUT = 120000  # 2 minutes
              
              try:
                  context = p.chromium.launch_persistent_context(
@@ -462,6 +499,10 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
                      viewport={'width': 1920, 'height': 1080},
                      user_agent=ua,
                      args=browser_args,
+                     timeout=BROWSER_LAUNCH_TIMEOUT,
+                     ignore_https_errors=True,
+                     java_script_enabled=True,
+                     bypass_csp=True,
                      extra_http_headers={
                          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
                          "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -472,13 +513,21 @@ def crawl_reviews_from_products(products: List[Dict[str, str]], max_products: in
                          "sec-fetch-mode": "navigate",
                          "sec-fetch-site": "none",
                          "sec-fetch-user": "?1",
+                         "upgrade-insecure-requests": "1",
                      },
                  )
              except PlaywrightTimeoutError as e:
                  print(f"{LOG_PREFIX} ⚠️  Browser launch timeout (likely GPU/display issue in Docker)")
-                 print(f"{LOG_PREFIX} This is a environment issue, not a crawler bug")
+                 print(f"{LOG_PREFIX} Error details: {e}")
+                 print(f"{LOG_PREFIX} TIP: Ensure Xvfb is running (DISPLAY={os.getenv('DISPLAY', 'not set')})")
+                 print(f"{LOG_PREFIX} TIP: Try increasing shared memory (--shm-size=2g in docker run)")
                  print(f"{LOG_PREFIX} Treating as SKIPPED - pipeline will continue")
                  return [], True  # Return empty + hit_antibot=True to skip gracefully
+             except Exception as browser_error:
+                 print(f"{LOG_PREFIX} ⚠️  Browser launch failed: {browser_error}")
+                 print(f"{LOG_PREFIX} DISPLAY={os.getenv('DISPLAY', 'not set')}")
+                 print(f"{LOG_PREFIX} Treating as SKIPPED - pipeline will continue")
+                 return [], True
 
              if os.path.exists(COOKIE_FILE):
                  with open(COOKIE_FILE, 'r') as f:

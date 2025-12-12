@@ -22,7 +22,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://isp490.onrender.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: true,
       },

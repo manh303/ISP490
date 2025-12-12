@@ -21,7 +21,7 @@ class DatawarehousePipeline:
         self.postgres_config = {
             'host': 'postgres',  # Docker service name
             'port': 5432,
-            'database': 'ecommerce_dss_1',
+            'database': 'ecommerce_dss',
             'user': 'dss_user',
             'password': 'dss_password_123'
         }
@@ -69,7 +69,7 @@ class DatawarehousePipeline:
         """BRONZE LAYER: Raw streaming data từ MongoDB"""
         logger.info("🔷 Processing Bronze Layer...")
         try:
-            db = self.mongo_client['ecommerce_dss_1']
+            db = self.mongo_client['ecommerce_dss']
 
             # Lấy dữ liệu streaming từ MongoDB
             processed_orders = list(db.processed_orders_stream.find({}))

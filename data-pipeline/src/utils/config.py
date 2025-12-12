@@ -12,14 +12,14 @@ class Config:
     # PostgreSQL Database Configuration
     POSTGRES_HOST = os.getenv('DB_HOST', 'postgres')
     POSTGRES_PORT = int(os.getenv('DB_PORT', 5432))  # Convert to int
-    POSTGRES_DB = os.getenv('DB_NAME', 'ecommerce_dss_1')
+    POSTGRES_DB = os.getenv('DB_NAME', 'ecommerce_dss')
     POSTGRES_USER = os.getenv('DB_USER', 'dss_user')
     POSTGRES_PASSWORD = os.getenv('DB_PASSWORD', 'dss_password_123')
     
     # MongoDB Configuration - ADDED missing authentication fields
     MONGO_HOST = os.getenv('MONGO_HOST', 'localhost')
     MONGO_PORT = int(os.getenv('MONGO_PORT', 27017))  # Convert to int
-    MONGO_DB = os.getenv('MONGO_DB', 'ecommerce_dss_1')
+    MONGO_DB = os.getenv('MONGO_DB', 'ecommerce_dss')
     MONGO_USER = os.getenv('MONGO_USER', 'admin')
     MONGO_PASSWORD = os.getenv('MONGO_PASSWORD', 'admin_password')
     MONGO_AUTH_SOURCE = os.getenv('MONGO_AUTH_SOURCE', 'admin')

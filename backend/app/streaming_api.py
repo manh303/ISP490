@@ -67,7 +67,7 @@ class StreamingConfig:
     """Streaming API Configuration"""
 
     # Database connections
-    POSTGRES_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1")
+    POSTGRES_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://dss_user:dss_password_123@postgres:5432/ecommerce_dss")
     MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://admin:admin_password@mongodb:27017/")
     REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 

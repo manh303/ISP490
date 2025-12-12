@@ -191,7 +191,7 @@ def send_performance_alert(message: str, severity: str = "INFO", **context):
         }
 
         # Store in MongoDB
-        db = mongo_client['ecommerce_dss_1']
+        db = mongo_client['ecommerce_dss']
         db.performance_alerts.insert_one(alert_doc)
 
         # Cache in Redis for quick access (safe serialization)
@@ -314,7 +314,7 @@ def check_data_freshness_advanced(**context):
                 freshness_results['data_sources'][table] = {'error': str(e)}
 
         # Check MongoDB collections
-        db = mongo_client['ecommerce_dss_1']
+        db = mongo_client['ecommerce_dss']
         mongo_collections = ['raw_data_collection', 'processed_data', 'ml_predictions']
 
         for collection_name in mongo_collections:
@@ -650,7 +650,7 @@ def generate_comprehensive_report(**context):
 
         # Store report in MongoDB (safe serialization)
         _, mongo_client, redis_client = get_database_connections()
-        db = mongo_client['ecommerce_dss_1']
+        db = mongo_client['ecommerce_dss']
         safe_report = safe_json_serialize(report)
         db.performance_reports.insert_one(safe_report)
 
@@ -820,7 +820,7 @@ cleanup_task = BashOperator(
     find /tmp -name "processing_*" -mtime +1 -delete || true
 
     # Optimize PostgreSQL (if accessible)
-    psql -h postgres -U admin -d ecommerce_dss_1 -c "VACUUM ANALYZE;" || echo "PostgreSQL optimization skipped"
+    psql -h postgres -U admin -d ecommerce_dss -c "VACUUM ANALYZE;" || echo "PostgreSQL optimization skipped"
 
     # Clear old Redis keys
     redis-cli -h redis EVAL "
@@ -870,7 +870,7 @@ def send_success_notification_safe(**context):
         # Store notification in MongoDB (primary method)
         try:
             _, mongo_client, redis_client = get_database_connections()
-            db = mongo_client['ecommerce_dss_1']
+            db = mongo_client['ecommerce_dss']
 
             # Store in notifications collection
             safe_notification = safe_json_serialize(notification_data)

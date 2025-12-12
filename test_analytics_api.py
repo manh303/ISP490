@@ -9,11 +9,11 @@ from datetime import date, datetime, timedelta
 
 # Database config (same as analytics.py)
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com"),
+    "host": os.getenv("DB_HOST", "localhost"),
     "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("DB_NAME", "ecommerce_dss_1"),
+    "database": os.getenv("DB_NAME", "ecommerce_dss"),
     "user": os.getenv("DB_USER", "dss_user"),
-    "password": os.getenv("DB_PASSWORD", "6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G"),
+    "password": os.getenv("DB_PASSWORD", "dss_password_123"),
 }
 
 async def test_connection():

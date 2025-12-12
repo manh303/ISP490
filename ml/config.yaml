@@ -62,10 +62,10 @@ data_preparation:
   train_test_split: 0.8
   validation_split: 0.1
 database:
-  database: ecommerce_dss_1
+  database: ecommerce_dss
   driver: org.postgresql.Driver
-  host: dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com
-  password: 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  host: localhost
+  password: dss_password_123
   port: 5432
   user: dss_user
 logging:

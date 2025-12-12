@@ -18,7 +18,7 @@ except Exception as e:
     pass
 
 # Default DATABASE_URL if not in environment
-DEFAULT_DATABASE_URL = "postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1"
+DEFAULT_DATABASE_URL = "postgresql://dss_user:dss_password_123@localhost:5433/ecommerce_dss"
 
 
 def collect_table_stats_after_etl():
@@ -90,7 +90,7 @@ def collect_table_stats_after_etl():
                     
                     # Insert/Update with CURRENT_DATE (TODAY)
                     cur.execute("""
-                        INSERT INTO meta.table_stats (
+                        INSERT INTO metadata.table_stats (
                             schema_name, table_name, snapshot_date,
                             row_count, size_bytes,
                             last_loaded_at
@@ -152,7 +152,7 @@ def collect_db_health():
             
             # Insert health record
             cur.execute("""
-                INSERT INTO meta.db_connection_health (
+                INSERT INTO metadata.db_connection_health (
                     check_time, host, port, database_name, status,
                     active_connections, idle_connections, max_connections,
                     connection_usage_pct, slow_queries_count

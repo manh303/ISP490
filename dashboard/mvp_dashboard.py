@@ -30,7 +30,7 @@ def init_connection():
         return psycopg2.connect(
             host='localhost',
             port=5433,
-            database='ecommerce_dss_1',
+            database='ecommerce_dss',
             user='dss_user',
             password='dss_password_123'
         )

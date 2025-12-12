@@ -190,3 +190,22 @@ class ProductReportResponse(BaseModel):
 
     timeseries: ProductTimeseriesResponse
     review_summary: ReviewSummaryResponse
+
+
+# ====== QUALITY & SENTIMENT ======
+
+class RatingDistributionData(BaseModel):
+    """Data for rating distribution histogram."""
+    rating_bucket: int = Field(..., description="Rating bucket: 0 (no rating), 1-5 stars")
+    product_count: int = Field(..., description="Number of products in this rating bucket")
+
+
+class CriticalProductItem(BaseModel):
+    """Product with critical issues (low rating or high negative sentiment)."""
+    product_key: str
+    product_name: str
+    platform_code: str
+    category_name: Optional[str] = None
+    avg_rating: float = Field(..., description="Average rating (0.0 if no rating)")
+    total_reviews: int = Field(..., description="Total number of reviews")
+    negative_pct: float = Field(..., description="Percentage of negative reviews (estimated)")

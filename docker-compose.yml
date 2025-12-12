@@ -8,12 +8,13 @@ x-airflow-common-env:
   LAZADA_HEADLESS: "1"
   LAZADA_PAGES_PER_RUN: "5"
   TZ: Asia/Bangkok
-  DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
-  DB_HOST: dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com
+  # ✅ FIXED: Use Docker network host 'postgres' instead of 'localhost'
+  DATABASE_URL: postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss
+  DB_HOST: postgres
   DB_PORT: "5432"
-  DB_NAME: ecommerce_dss_1
+  DB_NAME: ecommerce_dss
   DB_USER: dss_user
-  DB_PASSWORD: 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+  DB_PASSWORD: dss_password_123
 
   # Airflow core
   AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -27,7 +28,7 @@ x-airflow-common-env:
   AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
 
   # Optional conn cho ETL downstream
-  AIRFLOW_CONN_POSTGRES_DEFAULT: postgres://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1
+  AIRFLOW_CONN_POSTGRES_DEFAULT: postgres://dss_user:dss_password_123@postgres:5432/ecommerce_dss
 
 services:
   # ====================================
@@ -189,7 +190,7 @@ services:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_MEMORY=1g
       - SPARK_WORKER_WEBUI_PORT=8081
       - SPARK_CONF_DIR=/opt/bitnami/spark/conf
     ports:
@@ -218,7 +219,7 @@ services:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_MEMORY=1g
       - SPARK_WORKER_WEBUI_PORT=8081
       - SPARK_CONF_DIR=/opt/bitnami/spark/conf
     ports:
@@ -365,7 +366,7 @@ services:
       - "8080:8080"
    environment:
       <<: *airflow-common-env
-      DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
+      DATABASE_URL: postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss
    volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -396,9 +397,13 @@ services:
     build: ./airflow
     user: "50000:0"
     command: scheduler
+    # Playwright/Chromium requires increased shared memory
+    shm_size: '2gb'
     environment:
       <<: *airflow-common-env
-      DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
+      DATABASE_URL: postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss
+      DISPLAY: ':99'
+      CHROME_FLAGS: '--no-sandbox --disable-dev-shm-usage --disable-gpu'
     volumes:
       - ./data/logs_app:/app/logs  
       - ./airflow/dags:/opt/airflow/dags
@@ -423,9 +428,15 @@ services:
     build: ./airflow
     user: "50000:0"
     command: celery worker
+    # Playwright/Chromium requires increased shared memory for browser processes
+    shm_size: '2gb'
     environment:
       <<: *airflow-common-env
-      DATABASE_URL: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
+      DATABASE_URL: postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss
+      # Virtual display for headless browser in Docker
+      DISPLAY: ':99'
+      # Chrome flags for Docker compatibility
+      CHROME_FLAGS: '--no-sandbox --disable-dev-shm-usage --disable-gpu'
     volumes:
       - ./data/logs_app:/app/logs  
       - ./airflow/dags:/opt/airflow/dags
@@ -640,7 +651,7 @@ services:
     ports:
       - "9187:9187"
     environment:
-      - DATA_SOURCE_NAME=postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss_1?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://dss_user:dss_password_123@postgres:5432/ecommerce_dss?sslmode=disable
     networks:
       - dss_network
     depends_on:

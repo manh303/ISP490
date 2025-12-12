@@ -22,17 +22,17 @@ services:
       - key: REDIS_URL
         value: redis://default:H7452ZmrxCCJDB6pxk8pqOzgj2pAq7c3@redis-15687.crce194.ap-seast-1-1.ec2.cloud.redislabs.com:15687
       - key: DATABASE_URL
-        value: postgresql://dss_user:6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G@dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com/ecommerce_dss_1
+        value: postgresql://dss_user:dss_password_123@localhost/ecommerce_dss
       - key: DB_HOST
-        value: dpg-d4j17gn5r7bs73bsoqm0-a.singapore-postgres.render.com
+        value: localhost
       - key: DB_PORT
         value: 5432
       - key: DB_NAME
-        value: ecommerce_dss_1
+        value: ecommerce_dss
       - key: DB_USER
         value: dss_user
       - key: DB_PASSWORD
-        value: 6wYnk8sndEjkzvOt4LS8sI1beTwdMc6G
+        value: dss_password_123
       - key: ML_PATH
         value: /app/ml
       - key: PYTHON_VERSION
