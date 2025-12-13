@@ -475,11 +475,24 @@ async def forgot_password_otp(request: ForgotPasswordOTPRequest, iam: IAMService
         # Check if user exists
         user = await iam.get_user_by_email(request.email)
         if not user:
-            # Don't reveal if email exists for security
-            return {
-                "success": True,
-                "message": "If your email is registered, you will receive an OTP code to reset your password."
-            }
+            # Return error when email not found
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "success": False,
+                    "message": "No account found with this email address."
+                }
+            )
+
+        # Check if user is active - don't send OTP to disabled/deactive users
+        if user.get('status') != 'active':
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "success": False,
+                    "message": "Your account has been disabled. Please contact support."
+                }
+            )
 
         # Generate and send OTP via email
         from app.services.email_service import send_otp_email
@@ -551,6 +564,16 @@ async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, iam:
                 detail={
                     "success": False,
                     "message": "User not found"
+                }
+            )
+
+        # Check if user is active - disabled users cannot reset password
+        if user.get('status') != 'active':
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "success": False,
+                    "message": "Your account has been disabled. Please contact support."
                 }
             )
 

@@ -18,6 +18,7 @@ from app.schemas.models import (
     VerifyEmailRequest, VerifyEmailResponse,
     ForgotPasswordOTPRequest, ForgotPasswordOTPResponse,
     VerifyOTPResetPasswordRequest, VerifyOTPResetPasswordResponse,
+    VerifyOTPOnlyRequest, VerifyOTPOnlyResponse,
     SignOutResponse
 )
 
@@ -352,18 +353,25 @@ async def get_auth_profile(request: Request):
 async def forgot_password_otp(request: ForgotPasswordOTPRequest, db = Depends(get_database)):
     """Request OTP for password reset via email"""
     try:
-        # Check if user exists
-        user_query = "SELECT user_id, email, full_name FROM iam.iam_user WHERE email = $1 AND status = 'active'"
+        # Check if user exists (any status)
+        user_query = "SELECT user_id, email, full_name, status FROM iam.iam_user WHERE email = $1"
         user_result = await db.execute_query(user_query, (request.email,))
         
         if not user_result:
-            # Don't reveal if email exists for security
-            return ForgotPasswordOTPResponse(
-                success=True,
-                message="If your email is registered, you will receive an OTP code to reset your password."
+            # Return error when email not found
+            raise HTTPException(
+                status_code=404,
+                detail="No account found with this email address."
             )
         
         user = user_result[0]
+        
+        # Check if user is active
+        if user.get('status') != 'active':
+            raise HTTPException(
+                status_code=403,
+                detail="Your account has been disabled. Please contact support."
+            )
 
         # Generate and send OTP via email
         from app.services.email_service import send_otp_email
@@ -494,3 +502,51 @@ async def verify_otp_reset_password(request: VerifyOTPResetPasswordRequest, db =
     except Exception as e:
         logger.error(f"Verify OTP reset password error: {e}")
         raise HTTPException(status_code=500, detail="Password reset failed")
+
+
+# ====================================
+# VERIFY OTP ONLY (without password reset)
+# ====================================
+@router.post("/verify-otp-only", response_model=VerifyOTPOnlyResponse)
+async def verify_otp_only(request: VerifyOTPOnlyRequest, db = Depends(get_database)):
+    """Verify OTP only without resetting password - used to validate OTP before showing reset password form"""
+    try:
+        # Check if user exists
+        user_query = "SELECT user_id, email FROM iam.iam_user WHERE email = $1 AND status = 'active'"
+        user_result = await db.execute_query(user_query, (request.email,))
+        
+        if not user_result:
+            return VerifyOTPOnlyResponse(
+                success=False,
+                message="User not found",
+                valid=False
+            )
+
+        # Verify OTP WITHOUT consuming it (so it can be used for reset password)
+        from app.services.email_service import verify_otp_no_consume
+        
+        otp_result = await verify_otp_no_consume(request.email, request.otp)
+        
+        if not otp_result.get('valid'):
+            return VerifyOTPOnlyResponse(
+                success=False,
+                message=otp_result.get('message', 'Invalid or expired OTP'),
+                valid=False
+            )
+
+        # OTP is valid
+        return VerifyOTPOnlyResponse(
+            success=True,
+            message="OTP verified successfully",
+            valid=True
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Verify OTP only error: {e}")
+        return VerifyOTPOnlyResponse(
+            success=False,
+            message="OTP verification failed",
+            valid=False
+        )

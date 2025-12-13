@@ -47,35 +47,35 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
             setError(null);
             try {
                 const data = await getRoleUsers(roleId, { page, limit });
-               
+
                 // Handle different response structures
                 if (typeof data === 'string') {
                     // If API returns a string, parse it or handle accordingly
                     setUsers([]);
                     setTotal(0);
                 } else if (data.success && Array.isArray(data.data)) {
-                
+
                     setUsers(data.users);
                     setTotal(data.total || data.data.length);
                 } else if (Array.isArray(data)) {
-                     console.log("2")
+                    console.log("2")
                     setUsers(data);
                     setTotal(data.length);
                 } else {
-                    
+
                     setUsers(data.users);
                     setTotal(data.total);
                 }
             } catch (err: any) {
                 const detail = err?.response?.data?.detail;
-            let errorMsg = "Không thể tạo vai trò";
-            if (typeof detail === 'string') {
-                errorMsg = detail;
-            } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
-                errorMsg = detail[0].msg;
-            } else if (detail?.msg) {
-                errorMsg = detail.msg;
-            }
+                let errorMsg = "Failed to fetch users";
+                if (typeof detail === 'string') {
+                    errorMsg = detail;
+                } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
+                    errorMsg = detail[0].msg;
+                } else if (detail?.msg) {
+                    errorMsg = detail.msg;
+                }
                 setError(errorMsg);
                 showToast(errorMsg, "error");
             } finally {
@@ -95,11 +95,11 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                 <div className="flex justify-between items-start mb-6 pb-4 border-b">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                            Người dùng có vai trò: {roleName}
+                            Users with role: {roleName}
                         </h2>
                         <div className="flex items-center gap-2 text-gray-600">
                             <UsersIcon className="h-5 w-5" />
-                            <span className="text-sm">Tổng số người dùng: {total}</span>
+                            <span className="text-sm">Total users: {total}</span>
                         </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={onClose}>
@@ -110,7 +110,7 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                 {/* Loading State */}
                 {loading && (
                     <div className="flex justify-center items-center h-64">
-                        <div className="text-gray-500">Đang tải...</div>
+                        <div className="text-gray-500">Loading...</div>
                     </div>
                 )}
 
@@ -125,8 +125,8 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                 {!loading && !error && users.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                         <UsersIcon className="h-16 w-16 mb-4 text-gray-300" />
-                        <p className="text-lg font-medium">Không có người dùng nào</p>
-                        <p className="text-sm">Chưa có người dùng nào được gán vai trò này</p>
+                        <p className="text-lg font-medium">No users found</p>
+                        <p className="text-sm">No users assigned to this role yet</p>
                     </div>
                 )}
 
@@ -137,12 +137,12 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>STT</TableHead>
-                                        <TableHead>Tên</TableHead>
+                                        <TableHead>#</TableHead>
+                                        <TableHead>Name</TableHead>
                                         <TableHead>Email</TableHead>
-                                        <TableHead>Số điện thoại</TableHead>
-                                        <TableHead>Trạng thái</TableHead>
-                                        <TableHead>Lần đăng nhập cuối</TableHead>
+                                        <TableHead>Phone</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Last Login</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -157,16 +157,16 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                                             <TableCell>
                                                 {user.status === 'active' ? (
                                                     <Badge variant="default" className="bg-green-500 text-white">
-                                                        Hoạt động
+                                                        Active
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="destructive" className="bg-gray-500 text-white">
-                                                        Vô hiệu hóa
+                                                        Inactive
                                                     </Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {user.last_login_at 
+                                                {user.last_login_at
                                                     ? new Date(user.last_login_at).toLocaleString('vi-VN')
                                                     : '-'
                                                 }
@@ -181,7 +181,7 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                         {totalPages > 1 && (
                             <div className="flex justify-between items-center mt-4 pt-4 border-t">
                                 <div className="text-gray-600 text-sm">
-                                    Trang {page} / {totalPages}
+                                    Page {page} / {totalPages}
                                 </div>
                                 <div className="flex gap-2">
                                     <Button
@@ -190,7 +190,7 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                                         disabled={page === 1}
                                         onClick={() => setPage(page - 1)}
                                     >
-                                        Trang trước
+                                        Previous
                                     </Button>
                                     <Button
                                         size="sm"
@@ -198,7 +198,7 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                                         disabled={page === totalPages}
                                         onClick={() => setPage(page + 1)}
                                     >
-                                        Trang sau
+                                        Next
                                     </Button>
                                 </div>
                             </div>
@@ -209,7 +209,7 @@ export default function RoleUsersModal({ roleId, onClose }: RoleUsersModalProps)
                 {/* Close Button */}
                 <div className="flex justify-end mt-6 pt-4 border-t">
                     <Button variant="outline" onClick={onClose}>
-                        Đóng
+                        Close
                     </Button>
                 </div>
             </div>

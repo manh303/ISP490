@@ -1223,16 +1223,34 @@ Write concisely, clearly, using language accessible to non-technical business st
                         "Additional sentiment analysis recommended for comprehensive product feedback assessment"
                     )
 
-            # Actions 1-3: Product-level (top 3 by negative sentiment)
+            # Actions 1-3: Product-level (top 3 by negative sentiment) - Make each action UNIQUE
+            action_templates = [
+                lambda p, neg, rev: (
+                    f"[PRIORITY: HIGH] Investigate '{p.get('product_name', 'N/A')}' ({p.get('platform', 'N/A')}): "
+                    f"{neg:.1f}% negative ({rev} reviews). "
+                    f"Issues: {', '.join(p.get('top_negative_reasons', ['Quality issues'])[:2])}. "
+                    f"Action: Conduct root cause analysis and implement quality improvements within 7 days"
+                ),
+                lambda p, neg, rev: (
+                    f"[PRIORITY: HIGH] Address customer complaints for '{p.get('product_name', 'N/A')}' ({p.get('platform', 'N/A')}): "
+                    f"{neg:.1f}% negative sentiment from {rev} reviews. "
+                    f"Top complaints: {', '.join(p.get('top_negative_reasons', ['Service issues'])[:2])}. "
+                    f"Action: Respond to all 1-2 star reviews within 24h with resolution offers"
+                ),
+                lambda p, neg, rev: (
+                    f"[PRIORITY: MEDIUM] Review product listing for '{p.get('product_name', 'N/A')}' ({p.get('platform', 'N/A')}): "
+                    f"{neg:.1f}% negative feedback rate ({rev} reviews). "
+                    f"Reported issues: {', '.join(p.get('top_negative_reasons', ['Description mismatch'])[:2])}. "
+                    f"Action: Update product description, add FAQ section, clarify specifications"
+                ),
+            ]
+            
             for i, prod in enumerate(sorted_products[:3], 1):
                 neg_pct = (prod.get('negative_pct', 0) or 0) * 100
+                review_count = prod.get('total_reviews', 0) or prod.get('review_count', 0)
                 if neg_pct >= 15:
-                    recommended_actions.append(
-                        f"[PRIORITY: HIGH] Investigate '{prod.get('product_name', 'N/A')}' ({prod.get('platform', 'N/A')}): "
-                        f"{neg_pct:.1f}% negative ({prod.get('review_count', 0)} reviews). "
-                        f"Action: Analyze complaint themes (quality, delivery, description accuracy), "
-                        f"respond to negative reviews within 48h, implement corrective measures"
-                    )
+                    template = action_templates[(i - 1) % len(action_templates)]
+                    recommended_actions.append(template(prod, neg_pct, review_count))
 
             # Action 4: Category-level
             if avg_neg >= 15:

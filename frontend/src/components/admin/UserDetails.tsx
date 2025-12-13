@@ -27,6 +27,7 @@ export default function UserDetails(props: UserDetailsProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [editModeState, setEditModeState] = useState<boolean>(!!editMode);
   const [form, setForm] = useState({ full_name: "", phone: "", role: "CUSTOMER" });
   const [password, setPassword] = useState("");
@@ -79,6 +80,7 @@ export default function UserDetails(props: UserDetailsProps) {
 
   const handleUpdate = async () => {
     setLoading(true);
+    setUpdateError(null);
     try {
       await userApi.updateUser(userId, {
         full_name: form.full_name,
@@ -107,7 +109,7 @@ export default function UserDetails(props: UserDetailsProps) {
       } else if (detail?.msg) {
         errorMsg = detail.msg;
       }
-      setError(errorMsg);
+      setUpdateError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
@@ -117,23 +119,23 @@ export default function UserDetails(props: UserDetailsProps) {
   const handleUpdatePassword = async () => {
     // Reset error
     setPasswordError("");
-    
+
     // Validation
     if (!password || !confirmPassword) {
       setPasswordError("Please enter both passwords");
       return;
     }
-    
+
     if (password.length < 6) {
       setPasswordError("Password must be at least 6 characters");
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match");
       return;
     }
-    
+
     setLoading(true);
     try {
       await userApi.updateUserPassword(userId, password);
@@ -236,7 +238,7 @@ export default function UserDetails(props: UserDetailsProps) {
           ← Back
         </Button>
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Change Password</h2>
-        
+
         <div className="space-y-4">
           {/* User Info Display */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -256,15 +258,15 @@ export default function UserDetails(props: UserDetailsProps) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               New Password <span className="text-red-500">*</span>
             </label>
-            <input 
+            <input
               className={`w-full border ${passwordError ? 'border-red-400 focus:ring-red-300' : 'border-gray-300 focus:ring-blue-300'} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 text-base transition-all`}
-              type="password" 
-              value={password} 
+              type="password"
+              value={password}
               onChange={e => {
                 setPassword(e.target.value);
                 setPasswordError("");
               }}
-              placeholder="Enter new password (minimum 6 characters)" 
+              placeholder="Enter new password (minimum 6 characters)"
             />
           </div>
 
@@ -273,15 +275,15 @@ export default function UserDetails(props: UserDetailsProps) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Confirm Password <span className="text-red-500">*</span>
             </label>
-            <input 
+            <input
               className={`w-full border ${passwordError ? 'border-red-400 focus:ring-red-300' : 'border-gray-300 focus:ring-blue-300'} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 text-base transition-all`}
-              type="password" 
-              value={confirmPassword} 
+              type="password"
+              value={confirmPassword}
               onChange={e => {
                 setConfirmPassword(e.target.value);
                 setPasswordError("");
               }}
-              placeholder="Re-enter new password" 
+              placeholder="Re-enter new password"
             />
           </div>
 
@@ -303,17 +305,17 @@ export default function UserDetails(props: UserDetailsProps) {
 
           {/* Action buttons */}
           <div className="flex gap-3 mt-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleClosePasswordModal}
               className="flex-1"
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button 
-              variant="default" 
-              onClick={handleUpdatePassword} 
+            <Button
+              variant="default"
+              onClick={handleUpdatePassword}
               disabled={loading || !password || !confirmPassword}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
@@ -338,6 +340,14 @@ export default function UserDetails(props: UserDetailsProps) {
       <div className="mb-8">
         {editModeState ? (
           <div className="space-y-5">
+            {/* Update Error Message */}
+            {updateError && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <span className="text-red-500">⚠️</span>
+                <span className="text-sm text-red-600 font-medium">{updateError}</span>
+                <button onClick={() => setUpdateError(null)} className="ml-auto text-red-400 hover:text-red-600">✕</button>
+              </div>
+            )}
             <div>
               <label className="block text-base font-medium text-gray-700 mb-2">Full Name</label>
               <input className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:border-brand-500 text-gray-900 text-base" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Enter full name" />
@@ -364,12 +374,11 @@ export default function UserDetails(props: UserDetailsProps) {
                     {availableRoles.map(opt => (
                       <li
                         key={opt.role_code}
-                        className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${
-                          form.role === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
-                        }`}
-                        onClick={() => { 
-                          setForm(f => ({ ...f, role: opt.role_code })); 
-                          setShowRoleDropdown(false); 
+                        className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${form.role === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
+                          }`}
+                        onClick={() => {
+                          setForm(f => ({ ...f, role: opt.role_code }));
+                          setShowRoleDropdown(false);
                         }}
                       >
                         {opt.role_name}
@@ -388,15 +397,15 @@ export default function UserDetails(props: UserDetailsProps) {
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2 text-base">
-                <span className="font-semibold text-gray-700 min-w-[120px]">Full Name:</span> 
+                <span className="font-semibold text-gray-700 min-w-[120px]">Full Name:</span>
                 <span className="text-gray-900">{user.full_name}</span>
               </div>
               <div className="flex items-center gap-2 text-base">
-                <span className="font-semibold text-gray-700 min-w-[120px]">Email:</span> 
+                <span className="font-semibold text-gray-700 min-w-[120px]">Email:</span>
                 <span className="text-gray-900">{user.email}</span>
               </div>
               <div className="flex items-center gap-2 text-base">
-                <span className="font-semibold text-gray-700 min-w-[120px]">Phone Number:</span> 
+                <span className="font-semibold text-gray-700 min-w-[120px]">Phone Number:</span>
                 <span className="text-gray-900">{user.phone || 'Not updated'}</span>
               </div>
               <div className="flex items-center gap-2 text-base">
@@ -418,7 +427,7 @@ export default function UserDetails(props: UserDetailsProps) {
                 )}
               </div>
             </div>
-            
+
             {/* Always show action buttons in view mode */}
             <div className="flex gap-3 mt-4">
               <Button className="flex-1" variant="outline" onClick={() => setEditModeState(true)}>
@@ -434,11 +443,11 @@ export default function UserDetails(props: UserDetailsProps) {
 
       {/* Change Password - Only show in edit mode */}
       {editModeState && editMode !== false && (
-        <Button 
-          className="w-full mb-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors" 
+        <Button
+          className="w-full mb-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           onClick={() => setShowPasswordForm(true)}
         >
-           Change Password
+          Change Password
         </Button>
       )}
 

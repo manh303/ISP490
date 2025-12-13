@@ -28,8 +28,10 @@ export default function ForgotPasswordForm() {
       return;
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setErrors({ email: "Please enter a valid email address", general: "" });
+    // More robust email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      setErrors({ email: "Please enter a valid email address (e.g., user@example.com)", general: "" });
       showToast("Please enter a valid email address", "error");
       return;
     }
@@ -57,21 +59,19 @@ export default function ForgotPasswordForm() {
 
       let errorMessage = 'Unable to send password recovery code. Please try again.';
 
-      if (error?.message) {
+      // Extract error message from axios response
+      if (error?.response?.data?.detail) {
+        // Handle both string and object detail formats
+        const detail = error.response.data.detail;
+        errorMessage = typeof detail === 'string' ? detail : detail.message || JSON.stringify(detail);
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
         errorMessage = error.message;
       }
 
-      // Show specific error for common issues
-      if (errorMessage.toLowerCase().includes('no account found')) {
-        errorMessage = '❌ No account found with this email address. Please check your email or create a new account.';
-      } else if (errorMessage.toLowerCase().includes('email')) {
-        errorMessage = '❌ Please enter a valid email address.';
-      } else {
-        errorMessage = `❌ ${errorMessage}`;
-      }
-
-      setErrors({ email: "", general: errorMessage });
-      showToast(errorMessage, "error");
+      setErrors({ email: "", general: `❌ ${errorMessage}` });
+      showToast(`❌ ${errorMessage}`, "error");
     } finally {
       setIsLoading(false);
     }

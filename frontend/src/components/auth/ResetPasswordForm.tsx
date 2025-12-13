@@ -69,7 +69,8 @@ export default function ResetPasswordForm() {
       const response = await authAPI.resetPassword({
         email,
         otp,
-        new_password: formData.password
+        new_password: formData.password,
+        confirm_password: formData.confirmPassword
       });
 
       if (response.success) {
@@ -259,17 +260,17 @@ export default function ResetPasswordForm() {
                         <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mb-2">
                           <div
                             className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.strength === 1 ? 'bg-orange-500 w-1/4' :
-                                passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
-                                  passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
-                                    'bg-green-500 w-full'
+                              passwordStrength.strength === 2 ? 'bg-yellow-500 w-2/4' :
+                                passwordStrength.strength === 3 ? 'bg-blue-500 w-3/4' :
+                                  'bg-green-500 w-full'
                               }`}
                           />
                         </div>
                         <div className="text-left">
                           <span className={`text-sm font-medium ${passwordStrength.strength === 1 ? 'text-orange-500' :
-                              passwordStrength.strength === 2 ? 'text-yellow-500' :
-                                passwordStrength.strength === 3 ? 'text-blue-500' :
-                                  'text-green-500'
+                            passwordStrength.strength === 2 ? 'text-yellow-500' :
+                              passwordStrength.strength === 3 ? 'text-blue-500' :
+                                'text-green-500'
                             }`}>
                             Strength: {passwordStrength.label}
                           </span>

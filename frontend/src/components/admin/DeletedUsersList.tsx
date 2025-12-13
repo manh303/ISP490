@@ -39,7 +39,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [availableRoles, setAvailableRoles] = useState<Array<{ role_code: string; role_name: string }>>([]);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -60,7 +60,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
         } else if (userData.detail) {
           setError(userData.detail);
         } else {
-          throw new Error("API trả về lỗi");
+          throw new Error("API returned an error");
         }
 
         // Fetch roles
@@ -73,7 +73,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
         }
       } catch (err: any) {
         const detail = err?.response?.data?.detail;
-        let errorMsg = "Lỗi không xác định";
+        let errorMsg = "Unknown error";
         if (typeof detail === 'string') {
           errorMsg = detail;
         } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -99,11 +99,11 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
       } else {
         setUsers(users.filter(u => u.user_id !== id));
         setTotal(prev => prev - 1);
-        showToast('✓ Khôi phục tài khoản thành công!', 'success');
+        showToast('✓ Restored successfully!', 'success');
       }
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
-      let errorMsg = "Khôi phục thất bại";
+      let errorMsg = "Restore failed";
       if (typeof detail === 'string') {
         errorMsg = detail;
       } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -117,7 +117,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
   };
 
   const handlePermanentDelete = async (id: number) => {
-    const confirmed = window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn người dùng này? Hành động này không thể hoàn tác!");
+    const confirmed = window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone!");
     if (!confirmed) return;
     try {
       const res = await userApi.deleteUser(id);
@@ -127,11 +127,11 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
       } else {
         setUsers(users.filter(u => u.user_id !== id));
         setTotal(prev => prev - 1);
-        showToast('✓ Xóa vĩnh viễn tài khoản thành công!', 'success');
+        showToast('✓ Permanently deleted successfully!', 'success');
       }
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
-      let errorMsg = "Xóa vĩnh viễn thất bại";
+      let errorMsg = "Permanent delete failed";
       if (typeof detail === 'string') {
         errorMsg = detail;
       } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -151,7 +151,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
     // Filter by search term (email, name, or phone)
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.email.toLowerCase().includes(searchLower) ||
         user.full_name.toLowerCase().includes(searchLower) ||
         (user.phone && user.phone.includes(searchTerm))
@@ -190,9 +190,9 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
   return (
     <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Người dùng đã vô hiệu hóa</h2>
+        <h2 className="text-xl font-semibold">Deleted Users</h2>
         <div className="text-gray-500 text-sm">
-          Hiển thị {paginatedUsers.length} / {filteredUsers.length} (Tổng: {total})
+          Showing {paginatedUsers.length} / {filteredUsers.length} (Total: {total})
         </div>
       </div>
 
@@ -202,13 +202,13 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
           {/* Search Input */}
           <div className="flex-1 min-w-[250px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tìm kiếm theo Email, Tên hoặc SĐT
+              Search by Email, Name or Phone
             </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Nhập email, tên hoặc số điện thoại..."
+                placeholder="Enter email, name or phone number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -219,14 +219,14 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
           {/* Role Filter */}
           <div className="w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lọc theo Vai trò
+              Filter by Role
             </label>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">Tất cả vai trò</option>
+              <option value="all">All Roles</option>
               {availableRoles.map((role) => (
                 <option key={role.role_code} value={role.role_code}>
                   {role.role_name}
@@ -238,7 +238,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
           {/* Items per page */}
           <div className="w-[120px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hiển thị
+              Display
             </label>
             <select
               value={itemsPerPage}
@@ -261,7 +261,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
               className="flex items-center gap-2"
             >
               <X className="h-4 w-4" />
-              Xóa bộ lọc
+              Clear Filters
             </Button>
           )}
         </div>
@@ -269,21 +269,21 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
         {/* Active Filters Display */}
         {(searchTerm || selectedRole !== "all") && (
           <div className="flex flex-wrap gap-2 text-sm">
-            <span className="text-gray-600">Đang lọc:</span>
+            <span className="text-gray-600">Active Filters:</span>
             {searchTerm && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Tìm kiếm: "{searchTerm}"
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
+                Search: "{searchTerm}"
+                <X
+                  className="h-3 w-3 cursor-pointer"
                   onClick={() => setSearchTerm("")}
                 />
               </Badge>
             )}
             {selectedRole !== "all" && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Vai trò: {availableRoles.find(r => r.role_code === selectedRole)?.role_name}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
+                Role: {availableRoles.find(r => r.role_code === selectedRole)?.role_name}
+                <X
+                  className="h-3 w-3 cursor-pointer"
                   onClick={() => setSelectedRole("all")}
                 />
               </Badge>
@@ -292,14 +292,14 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
         )}
       </div>
 
-      {loading && <div className="text-gray-500">Đang tải...</div>}
+      {loading && <div className="text-gray-500">Loading...</div>}
       {error && <div className="text-red-500 mb-2">{error}</div>}
-      
+
       {!loading && filteredUsers.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          {searchTerm || selectedRole !== "all" 
-            ? "Không tìm thấy người dùng phù hợp với bộ lọc" 
-            : "Không có người dùng đã xóa"}
+          {searchTerm || selectedRole !== "all"
+            ? "No matching users found"
+            : "No deleted users found"}
         </div>
       )}
 
@@ -309,12 +309,12 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>STT</TableHead>
-                  <TableHead>Tên</TableHead>
+                  <TableHead>#</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Vai trò</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Hành động</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -325,32 +325,32 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.role_name === 'Admin' ? 'default' : 'secondary'}>
-                        {user.role_name || "Chưa xác định"}
+                        {user.role_name || "Undefined"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {user.status === 'active' ? (
-                        <Badge variant="default" className="bg-green-500 text-white">Hoạt động</Badge>
+                        <Badge variant="default" className="bg-green-500 text-white">Active</Badge>
                       ) : (
-                        <Badge variant="destructive" className="bg-gray-500 text-white">Vô hiệu hóa</Badge>
+                        <Badge variant="destructive" className="bg-gray-500 text-white">Inactive</Badge>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 items-center">
-                        <Button size="sm" variant="outline" onClick={() => handleRestore(user.user_id)} title="Khôi phục">
+                        <Button size="sm" variant="outline" onClick={() => handleRestore(user.user_id)} title="Restore">
                           <RotateCcw className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => handlePermanentDelete(user.user_id)}
-                          title="Xóa vĩnh viễn"
+                          title="Permanently Delete"
                           className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1 rounded"
                           disabled={loading}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id)} title="Xem chi tiết">
+                        <Button size="sm" variant="outline" onClick={() => onSelectUser(user.user_id)} title="View Details">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>
@@ -364,26 +364,26 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
           {/* Pagination Controls */}
           <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
             <div className="text-gray-600 text-sm">
-              Trang {currentPage} / {totalPages || 1}
+              Page {currentPage} / {totalPages || 1}
             </div>
             <div className="flex gap-2 items-center">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                disabled={currentPage === 1} 
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={currentPage === 1}
                 onClick={() => setCurrentPage(1)}
               >
                 ««
               </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                disabled={currentPage === 1} 
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={currentPage === 1}
                 onClick={() => setCurrentPage(currentPage - 1)}
               >
-                « Trang trước
+                « Previous
               </Button>
-              
+
               {/* Page numbers */}
               <div className="flex gap-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -397,7 +397,7 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <Button
                       key={pageNum}
@@ -412,18 +412,18 @@ export default function DeletedUsersList({ onSelectUser }: DeletedUsersListProps
                 })}
               </div>
 
-              <Button 
-                size="sm" 
-                variant="outline" 
-                disabled={currentPage === totalPages || totalPages === 0} 
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage(currentPage + 1)}
               >
-                Trang sau »
+                Next »
               </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                disabled={currentPage === totalPages || totalPages === 0} 
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage(totalPages)}
               >
                 »»

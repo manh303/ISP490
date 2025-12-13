@@ -135,7 +135,7 @@ export interface VerifyEmailRequest { email: string; verification_code: string; 
 export interface VerifyEmailResponse { success: boolean; message: string; user_created: boolean; user_id?: number; }
 export interface ForgotPasswordRequest { email: string; }
 export interface ForgotPasswordResponse { success: boolean; message: string; data?: { reset_token?: string; note?: string; } }
-export interface ResetPasswordRequest { email: string; otp: string; new_password: string; }
+export interface ResetPasswordRequest { email: string; otp: string; new_password: string; confirm_password: string; }
 export interface ResetPasswordResponse { success: boolean; message: string; }
 
 /* ----------------------------- API ------------------------------ */
@@ -343,7 +343,10 @@ export const authAPI = {
     (await api.post('/v1/auth/forgot-password-otp', data)).data,
 
   resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> =>
-    (await api.post('/v1/auth/verify-otp-reset-password', data)).data
+    (await api.post('/v1/auth/verify-otp-reset-password', data)).data,
+
+  verifyOtpOnly: async (data: { email: string; otp: string }): Promise<{ success: boolean; message: string; valid: boolean }> =>
+    (await api.post('/v1/auth/verify-otp-only', data)).data
 };
 
 export default api;

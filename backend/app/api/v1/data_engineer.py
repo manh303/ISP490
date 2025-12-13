@@ -106,7 +106,7 @@ class AlertSummary(BaseModel):
 @router.get("/health", summary="API Health Check")
 async def health_check():
     """Simple health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now()}
+    return {"status": "GOOD CONNECT", "timestamp": datetime.now()}
 
 # ===================================================================
 # ETL MONITORING
@@ -269,7 +269,7 @@ async def get_table_health(
                         WHEN last_loaded_at IS NULL THEN 'EMPTY'
                         WHEN EXTRACT(EPOCH FROM (NOW() - last_loaded_at))/3600 > %s THEN 'STALE'
                         WHEN row_count = 0 THEN 'EMPTY'
-                        ELSE 'HEALTHY'
+                        ELSE 'GOOD CONNECT'
                     END as health_status
                 FROM latest_stats
             """
@@ -463,7 +463,7 @@ async def get_database_health():
                 elif usage_pct >= 70:
                     status = "WARNING"
                 else:
-                    status = "HEALTHY"
+                    status = "GOOD CONNECT"
                 
                 return DatabaseHealth(
                     status=status,

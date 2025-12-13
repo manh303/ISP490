@@ -202,7 +202,7 @@ const DSSInput: React.FC = () => {
       name: 'Product Recommendations',
       icon: <Users className="w-6 h-6" />,
       description: 'Personalized product recommendations for customers',
-      fields: ['scope_mode', 'product_key', 'platform_code', 'category']
+      fields: ['scope_mode', 'product_key', 'platform_code', 'category', 'from_date', 'to_date']
     },
     review_sentiment: {
       name: 'Review Sentiment Analysis',
@@ -353,6 +353,7 @@ const DSSInput: React.FC = () => {
               onChange={(value) => handleChange('scope_mode', value)}
               placeholder="Select scope mode"
             />
+            {errors.scope_mode && <p className="text-red-500 text-xs mt-1">{errors.scope_mode}</p>}
           </div>
         );
       case 'product_key':
@@ -386,6 +387,7 @@ const DSSInput: React.FC = () => {
               categoryKey={categoryKey}
               placeholder="Search products..."
             />
+            {errors.product_key && <p className="text-red-500 text-xs mt-1">{errors.product_key}</p>}
           </div>
         );
       case 'platform_code':
@@ -400,6 +402,7 @@ const DSSInput: React.FC = () => {
                 handleChange('platform_code', value || 'tiki');
               }}
             />
+            {errors.platform_code && <p className="text-red-500 text-xs mt-1">{errors.platform_code}</p>}
           </div>
         );
       case 'category':
@@ -425,6 +428,7 @@ const DSSInput: React.FC = () => {
               }}
               platformCode={platformCode}
             />
+            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
           </div>
         );
       case 'time_range':
@@ -492,6 +496,7 @@ const DSSInput: React.FC = () => {
                 (fromDate && date.toDateString() === fromDate.toDateString() ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
               }
             />
+            {errors.from_date && <p className="text-red-500 text-xs mt-1">{errors.from_date}</p>}
           </div>
         );
       case 'to_date':
@@ -520,6 +525,7 @@ const DSSInput: React.FC = () => {
                 (toDate && date.toDateString() === toDate.toDateString() ? 'bg-blue-500 text-white' : 'hover:bg-blue-100')
               }
             />
+            {errors.to_date && <p className="text-red-500 text-xs mt-1">{errors.to_date}</p>}
           </div>
         );
       default:

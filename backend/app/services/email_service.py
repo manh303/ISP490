@@ -168,6 +168,91 @@ class OTPManager:
                     'attempts_remaining': remaining
                 }
 
+    async def verify_otp_no_consume(self, email: str, provided_otp: str) -> Dict[str, Any]:
+        """Verify OTP for email WITHOUT consuming it (for validation only)"""
+        if self.redis_client:
+            otp_key = f"otp:{email}"
+            attempts_key = f"otp_attempts:{email}"
+
+            # Get stored OTP and attempts
+            stored_otp = await self.redis_client.get(otp_key)
+            attempts = await self.redis_client.get(attempts_key) or 0
+            attempts = int(attempts)
+
+            if not stored_otp:
+                return {
+                    'valid': False,
+                    'error': 'OTP expired or not found',
+                    'attempts_remaining': 0
+                }
+
+            # Check attempts limit
+            if attempts >= self.config.max_attempts:
+                return {
+                    'valid': False,
+                    'error': 'Too many failed attempts',
+                    'attempts_remaining': 0
+                }
+
+            # Verify OTP - DO NOT DELETE if valid
+            if stored_otp.decode() == provided_otp:
+                return {
+                    'valid': True,
+                    'message': 'OTP verified successfully'
+                }
+            else:
+                # Increment attempts
+                await self.redis_client.incr(attempts_key)
+                remaining = self.config.max_attempts - (attempts + 1)
+                return {
+                    'valid': False,
+                    'error': 'Invalid OTP',
+                    'attempts_remaining': remaining
+                }
+        else:
+            # Fallback to in-memory storage
+            if not hasattr(self, '_otp_storage') or email not in self._otp_storage:
+                return {
+                    'valid': False,
+                    'error': 'OTP expired or not found',
+                    'attempts_remaining': 0
+                }
+
+            stored = self._otp_storage[email]
+
+            # Check expiration
+            if datetime.now() > stored['expires']:
+                del self._otp_storage[email]
+                return {
+                    'valid': False,
+                    'error': 'OTP expired',
+                    'attempts_remaining': 0
+                }
+
+            # Check attempts
+            if stored['attempts'] >= self.config.max_attempts:
+                del self._otp_storage[email]
+                return {
+                    'valid': False,
+                    'error': 'Too many failed attempts',
+                    'attempts_remaining': 0
+                }
+
+            # Verify OTP - DO NOT DELETE if valid
+            if stored['otp'] == provided_otp:
+                return {
+                    'valid': True,
+                    'message': 'OTP verified successfully'
+                }
+            else:
+                stored['attempts'] += 1
+                remaining = self.config.max_attempts - stored['attempts']
+                return {
+                    'valid': False,
+                    'error': 'Invalid OTP',
+                    'attempts_remaining': remaining
+                }
+
 class EmailService:
     """Email service for sending OTP and other notifications using Mailjet"""
 
@@ -391,7 +476,11 @@ async def send_otp_email(email: str, name: str = None) -> Dict[str, Any]:
     return await email_service.send_otp_email(email, name)
 
 async def verify_otp(email: str, otp: str) -> Dict[str, Any]:
-    """Verify OTP"""
+    """Verify OTP (consumes OTP on success)"""
     return await email_service.verify_email_otp(email, otp)
 
-__all__ = ['EmailService', 'OTPManager', 'email_service', 'send_otp_email', 'verify_otp']
+async def verify_otp_no_consume(email: str, otp: str) -> Dict[str, Any]:
+    """Verify OTP without consuming it (for validation only)"""
+    return await email_service.otp_manager.verify_otp_no_consume(email, otp)
+
+__all__ = ['EmailService', 'OTPManager', 'email_service', 'send_otp_email', 'verify_otp', 'verify_otp_no_consume']

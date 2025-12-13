@@ -48,7 +48,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
     setSuccess(null);
 
     if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+      setError("Passwords do not match");
       setLoading(false);
       return;
     }
@@ -62,14 +62,14 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
         phone,
         role: roleCode,
       });
-      if (!data.success) throw new Error(data.message || "Không thể tạo người dùng mới");
-      setSuccess("Tạo người dùng thành công!");
-      showToast("Tạo người dùng thành công!", 'success');
+      if (!data.success) throw new Error(data.message || "Failed to create new user");
+      setSuccess("User created successfully!");
+      showToast("User created successfully!", 'success');
       setFullName(""); setEmail(""); setRoleCode(availableRoles.length > 0 ? availableRoles[0].role_code : ""); setPassword(""); setConfirmPassword(""); setPhone("");
       onCreated();
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
-      let errorMsg = "Không thể tạo người dùng mới";
+      let errorMsg = "Failed to create new user";
       if (typeof detail === 'string') {
         errorMsg = detail;
       } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -88,11 +88,11 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
 
   return (
     <form className="bg-white rounded-lg shadow border border-gray-200 max-w-md mx-auto p-6" onSubmit={handleSubmit}>
-      <h2 className="text-xl font-semibold mb-4">Tạo người dùng mới</h2>
+      <h2 className="text-xl font-semibold mb-4">Create New User</h2>
       {error && <div className="text-red-500 mb-2">{error}</div>}
       {success && <div className="text-green-500 mb-2">{success}</div>}
       <div className="mb-4">
-        <label className="block text-gray-700 mb-1">Họ tên</label>
+        <label className="block text-gray-700 mb-1">Full Name</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" value={fullName} onChange={e => setFullName(e.target.value)} required />
       </div>
       <div className="mb-4">
@@ -100,11 +100,11 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700 mb-1">Số điện thoại</label>
+        <label className="block text-gray-700 mb-1">Phone Number</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" value={phone} onChange={e => setPhone(e.target.value)} required />
       </div>
       <div className="mb-4">
-        <label className="block text-base font-medium text-gray-700 mb-2">Vai trò</label>
+        <label className="block text-base font-medium text-gray-700 mb-2">Role</label>
         <div className="relative w-full">
           <button
             type="button"
@@ -112,7 +112,7 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
             onClick={() => setShowRoleDropdown(v => !v)}
           >
             <span className="text-gray-900">
-              {availableRoles.find(opt => opt.role_code === roleCode)?.role_name || "Chọn vai trò"}
+              {availableRoles.find(opt => opt.role_code === roleCode)?.role_name || "Select Role"}
             </span>
             <span className={`ml-2 text-gray-400 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`}>▼</span>
           </button>
@@ -121,12 +121,11 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
               {availableRoles.map(opt => (
                 <li
                   key={opt.role_code}
-                  className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${
-                    roleCode === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
-                  }`}
-                  onClick={() => { 
-                    setRoleCode(opt.role_code); 
-                    setShowRoleDropdown(false); 
+                  className={`px-4 py-3 text-base cursor-pointer hover:bg-blue-50 transition-colors ${roleCode === opt.role_code ? 'bg-blue-100 font-semibold text-blue-700' : 'text-gray-700'
+                    }`}
+                  onClick={() => {
+                    setRoleCode(opt.role_code);
+                    setShowRoleDropdown(false);
                   }}
                 >
                   {opt.role_name}
@@ -137,15 +136,15 @@ export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
         </div>
       </div>
       <div className="mb-6">
-        <label className="block text-gray-700 mb-1">Mật khẩu</label>
+        <label className="block text-gray-700 mb-1">Password</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
       </div>
       <div className="mb-6">
-        <label className="block text-gray-700 mb-1">Xác nhận mật khẩu</label>
+        <label className="block text-gray-700 mb-1">Confirm Password</label>
         <input className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
       </div>
       <Button className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" type="submit" disabled={loading}>
-        {loading ? "Đang tạo..." : "Tạo người dùng"}
+        {loading ? "Creating..." : "Create User"}
       </Button>
     </form>
   );

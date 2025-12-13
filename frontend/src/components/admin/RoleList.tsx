@@ -46,11 +46,11 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
                 setRoles(data.data);
                 setTotal(data.total);
             } else {
-                throw new Error("API trả về lỗi");
+                throw new Error("API returned an error");
             }
         } catch (err: any) {
-             const detail = err?.response?.data?.detail;
-            let errorMsg = "Không thể tạo vai trò";
+            const detail = err?.response?.data?.detail;
+            let errorMsg = "Failed to fetch roles";
             if (typeof detail === 'string') {
                 errorMsg = detail;
             } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -70,33 +70,34 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
     }, [page, limit, activeOnly, refreshTrigger]);
 
     const handleDelete = async (roleId: number, roleName: string) => {
-        if (!confirm(`Bạn có chắc chắn muốn xóa vai trò "${roleName}"?\nLưu ý: Chỉ xóa được nếu không có người dùng nào được gán vai trò này.`)) {
+        if (!confirm(`Are you sure you want to delete role "${roleName}"?\nNote: Role can only be deleted if no users are assigned to it.`)) {
             return;
         }
 
         try {
             const response = await deleteRole(roleId);
-            showToast(response.message || "Xóa vai trò thành công!", "success");
+            showToast(response.message || "Role deleted successfully!", "success");
             fetchRoles();
         } catch (err: any) {
-            showToast(err?.response?.data?.detail || "Không thể xóa vai trò", "error");
+            showToast(err?.response?.data?.detail || "Failed to delete role", "error");
         }
     };
 
     const handleToggleStatus = async (roleId: number, roleName: string, isActive: boolean) => {
-        const action = isActive ? "vô hiệu hóa" : "kích hoạt";
-        if (!confirm(`Bạn có chắc chắn muốn ${action} vai trò "${roleName}"?`)) {
+        const action = isActive ? "deactivate" : "activate";
+        const actionText = isActive ? "deactivate" : "activate";
+        if (!confirm(`Are you sure you want to ${actionText} role "${roleName}"?`)) {
             return;
         }
 
         try {
-            const response = isActive 
+            const response = isActive
                 ? await deactivateRole(roleId)
                 : await activateRole(roleId);
-            showToast(response.message || `${action.charAt(0).toUpperCase() + action.slice(1)} vai trò thành công!`, "success");
+            showToast(response.message || `Role ${action}d successfully!`, "success");
             fetchRoles();
         } catch (err: any) {
-            showToast(err?.response?.data?.detail || `Không thể ${action} vai trò`, "error");
+            showToast(err?.response?.data?.detail || `Failed to ${action} role`, "error");
         }
     };
 
@@ -105,7 +106,7 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
     return (
         <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Danh sách vai trò</h2>
+                <h2 className="text-xl font-semibold">Role List</h2>
                 <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 text-sm">
                         <input
@@ -117,25 +118,25 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
                             }}
                             className="rounded"
                         />
-                        Chỉ hiển thị vai trò đang hoạt động
+                        Show active roles only
                     </label>
-                    <div className="text-gray-500 text-sm">Tổng: {total}</div>
+                    <div className="text-gray-500 text-sm">Total: {total}</div>
                 </div>
             </div>
 
-            {loading && <div className="text-gray-500">Đang tải...</div>}
+            {loading && <div className="text-gray-500">Loading...</div>}
             {error && <div className="text-red-500 mb-2">{error}</div>}
 
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>STT</TableHead>
-                            <TableHead>Mã vai trò</TableHead>
-                            <TableHead>Tên vai trò</TableHead>
-                            <TableHead>Mô tả</TableHead>
-                            <TableHead>Trạng thái</TableHead>
-                            <TableHead>Hành động</TableHead>
+                            <TableHead>#</TableHead>
+                            <TableHead>Role Code</TableHead>
+                            <TableHead>Role Name</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -154,48 +155,48 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
                                 <TableCell>
                                     {role.is_active ? (
                                         <Badge variant="default" className="bg-green-500 text-white">
-                                            Hoạt động
+                                            Active
                                         </Badge>
                                     ) : (
                                         <Badge variant="destructive" className="bg-gray-500 text-white">
-                                            Vô hiệu hóa
+                                            Inactive
                                         </Badge>
                                     )}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2">
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline" 
-                                            onClick={() => onSelectRole(role.role_id, 'view')} 
-                                            title="Xem chi tiết"
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => onSelectRole(role.role_id, 'view')}
+                                            title="View Details"
                                         >
                                             <Eye className="h-4 w-4" />
                                         </Button>
 
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline" 
-                                            onClick={() => onSelectRole(role.role_id, 'edit')} 
-                                            title="Sửa"
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => onSelectRole(role.role_id, 'edit')}
+                                            title="Edit"
                                         >
                                             <Edit className="h-4 w-4" />
                                         </Button>
 
-                                        <Button 
-                                            size="sm" 
+                                        <Button
+                                            size="sm"
                                             variant="outline"
-                                            onClick={() => onViewUsers(role.role_id)} 
-                                            title="Xem người dùng"
+                                            onClick={() => onViewUsers(role.role_id)}
+                                            title="View Users"
                                         >
                                             <Users className="h-4 w-4" />
                                         </Button>
 
-                                        <Button 
-                                            size="sm" 
+                                        <Button
+                                            size="sm"
                                             variant={role.is_active ? "outline" : "default"}
                                             onClick={() => handleToggleStatus(role.role_id, role.role_name, role.is_active)}
-                                            title={role.is_active ? "Vô hiệu hóa" : "Kích hoạt"}
+                                            title={role.is_active ? "Deactivate" : "Activate"}
                                         >
                                             {role.is_active ? (
                                                 <Ban className="h-4 w-4" />
@@ -204,11 +205,11 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
                                             )}
                                         </Button>
 
-                                        <Button 
-                                            size="sm" 
-                                            variant="destructive" 
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
                                             onClick={() => handleDelete(role.role_id, role.role_name)}
-                                            title="Xóa"
+                                            title="Delete"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -223,24 +224,24 @@ export default function RoleList({ onSelectRole, onViewUsers, refreshTrigger }: 
             {/* Pagination Controls */}
             <div className="flex justify-between items-center mt-4">
                 <div className="text-gray-600 text-sm">
-                    Trang {page} / {totalPages || 1}
+                    Page {page} / {totalPages || 1}
                 </div>
                 <div className="flex gap-2">
-                    <Button 
-                        size="sm" 
-                        variant="outline" 
-                        disabled={page === 1} 
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={page === 1}
                         onClick={() => setPage(page - 1)}
                     >
-                        Trang trước
+                        Previous
                     </Button>
-                    <Button 
-                        size="sm" 
-                        variant="outline" 
-                        disabled={page === totalPages || totalPages === 0} 
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={page === totalPages || totalPages === 0}
                         onClick={() => setPage(page + 1)}
                     >
-                        Trang sau
+                        Next
                     </Button>
                 </div>
             </div>

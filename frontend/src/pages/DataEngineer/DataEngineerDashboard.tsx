@@ -65,7 +65,7 @@ const DataEngineerDashboard: React.FC = () => {
       setAlerts(alertsData);
     } catch (err) {
       console.error('Error fetching data:', err);
-          setError('Failed to load dashboard data');
+      setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -78,6 +78,7 @@ const DataEngineerDashboard: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'healthy':
+      case 'GOOD CONNECT':
       case 'success':
       case 'active':
         return 'text-green-600 bg-green-100';
@@ -153,11 +154,11 @@ const DataEngineerDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">System Health</p>
-              <p className={`text-2xl font-bold ${health?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}`}>
-                {health?.status === 'healthy' ? 'Healthy' : 'Unhealthy'}
+              <p className={`text-2xl font-bold ${health?.status === 'GOOD CONNECT' ? 'text-green-600' : 'text-red-600'}`}>
+                {health?.status === 'GOOD CONNECT' ? 'GOOD CONNECT' : 'Unhealthy'}
               </p>
             </div>
-            <Activity className={`w-8 h-8 ${health?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}`} />
+            <Activity className={`w-8 h-8 ${health?.status === 'GOOD CONNECT' ? 'text-green-600' : 'text-red-600'}`} />
           </div>
         </div>
 
@@ -165,11 +166,11 @@ const DataEngineerDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Database Status</p>
-              <p className={`text-2xl font-bold ${databaseHealth?.status?.toLowerCase() === 'healthy' ? 'text-green-600' : 'text-red-600'}`}>
-                {databaseHealth?.status ? databaseHealth.status.charAt(0) + databaseHealth.status.slice(1).toLowerCase() : 'Unknown'}
+              <p className={`text-2xl font-bold ${databaseHealth?.status?.toLowerCase() === 'good connect' ? 'text-green-600' : 'text-red-600'}`}>
+                {databaseHealth?.status ? databaseHealth.status : 'Unknown'}
               </p>
             </div>
-            <Database className={`w-8 h-8 ${databaseHealth?.status?.toLowerCase() === 'healthy' ? 'text-green-600' : 'text-red-600'}`} />
+            <Database className={`w-8 h-8 ${databaseHealth?.status?.toLowerCase() === 'good connect' ? 'text-green-600' : 'text-red-600'}`} />
           </div>
         </div>
 

@@ -229,7 +229,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600 dark:text-gray-400">Đang tải dữ liệu bảng điều khiển...</span>
+            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading dashboard data...</span>
           </div>
         </div>
       </div>

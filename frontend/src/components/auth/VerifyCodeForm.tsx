@@ -100,12 +100,27 @@ export default function VerifyCodeForm() {
       showToast("Verifying code...", "info", 2000);
 
       if (resetEmail) {
-        // Forgot password flow: save OTP and navigate to reset password, don't call verifyEmail API
-        sessionStorage.setItem('reset_otp', verificationCode);
-        showToast('OTP verified. Please reset your password.', 'success', 1500);
-        setTimeout(() => {
-          navigate('/reset-password');
-        }, 1000);
+        // Forgot password flow: verify OTP first, then navigate to reset password page
+        const response = await authAPI.verifyOtpOnly({
+          email: resetEmail,
+          otp: verificationCode
+        });
+
+        if (response.valid) {
+          // OTP is valid - save and navigate to reset password
+          sessionStorage.setItem('reset_otp', verificationCode);
+          showToast('✅ OTP verified! Please enter your new password.', 'success', 1500);
+          setTimeout(() => {
+            navigate('/reset-password');
+          }, 1000);
+        } else {
+          // OTP is invalid
+          const errorMsg = response.message || 'Invalid or expired OTP code. Please try again.';
+          setError(errorMsg);
+          setCode(["", "", "", "", "", ""]);
+          inputRefs.current[0]?.focus();
+          showToast(`❌ ${errorMsg}`, 'error');
+        }
       } else if (verifyEmail) {
         // Registration flow: call verifyEmail API
         const response = await authAPI.verifyEmail({

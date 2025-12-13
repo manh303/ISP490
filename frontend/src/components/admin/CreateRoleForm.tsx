@@ -124,7 +124,7 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
                         type="text"
                         value={formData.role_name}
                         onChange={(e) => handleChange('role_name', e.target.value)}
-                        placeholder="VD: Admin, Data Engineer"
+                        placeholder="e.g., Admin, Data Engineer"
                         className={errors.role_name ? 'border-red-500' : ''}
                         disabled={isSubmitting}
                     />
@@ -154,16 +154,16 @@ export default function CreateRoleForm({ onClose, onSuccess }: CreateRoleFormPro
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 pt-4 border-t">
-                    <Button 
-                        type="button" 
-                        variant="outline" 
+                    <Button
+                        type="button"
+                        variant="outline"
                         onClick={onClose}
                         disabled={isSubmitting}
                     >
                         Cancel
                     </Button>
-                    <Button 
-                        type="submit" 
+                    <Button
+                        type="submit"
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? 'Creating...' : 'Create Role'}

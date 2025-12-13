@@ -4,6 +4,7 @@ Handles user management, activity logging, and admin operations
 """
 import logging
 import datetime
+import json
 from typing import List, Dict, Any, Optional, Tuple
 from fastapi import HTTPException
 
@@ -139,6 +140,13 @@ class AdminService:
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already exists")
 
+        # Check phone uniqueness (if phone is provided)
+        if phone:
+            phone_check_query = "SELECT user_id FROM iam.iam_user WHERE phone = $1"
+            existing_phone = await self.db.execute_query(phone_check_query, (phone,))
+            if existing_phone:
+                raise HTTPException(status_code=400, detail="Phone number already exists")
+
         # Hash password
         password_hash = await self.iam_service.hash_password(password)
 
@@ -180,7 +188,7 @@ class AdminService:
                     f"INSERT INTO {ACTIVITY_LOG_TABLE} (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())",
                     user_id,
                     "USER_CREATED",
-                    f"Admin created user: {email} with role: {role_code}",
+                    json.dumps({"description": f"Admin created user: {email} with role: {role_code}"}),
                 )
 
                 result = {
@@ -217,8 +225,16 @@ class AdminService:
             param_count += 1
             
         if user_data.phone is not None:
+            # Only check uniqueness if phone is not empty
+            if user_data.phone and user_data.phone.strip():
+                # Check phone uniqueness (exclude current user)
+                phone_check_query = "SELECT user_id FROM iam.iam_user WHERE phone = $1 AND user_id != $2"
+                existing_phone = await self.db.execute_query(phone_check_query, (user_data.phone, user_id))
+                if existing_phone:
+                    raise HTTPException(status_code=400, detail="Phone number already exists")
+            
             update_fields.append(f"phone = ${param_count}")
-            values.append(user_data.phone)
+            values.append(user_data.phone if user_data.phone else None)
             param_count += 1
             
         if user_data.status is not None:

@@ -786,10 +786,60 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Insights</h3>
-              <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
-                {insights.map((insight: string, index: number) => (
-                  <li key={index}>{insight}</li>
-                ))}
+              <ul className="space-y-2">
+                {insights.map((insight: string, index: number) => {
+                  // Function to highlight numbers and percentages in insight text
+                  const formatInsight = (text: string) => {
+                    // Split by patterns that need highlighting
+                    const parts = text.split(/(₫[\d,]+|[\d,]+đ|\d+\.?\d*%|[\d,]+\s*(?:products?|orders?|reviews?|items?))/gi);
+
+                    return parts.map((part, i) => {
+                      // Check if this part matches currency pattern
+                      if (/^₫[\d,]+$/i.test(part) || /^[\d,]+đ$/i.test(part)) {
+                        return (
+                          <span key={i} className="font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-800 px-1 rounded">
+                            {part}
+                          </span>
+                        );
+                      }
+                      // Check if this part matches percentage pattern
+                      if (/^\d+\.?\d*%$/.test(part)) {
+                        const num = parseFloat(part);
+                        const isPositive = text.includes(`+${part}`) || text.includes('increase') || text.includes('uplift');
+                        const isNegative = num > 25 && (text.toLowerCase().includes('negative') || text.toLowerCase().includes('critical'));
+                        return (
+                          <span
+                            key={i}
+                            className={`font-bold px-1 rounded ${isNegative ? 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-800' :
+                                isPositive ? 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-800' :
+                                  'text-purple-700 bg-purple-100 dark:text-purple-300 dark:bg-purple-800'
+                              }`}
+                          >
+                            {part}
+                          </span>
+                        );
+                      }
+                      // Check if this part matches count pattern (products, orders, reviews)
+                      if (/^[\d,]+\s*(?:products?|orders?|reviews?|items?)$/i.test(part)) {
+                        return (
+                          <span key={i} className="font-semibold text-gray-700 dark:text-gray-300">
+                            {part}
+                          </span>
+                        );
+                      }
+                      return <span key={i}>{part}</span>;
+                    });
+                  };
+
+                  return (
+                    <li key={index} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-200 dark:bg-blue-700 text-blue-800 dark:text-blue-100 flex items-center justify-center text-xs font-medium mt-0.5">
+                        {index + 1}
+                      </span>
+                      <span className="leading-relaxed">{formatInsight(insight)}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             {anomalies.length > 0 && (
@@ -824,50 +874,310 @@ const DSSResults: React.FC<DSSResultsProps> = () => {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
           <Target className="w-6 h-6 mr-2" />
           AI Action Recommendations
+          <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+            {recommendations.length} actions
+          </span>
         </h2>
         <div className="space-y-4">
           {recommendations.map((action: { title: string; description: string; impact: string; effort: string; priority: string }, index: number) => {
-            // Function to highlight text in parentheses
-            const highlightParentheses = (text: string) => {
-              const parts = text.split(/(\([^)]+\))/g);
-              return parts.map((part, i) => {
-                if (part.startsWith('(') && part.endsWith(')')) {
-                  return (
-                    <span key={i} className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-1 rounded">
-                      {part}
-                    </span>
-                  );
-                }
-                return <span key={i}>{part}</span>;
-              });
+            // Parse structured action text - enhanced for price prediction
+            const parseActionText = (text: string) => {
+              // Try to extract priority, product name, and action details
+              const priorityMatch = text.match(/\[PRIORITY:\s*(HIGH|MEDIUM|LOW)\]/i);
+              const productMatch = text.match(/'([^']+)'/);
+              const percentMatch = text.match(/(\d+\.?\d*)%\s*(negative|positive)/i);
+              const reviewMatch = text.match(/\((\d+)\s*reviews?\)/i);
+
+              // Price prediction specific extractions
+              const priceFromMatch = text.match(/from\s*[₫đ$]?([\d,]+)/i);
+              const priceToMatch = text.match(/to\s*[₫đ$]?([\d,]+)/i);
+              const priceChangeMatch = text.match(/\(([+-]?\d+\.?\d*)%\)/);
+              const revenueChangeMatch = text.match(/revenue\s*change[:\s]*([+-]?\d+\.?\d*)%/i);
+              const confidenceMatch = text.match(/confidence[:\s]*(\d+\.?\d*)%/i);
+              const ordersMatch = text.match(/orders[:\s]*([\d,]+)/i);
+              const platformMatch = text.match(/\((tiki|lazada|shopee)\)/i);
+
+              return {
+                priority: priorityMatch ? priorityMatch[1].toUpperCase() : action.priority,
+                productName: productMatch ? productMatch[1] : null,
+                percentage: percentMatch ? { value: percentMatch[1], type: percentMatch[2].toLowerCase() } : null,
+                reviewCount: reviewMatch ? reviewMatch[1] : null,
+                // Price prediction data
+                priceFrom: priceFromMatch ? parseInt(priceFromMatch[1].replace(/,/g, '')) : null,
+                priceTo: priceToMatch ? parseInt(priceToMatch[1].replace(/,/g, '')) : null,
+                priceChange: priceChangeMatch ? parseFloat(priceChangeMatch[1]) : null,
+                revenueChange: revenueChangeMatch ? parseFloat(revenueChangeMatch[1]) : null,
+                confidence: confidenceMatch ? parseFloat(confidenceMatch[1]) : null,
+                orders: ordersMatch ? parseInt(ordersMatch[1].replace(/,/g, '')) : null,
+                platform: platformMatch ? platformMatch[1].toLowerCase() : null,
+                cleanText: text
+                  .replace(/\[PRIORITY:\s*(HIGH|MEDIUM|LOW)\]/gi, '')
+                  .replace(/Investigate\s*/i, '')
+                  .trim()
+              };
             };
 
+            const parsed = parseActionText(action.title);
+            const effectivePriority = parsed.priority || action.priority;
+
+            // Get icon and color based on priority
+            const getPriorityIcon = (priority: string) => {
+              switch (priority.toUpperCase()) {
+                case 'HIGH':
+                  return <AlertTriangle className="w-5 h-5 text-red-500" />;
+                case 'MEDIUM':
+                  return <Info className="w-5 h-5 text-yellow-500" />;
+                case 'LOW':
+                  return <Lightbulb className="w-5 h-5 text-green-500" />;
+                default:
+                  return <Target className="w-5 h-5 text-blue-500" />;
+              }
+            };
+
+            const getPriorityBorderColor = (priority: string) => {
+              switch (priority.toUpperCase()) {
+                case 'HIGH':
+                  return 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-900/10';
+                case 'MEDIUM':
+                  return 'border-l-4 border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
+                case 'LOW':
+                  return 'border-l-4 border-l-green-500 bg-green-50 dark:bg-green-900/10';
+                default:
+                  return 'border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/10';
+              }
+            };
+
+            // Extract action steps from text
+            const extractActionSteps = (text: string) => {
+              const steps: string[] = [];
+              // Common action keywords
+              const actionKeywords = ['Analyze', 'Respond', 'Implement', 'Review', 'Check', 'Monitor', 'Update', 'Create', 'Verify', 'Conduct', 'Address', 'Track'];
+
+              // Split by "Action:" if present to get the action part
+              const actionPart = text.includes('Action:') ? text.split('Action:')[1] : text;
+
+              actionKeywords.forEach(keyword => {
+                const regex = new RegExp(`${keyword}[^,.;]+`, 'gi');
+                const matches = actionPart.match(regex);
+                if (matches) {
+                  matches.forEach(m => {
+                    const step = m.trim();
+                    // Only add if step is meaningful (length > 15 chars) and not already added
+                    if (step.length > 15 && !steps.some(s => s.toLowerCase() === step.toLowerCase())) {
+                      steps.push(step);
+                    }
+                  });
+                }
+              });
+
+              // Deduplicate and limit
+              const uniqueSteps = [...new Set(steps)];
+              return uniqueSteps.length > 1 ? uniqueSteps.slice(0, 3) : [];
+            };
+
+            const actionSteps = extractActionSteps(action.title);
+
             return (
-              <div key={index} className="bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white leading-relaxed">
-                      {highlightParentheses(action.title)}
-                    </p>
+              <div
+                key={index}
+                className={`p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all ${getPriorityBorderColor(effectivePriority)}`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-1">
+                    {getPriorityIcon(effectivePriority)}
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(action.priority)}`}>
-                      {action.priority}
-                    </span>
-                    <span className={`px-2 py-1 text-xs rounded-full ${action.impact === 'High' ? 'bg-green-100 text-green-800' : action.impact === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
-                      Impact: {action.impact}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    {/* Priority Badge & Product Name */}
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getPriorityColor(effectivePriority)}`}>
+                        {effectivePriority} PRIORITY
+                      </span>
+                      {parsed.productName && (
+                        <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full font-medium truncate max-w-xs">
+                          📦 {parsed.productName.substring(0, 40)}{parsed.productName.length > 40 ? '...' : ''}
+                        </span>
+                      )}
+                      {parsed.platform && (
+                        <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full font-medium">
+                          🏪 {parsed.platform}
+                        </span>
+                      )}
+                      {parsed.percentage && (
+                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${parsed.percentage.type === 'negative' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                          }`}>
+                          {parsed.percentage.value}% {parsed.percentage.type}
+                        </span>
+                      )}
+                      {parsed.reviewCount && (
+                        <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded-full">
+                          💬 {parsed.reviewCount} reviews
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Price Prediction Metrics - Structured Display */}
+                    {(parsed.priceFrom || parsed.priceTo || parsed.confidence || parsed.revenueChange) && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 bg-white/70 dark:bg-gray-800/70 rounded-lg p-3 border border-gray-100 dark:border-gray-600">
+                        {parsed.priceFrom && parsed.priceTo && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-gray-500 mb-1">Price Change</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600 line-through">
+                                {new Intl.NumberFormat('vi-VN').format(parsed.priceFrom)}đ
+                              </span>
+                              <span className="text-gray-400">→</span>
+                              <span className="text-sm font-bold text-blue-600">
+                                {new Intl.NumberFormat('vi-VN').format(parsed.priceTo)}đ
+                              </span>
+                              {parsed.priceChange !== null && (
+                                <span className={`px-1.5 py-0.5 text-xs font-bold rounded ${parsed.priceChange >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                  {parsed.priceChange >= 0 ? '+' : ''}{parsed.priceChange.toFixed(1)}%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {parsed.revenueChange !== null && (
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Revenue Impact</p>
+                            <span className={`text-sm font-bold ${parsed.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {parsed.revenueChange >= 0 ? '📈 +' : '📉 '}{parsed.revenueChange.toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
+                        {parsed.confidence !== null && (
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Confidence</p>
+                            <div className="flex items-center gap-1">
+                              <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${parsed.confidence >= 80 ? 'bg-green-500' : parsed.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                  style={{ width: `${parsed.confidence}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-bold text-gray-700">{parsed.confidence.toFixed(0)}%</span>
+                            </div>
+                          </div>
+                        )}
+                        {parsed.orders !== null && (
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Current Orders</p>
+                            <span className="text-sm font-bold text-gray-700">
+                              🛒 {new Intl.NumberFormat('vi-VN').format(parsed.orders)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Main Action Description - Only if no structured data */}
+                    {!(parsed.priceFrom || parsed.priceTo || parsed.confidence || parsed.revenueChange) && (
+                      <p className="text-gray-900 dark:text-white font-medium mb-3 leading-relaxed">
+                        {action.title.replace(/\[PRIORITY:\s*(HIGH|MEDIUM|LOW)\]/gi, '').trim()}
+                      </p>
+                    )}
+
+                    {/* Collapsed description for structured data */}
+                    {(parsed.priceFrom || parsed.priceTo || parsed.confidence || parsed.revenueChange) && parsed.productName && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Adjust price for <strong>{parsed.productName.substring(0, 50)}</strong>
+                        {parsed.productName.length > 50 ? '...' : ''}
+                      </p>
+                    )}
+
+                    {/* Action Steps */}
+                    {actionSteps.length > 1 && (
+                      <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 mb-3">
+                        <p className="text-xs text-gray-500 font-medium mb-2">Suggested Steps:</p>
+                        <ul className="space-y-1">
+                          {actionSteps.slice(0, 3).map((step, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-medium">
+                                {idx + 1}
+                              </span>
+                              {step}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Impact & Effort Indicators */}
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-500">Impact:</span>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3].map((level) => (
+                            <div
+                              key={level}
+                              className={`w-3 h-3 rounded-sm ${(action.impact === 'High' && level <= 3) ||
+                                (action.impact === 'Medium' && level <= 2) ||
+                                (action.impact === 'Low' && level <= 1)
+                                ? 'bg-green-500'
+                                : 'bg-gray-200'
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-gray-600 font-medium">{action.impact}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-500">Effort:</span>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3].map((level) => (
+                            <div
+                              key={level}
+                              className={`w-3 h-3 rounded-sm ${(action.effort === 'High' && level <= 3) ||
+                                (action.effort === 'Medium' && level <= 2) ||
+                                (action.effort === 'Low' && level <= 1)
+                                ? 'bg-blue-500'
+                                : 'bg-gray-200'
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-gray-600 font-medium">{action.effort}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500">Effort: {action.effort}</span>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
-                    Execute Action
-                  </button>
+
+                  {/* Execute Action Button */}
+                  <div className="flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        // Navigate to create decision with this action pre-filled
+                        navigate('/analyst/dss-decisions/create', {
+                          state: {
+                            scenario_key: modelId,
+                            kpi_summary: dssResults?.kpi_summary,
+                            filters: dssResults?.filters,
+                            ai_summary_insights: insights,
+                            ai_recommended_actions: [action.title],
+                            title: `Action: ${action.title.substring(0, 50)}...`,
+                            description: action.title,
+                            table_data: dssResults?.table_data || [],
+                            preselected_action: action
+                          }
+                        });
+                      }}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm hover:shadow"
+                    >
+                      <Target className="w-4 h-4" />
+                      Execute
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
+
+          {recommendations.length === 0 && (
+            <div className="text-center py-8 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Target className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <p className="font-medium">No action recommendations available</p>
+              <p className="text-sm">Run the DSS analysis to get AI-powered recommendations</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

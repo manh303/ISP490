@@ -67,6 +67,19 @@ class VerifyOTPResetPasswordResponse(BaseModel):
     data: Optional[dict] = None
 
 
+class VerifyOTPOnlyRequest(BaseModel):
+    """Verify OTP only request model (without resetting password)"""
+    email: EmailStr = Field(..., description="User email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+
+class VerifyOTPOnlyResponse(BaseModel):
+    """Verify OTP only response model"""
+    success: bool
+    message: str
+    valid: bool = False
+
+
 # ====================================
 # SIGNUP & EMAIL VERIFICATION MODELS
 # ====================================

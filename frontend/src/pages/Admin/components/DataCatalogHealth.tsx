@@ -133,7 +133,7 @@ export default function DataCatalogHealth({
                     <Database className="w-5 h-5 text-green-600" />
                     Data Catalog & Dataset Health
                 </h2>
-                <Link to="/dataengineer/catalog">
+                <Link to="/admin/catalog">
                     <Button variant="outline" size="sm">
                         View All Datasets
                         <ArrowRight className="w-4 h-4 ml-2" />
@@ -222,7 +222,7 @@ export default function DataCatalogHealth({
                             ) : (
                                 atRiskDatasets.slice(0, 10).map((dataset) => (
                                     <Link
-                                        to={`/data-catalog/datasets/${dataset.dataset_id}`}
+                                        to={`/admin/catalog`}
                                         key={dataset.dataset_id}
                                         className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-orange-200 dark:border-orange-800 group"
                                     >

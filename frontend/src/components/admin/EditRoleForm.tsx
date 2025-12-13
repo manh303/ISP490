@@ -37,7 +37,7 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
                 });
             } catch (err: any) {
                 const detail = err?.response?.data?.detail;
-                let errorMsg = "Không thể tải thông tin vai trò";
+                let errorMsg = "Failed to load role details";
                 if (typeof detail === 'string') {
                     errorMsg = detail;
                 } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -58,11 +58,11 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
         const newErrors: Partial<Record<keyof UpdateRoleData, string>> = {};
 
         if (!formData.role_name?.trim()) {
-            newErrors.role_name = "Tên vai trò không được để trống";
+            newErrors.role_name = "Role name cannot be empty";
         }
 
         if (!formData.description?.trim()) {
-            newErrors.description = "Mô tả không được để trống";
+            newErrors.description = "Description cannot be empty";
         }
 
         setErrors(newErrors);
@@ -79,11 +79,11 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
         setIsSubmitting(true);
         try {
             const response = await updateRole(roleId, formData);
-            showToast(response.message || "Cập nhật vai trò thành công!", "success");
+            showToast(response.message || "Role updated successfully!", "success");
             onSuccess();
         } catch (err: any) {
             const detail = err?.response?.data?.detail;
-            let errorMsg = "Không thể cập nhật vai trò";
+            let errorMsg = "Failed to update role";
             if (typeof detail === 'string') {
                 errorMsg = detail;
             } else if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) {
@@ -109,7 +109,7 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
         return (
             <div className="bg-white rounded-lg shadow-lg p-6">
                 <div className="flex justify-center items-center h-64">
-                    <div className="text-gray-500">Đang tải...</div>
+                    <div className="text-gray-500">Loading...</div>
                 </div>
             </div>
         );
@@ -119,12 +119,12 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
         return (
             <div className="bg-white rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-red-600">Lỗi</h2>
+                    <h2 className="text-2xl font-bold text-red-600">Error</h2>
                     <Button variant="ghost" size="sm" onClick={onClose}>
                         <X className="h-5 w-5" />
                     </Button>
                 </div>
-                <div className="text-red-500">Không thể tải thông tin vai trò</div>
+                <div className="text-red-500">Failed to load role details</div>
             </div>
         );
     }
@@ -134,7 +134,7 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Chỉnh sửa vai trò</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Edit Role</h2>
                     <Badge variant="outline" className="font-mono text-sm">
                         {role.role_code}
                     </Badge>
@@ -147,7 +147,7 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
             {/* Info Note */}
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800">
-                    <strong>Lưu ý:</strong> Mã vai trò (role_code) không thể thay đổi sau khi đã tạo.
+                    <strong>Note:</strong> Role code cannot be changed after creation.
                 </p>
             </div>
 
@@ -155,7 +155,7 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Role Code (Read-only) */}
                 <div className="space-y-2">
-                    <Label htmlFor="role_code">Mã vai trò</Label>
+                    <Label htmlFor="role_code">Role Code</Label>
                     <Input
                         id="role_code"
                         type="text"
@@ -164,21 +164,21 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
                         className="bg-gray-100"
                     />
                     <p className="text-xs text-gray-500">
-                        Mã vai trò không thể thay đổi
+                        Role code cannot be changed
                     </p>
                 </div>
 
                 {/* Role Name */}
                 <div className="space-y-2">
                     <Label htmlFor="role_name">
-                        Tên vai trò <span className="text-red-500">*</span>
+                        Role Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
                         id="role_name"
                         type="text"
                         value={formData.role_name}
                         onChange={(e) => handleChange('role_name', e.target.value)}
-                        placeholder="VD: Admin, Data Engineer"
+                        placeholder="e.g., Admin, Data Engineer"
                         className={errors.role_name ? 'border-red-500' : ''}
                         disabled={isSubmitting}
                     />
@@ -190,13 +190,13 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
                 {/* Description */}
                 <div className="space-y-2">
                     <Label htmlFor="description">
-                        Mô tả <span className="text-red-500">*</span>
+                        Description <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
-                        placeholder="Nhập mô tả chi tiết về vai trò này..."
+                        placeholder="Enter detailed description..."
                         rows={4}
                         className={errors.description ? 'border-red-500' : ''}
                         disabled={isSubmitting}
@@ -208,20 +208,20 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
 
                 {/* Status Display */}
                 <div className="space-y-2">
-                    <Label>Trạng thái</Label>
+                    <Label>Status</Label>
                     <div>
                         {role.is_active ? (
                             <Badge variant="default" className="bg-green-500 text-white">
-                                Đang hoạt động
+                                Active
                             </Badge>
                         ) : (
                             <Badge variant="destructive" className="bg-gray-500 text-white">
-                                Đã vô hiệu hóa
+                                Inactive
                             </Badge>
                         )}
                     </div>
                     <p className="text-xs text-gray-500">
-                        Để thay đổi trạng thái, sử dụng nút Kích hoạt/Vô hiệu hóa trong danh sách
+                        To change status, use the Activate/Deactivate button in the list
                     </p>
                 </div>
 
@@ -229,27 +229,27 @@ export default function EditRoleForm({ roleId, onClose, onSuccess }: EditRoleFor
                 {role.user_count !== undefined && (
                     <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-700">
-                            <strong>Số người dùng hiện tại:</strong> {role.user_count} người
+                            <strong>Current users:</strong> {role.user_count} users
                         </p>
                     </div>
                 )}
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 pt-4 border-t">
-                    <Button 
-                        type="button" 
-                        variant="outline" 
+                    <Button
+                        type="button"
+                        variant="outline"
                         onClick={onClose}
                         disabled={isSubmitting}
                     >
-                        Hủy
+                        Cancel
                     </Button>
-                    <Button 
+                    <Button
                         type="submit"
-                        variant="outline" 
+                        variant="outline"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật vai trò'}
+                        {isSubmitting ? 'Updating...' : 'Update Role'}
                     </Button>
                 </div>
             </form>

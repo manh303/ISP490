@@ -137,6 +137,8 @@ async def update_user(
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Update user error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update user")

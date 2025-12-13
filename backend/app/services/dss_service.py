@@ -1416,7 +1416,7 @@ class DSSService:
         to_date = request.get("to_date")
         platforms = request.get("platforms")
         categories = request.get("categories")
-        min_reviews = request.get("min_reviews_per_product", 10)
+        min_reviews = request.get("min_reviews_per_product", 5)
         negative_threshold = request.get("negative_threshold", 0.25)
 
         product_keys = request.get("product_keys")
